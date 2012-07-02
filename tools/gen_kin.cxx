@@ -10,9 +10,11 @@
 #include<TH2D.h>
 #include<TLorentzVector.h>
 
+#include<constants.h>
+
 void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 
-	const double PION_MASS = 0.13957018;
+	using hlib::PION_MASS;
 
 	TFile* infile;
 	if(infile_name == NULL) {

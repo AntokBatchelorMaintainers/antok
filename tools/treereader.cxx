@@ -13,10 +13,13 @@
 #include<TLorentzRotation.h>
 #include<TVector3.h>
 
+#include<constants.h>
+#include<basic_calcs.h>
+
 void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
-	const double PION_MASS = 0.13957018;
-	const double PROTON_MASS = 0.93827203;
+	using hlib::PION_MASS;
+	using hlib::PROTON_MASS;
 
 	gStyle->SetPalette(1);
 	gStyle->SetCanvasColor(10);
@@ -114,6 +117,8 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	hists.push_back(mass_5pi);
 	TH1D* mom_5pi = new TH1D("mom_5pi", "mom_5Pi", 500, 0, 250);
 	hists.push_back(mom_5pi);
+	TH1D* calc_beam_E = new TH1D("calc_beam_E", "calc_beam_E", 500, 0, 250);
+	hists.push_back(calc_beam_E);
 	TH1D* rpd_mult = new TH1D("rpd_mult", "rpd_mult", 10, 0, 10);
 	hists.push_back(rpd_mult);
 	TH1D* rpd_Pxh = new TH1D("rpd_Px", "rpd_Px", 1000, 0, 10);
@@ -183,52 +188,20 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 		// Get beam 4-mom
 		TVector3 p3_beam(gradx, grady, 1.);
-		TVector3 p3_Tot(pTot.Px(), pTot.Py(), pTot.Pz());
-		double theta = p3_Tot.Angle(p3_beam);
-		double E_tot = pTot.E();
-		double p3_Tot_Mag = p3_Tot.Mag();
-		double a0 = (PION_MASS * PION_MASS) * p3_Tot_Mag * TMath::Cos(theta);
-		double a1 = (PROTON_MASS * E_tot) - 0.5 * (pTot.M2() + (PION_MASS * PION_MASS));
-		double a2 = PROTON_MASS - E_tot + (p3_Tot_Mag * TMath::Cos(theta));
-		double E_beam = (a1/a2) * (1 + (0.5 * (std::sqrt(1 + ((2*a2*a0)/(a1*a1)))-1)));
-		double p_beam = std::sqrt((E_beam * E_beam) - (PION_MASS * PION_MASS));
-		p3_beam.SetMag(p_beam);
-		TLorentzVector pBeam;
-		pBeam.SetXYZM(p3_beam.X(), p3_beam.Y(), p3_beam.Z(), PROTON_MASS);
+		TLorentzVector pBeam = hlib::get_beam_energy(p3_beam, pTot);
+
 		// Get the t's
 		double t = std::fabs((pBeam - pTot).Mag2());
 		// fhaas' method
-		double t_min = std::fabs((std::pow(pTot.M2() - pBeam.M2(), 2)) / (4. * p3_beam.Mag2()));
+		double t_min = std::fabs((std::pow(pTot.M2() - pBeam.M2(), 2)) / (4. * (pBeam.Vect()).Mag2()));
 		double t_prim = t - t_min;
 		// from suchung paper, seems to be wrong
 		double t_min_alt = (pBeam - pTot).Mag2() - std::pow((pBeam.E() - pTot.E()), 2);
 		double t_prim_alt = t - t_min_alt;
 
 		// Planarity cut
-		rpd_Phi /= TMath::TwoPi();
-		if(rpd_Phi < 0.) rpd_Phi += 1.;
-		int hit_slat = (int)((rpd_Phi*24.) + 0.5);
-		if(hit_slat >= 24) hit_slat -= 24;
-		double res;
-		if(hit_slat % 2) res = 3.75;
-		else res = 7.5;
-		res = (res/180.)*TMath::Pi();
-		res = std::sqrt(res*res + 0.067260*0.067260);
-		TVector3 proton3 = proton.Vect();
-		TVector3 pTot3 = pTot.Vect();
-		TVector3 pBeam3 = pBeam.Vect();
-		TVector3 a = pTot3 - (pTot3.Dot(pBeam3.Unit()))*pBeam3.Unit();
-		TVector3 b = proton3 - (proton3.Dot(pBeam3.Unit()))*pBeam3.Unit();
-		TVector3 n = a.Cross(b);
-		if(n.Dot(TVector3(0.,0.,1.)) > 0) {
-			n *= -1.;
-		}
-		double y = ((n.Cross(a)).Dot(b)) / (((a.Cross(b)).Cross(a)).Mag()*b.Mag());
-		double x = (a.Unit()).Dot(b.Unit());
-		double delta_phi = TMath::ATan2(y, x)-TMath::Pi();
-		if(delta_phi < (-1.*TMath::Pi())) {
-			delta_phi += TMath::TwoPi();
-		}
+		double delta_phi, res;
+		hlib::get_RPD_delta_phi_res(pBeam, proton, pTot, delta_phi, res);
 
 		delta_phih->Fill(delta_phi);
 		if(std::fabs(delta_phi) > res) {
@@ -237,6 +210,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 		stats->Fill("RPD planarity cut", 1);
 
 		mom_5pi->Fill(pTot.Energy());
+		calc_beam_E->Fill(pBeam.E());
 		if(std::fabs(pTot.Energy()-191.) > 3.28) {
 			continue;
 		}
