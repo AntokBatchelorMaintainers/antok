@@ -103,7 +103,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 	std::vector<TTree*> trees;
 	trees.resize(tfiles.size(), NULL);
 
-	const int splitLevel = 0;
+	const int splitLevel = 99;
 	const int buffsize = 256000;
 
 	// Create all the trees with their branches.
@@ -119,6 +119,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 	// Loop over events.
 	for(unsigned int i = 0; i < tree->GetEntries(); ++i) {
 
+		// Get stuff from the tree
 		tree->GetEntry(i);
 
 		particles.at(1).SetXYZM(px1, py1, pz1, PION_MASS);
@@ -134,22 +135,25 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 		particles.at(0) = hlib::get_beam_energy(TVector3(gradx, grady, 1.), pSum);
 		double mass = pSum.M();
 
+		// If out of bounds, go to next event
 		if(mass < bounds.at(0) || mass > bounds.at(bounds.size()-1)) {
 			continue;
 		}
 
+		// Fill the TClonesArrays
 		new ((*prodMom)[0]) TVector3(particles.at(0).Vect());
 		for(unsigned int i = 1; i < 6; ++i) {
 			new ((*decayMom)[i-1]) TVector3(particles.at(i).Vect());
 		}
 
+		// Fill the corresponding tree
 		for(unsigned int i = 0; i < tfiles.size(); ++i) {
 			if((mass > bounds.at(i)) && (mass < bounds.at(i+1))) {
 				trees.at(i)->Fill();
 			}
 		}
 
-	} // End loop over evnts.
+	} // End loop over events
 
 	for(unsigned int i = 0; i < tfiles.size(); ++i) {
 		tfiles.at(i)->cd();
