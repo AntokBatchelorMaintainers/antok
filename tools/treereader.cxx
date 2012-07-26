@@ -117,6 +117,8 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	hists.push_back(mass_5pi);
 	TH1D* mom_5pi = new TH1D("mom_5pi", "mom_5Pi", 500, 0, 250);
 	hists.push_back(mom_5pi);
+	TH1D* mom_5pi_raw = new TH1D("mom_5pi_raw", "mom_5Pi_raw", 500, 0, 250);
+	hists.push_back(mom_5pi_raw);
 	TH1D* calc_beam_E = new TH1D("calc_beam_E", "calc_beam_E", 500, 0, 250);
 	hists.push_back(calc_beam_E);
 	TH1D* rpd_mult = new TH1D("rpd_mult", "rpd_mult", 10, 0, 10);
@@ -152,13 +154,13 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 		if((vtx_z > -28.4) || (vtx_z < -68.4)) {
 			continue;
 		}
-		stats->Fill("Vertex z cut", 1);
+		stats->Fill("Vertex z in ]-28.4,-68.4[", 1);
 
 		vtx_pos->Fill(vtx_x, vtx_y);
 		if(std::pow(vtx_x, 2) + std::pow(vtx_y, 2) > 3.0625) {
 			continue;
 		}
-		stats->Fill("Vertex.R() > 1.75", 1);
+		stats->Fill("Vertex.R() < 1.75", 1);
 
 		rpd_mult->Fill(nbrRPDTracks);
 		if(nbrRPDTracks != 1) {
@@ -176,7 +178,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 		if(isKaon != 0) {
 			continue;
 		}
-		stats->Fill("isKaon != 0", 1);
+		stats->Fill("isKaon = 0", 1);
 
 		p1.SetXYZM(px1, py1, pz1, PION_MASS);
 		p2.SetXYZM(px2, py2, pz2, PION_MASS);
@@ -199,6 +201,16 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 		double t_min_alt = (pBeam - pTot).Mag2() - std::pow((pBeam.E() - pTot.E()), 2);
 		double t_prim_alt = t - t_min_alt;
 
+		t_primh->Fill(t_prim);
+		t_prim_alth->Fill(t_prim_alt);
+
+		if(t_prim < 0.1) {
+			continue;
+		}
+		stats->Fill("T-prime > 0.1", 1);
+
+		mom_5pi_raw->Fill(pTot.Energy());
+
 		// Planarity cut
 		double delta_phi, res;
 		hlib::get_RPD_delta_phi_res(pBeam, proton, pTot, delta_phi, res);
@@ -215,9 +227,6 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 			continue;
 		}
 		stats->Fill("Exclusivity 191+-3.28GeV", 1);
-
-		t_primh->Fill(t_prim);
-		t_prim_alth->Fill(t_prim_alt);
 
 		mass_5pi->Fill(pTot.M());
 
