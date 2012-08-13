@@ -74,13 +74,13 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 	intree->SetBranchAddress("isKaon", &isKaon);
 
 	std::vector<TH1*> hists;
-	hists.push_back(new TH1D("5_pi_mass", "5 Pion Mass", 500, 0, 7));
-	hists.push_back(new TH1D("4_pi_mass", "4 Pion Subsystem", 250, 0.5, 3.5));
-	hists.push_back(new TH1D("3_pi_mass", "3 Pion Subsystem", 750, 0.5, 2.5));
-	hists.push_back(new TH2D("3_dalitz", "3 Pion Subsystem", 500, 0, 2.5, 500, 0, 2.5));
-	hists.push_back(new TH2D("3_dalitz_a2", "3 Pion Subsystem in a2 region", 350, 0, 2.5, 350, 0, 2.5));
-	hists.push_back(new TH1D("2_pi_mass", "2 Pion Subsystem", 350, 0.2, 1.5));
-	hists.push_back(new TH2D("2_pi_4_pi_dalitz", "4 Pion Subsystem", 300, 0.5, 3, 300, 0.2, 1));
+	hists.push_back(new TH1D("5_pi_mass", "5 Pion Mass", 1000, 0., 7.));
+	hists.push_back(new TH1D("4_pi_mass", "4 Pion Subsystem", 500, 0.5, 3.5));
+	hists.push_back(new TH1D("3_pi_mass", "3 Pion Subsystem", 1500, 0.5, 2.5));
+	hists.push_back(new TH2D("3_dalitz", "3 Pion Subsystem", 1000, 0., 2.5, 1000, 0., 2.5));
+	hists.push_back(new TH2D("3_dalitz_a2", "3 Pion Subsystem in a2 region", 700, 0., 2.5, 700, 0., 2.5));
+	hists.push_back(new TH1D("2_pi_mass", "2 Pion Subsystem", 700, 0.2, 1.5));
+	hists.push_back(new TH2D("2_pi_4_pi_dalitz", "4 Pion Subsystem", 600, 0.5, 3., 600, 0.2, 1.));
 
 	std::vector<double> bounds;
 	bounds.resize(10, 0.784);
@@ -103,8 +103,14 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 		std::string ub = strs2.str();
 		std::string name("2_pi_4_pi_dalitz_" + lb + "_" + ub);
 		std::string title("2 Pion [" + lb + ", " + ub + "[");
-		hists.push_back(new TH2D(name.c_str(), title.c_str(), 100, 0.3, 1.3, 100, 0.3, 1.4));
+		hists.push_back(new TH2D(name.c_str(), title.c_str(), 200, 0.3, 1.3, 200, 0.3, 1.4));
 	}
+
+	hists.push_back(new TH1D("3_pi-_rapidity", "3 negative Pion Rapidity", 2000, 0., 10.));
+	hists.push_back(new TH1D("Max_pi-_rapidity", "negative Pion with max. Rapidity", 2000, 0., 10.));
+	hists.push_back(new TH1D("4_pi_mass_---+", "4 Pion Subsystem (---+)", 500, 0.5, 3.5));
+	hists.push_back(new TH2D("4_pi_mass_ag_rapidity", "4 Pion Mass against Rapidity", 250, 0.5, 3.5, 1000, 0., 10.));
+	hists.push_back(new TH2D("5_pi_mass_ag_rapidity", "5 Pion Mass against Rapidity", 250, 0.5, 3.5, 1000, 0., 10.));
 
 	for(unsigned int i = 0; i < intree->GetEntries(); ++i) {
 
@@ -190,6 +196,29 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 				hists.at(6+i)->Fill((p3+p4).M(), (p2+p5).M());
 			}
 		}
+
+		hists.at(6 + bounds.size())->Fill(p1.Rapidity());
+		hists.at(6 + bounds.size())->Fill(p2.Rapidity());
+		hists.at(6 + bounds.size())->Fill(p3.Rapidity());
+
+		TLorentzVector* p_max_rap = &p1;
+		if(p_max_rap->Rapidity() < p2.Rapidity()) {
+			p_max_rap = &p2;
+		}
+		if(p_max_rap->Rapidity() < p3.Rapidity()) {
+			p_max_rap = &p3;
+		}
+		hists.at(7 + bounds.size())->Fill(p_max_rap->Rapidity());
+		hists.at(8 + bounds.size())->Fill((p1+p2+p3+p4).M());
+		hists.at(8 + bounds.size())->Fill((p1+p2+p3+p5).M());
+
+		hists.at(9 + bounds.size())->Fill((p1+p2+p4+p5).M(), p3.Rapidity());
+		hists.at(9 + bounds.size())->Fill((p1+p3+p4+p5).M(), p2.Rapidity());
+		hists.at(9 + bounds.size())->Fill((p2+p3+p4+p5).M(), p1.Rapidity());
+
+		hists.at(10 + bounds.size())->Fill((p1+p2+p3+p4+p5).M(), p_max_rap->Rapidity());
+
+
 
 	}
 

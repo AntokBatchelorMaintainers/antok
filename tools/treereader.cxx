@@ -145,7 +145,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 		stats->Fill("All events", 1);
 
 		trig_maskh->Fill(trigMask);
-		if(trigMask != 1) {
+		if(trigMask&0x1) {
 			continue;
 		}
 		stats->Fill("Trigger Mask = 1", 1);
