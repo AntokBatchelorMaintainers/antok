@@ -144,8 +144,12 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 		tree_chain->GetEntry(i);
 		stats->Fill("All events", 1);
 
+/*std::cout<<"-------------"<<std::endl;
+std::cout<<trigMask<<std::endl;
+std::cout<<(trigMask&0x1)<<std::endl;
+std::cout<<"-------------"<<std::endl;*/
 		trig_maskh->Fill(trigMask);
-		if(trigMask&0x1) {
+		if(!(trigMask&0x1)) {
 			continue;
 		}
 		stats->Fill("Trigger Mask = 1", 1);
