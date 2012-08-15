@@ -16,7 +16,7 @@
 
 void convert_root_to_txt(char* infile_name, char* outfile_name) {
 
-	double bin_width = 0.05;		//GeV
+	double bin_width = 0.03;		//GeV
 	double mass_range_lb = 1.3;		//GeV
 	double mass_range_ub = 4.;		//GeV
 
