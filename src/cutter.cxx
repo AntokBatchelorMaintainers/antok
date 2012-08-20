@@ -1,4 +1,7 @@
 
+#include<assert.h>
+#include<sstream>
+
 #include<cutter.h>
 
 hlib::Cutter::Cutter() {
@@ -25,4 +28,33 @@ int hlib::Cutter::get_cutmask(const hlib::Event& event) {
 	}
 	return cutmask;
 
-}
+};
+
+std::string hlib::Cutter::get_abbreviations(int bitmask) {
+
+	unsigned int size = _cuts.size();
+	assert(bitmask>>(size) == 0);
+	std::stringstream sstr;
+	sstr<<"(";
+	if(bitmask == 0) {
+		sstr<<"AllCuts";
+	} else if (bitmask == ((1<<size)-1)) {
+		sstr<<"NoCuts";
+	} else {
+		bool first = true;
+		for(unsigned int i = 0; i < size; ++i) {
+			if(!((bitmask>>i)&0x1)) {
+				if(first) {
+					first = false;
+				} else {
+					sstr<<"|";
+				}
+				sstr<<_cuts.at((size-1)-i)->get_abbreviation();
+			}
+		}
+	}
+	sstr<<")";
+	std::string retval = sstr.str();
+	return retval;
+
+};

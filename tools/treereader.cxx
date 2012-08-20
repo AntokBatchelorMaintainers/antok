@@ -174,7 +174,9 @@ int test = 0;
 		if(cutmask == 0) {
 			out_tree->Fill();
 		}
-
+if(cutmask==0x1ff) {
+	std::cout<<cutter.get_abbreviations(cutmask)<<" ("<<std::hex<<cutmask<<")"<<std::endl;
+}
 assert(test == 0);
 if(cutter.get_cutmask(event) == 0) {
 	test = 1;
