@@ -19,6 +19,9 @@
 #include<data.hpp>
 #include<event.h>
 
+#include<assert.h>
+#include<cut.hpp>
+
 void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	using hlib::PION_MASS;
@@ -158,6 +161,9 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	TH1D* trig_maskh = new TH1D("trigger_mask", "trigger_mask", 15, 0, 15);
 	hists.push_back(trig_maskh);
 
+	hlib::TrigMask tmcut;
+	hlib::VrtxZ vzcut;
+
 	for(unsigned int i = 0; i < tree_chain->GetEntries(); ++i) {
 
 		tree_chain->GetEntry(i);
@@ -166,11 +172,15 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 		stats->Fill("All events", 1);
 
+assert((!(data.TrigMask&0x1)) == tmcut(event));
+
 		trig_maskh->Fill(data.TrigMask);
 		if(!(data.TrigMask&0x1)) {
 			continue;
 		}
 		stats->Fill("Trigger Mask = 1", 1);
+
+assert(((data.Z_primV > -28.4) || (data.Z_primV < -68.4)) == vzcut(event));
 
 		vtx_zh->Fill(data.Z_primV);
 		if((data.Z_primV > -28.4) || (data.Z_primV < -68.4)) {

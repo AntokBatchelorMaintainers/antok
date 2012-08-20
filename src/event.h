@@ -34,6 +34,8 @@ namespace hlib {
 		const double& get_RpdDeltaPhi() const { return RpdDeltaPhi; };
 		const double& get_RpdPhiRes() const { return RpdPhiRes; };
 
+		const hlib::Data* rawData;
+
 	  private:
 
 		TLorentzVector get_beam_energy(TVector3 p3_beam, const TLorentzVector& LV_X) const;
@@ -57,8 +59,6 @@ namespace hlib {
 
 		double RpdDeltaPhi;
 		double RpdPhiRes;
-
-		const hlib::Data* rawData;
 
 	};
 

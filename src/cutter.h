@@ -4,14 +4,17 @@
 #include<string>
 #include<vector>
 
+#include<cut.hpp>
+#include<event.h>
+
 namespace hlib {
 
 	class Cutter {
 	
 	  public:
-		Cutter() { };
+		Cutter();
 
-		virtual int get_cutmask(hlib::Event event);
+		int get_cutmask(hlib::Event event);
 
 		std::string get_abbreviations(int bitmask);
 
