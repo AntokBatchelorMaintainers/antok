@@ -79,7 +79,7 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 	hists.push_back(new TH1D("3_pi_mass", "3 Pion Subsystem", 1500, 0.5, 2.5));
 	hists.push_back(new TH2D("3_dalitz", "3 Pion Subsystem", 1000, 0., 2.5, 1000, 0., 2.5));
 	hists.push_back(new TH2D("3_dalitz_a2", "3 Pion Subsystem in a2 region", 700, 0., 2.5, 700, 0., 2.5));
-	hists.push_back(new TH1D("2_pi_mass", "2 Pion Subsystem", 700, 0.2, 1.5));
+	hists.push_back(new TH1D("2_pi_mass", "2 Pion Subsystem", 1000, 0.2, 2));
 	hists.push_back(new TH2D("2_pi_4_pi_dalitz", "4 Pion Subsystem", 600, 0.5, 3., 600, 0.2, 1.));
 
 	std::vector<double> bounds;
