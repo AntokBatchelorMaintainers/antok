@@ -17,6 +17,7 @@
 #include<basic_calcs.h>
 #include<constants.h>
 #include<data.hpp>
+#include<event.h>
 
 void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
@@ -59,17 +60,8 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	TTree* out_tree = tree_chain->CloneTree(0);
 
-	TLorentzVector p1;
-	TLorentzVector p2;
-	TLorentzVector p3;
-	TLorentzVector p4;
-	TLorentzVector p5;
-
-	TLorentzVector pTot;
-
-	TLorentzVector proton;
-
 	hlib::Data data;
+	hlib::Event event;
 
 	tree_chain->SetBranchAddress("Run", &data.Run);
 	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
@@ -161,8 +153,6 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	hists.push_back(vtx_zh);
 	TH1D* t_primh = new TH1D("t_prime", "t_prime", 1000, -5, 5);
 	hists.push_back(t_primh);
-	TH1D* t_prim_alth = new TH1D("t_prime_alt", "t_prime_alt", 1000, -5, 5);
-	hists.push_back(t_prim_alth);
 	TH1D* delta_phih = new TH1D("delta_phi", "delta_phi", 500, -7, 7);
 	hists.push_back(delta_phih);
 	TH1D* trig_maskh = new TH1D("trigger_mask", "trigger_mask", 15, 0, 15);
@@ -171,12 +161,11 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	for(unsigned int i = 0; i < tree_chain->GetEntries(); ++i) {
 
 		tree_chain->GetEntry(i);
+
+		event.update(data);
+
 		stats->Fill("All events", 1);
 
-/*std::cout<<"-------------"<<std::endl;
-std::cout<<data.TrigMask<<std::endl;
-std::cout<<(data.TrigMask&0x1)<<std::endl;
-std::cout<<"-------------"<<std::endl;*/
 		trig_maskh->Fill(data.TrigMask);
 		if(!(data.TrigMask&0x1)) {
 			continue;
@@ -201,9 +190,8 @@ std::cout<<"-------------"<<std::endl;*/
 		}
 		stats->Fill("1 RPD track", 1);
 
-		proton.SetPxPyPzE(data.RPD_Px, data.RPD_Py, data.RPD_Pz, data.RPD_E);
-		rpd_Pxh->Fill(proton.M());
-		if(proton.M() < 0.2) {
+		rpd_Pxh->Fill(event.get_pProton().M());
+		if(event.get_pProton().M() < 0.2) {
 			continue;
 		}
 		stats->Fill("Proton mass > 0.2", 1);
@@ -213,55 +201,29 @@ std::cout<<"-------------"<<std::endl;*/
 		}
 		stats->Fill("data.isKaon = 0", 1);
 
-		p1.SetXYZM(data.Mom_x1, data.Mom_y1, data.Mom_z1, PION_MASS);
-		p2.SetXYZM(data.Mom_x2, data.Mom_y2, data.Mom_z2, PION_MASS);
-		p3.SetXYZM(data.Mom_x3, data.Mom_y3, data.Mom_z3, PION_MASS);
-		p4.SetXYZM(data.Mom_x4, data.Mom_y4, data.Mom_z4, PION_MASS);
-		p5.SetXYZM(data.Mom_x5, data.Mom_y5, data.Mom_z5, PION_MASS);
+		t_primh->Fill(event.get_tPrime());
 
-		pTot = p1+p2+p3+p4+p5;
-
-		// Get beam 4-mom
-		TVector3 p3_beam(data.gradx, data.grady, 1.);
-		TLorentzVector pBeam = hlib::get_beam_energy(p3_beam, pTot);
-
-		// Get the t's
-		double t = std::fabs((pBeam - pTot).Mag2());
-		// fhaas' method
-		double t_min = std::fabs((std::pow(pTot.M2() - pBeam.M2(), 2)) / (4. * (pBeam.Vect()).Mag2()));
-		double t_prim = t - t_min;
-		// from suchung paper, seems to be wrong
-		double t_min_alt = (pBeam - pTot).Mag2() - std::pow((pBeam.E() - pTot.E()), 2);
-		double t_prim_alt = t - t_min_alt;
-
-		t_primh->Fill(t_prim);
-		t_prim_alth->Fill(t_prim_alt);
-
-		if(t_prim < 0.1) {
+		if(event.get_tPrime() < 0.1) {
 			continue;
 		}
 		stats->Fill("T-prime > 0.1", 1);
 
-		mom_5pi_raw->Fill(pTot.Energy());
+		mom_5pi_raw->Fill(event.get_pSum().Energy());
 
-		// Planarity cut
-		double delta_phi, res;
-		hlib::get_RPD_delta_phi_res(pBeam, proton, pTot, delta_phi, res);
-
-		delta_phih->Fill(delta_phi);
-		if(std::fabs(delta_phi) > res) {
+		delta_phih->Fill(event.get_RpdDeltaPhi());
+		if(std::fabs(event.get_RpdDeltaPhi()) > event.get_RpdPhiRes()) {
 			continue;
 		}
 		stats->Fill("RPD planarity cut", 1);
 
-		mom_5pi->Fill(pTot.Energy());
-		calc_beam_E->Fill(pBeam.E());
-		if(std::fabs(pTot.Energy()-191.) > 3.28) {
+		mom_5pi->Fill(event.get_pSum().Energy());
+		calc_beam_E->Fill(event.get_pBeam().E());
+		if(std::fabs(event.get_pSum().Energy()-191.) > 3.28) {
 			continue;
 		}
 		stats->Fill("Exclusivity 191+-3.28GeV", 1);
 
-		mass_5pi->Fill(pTot.M());
+		mass_5pi->Fill(event.get_pSum().M());
 
 		out_tree->Fill();
 

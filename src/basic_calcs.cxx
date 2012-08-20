@@ -5,7 +5,7 @@
 #include<TLorentzVector.h>
 #include<TVector3.h>
 
-TLorentzVector hlib::get_beam_energy(TVector3 p3_beam, TLorentzVector pX) {
+TLorentzVector hlib::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX) {
 
 	using hlib::PION_MASS;
 	using hlib::PROTON_MASS;
@@ -26,9 +26,9 @@ TLorentzVector hlib::get_beam_energy(TVector3 p3_beam, TLorentzVector pX) {
 
 };
 
-void hlib::get_RPD_delta_phi_res(TLorentzVector pBeam,
-								 TLorentzVector pProton,
-								 TLorentzVector pX,
+void hlib::get_RPD_delta_phi_res(const TLorentzVector& pBeam,
+								 const TLorentzVector& pProton,
+								 const TLorentzVector& pX,
 								 double& delta_phi, double& res)
 {
 
@@ -58,3 +58,4 @@ void hlib::get_RPD_delta_phi_res(TLorentzVector pBeam,
 	}
 
 };
+

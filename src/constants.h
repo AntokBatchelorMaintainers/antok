@@ -1,5 +1,5 @@
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef HLIB_CONSTANTS_H
+#define HLIB_CONSTANTS_H
 
 namespace hlib {
 

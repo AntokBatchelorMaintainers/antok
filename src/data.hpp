@@ -1,4 +1,7 @@
 
+#ifndef HLIB_DATA_H
+#define HLIB_DATA_H
+
 namespace hlib {
 
 	struct Data {
@@ -134,3 +137,5 @@ double Data::zmax4 = -1.;
 double Data::zmax5 = -1.;
 
 }
+
+#endif
