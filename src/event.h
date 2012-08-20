@@ -58,6 +58,8 @@ namespace hlib {
 		double RpdDeltaPhi;
 		double RpdPhiRes;
 
+		const hlib::Data* rawData;
+
 	};
 
 }

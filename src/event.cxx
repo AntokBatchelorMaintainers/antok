@@ -6,6 +6,8 @@ using hlib::PION_MASS;
 
 void hlib::Event::update(const hlib::Data& data) {
 
+	rawData = &data;
+
 	p1.SetXYZM(data.Mom_x1, data.Mom_y1, data.Mom_z1, PION_MASS);
 	p2.SetXYZM(data.Mom_x2, data.Mom_y2, data.Mom_z2, PION_MASS);
 	p3.SetXYZM(data.Mom_x3, data.Mom_y3, data.Mom_z3, PION_MASS);
