@@ -16,11 +16,11 @@
 
 #include<basic_calcs.h>
 #include<constants.h>
+#include<cutter.h>
 #include<data.hpp>
 #include<event.h>
 
 #include<assert.h>
-#include<cut.hpp>
 
 void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
@@ -65,6 +65,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	hlib::Data data;
 	hlib::Event event;
+	hlib::Cutter cutter;
 
 	tree_chain->SetBranchAddress("Run", &data.Run);
 	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
@@ -161,8 +162,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	TH1D* trig_maskh = new TH1D("trigger_mask", "trigger_mask", 15, 0, 15);
 	hists.push_back(trig_maskh);
 
-	hlib::TrigMask tmcut;
-	hlib::VrtxZ vzcut;
+int test = 0;
 
 	for(unsigned int i = 0; i < tree_chain->GetEntries(); ++i) {
 
@@ -170,17 +170,23 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 		event.update(data);
 
-		stats->Fill("All events", 1);
+		int cutmask = cutter.get_cutmask(event);
+		if(cutmask == 0) {
+			out_tree->Fill();
+		}
 
-assert((!(data.TrigMask&0x1)) == tmcut(event));
+assert(test == 0);
+if(cutter.get_cutmask(event) == 0) {
+	test = 1;
+}
+
+		stats->Fill("All events", 1);
 
 		trig_maskh->Fill(data.TrigMask);
 		if(!(data.TrigMask&0x1)) {
 			continue;
 		}
 		stats->Fill("Trigger Mask = 1", 1);
-
-assert(((data.Z_primV > -28.4) || (data.Z_primV < -68.4)) == vzcut(event));
 
 		vtx_zh->Fill(data.Z_primV);
 		if((data.Z_primV > -28.4) || (data.Z_primV < -68.4)) {
@@ -235,7 +241,11 @@ assert(((data.Z_primV > -28.4) || (data.Z_primV < -68.4)) == vzcut(event));
 
 		mass_5pi->Fill(event.get_pSum().M());
 
-		out_tree->Fill();
+assert(cutter.get_cutmask(event) == 0);
+assert(test == 1);
+test = 0;
+
+//		out_tree->Fill();
 
 	}
 

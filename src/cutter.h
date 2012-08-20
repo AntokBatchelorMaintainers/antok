@@ -14,7 +14,7 @@ namespace hlib {
 	  public:
 		Cutter();
 
-		int get_cutmask(hlib::Event event);
+		int get_cutmask(const hlib::Event& event);
 
 		std::string get_abbreviations(int bitmask);
 
