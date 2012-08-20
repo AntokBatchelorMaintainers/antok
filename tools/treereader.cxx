@@ -1,6 +1,7 @@
 
 #include<iostream>
 
+#include<TApplication.h>
 #include<TChain.h>
 #include<TFile.h>
 #include<TMath.h>
@@ -13,13 +14,16 @@
 #include<TLorentzRotation.h>
 #include<TVector3.h>
 
-#include<constants.h>
 #include<basic_calcs.h>
+#include<constants.h>
+#include<data.hpp>
 
 void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	using hlib::PION_MASS;
 	using hlib::PROTON_MASS;
+
+	TApplication* app = new TApplication("app", 0, NULL);
 
 	gStyle->SetPalette(1);
 	gStyle->SetCanvasColor(10);
@@ -55,57 +59,82 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	TTree* out_tree = tree_chain->CloneTree(0);
 
-	double px1, py1, pz1;
 	TLorentzVector p1;
-	double px2, py2, pz2;
 	TLorentzVector p2;
-	double px3, py3, pz3;
 	TLorentzVector p3;
-	double px4, py4, pz4;
 	TLorentzVector p4;
-	double px5, py5, pz5;
 	TLorentzVector p5;
 
 	TLorentzVector pTot;
-	double gradx, grady;
 
-	int nbrRPDTracks;
-	double rpd_E, rpd_Px, rpd_Py, rpd_Pz, rpd_Phi;
 	TLorentzVector proton;
 
-	double vtx_x, vtx_y, vtx_z;
-	int trigMask;
+	hlib::Data data;
 
-	int isKaon;
+	tree_chain->SetBranchAddress("Run", &data.Run);
+	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
+	tree_chain->SetBranchAddress("EvNbr", &data.EvNbr);
+	tree_chain->SetBranchAddress("SpillNbr", &data.SpillNbr);
 
-	tree_chain->SetBranchAddress("Mom_x1", &px1);
-	tree_chain->SetBranchAddress("Mom_y1", &py1);
-	tree_chain->SetBranchAddress("Mom_z1", &pz1);
-	tree_chain->SetBranchAddress("Mom_x2", &px2);
-	tree_chain->SetBranchAddress("Mom_y2", &py2);
-	tree_chain->SetBranchAddress("Mom_z2", &pz2);
-	tree_chain->SetBranchAddress("Mom_x3", &px3);
-	tree_chain->SetBranchAddress("Mom_y3", &py3);
-	tree_chain->SetBranchAddress("Mom_z3", &pz3);
-	tree_chain->SetBranchAddress("Mom_x4", &px4);
-	tree_chain->SetBranchAddress("Mom_y4", &py4);
-	tree_chain->SetBranchAddress("Mom_z4", &pz4);
-	tree_chain->SetBranchAddress("Mom_x5", &px5);
-	tree_chain->SetBranchAddress("Mom_y5", &py5);
-	tree_chain->SetBranchAddress("Mom_z5", &pz5);
-	tree_chain->SetBranchAddress("nbrRPDTracks", &nbrRPDTracks);
-	tree_chain->SetBranchAddress("RPD_Px", &rpd_Px);
-	tree_chain->SetBranchAddress("RPD_Py", &rpd_Py);
-	tree_chain->SetBranchAddress("RPD_Pz", &rpd_Pz);
-	tree_chain->SetBranchAddress("RPD_E", &rpd_E);
-	tree_chain->SetBranchAddress("RPD_Phi", &rpd_Phi);
-	tree_chain->SetBranchAddress("X_primV", &vtx_x);
-	tree_chain->SetBranchAddress("Y_primV", &vtx_y);
-	tree_chain->SetBranchAddress("Z_primV", &vtx_z);
-	tree_chain->SetBranchAddress("TrigMask", &trigMask);
-	tree_chain->SetBranchAddress("gradx", &gradx);
-	tree_chain->SetBranchAddress("grady", &grady);
-	tree_chain->SetBranchAddress("isKaon", &isKaon);
+	tree_chain->SetBranchAddress("X_primV", &data.X_primV);
+	tree_chain->SetBranchAddress("Y_primV", &data.Y_primV);
+	tree_chain->SetBranchAddress("Z_primV", &data.Z_primV);
+
+	tree_chain->SetBranchAddress("gradx", &data.gradx);
+	tree_chain->SetBranchAddress("grady", &data.grady);
+
+	tree_chain->SetBranchAddress("Mom_x1", &data.Mom_x1);
+	tree_chain->SetBranchAddress("Mom_x2", &data.Mom_x2);
+	tree_chain->SetBranchAddress("Mom_x3", &data.Mom_x3);
+	tree_chain->SetBranchAddress("Mom_x4", &data.Mom_x4);
+	tree_chain->SetBranchAddress("Mom_x5", &data.Mom_x5);
+
+	tree_chain->SetBranchAddress("Mom_y1", &data.Mom_y1);
+	tree_chain->SetBranchAddress("Mom_y2", &data.Mom_y2);
+	tree_chain->SetBranchAddress("Mom_y3", &data.Mom_y3);
+	tree_chain->SetBranchAddress("Mom_y4", &data.Mom_y4);
+	tree_chain->SetBranchAddress("Mom_y5", &data.Mom_y5);
+
+	tree_chain->SetBranchAddress("Mom_z1", &data.Mom_z1);
+	tree_chain->SetBranchAddress("Mom_z2", &data.Mom_z2);
+	tree_chain->SetBranchAddress("Mom_z3", &data.Mom_z3);
+	tree_chain->SetBranchAddress("Mom_z4", &data.Mom_z4);
+	tree_chain->SetBranchAddress("Mom_z5", &data.Mom_z5);
+
+	tree_chain->SetBranchAddress("chi2PV", &data.chi2PV);
+
+	tree_chain->SetBranchAddress("theta_RICH_1", &data.theta_RICH_1);
+	tree_chain->SetBranchAddress("theta_RICH_2", &data.theta_RICH_2);
+	tree_chain->SetBranchAddress("theta_RICH_3", &data.theta_RICH_3);
+	tree_chain->SetBranchAddress("theta_RICH_4", &data.theta_RICH_4);
+	tree_chain->SetBranchAddress("theta_RICH_5", &data.theta_RICH_5);
+
+	tree_chain->SetBranchAddress("PID_RICH_1", &data.PID_RICH_1);
+	tree_chain->SetBranchAddress("PID_RICH_2", &data.PID_RICH_2);
+	tree_chain->SetBranchAddress("PID_RICH_3", &data.PID_RICH_3);
+	tree_chain->SetBranchAddress("PID_RICH_4", &data.PID_RICH_4);
+	tree_chain->SetBranchAddress("PID_RICH_5", &data.PID_RICH_5);
+
+	tree_chain->SetBranchAddress("RPD_Px", &data.RPD_Px);
+	tree_chain->SetBranchAddress("RPD_Py", &data.RPD_Py);
+	tree_chain->SetBranchAddress("RPD_Pz", &data.RPD_Pz);
+	tree_chain->SetBranchAddress("RPD_E", &data.RPD_E);
+	tree_chain->SetBranchAddress("RPD_Tz", &data.RPD_Tz);
+	tree_chain->SetBranchAddress("RPD_z", &data.RPD_z);
+	tree_chain->SetBranchAddress("RPD_beta", &data.RPD_beta);
+	tree_chain->SetBranchAddress("RPD_Phi", &data.RPD_Phi);
+	tree_chain->SetBranchAddress("RPD_dEA", &data.RPD_dEA);
+	tree_chain->SetBranchAddress("RPD_dEB", &data.RPD_dEB);
+	tree_chain->SetBranchAddress("nbrRPDTracks", &data.nbrRPDTracks);
+
+	tree_chain->SetBranchAddress("isKaon", &data.isKaon);
+
+	tree_chain->SetBranchAddress("zmax1", &data.zmax1);
+	tree_chain->SetBranchAddress("zmax2", &data.zmax2);
+	tree_chain->SetBranchAddress("zmax3", &data.zmax3);
+	tree_chain->SetBranchAddress("zmax4", &data.zmax4);
+	tree_chain->SetBranchAddress("zmax5", &data.zmax5);
+
 
 	std::vector<TH1*> hists;
 
@@ -145,55 +174,55 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 		stats->Fill("All events", 1);
 
 /*std::cout<<"-------------"<<std::endl;
-std::cout<<trigMask<<std::endl;
-std::cout<<(trigMask&0x1)<<std::endl;
+std::cout<<data.TrigMask<<std::endl;
+std::cout<<(data.TrigMask&0x1)<<std::endl;
 std::cout<<"-------------"<<std::endl;*/
-		trig_maskh->Fill(trigMask);
-		if(!(trigMask&0x1)) {
+		trig_maskh->Fill(data.TrigMask);
+		if(!(data.TrigMask&0x1)) {
 			continue;
 		}
 		stats->Fill("Trigger Mask = 1", 1);
 
-		vtx_zh->Fill(vtx_z);
-		if((vtx_z > -28.4) || (vtx_z < -68.4)) {
+		vtx_zh->Fill(data.Z_primV);
+		if((data.Z_primV > -28.4) || (data.Z_primV < -68.4)) {
 			continue;
 		}
 		stats->Fill("Vertex z in ]-28.4,-68.4[", 1);
 
-		vtx_pos->Fill(vtx_x, vtx_y);
-		if(std::pow(vtx_x, 2) + std::pow(vtx_y, 2) > 3.0625) {
+		vtx_pos->Fill(data.X_primV, data.Y_primV);
+		if(std::pow(data.X_primV, 2) + std::pow(data.Y_primV, 2) > 3.0625) {
 			continue;
 		}
 		stats->Fill("Vertex.R() < 1.75", 1);
 
-		rpd_mult->Fill(nbrRPDTracks);
-		if(nbrRPDTracks != 1) {
+		rpd_mult->Fill(data.nbrRPDTracks);
+		if(data.nbrRPDTracks != 1) {
 			continue;
 		}
 		stats->Fill("1 RPD track", 1);
 
-		proton.SetPxPyPzE(rpd_Px, rpd_Py, rpd_Pz, rpd_E);
+		proton.SetPxPyPzE(data.RPD_Px, data.RPD_Py, data.RPD_Pz, data.RPD_E);
 		rpd_Pxh->Fill(proton.M());
 		if(proton.M() < 0.2) {
 			continue;
 		}
 		stats->Fill("Proton mass > 0.2", 1);
 
-		if(isKaon != 0) {
+		if(data.isKaon != 0) {
 			continue;
 		}
-		stats->Fill("isKaon = 0", 1);
+		stats->Fill("data.isKaon = 0", 1);
 
-		p1.SetXYZM(px1, py1, pz1, PION_MASS);
-		p2.SetXYZM(px2, py2, pz2, PION_MASS);
-		p3.SetXYZM(px3, py3, pz3, PION_MASS);
-		p4.SetXYZM(px4, py4, pz4, PION_MASS);
-		p5.SetXYZM(px5, py5, pz5, PION_MASS);
+		p1.SetXYZM(data.Mom_x1, data.Mom_y1, data.Mom_z1, PION_MASS);
+		p2.SetXYZM(data.Mom_x2, data.Mom_y2, data.Mom_z2, PION_MASS);
+		p3.SetXYZM(data.Mom_x3, data.Mom_y3, data.Mom_z3, PION_MASS);
+		p4.SetXYZM(data.Mom_x4, data.Mom_y4, data.Mom_z4, PION_MASS);
+		p5.SetXYZM(data.Mom_x5, data.Mom_y5, data.Mom_z5, PION_MASS);
 
 		pTot = p1+p2+p3+p4+p5;
 
 		// Get beam 4-mom
-		TVector3 p3_beam(gradx, grady, 1.);
+		TVector3 p3_beam(data.gradx, data.grady, 1.);
 		TLorentzVector pBeam = hlib::get_beam_energy(p3_beam, pTot);
 
 		// Get the t's
