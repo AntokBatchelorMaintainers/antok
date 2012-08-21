@@ -27,7 +27,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	using hlib::PION_MASS;
 	using hlib::PROTON_MASS;
 
-	TApplication* app = new TApplication("app", 0, NULL);
+	new TApplication("app", 0, NULL);
 
 	gStyle->SetPalette(1);
 	gStyle->SetCanvasColor(10);
@@ -65,7 +65,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	hlib::Data data;
 	hlib::Event event;
-	hlib::Cutter cutter;
+	hlib::Cutter* cutter = hlib::Cutter::instance();
 
 	tree_chain->SetBranchAddress("Run", &data.Run);
 	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
@@ -170,15 +170,15 @@ int test = 0;
 
 		event.update(data);
 
-		int cutmask = cutter.get_cutmask(event);
+		int cutmask = cutter->get_cutmask(event);
 		if(cutmask == 0) {
 			out_tree->Fill();
 		}
 if(cutmask==0x1ff) {
-	std::cout<<cutter.get_abbreviations(cutmask)<<" ("<<std::hex<<cutmask<<")"<<std::endl;
+	std::cout<<cutter->get_abbreviations(cutmask)<<" ("<<std::hex<<cutmask<<")"<<std::endl;
 }
 assert(test == 0);
-if(cutter.get_cutmask(event) == 0) {
+if(cutter->get_cutmask(event) == 0) {
 	test = 1;
 }
 
@@ -243,7 +243,7 @@ if(cutter.get_cutmask(event) == 0) {
 
 		mass_5pi->Fill(event.get_pSum().M());
 
-assert(cutter.get_cutmask(event) == 0);
+assert(cutter->get_cutmask(event) == 0);
 assert(test == 1);
 test = 0;
 

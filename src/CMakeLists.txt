@@ -9,6 +9,8 @@ set(SOURCES
 	basic_calcs.cxx
 	event.cxx
 	cutter.cxx
+	plot.cxx
+	plotter.cxx
    )
 
 make_shared_library("bannt" "${SOURCES}" "${ROOT_LIBS}")

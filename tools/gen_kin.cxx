@@ -17,7 +17,7 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 
 	using hlib::PION_MASS;
 
-	TApplication* app = new TApplication("app", 0, NULL);
+	new TApplication("app", 0, NULL);
 
 	TFile* infile;
 	if(infile_name == NULL) {

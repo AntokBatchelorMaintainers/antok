@@ -4,6 +4,15 @@
 
 #include<cutter.h>
 
+hlib::Cutter* hlib::Cutter::_cutter = NULL;
+
+hlib::Cutter* hlib::Cutter::instance() {
+	if(_cutter == NULL) {
+		_cutter = new hlib::Cutter();
+	}
+	return _cutter;
+}
+
 hlib::Cutter::Cutter() {
 
 	_cuts.push_back(new TrigMask(0x1));
@@ -56,5 +65,13 @@ std::string hlib::Cutter::get_abbreviations(int bitmask) {
 	sstr<<")";
 	std::string retval = sstr.str();
 	return retval;
+
+};
+
+hlib::Cutter::~Cutter() {
+
+	for(unsigned int i = 0; i < _cuts.size(); ++i) {
+		delete _cuts.at(i);
+	}
 
 };

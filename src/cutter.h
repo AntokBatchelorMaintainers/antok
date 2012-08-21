@@ -12,13 +12,22 @@ namespace hlib {
 	class Cutter {
 	
 	  public:
-		Cutter();
+
+		static Cutter* instance();
 
 		int get_cutmask(const hlib::Event& event);
 
 		std::string get_abbreviations(int bitmask);
 
+		unsigned int get_no_cuts() { return _cuts.size(); };
+
 	  private:
+
+		Cutter();
+		~Cutter();
+
+		static Cutter* _cutter;
+
 		std::vector<hlib::Cut*> _cuts;
 
 	};
