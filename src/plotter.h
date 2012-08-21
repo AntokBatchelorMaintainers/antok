@@ -3,6 +3,7 @@
 
 #include<vector>
 
+#include<TDirectory.h>
 #include<TH1D.h>
 #include<TH2D.h>
 
@@ -16,8 +17,21 @@ namespace hlib {
 	  public:
 		Plotter();
 
-		void fill(const hlib::Event& event);
+		void fill(const hlib::Event& event, int cutmask);
 
+		void save(TDirectory* dir);
+
+		double XMass;
+		double XMom;
+		double CalcBeamE;
+		double RPDMult;
+		double PrimVX;
+		double PrimVY;
+		double PrimVZ;
+		double ProtonMass;
+		double TPrim;
+		double RPDDeltaPhi;
+		double TrigMask;
 
 	  private:
 

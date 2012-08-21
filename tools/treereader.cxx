@@ -19,6 +19,7 @@
 #include<cutter.h>
 #include<data.hpp>
 #include<event.h>
+#include<plotter.h>
 
 #include<assert.h>
 
@@ -66,6 +67,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	hlib::Data data;
 	hlib::Event event;
 	hlib::Cutter* cutter = hlib::Cutter::instance();
+	hlib::Plotter plotter;
 
 	tree_chain->SetBranchAddress("Run", &data.Run);
 	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
@@ -132,14 +134,14 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	tree_chain->SetBranchAddress("zmax5", &data.zmax5);
 
 
-	std::vector<TH1*> hists;
+/*	std::vector<TH1*> hists;
 
 	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
-//	TH1D* stats_pre = (TH1D*)infile->Get("fhaas/statistic");
+	//	TH1D* stats_pre = (TH1D*)infile->Get("fhaas/statistic");
 	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
 	hists.push_back(stats);
-	TH1D* mass_5pi = new TH1D("mass_5pi", "mass_5Pi", 500, 0, 7);
-	hists.push_back(mass_5pi);
+	//	TH1D* mass_5pi = new TH1D("mass_5pi", "mass_5Pi", 500, 0, 7);
+	//	hists.push_back(mass_5pi);
 	TH1D* mom_5pi = new TH1D("mom_5pi", "mom_5Pi", 500, 0, 250);
 	hists.push_back(mom_5pi);
 	TH1D* mom_5pi_raw = new TH1D("mom_5pi_raw", "mom_5Pi_raw", 500, 0, 250);
@@ -162,7 +164,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	TH1D* trig_maskh = new TH1D("trigger_mask", "trigger_mask", 15, 0, 15);
 	hists.push_back(trig_maskh);
 
-int test = 0;
+	int test = 0;*/
 
 	for(unsigned int i = 0; i < tree_chain->GetEntries(); ++i) {
 
@@ -174,55 +176,50 @@ int test = 0;
 		if(cutmask == 0) {
 			out_tree->Fill();
 		}
-if(cutmask==0x1ff) {
-	std::cout<<cutter->get_abbreviations(cutmask)<<" ("<<std::hex<<cutmask<<")"<<std::endl;
-}
-assert(test == 0);
-if(cutter->get_cutmask(event) == 0) {
-	test = 1;
-}
 
-		stats->Fill("All events", 1);
+		plotter.fill(event, cutmask);
+
+/*		stats->Fill("All events", 1);
 
 		trig_maskh->Fill(data.TrigMask);
 		if(!(data.TrigMask&0x1)) {
-			continue;
+		continue;
 		}
 		stats->Fill("Trigger Mask = 1", 1);
 
 		vtx_zh->Fill(data.Z_primV);
 		if((data.Z_primV > -28.4) || (data.Z_primV < -68.4)) {
-			continue;
+		continue;
 		}
 		stats->Fill("Vertex z in ]-28.4,-68.4[", 1);
 
 		vtx_pos->Fill(data.X_primV, data.Y_primV);
 		if(std::pow(data.X_primV, 2) + std::pow(data.Y_primV, 2) > 3.0625) {
-			continue;
+		continue;
 		}
 		stats->Fill("Vertex.R() < 1.75", 1);
 
 		rpd_mult->Fill(data.nbrRPDTracks);
 		if(data.nbrRPDTracks != 1) {
-			continue;
+		continue;
 		}
 		stats->Fill("1 RPD track", 1);
 
 		rpd_Pxh->Fill(event.get_pProton().M());
 		if(event.get_pProton().M() < 0.2) {
-			continue;
+		continue;
 		}
 		stats->Fill("Proton mass > 0.2", 1);
 
 		if(data.isKaon != 0) {
-			continue;
+		continue;
 		}
 		stats->Fill("data.isKaon = 0", 1);
 
 		t_primh->Fill(event.get_tPrime());
 
 		if(event.get_tPrime() < 0.1) {
-			continue;
+		continue;
 		}
 		stats->Fill("T-prime > 0.1", 1);
 
@@ -230,34 +227,36 @@ if(cutter->get_cutmask(event) == 0) {
 
 		delta_phih->Fill(event.get_RpdDeltaPhi());
 		if(std::fabs(event.get_RpdDeltaPhi()) > event.get_RpdPhiRes()) {
-			continue;
+		continue;
 		}
 		stats->Fill("RPD planarity cut", 1);
 
 		mom_5pi->Fill(event.get_pSum().Energy());
 		calc_beam_E->Fill(event.get_pBeam().E());
 		if(std::fabs(event.get_pSum().Energy()-191.) > 3.28) {
-			continue;
+		continue;
 		}
 		stats->Fill("Exclusivity 191+-3.28GeV", 1);
 
-		mass_5pi->Fill(event.get_pSum().M());
+//		mass_5pi->Fill(event.get_pSum().M());
 
 assert(cutter->get_cutmask(event) == 0);
 assert(test == 1);
 test = 0;
 
 //		out_tree->Fill();
-
+ */
 	}
 
-	outfile->cd();
-	out_tree->Write();
-	outfile->mkdir("Histograms");
-	outfile->Cd("Histograms");
-	for(unsigned int i = 0; i < hists.size(); ++i) {
+	plotter.save(outfile);
+
+	/*	outfile->cd();
+		out_tree->Write();
+		outfile->mkdir("Histograms");
+		outfile->Cd("Histograms");
+		for(unsigned int i = 0; i < hists.size(); ++i) {
 		hists.at(i)->Write();
-	}
+		}*/
 
 	infile->Close();
 	outfile->Close();

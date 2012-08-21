@@ -5,9 +5,11 @@
 #include<cutter.h>
 #include<plot.h>
 
-hlib::Plot::Plot(std::vector<int> cutmasks, TH1* hist_template, int dim) :
+hlib::Plot::Plot(std::vector<int> cutmasks, TH1* hist_template, double* data1, double* data2) :
 		_cutmasks(cutmasks),
-		_dim(dim)
+		_hist_template(hist_template),
+		_data1(data1),
+		_data2(data2)
 {
 
 	assert(hist_template != NULL);
@@ -30,16 +32,16 @@ hlib::Plot::Plot(std::vector<int> cutmasks, TH1* hist_template, int dim) :
 	for(unsigned int i = 0; i < _cutmasks.size(); ++i) {
 		int cutmask = _cutmasks.at(i);
 		sstr<<hist_template->GetName()<<"_";
-		for(unsigned int j = no_cuts-1; j > 0; --j) {
+		for(int j = no_cuts-1; j >= 0; --j) {
 			if((cutmask>>j)&0x1) {
 				sstr<<"1";
 			} else {
 				sstr<<"0";
 			}
 		}
-		sstr.str("");
 		TH1* new_hist = dynamic_cast<TH1*>(hist_template->Clone(sstr.str().c_str()));
 		assert(new_hist != NULL);
+		sstr.str("");
 		sstr<<hist_template->GetTitle();
 		sstr<<" "<<cutter->get_abbreviations(cutmask);
 		new_hist->SetTitle(sstr.str().c_str());
@@ -49,30 +51,19 @@ hlib::Plot::Plot(std::vector<int> cutmasks, TH1* hist_template, int dim) :
 
 };
 
-void hlib::Plot::fill(int cutmask, double data1, double data2) {
+void hlib::Plot::fill(int cutmask) {
 
 	for(unsigned int i = 0; i < _cutmasks.size(); ++i) {
-		if((~_cutmasks.at(i)&~cutmask) == _cutmasks.at(i)) {
-			if(_dim == 1) {
-				assert(data2 == -999999999.);
+		if(((~_cutmasks.at(i))&(~cutmask)) == (~_cutmasks.at(i))) {
+			assert(_data1 != NULL);
+			if(_data2 == NULL) {
+				double data1 = *_data1;
 				_histograms.at(i)->Fill(data1);
 			} else {
-				assert(data2 != -999999999.);
-				_histograms.at(i)->Fill(data1, data2);
+				_histograms.at(i)->Fill(*_data1, *_data2);
 			}
 		}
 	}
 
 }
 
-std::vector<TH1*> hlib::Plot::get_histograms() {
-
-	std::vector<TH1*> hists;
-
-	for(unsigned int i = 0; i < _cutmasks.size(); ++i) {
-
-	};
-
-	return hists;
-
-};

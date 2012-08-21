@@ -11,16 +11,23 @@ namespace hlib {
 
 	class Plot {
 
-		Plot(std::vector<int> cutmasks, TH1* hist_template, int dim = 1);
+	  public:
 
-		void fill(int cutmask, double data1, double data2 = -999999999.);
+		Plot(std::vector<int> cutmasks, TH1* hist_template, double* data1, double* data2 = NULL);
 
-		std::vector<TH1*> get_histograms();
+		void fill(int cutmask);
+
+		std::vector<TH1*> get_histograms() { return _histograms; };
+
+		const TH1* get_template() const { return _hist_template; };
 
 	  private:
 		std::vector<int> _cutmasks;
+		TH1* _hist_template;
 		std::vector<TH1*> _histograms;
-		int _dim;
+
+		double* _data1;
+		double* _data2;
 
 	};
 
