@@ -17,11 +17,11 @@ TLorentzVector hlib::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX)
 	double a0 = (PION_MASS * PION_MASS) * p3_Tot_Mag * TMath::Cos(theta);
 	double a1 = (PROTON_MASS * E_tot) - 0.5 * (pX.M2() + (PION_MASS * PION_MASS));
 	double a2 = PROTON_MASS - E_tot + (p3_Tot_Mag * TMath::Cos(theta));
-	double E_beam = (a1/a2) * (1 + (0.5 * (std::sqrt(1 + ((2*a2*a0)/(a1*a1)))-1)));
+	double E_beam = (a1/(2*a2)) * (1 + std::sqrt(1 + ((2*a2*a0)/(a1*a1))));
 	double p_beam = std::sqrt((E_beam * E_beam) - (PION_MASS * PION_MASS));
 	p3_beam.SetMag(p_beam);
 	TLorentzVector pBeam;
-	pBeam.SetXYZM(p3_beam.X(), p3_beam.Y(), p3_beam.Z(), PROTON_MASS);
+	pBeam.SetXYZM(p3_beam.X(), p3_beam.Y(), p3_beam.Z(), PION_MASS);
 	return pBeam;
 
 };

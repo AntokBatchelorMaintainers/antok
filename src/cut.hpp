@@ -180,11 +180,11 @@ namespace hlib {
 		TPrime(double tmin, double tmax, int num = 0);
 		inline bool operator() (const hlib::Event& event) const {
 			if (_tmin >= 0. && _tmax >= 0.) {
-				return ((event.get_tPrime() < _tmin) || (event.get_tPrime() > _tmax));
+				return ((event.get_tPrime() <= _tmin) || (event.get_tPrime() >= _tmax));
 			} else if (_tmin < 0. && _tmax >= 0.) {
-				return (event.get_tPrime() > _tmax);
+				return (event.get_tPrime() >= _tmax);
 			} else if (_tmin >= 0. && _tmax < 0.) {
-				return (event.get_tPrime() < _tmin);
+				return (event.get_tPrime() <= _tmin);
 			} else {
 				return false;
 			}
@@ -203,7 +203,7 @@ namespace hlib {
 		sstr<<"t' in ]"<<_tmin<<","<<_tmax<<"[";
 		longname = sstr.str();
 		abbreviation = "tp";
-		if(num == 0) {
+		if(num != 0) {
 			sstr.str("");
 			sstr<<abbreviation<<num;
 			abbreviation = sstr.str();
@@ -229,7 +229,8 @@ namespace hlib {
 
 	  public:
 		Exclusivity(double mean, double win, int num = 0);
-		bool operator() (const hlib::Event& event) const { return (std::fabs(event.get_pSum().Energy()-_mean) > _win); };
+//		bool operator() (const hlib::Event& event) const { return (std::fabs(event.get_pSum().Energy()-_mean) > _win); };
+		bool operator() (const hlib::Event& event) const { return (std::fabs(event.get_pBeam().Energy()-_mean) >= _win); };
 
 	  private:
 		double _mean;

@@ -19,6 +19,15 @@ hlib::Plotter::Plotter() {
 	standard_cutmasks.push_back(510);
 	standard_cutmasks.push_back(511);
 
+	standard_cutmasks.push_back(48);
+	standard_cutmasks.push_back(56);
+	standard_cutmasks.push_back(112);
+	standard_cutmasks.push_back(120);
+	standard_cutmasks.push_back(176);
+	standard_cutmasks.push_back(184);
+	standard_cutmasks.push_back(240);
+	standard_cutmasks.push_back(248);
+
 	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("mass_5pi", "mass_5Pi", 500, 0, 7), &XMass));
 	cutmasks.clear();
