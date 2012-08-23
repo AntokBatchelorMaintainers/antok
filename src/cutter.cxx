@@ -9,6 +9,7 @@ hlib::Cutter* hlib::Cutter::_cutter = NULL;
 hlib::Cutter* hlib::Cutter::instance() {
 	if(_cutter == NULL) {
 		_cutter = new hlib::Cutter();
+		_cutter->_statsHist = NULL;
 	}
 	return _cutter;
 }
@@ -31,9 +32,13 @@ hlib::Cutter::Cutter() {
 int hlib::Cutter::get_cutmask(const hlib::Event& event) {
 
 	int cutmask = 0;
+	bool cut_previously = false;
 	for(unsigned int i = 0; i < _cuts.size(); ++i) {
 		if((*(_cuts.at(i)))(event)) {
 			cutmask += (1<<i);
+			cut_previously = true;
+		} else if (!cut_previously) {
+			_statsHist->Fill(((_cuts.at(i))->get_longname()).c_str(), 1);
 		}
 	}
 	return cutmask;
@@ -68,6 +73,16 @@ std::string hlib::Cutter::get_abbreviations(int bitmask) {
 	return retval;
 
 };
+
+bool hlib::Cutter::set_stats_histogram(TH1D* stats) {
+
+	if(_statsHist != NULL) {
+		return false;
+	}
+	_statsHist = stats;
+	return true;
+
+}
 
 hlib::Cutter::~Cutter() {
 

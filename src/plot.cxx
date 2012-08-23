@@ -5,7 +5,7 @@
 #include<cutter.h>
 #include<plot.h>
 
-hlib::Plot::Plot(std::vector<int> cutmasks, TH1* hist_template, double* data1, double* data2) :
+hlib::Plot::Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1, double* data2) :
 		_cutmasks(cutmasks),
 		_hist_template(hist_template),
 		_data1(data1),

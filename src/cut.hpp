@@ -42,6 +42,7 @@ namespace hlib {
 		shortname = sstr.str();
 		sstr.str("");
 		sstr<<"Trigger Mask & "<<std::hex<<_trigmask;
+		longname = sstr.str();
 		abbreviation = "tm";
 		if(num != 0) {
 			sstr.str("");
@@ -168,7 +169,7 @@ namespace hlib {
 	};
 	inline CedarKaon::CedarKaon() {
 		shortname = "isKaon=0";
-		longname = "isKaon = ";
+		longname = "isKaon = 0";
 		abbreviation = "ik";
 	};
 

@@ -133,38 +133,10 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	tree_chain->SetBranchAddress("zmax4", &data.zmax4);
 	tree_chain->SetBranchAddress("zmax5", &data.zmax5);
 
-
-/*	std::vector<TH1*> hists;
-
 	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
-	//	TH1D* stats_pre = (TH1D*)infile->Get("fhaas/statistic");
 	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
-	hists.push_back(stats);
-	//	TH1D* mass_5pi = new TH1D("mass_5pi", "mass_5Pi", 500, 0, 7);
-	//	hists.push_back(mass_5pi);
-	TH1D* mom_5pi = new TH1D("mom_5pi", "mom_5Pi", 500, 0, 250);
-	hists.push_back(mom_5pi);
-	TH1D* mom_5pi_raw = new TH1D("mom_5pi_raw", "mom_5Pi_raw", 500, 0, 250);
-	hists.push_back(mom_5pi_raw);
-	TH1D* calc_beam_E = new TH1D("calc_beam_E", "calc_beam_E", 500, 0, 250);
-	hists.push_back(calc_beam_E);
-	TH1D* rpd_mult = new TH1D("rpd_mult", "rpd_mult", 10, 0, 10);
-	hists.push_back(rpd_mult);
-	TH1D* rpd_Pxh = new TH1D("rpd_Px", "rpd_Px", 1000, 0, 10);
-	hists.push_back(rpd_Pxh);
-	TH2D* vtx_pos = new TH2D("vtx_pos", "vtx_pos", 1000, -5, 5, 1000, -5, 5);
-	vtx_pos->SetDrawOption("colz");
-	hists.push_back(vtx_pos);
-	TH1D* vtx_zh = new TH1D("vtx_z", "vtx_z", 2000, -200, 200);
-	hists.push_back(vtx_zh);
-	TH1D* t_primh = new TH1D("t_prime", "t_prime", 1000, -5, 5);
-	hists.push_back(t_primh);
-	TH1D* delta_phih = new TH1D("delta_phi", "delta_phi", 500, -7, 7);
-	hists.push_back(delta_phih);
-	TH1D* trig_maskh = new TH1D("trigger_mask", "trigger_mask", 15, 0, 15);
-	hists.push_back(trig_maskh);
 
-	int test = 0;*/
+	assert(cutter->set_stats_histogram(stats));
 
 	for(unsigned int i = 0; i < tree_chain->GetEntries(); ++i) {
 
@@ -179,84 +151,11 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 		plotter.fill(event, cutmask);
 
-/*		stats->Fill("All events", 1);
-
-		trig_maskh->Fill(data.TrigMask);
-		if(!(data.TrigMask&0x1)) {
-		continue;
-		}
-		stats->Fill("Trigger Mask = 1", 1);
-
-		vtx_zh->Fill(data.Z_primV);
-		if((data.Z_primV > -28.4) || (data.Z_primV < -68.4)) {
-		continue;
-		}
-		stats->Fill("Vertex z in ]-28.4,-68.4[", 1);
-
-		vtx_pos->Fill(data.X_primV, data.Y_primV);
-		if(std::pow(data.X_primV, 2) + std::pow(data.Y_primV, 2) > 3.0625) {
-		continue;
-		}
-		stats->Fill("Vertex.R() < 1.75", 1);
-
-		rpd_mult->Fill(data.nbrRPDTracks);
-		if(data.nbrRPDTracks != 1) {
-		continue;
-		}
-		stats->Fill("1 RPD track", 1);
-
-		rpd_Pxh->Fill(event.get_pProton().M());
-		if(event.get_pProton().M() < 0.2) {
-		continue;
-		}
-		stats->Fill("Proton mass > 0.2", 1);
-
-		if(data.isKaon != 0) {
-		continue;
-		}
-		stats->Fill("data.isKaon = 0", 1);
-
-		t_primh->Fill(event.get_tPrime());
-
-		if(event.get_tPrime() < 0.1) {
-		continue;
-		}
-		stats->Fill("T-prime > 0.1", 1);
-
-		mom_5pi_raw->Fill(event.get_pSum().Energy());
-
-		delta_phih->Fill(event.get_RpdDeltaPhi());
-		if(std::fabs(event.get_RpdDeltaPhi()) > event.get_RpdPhiRes()) {
-		continue;
-		}
-		stats->Fill("RPD planarity cut", 1);
-
-		mom_5pi->Fill(event.get_pSum().Energy());
-		calc_beam_E->Fill(event.get_pBeam().E());
-		if(std::fabs(event.get_pSum().Energy()-191.) > 3.28) {
-		continue;
-		}
-		stats->Fill("Exclusivity 191+-3.28GeV", 1);
-
-//		mass_5pi->Fill(event.get_pSum().M());
-
-assert(cutter->get_cutmask(event) == 0);
-assert(test == 1);
-test = 0;
-
-//		out_tree->Fill();
- */
 	}
 
 	plotter.save(outfile);
-
-	/*	outfile->cd();
-		out_tree->Write();
-		outfile->mkdir("Histograms");
-		outfile->Cd("Histograms");
-		for(unsigned int i = 0; i < hists.size(); ++i) {
-		hists.at(i)->Write();
-		}*/
+	outfile->cd();
+	(cutter->get_stats_histogram())->Write();
 
 	infile->Close();
 	outfile->Close();

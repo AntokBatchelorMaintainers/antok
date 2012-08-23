@@ -4,6 +4,8 @@
 #include<string>
 #include<vector>
 
+#include<TH1D.h>
+
 #include<cut.hpp>
 #include<event.h>
 
@@ -21,6 +23,9 @@ namespace hlib {
 
 		unsigned int get_no_cuts() { return _cuts.size(); };
 
+		bool set_stats_histogram(TH1D* stats);
+		TH1D* get_stats_histogram() { return _statsHist; };
+
 	  private:
 
 		Cutter();
@@ -29,6 +34,8 @@ namespace hlib {
 		static Cutter* _cutter;
 
 		std::vector<hlib::Cut*> _cuts;
+
+		TH1D* _statsHist;
 
 	};
 

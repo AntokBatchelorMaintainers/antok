@@ -13,7 +13,7 @@ namespace hlib {
 
 	  public:
 
-		Plot(std::vector<int> cutmasks, TH1* hist_template, double* data1, double* data2 = NULL);
+		Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1, double* data2 = NULL);
 
 		void fill(int cutmask);
 
