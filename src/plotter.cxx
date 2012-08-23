@@ -6,72 +6,68 @@
 hlib::Plotter::Plotter() {
 
 	std::vector<int> cutmasks;
+	std::vector<int> standard_cutmasks;
 
-	cutmasks.push_back(0);
-	cutmasks.push_back(256);
-	cutmasks.push_back(0x1ff);
+	standard_cutmasks.push_back(0);
+	standard_cutmasks.push_back(256);
+	standard_cutmasks.push_back(384);
+	standard_cutmasks.push_back(448);
+	standard_cutmasks.push_back(480);
+	standard_cutmasks.push_back(496);
+	standard_cutmasks.push_back(504);
+	standard_cutmasks.push_back(508);
+	standard_cutmasks.push_back(510);
+	standard_cutmasks.push_back(511);
+
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("mass_5pi", "mass_5Pi", 500, 0, 7), &XMass));
 	cutmasks.clear();
 
-	cutmasks.push_back(0);
-	cutmasks.push_back(256);
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(128);
-	cutmasks.push_back(384);
-	cutmasks.push_back(0x1ff);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("mom_5pi", "mom_5Pi", 500, 0, 250), &XMom));
 	cutmasks.clear();
 
-	cutmasks.push_back(0);
-	cutmasks.push_back(256);
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(128);
-	cutmasks.push_back(384);
-	cutmasks.push_back(0x1ff);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("calc_beam_E", "calc_beam_E", 500, 0, 250), &CalcBeamE));
 	cutmasks.clear();
 
-	cutmasks.push_back(0);
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(8);
 	cutmasks.push_back(264);
 	cutmasks.push_back(136);
 	cutmasks.push_back(392);
-	cutmasks.push_back(0x1ff);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("rpd_mult", "rpd_mult", 10, 0, 10), &RPDMult));
 	cutmasks.clear();
 
-	cutmasks.push_back(0);
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(16);
-	cutmasks.push_back(0x1ff);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("rpd_P_mass", "rpd_P_mass", 1000, 0, 10), &ProtonMass));
 	cutmasks.clear();
 
-	cutmasks.push_back(0);
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(4);
-	cutmasks.push_back(0x1ff);
 	_plots.push_back(hlib::Plot(cutmasks, new TH2D("vtx_pos", "vtx_pos", 1000, -5, 5, 1000, -5, 5), &PrimVX, &PrimVY));
 	cutmasks.clear();
 
-	cutmasks.push_back(0);
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(2);
-	cutmasks.push_back(0x1ff);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("vtx_z", "vtx_z", 2000, -200, 200), &PrimVZ));
 	cutmasks.clear();
 
-	cutmasks.push_back(0);
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(64);
-	cutmasks.push_back(0x1ff);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("t_prime", "t_prime", 1000, -5, 5), &TPrim));
 	cutmasks.clear();
 
-	cutmasks.push_back(0);
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(128);
-	cutmasks.push_back(384);
-	cutmasks.push_back(0x1ff);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("delta_phi", "delta_phi", 500, -7, 7), &RPDDeltaPhi));
 	cutmasks.clear();
 
-	cutmasks.push_back(0);
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(1);
-	cutmasks.push_back(0x1ff);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("trigger_mask", "trigger_mask", 15, 0, 15), &TrigMask));
 	cutmasks.clear();
 

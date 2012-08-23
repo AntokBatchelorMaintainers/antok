@@ -15,15 +15,16 @@ hlib::Cutter* hlib::Cutter::instance() {
 
 hlib::Cutter::Cutter() {
 
-	_cuts.push_back(new TrigMask(0x1));				// 1
-	_cuts.push_back(new VrtxZ(-28.4, -68.4));		// 2
-	_cuts.push_back(new VrtxR(1.75));				// 4
-	_cuts.push_back(new nRPDTracks(1));				// 8
-	_cuts.push_back(new RPDProtMass(0.2));			// 16
-	_cuts.push_back(new CedarKaon());				// 32
-	_cuts.push_back(new TPrime(0.1, -1.));			// 64
-	_cuts.push_back(new RPDPlanarity());			// 128
-	_cuts.push_back(new Exclusivity(191., 3.28));	// 256
+													// No cuts: 511
+	_cuts.push_back(new TrigMask(0x1));				// 1	510
+	_cuts.push_back(new VrtxZ(-28.4, -68.4));		// 2	508
+	_cuts.push_back(new VrtxR(1.75));				// 4	504
+	_cuts.push_back(new nRPDTracks(1));				// 8	496
+	_cuts.push_back(new RPDProtMass(0.2));			// 16	480
+	_cuts.push_back(new CedarKaon());				// 32	448
+	_cuts.push_back(new TPrime(0.1, -1.));			// 64	384
+	_cuts.push_back(new RPDPlanarity());			// 128	256
+	_cuts.push_back(new Exclusivity(191., 3.28));	// 256	0
 
 }
 
