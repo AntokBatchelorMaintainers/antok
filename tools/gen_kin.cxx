@@ -12,6 +12,7 @@
 #include<TLorentzVector.h>
 
 #include<constants.h>
+#include<basic_calcs.h>
 
 void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 
@@ -56,6 +57,8 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 
 	int isKaon;
 
+	double gradx, grady;
+
 	intree->SetBranchAddress("Mom_x1", &px1);
 	intree->SetBranchAddress("Mom_y1", &py1);
 	intree->SetBranchAddress("Mom_z1", &pz1);
@@ -72,6 +75,8 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 	intree->SetBranchAddress("Mom_y5", &py5);
 	intree->SetBranchAddress("Mom_z5", &pz5);
 	intree->SetBranchAddress("isKaon", &isKaon);
+	intree->SetBranchAddress("gradx", &gradx);
+	intree->SetBranchAddress("grady", &grady);
 
 	std::vector<TH1*> hists;
 	hists.push_back(new TH1D("5_pi_mass", "5 Pion Mass", 1000, 0., 7.));
@@ -112,6 +117,9 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 	hists.push_back(new TH2D("4_pi_mass_ag_rapidity", "4 Pion Mass against Rapidity", 250, 0.5, 3.5, 1000, 0., 10.));
 	hists.push_back(new TH2D("5_pi_mass_ag_rapidity", "5 Pion Mass against Rapidity", 250, 0.5, 3.5, 1000, 0., 10.));
 
+	hists.push_back(new TH2D("4_pi_mass_ag_tp", "4 Pion Mass against t prime", 250, 0.5, 3.5, 1000, 0.1, 1.));
+	hists.push_back(new TH2D("5_pi_mass_ag_tp", "5 Pion Mass against t prime", 250, 0.5, 3.5, 1000, 0.1, 1.));
+
 	for(unsigned int i = 0; i < intree->GetEntries(); ++i) {
 
 		intree->GetEntry(i);
@@ -123,6 +131,15 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 		p5.SetXYZM(px5, py5, pz5, PION_MASS);
 
 		pTot = p1+p2+p3+p4+p5;
+
+		TVector3 p3Beam;
+		p3Beam.SetXYZ(gradx, grady, 1.);
+		TLorentzVector pBeam = hlib::get_beam_energy(p3Beam, pTot);
+		p3Beam = pBeam.Vect();
+
+		double t = std::fabs((pBeam - pTot).Mag2());
+		double tMin = std::fabs((std::pow(pTot.M2() - pBeam.M2(), 2)) / (4. * p3Beam.Mag2()));
+		double tPrime = t - tMin;
 
 		hists.at(0)->Fill(pTot.M());
 		hists.at(1)->Fill((p1+p2+p4+p5).M());
@@ -218,6 +235,11 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 
 		hists.at(10 + bounds.size())->Fill((p1+p2+p3+p4+p5).M(), p_max_rap->Rapidity());
 
+		hists.at(11 + bounds.size())->Fill((p1+p2+p4+p5).M(), tPrime);
+		hists.at(11 + bounds.size())->Fill((p1+p3+p4+p5).M(), tPrime);
+		hists.at(11 + bounds.size())->Fill((p2+p3+p4+p5).M(), tPrime);
+
+		hists.at(12 + bounds.size())->Fill((p1+p2+p3+p4+p5).M(), tPrime);
 
 
 	}
