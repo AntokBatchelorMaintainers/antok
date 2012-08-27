@@ -31,8 +31,14 @@ namespace hlib {
 		double PrimVZ;
 		double ProtonMass;
 		double TPrim;
-		double RPDDeltaPhi;
 		double TrigMask;
+
+		double RPDDeltaPhi;
+		double RPDPhiRes;
+		double RPDDeltaPhi_fhaas;
+		double RPDPhiRes_fhaas;
+		double RPDDeltaPhiAbs;
+		double RPDDeltaPhiAbs_fhaas;
 
 	  private:
 

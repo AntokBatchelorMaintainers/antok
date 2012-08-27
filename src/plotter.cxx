@@ -79,15 +79,26 @@ hlib::Plotter::Plotter() {
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("t_prime", "t_prime", 1000, -5, 5), &TPrim));
 	cutmasks.clear();
 
-	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
+/*	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(128);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("delta_phi", "delta_phi", 500, -7, 7), &RPDDeltaPhi));
-	cutmasks.clear();
+	cutmasks.clear();*/
 
 	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(1);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("trigger_mask", "trigger_mask", 15, 0, 15), &TrigMask));
 	cutmasks.clear();
+
+	cutmasks.push_back(384);
+	_plots.push_back(hlib::Plot(cutmasks, new TH1D("delta_phi", "delta_phi", 500, -7, 7), &RPDDeltaPhi));
+	_plots.push_back(hlib::Plot(cutmasks, new TH1D("delta_phi_fhaas", "delta_phi", 500, -7, 7), &RPDDeltaPhi_fhaas));
+	_plots.push_back(hlib::Plot(cutmasks, new TH2D("delta_phi_comparison", "delta_phi_comparison", 1000, -7, 7, 1000, -7, 7), &RPDDeltaPhi, &RPDDeltaPhi_fhaas));
+	_plots.push_back(hlib::Plot(cutmasks, new TH1D("delta_phi_abs", "delta_abs_phi", 500, -7, 7), &RPDDeltaPhiAbs));
+	_plots.push_back(hlib::Plot(cutmasks, new TH1D("delta_phi_abs_fhaas", "delta_abs_phi", 500, -7, 7), &RPDDeltaPhiAbs_fhaas));
+	_plots.push_back(hlib::Plot(cutmasks, new TH2D("delta_phi_abs_comparison", "delta_phi_abs_comparison", 1000, -7, 7, 1000, -7, 7), &RPDDeltaPhiAbs, &RPDDeltaPhiAbs_fhaas));
+	_plots.push_back(hlib::Plot(cutmasks, new TH1D("phi_res", "phi_res", 500, -7, 7), &RPDPhiRes));
+	_plots.push_back(hlib::Plot(cutmasks, new TH1D("phi_res_fhaas", "phi_res_fhaas", 500, -7, 7), &RPDPhiRes_fhaas));
+	_plots.push_back(hlib::Plot(cutmasks, new TH2D("phi_res_comparison", "phi_res_comparison", 500, -7, 7, 500, -7, 7), &RPDPhiRes, &RPDPhiRes_fhaas));
 
 };
 
@@ -104,6 +115,13 @@ void hlib::Plotter::fill(const hlib::Event& event, int cutmask) {
 	TPrim = event.get_tPrime();
 	RPDDeltaPhi = event.get_RpdDeltaPhi();
 	TrigMask = event.rawData->TrigMask;
+
+	RPDPhiRes = event.get_RpdPhiRes();
+	RPDDeltaPhi_fhaas = event.get_RpdDeltaPhi_fhaas();
+	RPDPhiRes_fhaas = event.get_RpdPhiRes_fhaas();
+	RPDDeltaPhiAbs = std::fabs(RPDDeltaPhi);
+	RPDDeltaPhiAbs_fhaas = std::fabs(RPDDeltaPhi_fhaas);
+
 
 	for(unsigned int i = 0; i < _plots.size(); ++i) {
 		_plots.at(i).fill(cutmask);

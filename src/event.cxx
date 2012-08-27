@@ -41,6 +41,7 @@ void hlib::Event::update(const hlib::Data& data) {
 	_tPrime = _t - _tMin;
 
 	hlib::get_RPD_delta_phi_res(_pBeam, _pProton, _pSum, _RpdDeltaPhi, _RpdPhiRes);
+	hlib::get_RPD_delta_phi_res_fhaas(_pBeam, _pProton, _pSum, _RpdDeltaPhi_fhaas, _RpdPhiRes_fhaas);
 
 };
 

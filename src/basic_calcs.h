@@ -13,6 +13,11 @@ namespace hlib {
 							   const TLorentzVector& pX,
 							   double& delta_phi, double& res);
 
+	void get_RPD_delta_phi_res_fhaas(const TLorentzVector& pBeam,
+							         const TLorentzVector& pProton,
+							         const TLorentzVector& pX,
+							         double& delta_phi, double& res);
+
 }
 
 #endif

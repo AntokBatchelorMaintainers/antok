@@ -3,6 +3,7 @@
 #include<constants.hpp>
 
 #include<TLorentzVector.h>
+#include<TLorentzRotation.h>
 #include<TVector3.h>
 
 TLorentzVector hlib::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX) {
@@ -59,3 +60,36 @@ void hlib::get_RPD_delta_phi_res(const TLorentzVector& pBeam,
 
 };
 
+void hlib::get_RPD_delta_phi_res_fhaas(const TLorentzVector& pBeam,
+                                       const TLorentzVector& pProton,
+                                       const TLorentzVector& pX,
+                                       double& delta_phi, double& res)
+{
+
+	double rpd_Phi = pProton.Phi();
+	rpd_Phi /= TMath::TwoPi();
+
+	if(rpd_Phi < 0.) rpd_Phi += 1.;
+	int hit_slat = (int)((rpd_Phi*24.) + 0.5);
+	if(hit_slat >= 24) hit_slat -= 24;
+	if(hit_slat % 2) res = 3.75;
+	else res = 7.5;
+	res = (res/180.)*TMath::Pi();
+
+	TVector3 z(0.,0.,1.);
+	double angle = pBeam.Vect().Angle(z);
+	TVector3 ra = pBeam.Vect().Cross(z);
+	TRotation r;
+	r.Rotate(angle, ra);
+	TLorentzRotation Tr(r);
+
+	TLorentzVector proton_lab(pProton);
+	TLorentzVector pX_lab(pX);
+	proton_lab.Transform(Tr);
+	pX_lab.Transform(Tr);
+
+
+	delta_phi = std::fabs(pX_lab.Phi() - proton_lab.Phi()) - TMath::Pi();
+	res = std::sqrt(res*res + 0.067260*0.067260);
+
+};

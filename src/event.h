@@ -32,6 +32,9 @@ namespace hlib {
 		const double& get_RpdDeltaPhi() const { return _RpdDeltaPhi; };
 		const double& get_RpdPhiRes() const { return _RpdPhiRes; };
 
+		const double& get_RpdDeltaPhi_fhaas() const { return _RpdDeltaPhi_fhaas; };
+		const double& get_RpdPhiRes_fhaas() const { return _RpdPhiRes_fhaas; };
+
 		const hlib::Data* rawData;
 
 	  private:
@@ -57,6 +60,9 @@ namespace hlib {
 
 		double _RpdDeltaPhi;
 		double _RpdPhiRes;
+
+		double _RpdDeltaPhi_fhaas;
+		double _RpdPhiRes_fhaas;
 
 	};
 
