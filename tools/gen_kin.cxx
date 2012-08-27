@@ -11,7 +11,7 @@
 #include<TH2D.h>
 #include<TLorentzVector.h>
 
-#include<constants.h>
+#include<constants.hpp>
 #include<basic_calcs.h>
 
 void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {

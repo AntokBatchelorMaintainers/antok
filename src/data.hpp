@@ -2,6 +2,8 @@
 #ifndef HLIB_DATA_H
 #define HLIB_DATA_H
 
+#include<constants.hpp>
+
 namespace hlib {
 
 	struct Data {
@@ -18,37 +20,16 @@ namespace hlib {
 		double gradx;
 		double grady;
 
-		double Mom_x1;
-		double Mom_x2;
-		double Mom_x3;
-		double Mom_x4;
-		double Mom_x5;
+		std::vector<double> Mom_x;
+		std::vector<double> Mom_y;
+		std::vector<double> Mom_z;
 
-		double Mom_y1;
-		double Mom_y2;
-		double Mom_y3;
-		double Mom_y4;
-		double Mom_y5;
+		std::vector<double> z_max;
 
-		double Mom_z1;
-		double Mom_z2;
-		double Mom_z3;
-		double Mom_z4;
-		double Mom_z5;
+		std::vector<double> theta_RICH;
+		std::vector<int> PID_RICH;
 
 		double chi2PV;
-
-		double theta_RICH_1;
-		double theta_RICH_2;
-		double theta_RICH_3;
-		double theta_RICH_4;
-		double theta_RICH_5;
-
-		int PID_RICH_1;
-		int PID_RICH_2;
-		int PID_RICH_3;
-		int PID_RICH_4;
-		int PID_RICH_5;
 
 		double RPD_Px;
 		double RPD_Py;
@@ -64,11 +45,14 @@ namespace hlib {
 
 		int isKaon;
 
-		double zmax1;
-		double zmax2;
-		double zmax3;
-		double zmax4;
-		double zmax5;
+	Data() {
+			Mom_x.resize(hlib::N_PARTICLES);
+			Mom_y.resize(hlib::N_PARTICLES);
+			Mom_z.resize(hlib::N_PARTICLES);
+			z_max.resize(hlib::N_PARTICLES);
+			theta_RICH.resize(hlib::N_PARTICLES);
+			PID_RICH.resize(hlib::N_PARTICLES);
+		}
 
 	};
 

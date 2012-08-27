@@ -3,6 +3,15 @@
 
 #include<plotter.h>
 
+hlib::Plotter* hlib::Plotter::_plotter = NULL;
+
+hlib::Plotter* hlib::Plotter::instance() {
+	if(_plotter == NULL) {
+		_plotter = new hlib::Plotter();
+	}
+	return _plotter;
+}
+
 hlib::Plotter::Plotter() {
 
 	std::vector<int> cutmasks;

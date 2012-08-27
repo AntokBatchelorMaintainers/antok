@@ -1,5 +1,6 @@
 
 #include<iostream>
+#include<sstream>
 
 #include<TApplication.h>
 #include<TChain.h>
@@ -15,7 +16,7 @@
 #include<TVector3.h>
 
 #include<basic_calcs.h>
-#include<constants.h>
+#include<constants.hpp>
 #include<cutter.h>
 #include<data.hpp>
 #include<event.h>
@@ -65,9 +66,9 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	TTree* out_tree = tree_chain->CloneTree(0);
 
 	hlib::Data data;
-	hlib::Event event;
+	hlib::Event* event = hlib::Event::instance();
 	hlib::Cutter* cutter = hlib::Cutter::instance();
-	hlib::Plotter plotter;
+	hlib::Plotter* plotter = hlib::Plotter::instance();
 
 	tree_chain->SetBranchAddress("Run", &data.Run);
 	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
@@ -81,37 +82,28 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	tree_chain->SetBranchAddress("gradx", &data.gradx);
 	tree_chain->SetBranchAddress("grady", &data.grady);
 
-	tree_chain->SetBranchAddress("Mom_x1", &data.Mom_x1);
-	tree_chain->SetBranchAddress("Mom_x2", &data.Mom_x2);
-	tree_chain->SetBranchAddress("Mom_x3", &data.Mom_x3);
-	tree_chain->SetBranchAddress("Mom_x4", &data.Mom_x4);
-	tree_chain->SetBranchAddress("Mom_x5", &data.Mom_x5);
-
-	tree_chain->SetBranchAddress("Mom_y1", &data.Mom_y1);
-	tree_chain->SetBranchAddress("Mom_y2", &data.Mom_y2);
-	tree_chain->SetBranchAddress("Mom_y3", &data.Mom_y3);
-	tree_chain->SetBranchAddress("Mom_y4", &data.Mom_y4);
-	tree_chain->SetBranchAddress("Mom_y5", &data.Mom_y5);
-
-	tree_chain->SetBranchAddress("Mom_z1", &data.Mom_z1);
-	tree_chain->SetBranchAddress("Mom_z2", &data.Mom_z2);
-	tree_chain->SetBranchAddress("Mom_z3", &data.Mom_z3);
-	tree_chain->SetBranchAddress("Mom_z4", &data.Mom_z4);
-	tree_chain->SetBranchAddress("Mom_z5", &data.Mom_z5);
+	for(unsigned int i = 0; i < hlib::N_PARTICLES; ++i) {
+		std::stringstream sstr;
+		sstr<<"Mom_x"<<(i + 1);
+		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.Mom_x.at(i));
+		sstr.str("");
+		sstr<<"Mom_y"<<(i + 1);
+		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.Mom_y.at(i));
+		sstr.str("");
+		sstr<<"Mom_z"<<(i + 1);
+		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.Mom_z.at(i));
+		sstr.str("");
+		sstr<<"theta_RICH_"<<(i + 1);
+		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.theta_RICH.at(i));
+		sstr.str("");
+		sstr<<"PID_RICH_"<<(i + 1);
+		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.PID_RICH.at(i));
+		sstr.str("");
+		sstr<<"zmax"<<(i + 1);
+		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.z_max.at(i));
+	}
 
 	tree_chain->SetBranchAddress("chi2PV", &data.chi2PV);
-
-	tree_chain->SetBranchAddress("theta_RICH_1", &data.theta_RICH_1);
-	tree_chain->SetBranchAddress("theta_RICH_2", &data.theta_RICH_2);
-	tree_chain->SetBranchAddress("theta_RICH_3", &data.theta_RICH_3);
-	tree_chain->SetBranchAddress("theta_RICH_4", &data.theta_RICH_4);
-	tree_chain->SetBranchAddress("theta_RICH_5", &data.theta_RICH_5);
-
-	tree_chain->SetBranchAddress("PID_RICH_1", &data.PID_RICH_1);
-	tree_chain->SetBranchAddress("PID_RICH_2", &data.PID_RICH_2);
-	tree_chain->SetBranchAddress("PID_RICH_3", &data.PID_RICH_3);
-	tree_chain->SetBranchAddress("PID_RICH_4", &data.PID_RICH_4);
-	tree_chain->SetBranchAddress("PID_RICH_5", &data.PID_RICH_5);
 
 	tree_chain->SetBranchAddress("RPD_Px", &data.RPD_Px);
 	tree_chain->SetBranchAddress("RPD_Py", &data.RPD_Py);
@@ -127,12 +119,6 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	tree_chain->SetBranchAddress("isKaon", &data.isKaon);
 
-	tree_chain->SetBranchAddress("zmax1", &data.zmax1);
-	tree_chain->SetBranchAddress("zmax2", &data.zmax2);
-	tree_chain->SetBranchAddress("zmax3", &data.zmax3);
-	tree_chain->SetBranchAddress("zmax4", &data.zmax4);
-	tree_chain->SetBranchAddress("zmax5", &data.zmax5);
-
 	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
 	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
 
@@ -142,18 +128,18 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 		tree_chain->GetEntry(i);
 
-		event.update(data);
+		event->update(data);
 
-		int cutmask = cutter->get_cutmask(event);
+		int cutmask = cutter->get_cutmask(*event);
 		if(cutmask == 0) {
 			out_tree->Fill();
 		}
 
-		plotter.fill(event, cutmask);
+		plotter->fill(*event, cutmask);
 
 	}
 
-	plotter.save(outfile);
+	plotter->save(outfile);
 	outfile->cd();
 	(cutter->get_stats_histogram())->Write();
 

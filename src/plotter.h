@@ -15,7 +15,8 @@ namespace hlib {
 	class Plotter {
 
 	  public:
-		Plotter();
+
+		static Plotter* instance();
 
 		void fill(const hlib::Event& event, int cutmask);
 
@@ -34,6 +35,10 @@ namespace hlib {
 		double TrigMask;
 
 	  private:
+
+		Plotter();
+
+		static Plotter* _plotter;
 
 		std::vector<hlib::Plot> _plots;
 

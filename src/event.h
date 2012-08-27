@@ -1,6 +1,8 @@
 #ifndef HLIB_EVENT_H
 #define HLIB_EVENT_H
 
+#include<vector>
+
 #include<TLorentzVector.h>
 
 #include<data.hpp>
@@ -11,54 +13,50 @@ namespace hlib {
 
 	  public:
 
-		Event() { };
+		static Event* instance();
 
 		void update(const hlib::Data& data);
 
-		const TLorentzVector& get_p1() const { return p1; };
-		const TLorentzVector& get_p2() const { return p2; };
-		const TLorentzVector& get_p3() const { return p3; };
-		const TLorentzVector& get_p4() const { return p4; };
-		const TLorentzVector& get_p5() const { return p5; };
+		const TLorentzVector& get_p(unsigned int n) const { return _p.at(n); };
 
-		const TLorentzVector& get_pSum() const { return pSum; };
-		const TLorentzVector& get_pProton() const { return pProton; };
+		const TLorentzVector& get_pSum() const { return _pSum; };
+		const TLorentzVector& get_pProton() const { return _pProton; };
 
-		const TVector3& get_p3Beam() const { return p3Beam; };
-		const TLorentzVector& get_pBeam() const { return pBeam; };
+		const TVector3& get_p3Beam() const { return _p3Beam; };
+		const TLorentzVector& get_pBeam() const { return _pBeam; };
 
-		const double& get_t() const { return t; };
-		const double& get_tMin() const { return tMin; };
-		const double& get_tPrime() const { return tPrime; };
+		const double& get_t() const { return _t; };
+		const double& get_tMin() const { return _tMin; };
+		const double& get_tPrime() const { return _tPrime; };
 
-		const double& get_RpdDeltaPhi() const { return RpdDeltaPhi; };
-		const double& get_RpdPhiRes() const { return RpdPhiRes; };
+		const double& get_RpdDeltaPhi() const { return _RpdDeltaPhi; };
+		const double& get_RpdPhiRes() const { return _RpdPhiRes; };
 
 		const hlib::Data* rawData;
 
 	  private:
 
+		Event();
+
+		static Event* _event;
+
 		TLorentzVector get_beam_energy(TVector3 p3_beam, const TLorentzVector& LV_X) const;
 
-		TLorentzVector p1;
-		TLorentzVector p2;
-		TLorentzVector p3;
-		TLorentzVector p4;
-		TLorentzVector p5;
+		std::vector<TLorentzVector> _p;
 
-		TLorentzVector pSum;
+		TLorentzVector _pSum;
 
-		TLorentzVector pProton;
+		TLorentzVector _pProton;
 
-		TVector3 p3Beam;
-		TLorentzVector pBeam;
+		TVector3 _p3Beam;
+		TLorentzVector _pBeam;
 
-		double t;
-		double tMin;
-		double tPrime;
+		double _t;
+		double _tMin;
+		double _tPrime;
 
-		double RpdDeltaPhi;
-		double RpdPhiRes;
+		double _RpdDeltaPhi;
+		double _RpdPhiRes;
 
 	};
 

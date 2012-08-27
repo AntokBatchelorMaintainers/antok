@@ -8,6 +8,8 @@ namespace hlib {
 	const double PION_MASS = 0.139567;
 	const double PROTON_MASS = 0.9382723;
 
+	const unsigned int N_PARTICLES = 5;
+
 }
 
 #endif
