@@ -141,6 +141,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	plotter->save(outfile);
 	outfile->cd();
+	out_tree->Write();
 	(cutter->get_stats_histogram())->Write();
 
 	infile->Close();

@@ -17,6 +17,7 @@
 void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 
 	using hlib::PION_MASS;
+	using hlib::CHARGED_KAON_MASS;
 
 	new TApplication("app", 0, NULL);
 
@@ -52,6 +53,12 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 	TLorentzVector p4;
 	double px5, py5, pz5;
 	TLorentzVector p5;
+
+	TLorentzVector k1;
+	TLorentzVector k2;
+	TLorentzVector k3;
+	TLorentzVector k4;
+	TLorentzVector k5;
 
 	TLorentzVector pTot;
 
@@ -120,6 +127,8 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 	hists.push_back(new TH2D("4_pi_mass_ag_tp", "4 Pion Mass against t prime", 250, 0.5, 3.5, 1000, 0.1, 1.));
 	hists.push_back(new TH2D("5_pi_mass_ag_tp", "5 Pion Mass against t prime", 250, 0.5, 3.5, 1000, 0.1, 1.));
 
+	hists.push_back(new TH1D("2_kaon_mass", "2 Kaon (assumption) Subsystem", 1000, 0.9, 2));
+
 	for(unsigned int i = 0; i < intree->GetEntries(); ++i) {
 
 		intree->GetEntry(i);
@@ -129,6 +138,12 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 		p3.SetXYZM(px3, py3, pz3, PION_MASS);
 		p4.SetXYZM(px4, py4, pz4, PION_MASS);
 		p5.SetXYZM(px5, py5, pz5, PION_MASS);
+
+		k1.SetXYZM(px1, py1, pz1, CHARGED_KAON_MASS);
+		k2.SetXYZM(px2, py2, pz2, CHARGED_KAON_MASS);
+		k3.SetXYZM(px3, py3, pz3, CHARGED_KAON_MASS);
+		k4.SetXYZM(px4, py4, pz4, CHARGED_KAON_MASS);
+		k5.SetXYZM(px5, py5, pz5, CHARGED_KAON_MASS);
 
 		pTot = p1+p2+p3+p4+p5;
 
@@ -240,6 +255,13 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 		hists.at(11 + bounds.size())->Fill((p2+p3+p4+p5).M(), tPrime);
 
 		hists.at(12 + bounds.size())->Fill((p1+p2+p3+p4+p5).M(), tPrime);
+
+		hists.at(13 + bounds.size())->Fill((k1+k5).M());
+		hists.at(13 + bounds.size())->Fill((k2+k5).M());
+		hists.at(13 + bounds.size())->Fill((k3+k5).M());
+		hists.at(13 + bounds.size())->Fill((k1+k4).M());
+		hists.at(13 + bounds.size())->Fill((k2+k4).M());
+		hists.at(13 + bounds.size())->Fill((k3+k4).M());
 
 
 	}
