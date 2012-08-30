@@ -12,6 +12,8 @@ namespace hlib {
 	
 	  public:
 
+		virtual ~Cut() { };
+
 		virtual bool operator() (const hlib::Event& event) const = 0;
 
 		std::string get_shortname() const { return shortname; };
