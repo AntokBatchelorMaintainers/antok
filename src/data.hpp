@@ -45,7 +45,7 @@ namespace hlib {
 
 		int isKaon;
 
-	Data() {
+		Data() {
 			Mom_x.resize(hlib::N_PARTICLES);
 			Mom_y.resize(hlib::N_PARTICLES);
 			Mom_z.resize(hlib::N_PARTICLES);
