@@ -20,6 +20,8 @@ namespace hlib {
 		double gradx;
 		double grady;
 
+		double beam_time;
+
 		std::vector<double> Mom_x;
 		std::vector<double> Mom_y;
 		std::vector<double> Mom_z;

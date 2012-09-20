@@ -82,6 +82,8 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	tree_chain->SetBranchAddress("gradx", &data.gradx);
 	tree_chain->SetBranchAddress("grady", &data.grady);
 
+	tree_chain->SetBranchAddress("beam_time", &data.beam_time);
+
 	for(unsigned int i = 0; i < hlib::N_PARTICLES; ++i) {
 		std::stringstream sstr;
 		sstr<<"Mom_x"<<(i + 1);
