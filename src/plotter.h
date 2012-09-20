@@ -32,14 +32,15 @@ namespace hlib {
 		double ProtonMass;
 		double TPrim;
 		double TrigMask;
+		double beam_time;
 
 		double RPDDeltaPhi;
-		double RPDPhiRes;
+/*		double RPDPhiRes;
 		double RPDDeltaPhi_fhaas;
 		double RPDPhiRes_fhaas;
 		double RPDDeltaPhiAbs;
 		double RPDDeltaPhiAbs_fhaas;
-
+*/
 	  private:
 
 		Plotter();
