@@ -90,8 +90,11 @@ hlib::Plotter::Plotter() {
 	cutmasks.clear();
 
 	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
-	cutmasks.push_back(1);
 	_plots.push_back(hlib::Plot(cutmasks, new TH1D("beam_time", "beam_time", 100, -10, 10), &beam_time));
+	cutmasks.clear();
+
+	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
+	_plots.push_back(hlib::Plot(cutmasks, new TH2D("cedar_theta", "cedar_theta", 3000, -300, 300, 3000, -300, 300), &cedarTheta_X, &cedarTheta_Y));
 	cutmasks.clear();
 
 /*	cutmasks.push_back(384);
@@ -121,6 +124,8 @@ void hlib::Plotter::fill(const hlib::Event& event, int cutmask) {
 	RPDDeltaPhi = event.get_RpdDeltaPhi();
 	TrigMask = event.rawData->TrigMask;
 	beam_time = event.rawData->beam_time;
+	cedarTheta_X = event.rawData->cedarTheta_X;
+	cedarTheta_Y = event.rawData->cedarTheta_Y;
 
 /*	RPDPhiRes = event.get_RpdPhiRes();
 	RPDDeltaPhi_fhaas = event.get_RpdDeltaPhi_fhaas();

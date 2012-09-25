@@ -119,7 +119,12 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 	tree_chain->SetBranchAddress("RPD_dEB", &data.RPD_dEB);
 	tree_chain->SetBranchAddress("nbrRPDTracks", &data.nbrRPDTracks);
 
-	tree_chain->SetBranchAddress("isKaon", &data.isKaon);
+	tree_chain->SetBranchAddress("cedarID_bayes", &data.cedarID_bayes);
+	tree_chain->SetBranchAddress("cedarTheta_X", &data.cedarTheta_X);
+	tree_chain->SetBranchAddress("cedarTheta_Y", &data.cedarTheta_Y);
+	tree_chain->SetBranchAddress("cedarProbK1", &data.cedarProbK1);
+	tree_chain->SetBranchAddress("cedarProbK2", &data.cedarProbK2);
+	tree_chain->SetBranchAddress("cedarProbK3", &data.cedarProbK3);
 
 	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
 	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");

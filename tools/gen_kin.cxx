@@ -62,7 +62,7 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 
 	TLorentzVector pTot;
 
-	int isKaon;
+	int cedarID_bayes;
 
 	double gradx, grady;
 
@@ -81,7 +81,7 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 	intree->SetBranchAddress("Mom_x5", &px5);
 	intree->SetBranchAddress("Mom_y5", &py5);
 	intree->SetBranchAddress("Mom_z5", &pz5);
-	intree->SetBranchAddress("isKaon", &isKaon);
+	intree->SetBranchAddress("cedarID_bayes", &cedarID_bayes);
 	intree->SetBranchAddress("gradx", &gradx);
 	intree->SetBranchAddress("grady", &grady);
 

@@ -166,12 +166,12 @@ namespace hlib {
 
 	  public:
 		CedarKaon();
-		bool operator() (const hlib::Event& event) const { return (event.rawData->isKaon != 0); };
+		bool operator() (const hlib::Event& event) const { return (event.rawData->cedarID_bayes != 0); };
 
 	};
 	inline CedarKaon::CedarKaon() {
-		shortname = "isKaon=0";
-		longname = "isKaon = 0";
+		shortname = "cedarID_bayes=0";
+		longname = "cedarID_bayes = 0";
 		abbreviation = "ik";
 	};
 

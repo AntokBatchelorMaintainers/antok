@@ -45,7 +45,12 @@ namespace hlib {
 		double RPD_dEB;
 		int nbrRPDTracks;
 
-		int isKaon;
+		int cedarID_bayes;
+		double cedarTheta_X;
+		double cedarTheta_Y;
+		double cedarProbK1;
+		double cedarProbK2;
+		double cedarProbK3;
 
 		Data() {
 			Mom_x.resize(hlib::N_PARTICLES);

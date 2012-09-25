@@ -33,6 +33,8 @@ namespace hlib {
 		double TPrim;
 		double TrigMask;
 		double beam_time;
+		double cedarTheta_X;
+		double cedarTheta_Y;
 
 		double RPDDeltaPhi;
 /*		double RPDPhiRes;
