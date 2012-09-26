@@ -1,21 +1,11 @@
 
 #include<iostream>
-#include<sstream>
 
 #include<TApplication.h>
-#include<TChain.h>
 #include<TFile.h>
-#include<TMath.h>
+#include<TTree.h>
 #include<TStyle.h>
-#include<TH1D.h>
-#include<TH2D.h>
-#include<TCanvas.h>
-#include<TRotation.h>
-#include<TLorentzVector.h>
-#include<TLorentzRotation.h>
-#include<TVector3.h>
 
-#include<basic_calcs.h>
 #include<constants.hpp>
 #include<cutter.h>
 #include<data.hpp>
