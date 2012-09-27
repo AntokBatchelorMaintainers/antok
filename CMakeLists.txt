@@ -23,7 +23,11 @@ message(STATUS "Using executable output path '${EXECUTABLE_OUTPUT_PATH}'")
 # setup ROOT includes and libraries
 find_package(ROOT 5.26 REQUIRED)
 
+# find yaml
+find_package(YamlCpp 0.3.0 REQUIRED)
+
 set(BANNT_LIB "bannt")
 set(BANNT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src)
 add_subdirectory(src)
 add_subdirectory(tools)
+
