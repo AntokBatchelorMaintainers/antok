@@ -10,6 +10,7 @@
 #include<cutter.h>
 #include<data.hpp>
 #include<event.h>
+#include<initializer.h>
 #include<plotter.h>
 
 #include<assert.h>
@@ -56,9 +57,10 @@ void treereader(char* infilename=0, char* outfilename=0) {
 	TTree* out_tree = tree_chain->CloneTree(0);
 
 	antok::Data data;
-	antok::Event* event = antok::Event::instance();
-	antok::Cutter* cutter = antok::Cutter::instance();
-	antok::Plotter* plotter = antok::Plotter::instance();
+	antok::Initializer* initializer = antok::Initializer::instance();
+	antok::Event& event = initializer->get_event();
+	antok::Cutter& cutter = initializer->get_cutter();
+	antok::Plotter& plotter = initializer->get_plotter();
 
 	tree_chain->SetBranchAddress("Run", &data.Run);
 	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
@@ -119,27 +121,27 @@ void treereader(char* infilename=0, char* outfilename=0) {
 	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
 	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
 
-	assert(cutter->set_stats_histogram(stats));
+	assert(cutter.set_stats_histogram(stats));
 
 	for(unsigned int i = 0; i < tree_chain->GetEntries(); ++i) {
 
 		tree_chain->GetEntry(i);
 
-		event->update(data);
+		event.update(data);
 
-		int cutmask = cutter->get_cutmask(*event);
+		int cutmask = cutter.get_cutmask(event);
 		if(cutmask == 0) {
 			out_tree->Fill();
 		}
 
-		plotter->fill(*event, cutmask);
+		plotter.fill(event, cutmask);
 
 	}
 
-	plotter->save(outfile);
+	plotter.save(outfile);
 	outfile->cd();
 	out_tree->Write();
-	(cutter->get_stats_histogram())->Write();
+	(cutter.get_stats_histogram())->Write();
 
 	infile->Close();
 	outfile->Close();

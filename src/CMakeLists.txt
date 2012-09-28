@@ -9,6 +9,7 @@ set(SOURCES
 	basic_calcs.cxx
 	cutter.cxx
 	event.cxx
+	initializer.cxx
 	plot.cxx
 	plotter.cxx
    )
