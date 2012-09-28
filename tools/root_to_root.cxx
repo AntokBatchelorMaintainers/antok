@@ -20,7 +20,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 	double mass_range_lb = 1.3;		//GeV
 	double mass_range_ub = 4.;		//GeV
 
-	using hlib::PION_MASS;
+	using antok::PION_MASS;
 
 	if((int)(mass_range_ub*1000. - mass_range_lb*1000.) % (int)(bin_width*1000.)) {
 		std::cout<<"Mass bins don't fit into range"<<std::endl;
@@ -132,7 +132,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 		for(unsigned int i = 1; i < 6; ++i) {
 			pSum += particles.at(i);
 		}
-		particles.at(0) = hlib::get_beam_energy(TVector3(gradx, grady, 1.), pSum);
+		particles.at(0) = antok::get_beam_energy(TVector3(gradx, grady, 1.), pSum);
 		double mass = pSum.M();
 
 		// If out of bounds, go to next event

@@ -7,7 +7,7 @@
 
 #include<data.hpp>
 
-namespace hlib {
+namespace antok {
 
 	class Event {
 
@@ -15,7 +15,7 @@ namespace hlib {
 
 		static Event* instance();
 
-		void update(const hlib::Data& data);
+		void update(const antok::Data& data);
 
 		const TLorentzVector& get_p(unsigned int n) const { return _p.at(n); };
 
@@ -35,7 +35,7 @@ namespace hlib {
 		const double& get_RpdDeltaPhi_fhaas() const { return _RpdDeltaPhi_fhaas; };
 		const double& get_RpdPhiRes_fhaas() const { return _RpdPhiRes_fhaas; };
 
-		const hlib::Data* rawData;
+		const antok::Data* rawData;
 
 	  private:
 

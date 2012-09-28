@@ -9,7 +9,7 @@
 #include<cut.hpp>
 #include<event.h>
 
-namespace hlib {
+namespace antok {
 
 	class Cutter {
 	
@@ -17,7 +17,7 @@ namespace hlib {
 
 		static Cutter* instance();
 
-		int get_cutmask(const hlib::Event& event);
+		int get_cutmask(const antok::Event& event);
 
 		std::string get_abbreviations(int bitmask);
 
@@ -33,7 +33,7 @@ namespace hlib {
 
 		static Cutter* _cutter;
 
-		std::vector<hlib::Cut*> _cuts;
+		std::vector<antok::Cut*> _cuts;
 
 		TH1D* _statsHist;
 

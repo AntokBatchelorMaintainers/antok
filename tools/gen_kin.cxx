@@ -16,8 +16,8 @@
 
 void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 
-	using hlib::PION_MASS;
-	using hlib::CHARGED_KAON_MASS;
+	using antok::PION_MASS;
+	using antok::CHARGED_KAON_MASS;
 
 	new TApplication("app", 0, NULL);
 
@@ -149,7 +149,7 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 
 		TVector3 p3Beam;
 		p3Beam.SetXYZ(gradx, grady, 1.);
-		TLorentzVector pBeam = hlib::get_beam_energy(p3Beam, pTot);
+		TLorentzVector pBeam = antok::get_beam_energy(p3Beam, pTot);
 		p3Beam = pBeam.Vect();
 
 		double t = std::fabs((pBeam - pTot).Mag2());

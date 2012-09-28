@@ -10,7 +10,7 @@
 #include<event.h>
 #include<plot.h>
 
-namespace hlib {
+namespace antok {
 
 	class Plotter {
 
@@ -18,7 +18,7 @@ namespace hlib {
 
 		static Plotter* instance();
 
-		void fill(const hlib::Event& event, int cutmask);
+		void fill(const antok::Event& event, int cutmask);
 
 		void save(TDirectory* dir);
 
@@ -49,7 +49,7 @@ namespace hlib {
 
 		static Plotter* _plotter;
 
-		std::vector<hlib::Plot> _plots;
+		std::vector<antok::Plot> _plots;
 
 	};
 

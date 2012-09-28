@@ -4,17 +4,17 @@
 
 #include<cutter.h>
 
-hlib::Cutter* hlib::Cutter::_cutter = NULL;
+antok::Cutter* antok::Cutter::_cutter = NULL;
 
-hlib::Cutter* hlib::Cutter::instance() {
+antok::Cutter* antok::Cutter::instance() {
 	if(_cutter == NULL) {
-		_cutter = new hlib::Cutter();
+		_cutter = new antok::Cutter();
 		_cutter->_statsHist = NULL;
 	}
 	return _cutter;
 }
 
-hlib::Cutter::Cutter() {
+antok::Cutter::Cutter() {
 
 													// No cuts: 511
 	_cuts.push_back(new TrigMask(0x1));				// 1	510
@@ -29,7 +29,7 @@ hlib::Cutter::Cutter() {
 
 }
 
-int hlib::Cutter::get_cutmask(const hlib::Event& event) {
+int antok::Cutter::get_cutmask(const antok::Event& event) {
 
 	int cutmask = 0;
 	bool cut_previously = false;
@@ -45,7 +45,7 @@ int hlib::Cutter::get_cutmask(const hlib::Event& event) {
 
 };
 
-std::string hlib::Cutter::get_abbreviations(int bitmask) {
+std::string antok::Cutter::get_abbreviations(int bitmask) {
 
 	unsigned int size = _cuts.size();
 	assert(bitmask>>(size) == 0);
@@ -74,7 +74,7 @@ std::string hlib::Cutter::get_abbreviations(int bitmask) {
 
 };
 
-bool hlib::Cutter::set_stats_histogram(TH1D* stats) {
+bool antok::Cutter::set_stats_histogram(TH1D* stats) {
 
 	if(_statsHist != NULL) {
 		return false;
@@ -84,7 +84,7 @@ bool hlib::Cutter::set_stats_histogram(TH1D* stats) {
 
 }
 
-hlib::Cutter::~Cutter() {
+antok::Cutter::~Cutter() {
 
 	for(unsigned int i = 0; i < _cuts.size(); ++i) {
 		delete _cuts.at(i);

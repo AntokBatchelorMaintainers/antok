@@ -7,7 +7,7 @@
 
 #include<event.h>
 
-namespace hlib {
+namespace antok {
 
 	class Plot {
 

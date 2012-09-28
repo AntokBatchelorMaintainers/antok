@@ -4,7 +4,7 @@
 class TLorentzVector;
 class TVector3;
 
-namespace hlib {
+namespace antok {
 
 	TLorentzVector get_beam_energy(TVector3 p3_beam, const TLorentzVector& LV_X);
 

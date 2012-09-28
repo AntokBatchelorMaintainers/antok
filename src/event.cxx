@@ -2,25 +2,25 @@
 #include<constants.hpp>
 #include<event.h>
 
-using hlib::PION_MASS;
+using antok::PION_MASS;
 
-hlib::Event* hlib::Event::_event = NULL;
+antok::Event* antok::Event::_event = NULL;
 
-hlib::Event* hlib::Event::instance() {
+antok::Event* antok::Event::instance() {
 	if(_event == NULL) {
-		_event = new hlib::Event();
+		_event = new antok::Event();
 	}
 	return _event;
 }
 
 
-hlib::Event::Event() {
+antok::Event::Event() {
 
-	_p.resize(hlib::N_PARTICLES);
+	_p.resize(antok::N_PARTICLES);
 
 };
 
-void hlib::Event::update(const hlib::Data& data) {
+void antok::Event::update(const antok::Data& data) {
 
 	rawData = &data;
 
@@ -33,15 +33,15 @@ void hlib::Event::update(const hlib::Data& data) {
 	_pProton.SetPxPyPzE(data.RPD_Px, data.RPD_Py, data.RPD_Pz, data.RPD_E);
 
 	_p3Beam.SetXYZ(data.gradx, data.grady, 1.);
-	_pBeam = hlib::get_beam_energy(_p3Beam, _pSum);
+	_pBeam = antok::get_beam_energy(_p3Beam, _pSum);
 	_p3Beam = _pBeam.Vect();
 
 	_t = std::fabs((_pBeam - _pSum).Mag2());
 	_tMin = std::fabs((std::pow(_pSum.M2() - _pBeam.M2(), 2)) / (4. * _p3Beam.Mag2()));
 	_tPrime = _t - _tMin;
 
-	hlib::get_RPD_delta_phi_res(_pBeam, _pProton, _pSum, _RpdDeltaPhi, _RpdPhiRes);
-	hlib::get_RPD_delta_phi_res_fhaas(_pBeam, _pProton, _pSum, _RpdDeltaPhi_fhaas, _RpdPhiRes_fhaas);
+	antok::get_RPD_delta_phi_res(_pBeam, _pProton, _pSum, _RpdDeltaPhi, _RpdPhiRes);
+	antok::get_RPD_delta_phi_res_fhaas(_pBeam, _pProton, _pSum, _RpdDeltaPhi_fhaas, _RpdPhiRes_fhaas);
 
 };
 

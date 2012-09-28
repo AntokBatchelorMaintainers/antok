@@ -4,7 +4,7 @@
 
 #include<constants.hpp>
 
-namespace hlib {
+namespace antok {
 
 	struct Data {
 
@@ -53,12 +53,12 @@ namespace hlib {
 		double cedarProbK3;
 
 		Data() {
-			Mom_x.resize(hlib::N_PARTICLES);
-			Mom_y.resize(hlib::N_PARTICLES);
-			Mom_z.resize(hlib::N_PARTICLES);
-			z_max.resize(hlib::N_PARTICLES);
-			theta_RICH.resize(hlib::N_PARTICLES);
-			PID_RICH.resize(hlib::N_PARTICLES);
+			Mom_x.resize(antok::N_PARTICLES);
+			Mom_y.resize(antok::N_PARTICLES);
+			Mom_z.resize(antok::N_PARTICLES);
+			z_max.resize(antok::N_PARTICLES);
+			theta_RICH.resize(antok::N_PARTICLES);
+			PID_RICH.resize(antok::N_PARTICLES);
 		}
 
 	};

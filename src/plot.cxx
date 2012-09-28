@@ -5,7 +5,7 @@
 #include<cutter.h>
 #include<plot.h>
 
-hlib::Plot::Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1, double* data2) :
+antok::Plot::Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1, double* data2) :
 		_cutmasks(cutmasks),
 		_hist_template(hist_template),
 		_data1(data1),
@@ -16,7 +16,7 @@ hlib::Plot::Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1, 
 	if(_cutmasks.size() == 0) {
 		_cutmasks.push_back(0);
 	}
-	hlib::Cutter* cutter = hlib::Cutter::instance();
+	antok::Cutter* cutter = antok::Cutter::instance();
 	unsigned int no_cuts = cutter->get_no_cuts();
 	std::stringstream sstr;
 	bool found_zero = false;
@@ -51,7 +51,7 @@ hlib::Plot::Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1, 
 
 };
 
-void hlib::Plot::fill(int cutmask) {
+void antok::Plot::fill(int cutmask) {
 
 	for(unsigned int i = 0; i < _cutmasks.size(); ++i) {
 		if(((~_cutmasks.at(i))&(~cutmask)) == (~_cutmasks.at(i))) {

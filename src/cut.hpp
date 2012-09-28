@@ -6,7 +6,7 @@
 
 #include<event.h>
 
-namespace hlib {
+namespace antok {
 
 	class Cut {
 	
@@ -14,7 +14,7 @@ namespace hlib {
 
 		virtual ~Cut() { };
 
-		virtual bool operator() (const hlib::Event& event) const = 0;
+		virtual bool operator() (const antok::Event& event) const = 0;
 
 		std::string get_shortname() const { return shortname; };
 		std::string get_longname() const { return longname; };
@@ -32,7 +32,7 @@ namespace hlib {
 
 	  public:
 		TrigMask(int trigmask, int num = 0);
-		bool operator() (const hlib::Event& event) const { return (!((event.rawData->TrigMask)&0x1)); };
+		bool operator() (const antok::Event& event) const { return (!((event.rawData->TrigMask)&0x1)); };
 
 	  private:
 		int _trigmask;
@@ -58,8 +58,8 @@ namespace hlib {
 
 	  public:
 		VrtxZ(double zmin, double zmax, int num = 0);
-		bool operator() (const hlib::Event& event) const { return ((event.rawData->Z_primV > _zmin) ||
-		                                                           (event.rawData->Z_primV < _zmax)); };
+		bool operator() (const antok::Event& event) const { return ((event.rawData->Z_primV > _zmin) ||
+		                                                            (event.rawData->Z_primV < _zmax)); };
 
 	  private:
 		double _zmin;
@@ -86,8 +86,8 @@ namespace hlib {
 
 	  public:
 		VrtxR(double rmax, int num = 0);
-		bool operator() (const hlib::Event& event) const { return (std::pow(event.rawData->X_primV, 2) +  
-																   std::pow(event.rawData->Y_primV, 2) > _rmax2); };
+		bool operator() (const antok::Event& event) const { return (std::pow(event.rawData->X_primV, 2) +
+		                                                            std::pow(event.rawData->Y_primV, 2) > _rmax2); };
 
 	  private:
 		double _rmax;
@@ -114,7 +114,7 @@ namespace hlib {
 
 	  public:
 		nRPDTracks(int nTracks, int num = 0);
-		bool operator() (const hlib::Event& event) const { return (event.rawData->nbrRPDTracks != _nTracks); };
+		bool operator() (const antok::Event& event) const { return (event.rawData->nbrRPDTracks != _nTracks); };
 
 	  private:
 		int _nTracks;
@@ -140,7 +140,7 @@ namespace hlib {
 
 	  public:
 		RPDProtMass(double minMass, int num = 0);
-		bool operator() (const hlib::Event& event) const { return (event.get_pProton().M() < _minMass); };
+		bool operator() (const antok::Event& event) const { return (event.get_pProton().M() < _minMass); };
 
 	  private:
 		double _minMass;
@@ -166,7 +166,7 @@ namespace hlib {
 
 	  public:
 		CedarKaon();
-		bool operator() (const hlib::Event& event) const { return (event.rawData->cedarID_bayes != 0); };
+		bool operator() (const antok::Event& event) const { return (event.rawData->cedarID_bayes != 0); };
 
 	};
 	inline CedarKaon::CedarKaon() {
@@ -180,7 +180,7 @@ namespace hlib {
 
 	  public:
 		TPrime(double tmin, double tmax, int num = 0);
-		inline bool operator() (const hlib::Event& event) const {
+		inline bool operator() (const antok::Event& event) const {
 			if (_tmin >= 0. && _tmax >= 0.) {
 				return ((event.get_tPrime() <= _tmin) || (event.get_tPrime() >= _tmax));
 			} else if (_tmin < 0. && _tmax >= 0.) {
@@ -217,7 +217,7 @@ namespace hlib {
 
 	  public:
 		RPDPlanarity();
-		bool operator() (const hlib::Event& event) const { return (std::fabs(event.get_RpdDeltaPhi()) > event.get_RpdPhiRes()); };
+		bool operator() (const antok::Event& event) const { return (std::fabs(event.get_RpdDeltaPhi()) > event.get_RpdPhiRes()); };
 
 	};
 	inline RPDPlanarity::RPDPlanarity() {
@@ -231,8 +231,7 @@ namespace hlib {
 
 	  public:
 		Exclusivity(double mean, double win, int num = 0);
-//		bool operator() (const hlib::Event& event) const { return (std::fabs(event.get_pSum().Energy()-_mean) > _win); };
-		bool operator() (const hlib::Event& event) const { return (std::fabs(event.get_pBeam().Energy()-_mean) >= _win); };
+		bool operator() (const antok::Event& event) const { return (std::fabs(event.get_pBeam().Energy()-_mean) >= _win); };
 
 	  private:
 		double _mean;

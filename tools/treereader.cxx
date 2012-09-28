@@ -16,8 +16,8 @@
 
 void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
-	using hlib::PION_MASS;
-	using hlib::PROTON_MASS;
+	using antok::PION_MASS;
+	using antok::PROTON_MASS;
 
 	new TApplication("app", 0, NULL);
 
@@ -55,10 +55,10 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	TTree* out_tree = tree_chain->CloneTree(0);
 
-	hlib::Data data;
-	hlib::Event* event = hlib::Event::instance();
-	hlib::Cutter* cutter = hlib::Cutter::instance();
-	hlib::Plotter* plotter = hlib::Plotter::instance();
+	antok::Data data;
+	antok::Event* event = antok::Event::instance();
+	antok::Cutter* cutter = antok::Cutter::instance();
+	antok::Plotter* plotter = antok::Plotter::instance();
 
 	tree_chain->SetBranchAddress("Run", &data.Run);
 	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
@@ -74,7 +74,7 @@ void treereader(char* infilename=NULL, char* outfilename=NULL) {
 
 	tree_chain->SetBranchAddress("beam_time", &data.beam_time);
 
-	for(unsigned int i = 0; i < hlib::N_PARTICLES; ++i) {
+	for(unsigned int i = 0; i < antok::N_PARTICLES; ++i) {
 		std::stringstream sstr;
 		sstr<<"Mom_x"<<(i + 1);
 		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.Mom_x.at(i));

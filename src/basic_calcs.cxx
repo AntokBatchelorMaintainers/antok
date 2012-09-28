@@ -6,10 +6,10 @@
 #include<TLorentzRotation.h>
 #include<TVector3.h>
 
-TLorentzVector hlib::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX) {
+TLorentzVector antok::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX) {
 
-	using hlib::PION_MASS;
-	using hlib::PROTON_MASS;
+	using antok::PION_MASS;
+	using antok::PROTON_MASS;
 
 	TVector3 p3_Tot(pX.Vect());
 	double theta = p3_Tot.Angle(p3_beam);
@@ -27,7 +27,7 @@ TLorentzVector hlib::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX)
 
 };
 
-void hlib::get_RPD_delta_phi_res(const TLorentzVector& pBeam,
+void antok::get_RPD_delta_phi_res(const TLorentzVector& pBeam,
 								 const TLorentzVector& pProton,
 								 const TLorentzVector& pX,
 								 double& delta_phi, double& res)
@@ -60,7 +60,7 @@ void hlib::get_RPD_delta_phi_res(const TLorentzVector& pBeam,
 
 };
 
-void hlib::get_RPD_delta_phi_res_fhaas(const TLorentzVector& pBeam,
+void antok::get_RPD_delta_phi_res_fhaas(const TLorentzVector& pBeam,
                                        const TLorentzVector& pProton,
                                        const TLorentzVector& pX,
                                        double& delta_phi, double& res)
