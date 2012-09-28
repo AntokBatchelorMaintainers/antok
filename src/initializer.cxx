@@ -1,4 +1,7 @@
 
+#include<yaml-cpp/yaml.h>
+
+#include<constants.h>
 #include<cutter.h>
 #include<event.h>
 #include<initializer.h>
@@ -25,7 +28,51 @@ antok::Initializer::Initializer()
 
 bool antok::Initializer::readConfigFile(const std::string& filename) {
 
-	return true;
+	bool error = false;
+
+	// Load the config file
+	YAML::Node config;
+	try {
+		config = YAML::LoadFile(filename);
+	} catch (YAML::ParserException e) {
+		std::cerr<<"Error parsing config file: "<<e.what()<<"."<<std::endl;
+		error = true;
+	}
+
+	// Number of particles
+	try {
+		if(not (config["NumberOfParticles"] and antok::Constants::set_n_particles(config["NumberOfParticles"].as<unsigned int>()))) {
+			std::cerr<<"Could not set number of particles."<<std::endl;
+			error = true;
+		}
+	} catch (YAML::TypedBadConversion<int> e) {
+		std::cerr<<"Conversion error when reading \"NumberOfParticles\": "<<e.what()<<"."<<std::endl;
+		error = true;
+	}
+
+	// Get the constants
+	YAML::Node constants = config["Constants"];
+	try {
+		if(not (constants["ChargedKaonMass"] and antok::Constants::set_charged_kaon_mass(constants["ChargedKaonMass"].as<double>()))) {
+			std::cerr<<"Could not set charged kaon mass."<<std::endl;
+			error = true;
+		}
+		if(not (constants["ChargedPionMass"] and antok::Constants::set_charged_pion_mass(constants["ChargedPionMass"].as<double>()))) {
+			std::cerr<<"Could not set pion mass."<<std::endl;
+			error = true;
+		}
+		if(not (constants["ProtonMass"] and antok::Constants::set_proton_mass(constants["ProtonMass"].as<double>()))) {
+			std::cerr<<"Coud not set proton mass."<<std::endl;
+			error = true;
+		}
+	} catch (YAML::TypedBadConversion<double> e) {
+		std::cerr<<"Conversion error when reading constants: "<<e.what()<<"."<<std::endl;
+		error = true;
+	}
+
+	antok::Constants::_initialized = (not error);
+
+	return (not error);
 
 };
 

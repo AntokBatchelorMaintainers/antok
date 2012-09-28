@@ -11,13 +11,20 @@
 #include<TH2D.h>
 #include<TLorentzVector.h>
 
-#include<constants.hpp>
 #include<basic_calcs.h>
+#include<constants.h>
+#include<initializer.h>
 
-void gen_kin(char* infile_name = 0, char* outfile_name = 0) {
+void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfilename="../config/default.yaml") {
 
-	using antok::PION_MASS;
-	using antok::CHARGED_KAON_MASS;
+	antok::Initializer* initializer = antok::Initializer::instance();
+	if(not initializer->readConfigFile(configfilename)) {
+		std::cerr<<"Could not open config file. Aborting..."<<std::endl;
+		exit(1);
+	}
+
+	const double& CHARGED_KAON_MASS = antok::Constants::charged_kaon_mass();
+	const double& PION_MASS = antok::Constants::charged_pion_mass();
 
 	new TApplication("app", 0, 0);
 
@@ -306,9 +313,13 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0) {
 }
 
 int main(int argc, char* argv[]) {
-	if(argc != 3) {
+	if(argc == 1) {
 		gen_kin();
-	} else {
+	} else if (argc == 3) {
 		gen_kin(argv[1], argv[2]);
+	} else if (argc == 4) {
+		gen_kin(argv[1], argv[2], argv[3]);
+	} else {
+		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be in [0, 2, 3]."<<std::endl;
 	}
 }

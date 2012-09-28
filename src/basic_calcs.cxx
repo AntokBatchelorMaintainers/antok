@@ -1,6 +1,6 @@
 
 #include<basic_calcs.h>
-#include<constants.hpp>
+#include<constants.h>
 
 #include<TLorentzVector.h>
 #include<TLorentzRotation.h>
@@ -8,8 +8,8 @@
 
 TLorentzVector antok::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX) {
 
-	using antok::PION_MASS;
-	using antok::PROTON_MASS;
+	const double& PION_MASS = antok::Constants::charged_pion_mass();
+	const double& PROTON_MASS = antok::Constants::proton_mass();
 
 	TVector3 p3_Tot(pX.Vect());
 	double theta = p3_Tot.Angle(p3_beam);

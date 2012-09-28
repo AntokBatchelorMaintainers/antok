@@ -1,8 +1,7 @@
-
 #ifndef ANTOK_DATA_H
 #define ANTOK_DATA_H
 
-#include<constants.hpp>
+#include<constants.h>
 
 namespace antok {
 
@@ -53,12 +52,13 @@ namespace antok {
 		double cedarProbK3;
 
 		Data() {
-			Mom_x.resize(antok::N_PARTICLES);
-			Mom_y.resize(antok::N_PARTICLES);
-			Mom_z.resize(antok::N_PARTICLES);
-			z_max.resize(antok::N_PARTICLES);
-			theta_RICH.resize(antok::N_PARTICLES);
-			PID_RICH.resize(antok::N_PARTICLES);
+			const unsigned int& N_PARTICLES = antok::Constants::n_particles();
+			Mom_x.resize(N_PARTICLES);
+			Mom_y.resize(N_PARTICLES);
+			Mom_z.resize(N_PARTICLES);
+			z_max.resize(N_PARTICLES);
+			theta_RICH.resize(N_PARTICLES);
+			PID_RICH.resize(N_PARTICLES);
 		}
 
 	};

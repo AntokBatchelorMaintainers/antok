@@ -1,8 +1,6 @@
 #include<basic_calcs.h>
-#include<constants.hpp>
+#include<constants.h>
 #include<event.h>
-
-using antok::PION_MASS;
 
 antok::Event* antok::Event::_event = 0;
 
@@ -16,11 +14,13 @@ antok::Event* antok::Event::instance() {
 
 antok::Event::Event() {
 
-	_p.resize(antok::N_PARTICLES);
+	_p.resize(antok::Constants::n_particles());
 
 };
 
 void antok::Event::update(const antok::Data& data) {
+
+	const int& PION_MASS = antok::Constants::charged_pion_mass();
 
 	rawData = &data;
 

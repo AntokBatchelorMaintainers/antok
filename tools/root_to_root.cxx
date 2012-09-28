@@ -12,15 +12,22 @@
 #include<TVector3.h>
 
 #include<basic_calcs.h>
-#include<constants.hpp>
+#include<constants.h>
+#include<initializer.h>
 
-void convert_root_to_txt(char* infile_name, char* outfile_name) {
+void convert_root_to_txt(char* infile_name, char* outfile_name, std::string configfilename = "../config/default.yaml") {
+
+	antok::Initializer* initializer = antok::Initializer::instance();
+	if(not initializer->readConfigFile(configfilename)) {
+		std::cerr<<"Could not open config file. Aborting..."<<std::endl;
+		exit(1);
+	}
+
+	const double& PION_MASS = antok::Constants::charged_pion_mass();
 
 	double bin_width = 0.03;		//GeV
 	double mass_range_lb = 1.3;		//GeV
 	double mass_range_ub = 4.;		//GeV
-
-	using antok::PION_MASS;
 
 	if((int)(mass_range_ub*1000. - mass_range_lb*1000.) % (int)(bin_width*1000.)) {
 		std::cout<<"Mass bins don't fit into range"<<std::endl;
@@ -166,5 +173,9 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 int main(int argc, char* argv[]) {
 	if(argc == 3) {
 		convert_root_to_txt(argv[1], argv[2]);
+	} else if(argc == 4) {
+		convert_root_to_txt(argv[1], argv[2], argv[3]);
+	} else {
+		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be in [2, 3]."<<std::endl;
 	}
 }

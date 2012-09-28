@@ -1,0 +1,17 @@
+
+NumberOfParticles: 5
+
+TreeEntries:
+    - Run
+    - TrigMask
+    - EvNbr
+    - SpillNbr
+    - X_primV
+    - Y_primV
+    - Z_primV
+
+Constants:
+    ChargedKaonMass: 0.493677
+    ChargedPionMass: 0.13957018
+    ProtonMass     : 0.938272046
+

@@ -6,7 +6,7 @@
 #include<TTree.h>
 #include<TStyle.h>
 
-#include<constants.hpp>
+#include<constants.h>
 #include<cutter.h>
 #include<data.hpp>
 #include<event.h>
@@ -15,10 +15,7 @@
 
 #include<assert.h>
 
-void treereader(char* infilename=0, char* outfilename=0) {
-
-	using antok::PION_MASS;
-	using antok::PROTON_MASS;
+void treereader(char* infilename=0, char* outfilename=0, std::string configfilename = "../config/default.yaml") {
 
 	new TApplication("app", 0, 0);
 
@@ -56,11 +53,17 @@ void treereader(char* infilename=0, char* outfilename=0) {
 
 	TTree* out_tree = tree_chain->CloneTree(0);
 
-	antok::Data data;
 	antok::Initializer* initializer = antok::Initializer::instance();
+	if(not initializer->readConfigFile(configfilename)) {
+		std::cerr<<"Could not open config file. Aborting..."<<std::endl;
+		exit(1);
+	}
+	antok::Data data;
 	antok::Event& event = initializer->get_event();
 	antok::Cutter& cutter = initializer->get_cutter();
 	antok::Plotter& plotter = initializer->get_plotter();
+
+	const unsigned int& N_PARTICLES = antok::Constants::n_particles();
 
 	tree_chain->SetBranchAddress("Run", &data.Run);
 	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
@@ -76,7 +79,7 @@ void treereader(char* infilename=0, char* outfilename=0) {
 
 	tree_chain->SetBranchAddress("beam_time", &data.beam_time);
 
-	for(unsigned int i = 0; i < antok::N_PARTICLES; ++i) {
+	for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 		std::stringstream sstr;
 		sstr<<"Mom_x"<<(i + 1);
 		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.Mom_x.at(i));
@@ -149,9 +152,13 @@ void treereader(char* infilename=0, char* outfilename=0) {
 }
 
 int main(int argc, char* argv[]) {
-	if(argc != 3) {
+	if(argc == 1) {
 		treereader();
-	} else {
+	} else if (argc == 3) {
 		treereader(argv[1], argv[2]);
+	} else if (argc == 4) {
+		treereader(argv[1], argv[2], argv[3]);
+	} else {
+		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be in [0, 2, 3]."<<std::endl;
 	}
 }
