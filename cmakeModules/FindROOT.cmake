@@ -29,7 +29,7 @@
 #//      requires root-config to be in PATH
 #//      based on AliRoots's FindROOT.cmake (r41015)
 #//      in https://alisoft.cern.ch/AliRoot/trunk/cmake/modules
-#//	 
+#//
 #//      following variables are defined:
 #//      ROOT_CONFIG_EXECUTABLE - path to root-config program
 #//      ROOTSYS                - path to root installation directory
@@ -49,11 +49,11 @@
 #//      ROOT_MINOR_VERSION     - ROOT minor version
 #//      ROOT_PATCH_VERSION     - ROOT patch level
 #//      ROOT_LIBS              - list of ROOT library files
-#//	 
+#//
 #//      Example usage:
 #//          find_package(ROOT 5.26 REQUIRED Minuit2)
-#//	 
-#//	 
+#//
+#//
 #//      The module also provides a function to generate ROOT dictionaries.
 #//      Example usage:
 #//          set(ROOTPWA_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/someDict.cc)  # set dictionary path
@@ -83,12 +83,12 @@ find_program(ROOT_CONFIG_EXECUTABLE root-config)
 if(NOT ROOT_CONFIG_EXECUTABLE)
   set(ROOT_ERROR_REASON "${ROOT_ERROR_REASON} Cannot find root-config executable. Make sure ROOT is setup correctly.")
 else()
-  
+
   set(ROOT_FOUND TRUE)
 
   execute_process(
-    COMMAND ${ROOT_CONFIG_EXECUTABLE} --prefix 
-    OUTPUT_VARIABLE ROOTSYS 
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --prefix
+    OUTPUT_VARIABLE ROOTSYS
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   execute_process(
@@ -97,13 +97,13 @@ else()
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   execute_process(
-    COMMAND ${ROOT_CONFIG_EXECUTABLE} --f77 
-    OUTPUT_VARIABLE ROOT_F77 
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --f77
+    OUTPUT_VARIABLE ROOT_F77
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   execute_process(
     COMMAND ${ROOT_CONFIG_EXECUTABLE} --cc
-    OUTPUT_VARIABLE ROOT_CC 
+    OUTPUT_VARIABLE ROOT_CC
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   execute_process(
@@ -215,7 +215,7 @@ if(ROOT_FOUND)
   if(ROOT_FIND_COMPONENTS)
     set(_LIBRARY_NAMES "${_LIBRARY_NAMES};${ROOT_FIND_COMPONENTS}")
   endif()
-  
+
   # check whether libraries exist
   foreach(_LIBNAME ${_LIBRARY_NAMES})
     find_library(_ROOT_LIB_${_LIBNAME}
@@ -292,7 +292,7 @@ function(root_generate_dictionary DICT_FILE INCLUDE_DIRS HEADER_FILES LINKDEF_FI
     message(FATAL_ERROR "Impossible to generate dictionary '${DICT_FILE}', "
 			"because no ROOT installation was found.")
   endif()
-	
+
   # prepare command line argument for compiler definitions (put -D in front)
   set(_DEFINITIONS)
   get_property(_DEFS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY COMPILE_DEFINITIONS)
@@ -306,7 +306,7 @@ function(root_generate_dictionary DICT_FILE INCLUDE_DIRS HEADER_FILES LINKDEF_FI
   foreach(_FILE ${INCLUDE_DIRS})
     set(_INCLUDES ${_INCLUDES} -I${_FILE})
   endforeach()
-	
+
   # strip paths from header file names
   set(_HEADERS)
   foreach(_FILE ${HEADER_FILES})

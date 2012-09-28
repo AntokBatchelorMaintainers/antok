@@ -12,7 +12,7 @@
 namespace antok {
 
 	class Cutter {
-	
+
 	  public:
 
 		static Cutter* instance();

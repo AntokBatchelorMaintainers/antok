@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.0 FATAL_ERROR)
 
 set(CMAKE_VERBOSE_MAKEFILE 0)
 
-project(BANNT)
+project(ANTOK)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmakeModules")
 message(STATUS "Using cmake module path '${CMAKE_MODULE_PATH}'")
@@ -26,8 +26,8 @@ find_package(ROOT 5.26 REQUIRED)
 # find yaml
 find_package(YamlCpp 0.3.0 REQUIRED)
 
-set(BANNT_LIB "bannt")
-set(BANNT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src)
+set(ANTOK_LIB "antok")
+set(ANTOK_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src)
 add_subdirectory(src)
 add_subdirectory(tools)
 

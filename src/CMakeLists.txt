@@ -13,4 +13,5 @@ set(SOURCES
 	plotter.cxx
    )
 
-make_shared_library("bannt" "${SOURCES}" "${ROOT_LIBS}")
+make_shared_library("antok" "${SOURCES}" "${ROOT_LIBS}")
+

@@ -9,7 +9,7 @@
 namespace antok {
 
 	class Cut {
-	
+
 	  public:
 
 		virtual ~Cut() { };
@@ -24,7 +24,7 @@ namespace antok {
 		std::string shortname;
 		std::string longname;
 		std::string abbreviation;
-	
+
 	};
 
 	// Cut on the trigger mask.
