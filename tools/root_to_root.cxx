@@ -36,7 +36,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 
 	// Make dirs and open output files.
 	std::vector<TFile*> tfiles;
-	tfiles.resize(bounds.size()-1, NULL);
+	tfiles.resize(bounds.size()-1, 0);
 	for(unsigned int i = 0; i < tfiles.size(); ++i) {
 		std::string dir_to_make = outfile_name;
 		std::ostringstream strs;
@@ -44,7 +44,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 		mkdir(strs.str().c_str(), S_IRWXU | S_IRWXG);
 		strs<<"/"<<(int)(bounds.at(i)*1000.)<<"."<<(int)((bounds.at(i+1))*1000.)<<".root";
 		tfiles.at(i) = TFile::Open(strs.str().c_str(), "NEW");
-		if(tfiles.at(i) == NULL) {
+		if(tfiles.at(i) == 0) {
 			std::cout<<"Error opening file for writing."<<std::endl;
 			return;
 		}
@@ -52,11 +52,11 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 
 	// Open input file and do all the tree stuff
 	TFile* infile = TFile::Open(infile_name, "READ");
-	if(infile == NULL) {
+	if(infile == 0) {
 		return;
 	}
 	TTree* tree = (TTree*)infile->Get("USR55");
-	if(tree == NULL) {
+	if(tree == 0) {
 		std::cout<<"Error opening in-TTree."<<std::endl;
 		return;
 	}
@@ -101,7 +101,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name) {
 	TClonesArray* decayMom = new TClonesArray("TVector3");
 
 	std::vector<TTree*> trees;
-	trees.resize(tfiles.size(), NULL);
+	trees.resize(tfiles.size(), 0);
 
 	const int splitLevel = 99;
 	const int buffsize = 256000;

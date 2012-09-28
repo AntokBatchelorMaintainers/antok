@@ -14,42 +14,42 @@
 
 #include<assert.h>
 
-void treereader(char* infilename=NULL, char* outfilename=NULL) {
+void treereader(char* infilename=0, char* outfilename=0) {
 
 	using antok::PION_MASS;
 	using antok::PROTON_MASS;
 
-	new TApplication("app", 0, NULL);
+	new TApplication("app", 0, 0);
 
 	gStyle->SetPalette(1);
 	gStyle->SetCanvasColor(10);
 	gStyle->SetPadColor(10);
 
 	TFile* infile;
-	if(infilename != NULL) {
+	if(infilename != 0) {
 		infile = TFile::Open(infilename, "READ");
 	} else {
 		infile = TFile::Open("/afs/cern.ch/user/k/kbicker/w0/analysis/phast/5Pi_fhaasUE_10chunks.root", "READ");
 // 		infile = TFile::Open("/afs/cern.ch/user/k/kbicker/scratch0/prefiltering_run1_merged/files_H_2008_26.root");
 	}
-	if(infile == NULL) {
+	if(infile == 0) {
 		return;
 	}
 
 	TTree* tree_chain = (TTree*)infile->Get("kbicker/USR55");
 //	TTree* tree_chain = (TTree*)infile->Get("fhaas/USR52");
-	if(tree_chain == NULL) {
+	if(tree_chain == 0) {
 		std::cout<<"Error opening in-TTree."<<std::endl;
 		return;
 	}
 
 	TFile* outfile;
-	if(outfilename != NULL) {
+	if(outfilename != 0) {
 		outfile = TFile::Open(outfilename, "NEW");
 	} else {
 		outfile = TFile::Open("out_tree.root", "RECREATE");
 	}
-	if(outfile == NULL) {
+	if(outfile == 0) {
 		return;
 	}
 

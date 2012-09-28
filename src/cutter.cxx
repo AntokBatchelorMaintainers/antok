@@ -4,12 +4,12 @@
 
 #include<cutter.h>
 
-antok::Cutter* antok::Cutter::_cutter = NULL;
+antok::Cutter* antok::Cutter::_cutter = 0;
 
 antok::Cutter* antok::Cutter::instance() {
-	if(_cutter == NULL) {
+	if(_cutter == 0) {
 		_cutter = new antok::Cutter();
-		_cutter->_statsHist = NULL;
+		_cutter->_statsHist = 0;
 	}
 	return _cutter;
 }
@@ -76,7 +76,7 @@ std::string antok::Cutter::get_abbreviations(int bitmask) {
 
 bool antok::Cutter::set_stats_histogram(TH1D* stats) {
 
-	if(_statsHist != NULL) {
+	if(_statsHist != 0) {
 		return false;
 	}
 	_statsHist = stats;

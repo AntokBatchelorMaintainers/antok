@@ -14,32 +14,32 @@
 #include<constants.hpp>
 #include<basic_calcs.h>
 
-void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
+void gen_kin(char* infile_name = 0, char* outfile_name = 0) {
 
 	using antok::PION_MASS;
 	using antok::CHARGED_KAON_MASS;
 
-	new TApplication("app", 0, NULL);
+	new TApplication("app", 0, 0);
 
 	TFile* infile;
-	if(infile_name == NULL) {
+	if(infile_name == 0) {
 		infile = TFile::Open("/afs/cern.ch/user/k/kbicker/scratch0/filtered_run1/files_H_2008_10.root");
 	} else {
 		infile = TFile::Open(infile_name);
 	}
-	if(infile == NULL) {
+	if(infile == 0) {
 		return;
 	}
 
 	TTree* intree = (TTree*)infile->Get("USR55");
 
 	TFile* outfile;
-	if(outfile_name == NULL) {
+	if(outfile_name == 0) {
 		outfile = TFile::Open("outfile.root", "RECREATE");
 	} else {
 		outfile = TFile::Open(outfile_name, "NEW");
 	}
-	if(outfile == NULL) {
+	if(outfile == 0) {
 		return;
 	}
 
@@ -288,7 +288,7 @@ void gen_kin(char* infile_name = NULL, char* outfile_name = NULL) {
 		TCanvas* c;
 		c = new TCanvas(name.c_str(), hists.at(i)->GetTitle());
 		hists.at(i)->Draw();
-		if(dynamic_cast<TH2D*>(hists.at(i)) != NULL) {
+		if(dynamic_cast<TH2D*>(hists.at(i)) != 0) {
 			hists.at(i)->SetDrawOption("colz");
 		}
 		c->Write();

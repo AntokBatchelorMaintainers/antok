@@ -5,10 +5,10 @@
 
 #include<event.h>
 
-antok::Plotter* antok::Plotter::_plotter = NULL;
+antok::Plotter* antok::Plotter::_plotter = 0;
 
 antok::Plotter* antok::Plotter::instance() {
-	if(_plotter == NULL) {
+	if(_plotter == 0) {
 		_plotter = new antok::Plotter();
 	}
 	return _plotter;
@@ -151,7 +151,7 @@ void antok::Plotter::save(TDirectory* dir) {
 		antok::Plot plot = _plots.at(i);
 		const char* name = plot.get_template()->GetName();
 		TDirectory* new_dir = dir->mkdir(name);
-		assert(new_dir != NULL);
+		assert(new_dir != 0);
 		new_dir->cd();
 		std::vector<TH1*> histograms = plot.get_histograms();
 		for(unsigned int j = 0; j < histograms.size(); ++j) {

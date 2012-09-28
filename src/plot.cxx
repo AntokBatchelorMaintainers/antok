@@ -12,7 +12,7 @@ antok::Plot::Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1,
 		_data2(data2)
 {
 
-	assert(hist_template != NULL);
+	assert(hist_template != 0);
 	if(_cutmasks.size() == 0) {
 		_cutmasks.push_back(0);
 	}
@@ -40,7 +40,7 @@ antok::Plot::Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1,
 			}
 		}
 		TH1* new_hist = dynamic_cast<TH1*>(hist_template->Clone(sstr.str().c_str()));
-		assert(new_hist != NULL);
+		assert(new_hist != 0);
 		sstr.str("");
 		sstr<<hist_template->GetTitle();
 		sstr<<" "<<cutter->get_abbreviations(cutmask);
@@ -55,8 +55,8 @@ void antok::Plot::fill(int cutmask) {
 
 	for(unsigned int i = 0; i < _cutmasks.size(); ++i) {
 		if(((~_cutmasks.at(i))&(~cutmask)) == (~_cutmasks.at(i))) {
-			assert(_data1 != NULL);
-			if(_data2 == NULL) {
+			assert(_data1 != 0);
+			if(_data2 == 0) {
 				double data1 = *_data1;
 				_histograms.at(i)->Fill(data1);
 			} else {

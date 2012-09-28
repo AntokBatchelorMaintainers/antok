@@ -7,8 +7,8 @@ include_directories(${INCLUDE_DIRECTORIES})
 
 set(SOURCES
 	basic_calcs.cxx
-	event.cxx
 	cutter.cxx
+	event.cxx
 	plot.cxx
 	plotter.cxx
    )

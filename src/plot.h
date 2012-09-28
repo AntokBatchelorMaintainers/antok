@@ -13,7 +13,7 @@ namespace antok {
 
 	  public:
 
-		Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1, double* data2 = NULL);
+		Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1, double* data2 = 0);
 
 		void fill(int cutmask);
 

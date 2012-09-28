@@ -4,10 +4,10 @@
 
 using antok::PION_MASS;
 
-antok::Event* antok::Event::_event = NULL;
+antok::Event* antok::Event::_event = 0;
 
 antok::Event* antok::Event::instance() {
-	if(_event == NULL) {
+	if(_event == 0) {
 		_event = new antok::Event();
 	}
 	return _event;
