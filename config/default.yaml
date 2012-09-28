@@ -15,3 +15,6 @@ Constants:
     ChargedPionMass: 0.13957018
     ProtonMass     : 0.938272046
 
+#   old values used by flo
+#   ChargedPionMass: 0.9382723
+#   ProtonMass     : 0.139567
