@@ -1,5 +1,5 @@
-#ifndef HLIB_EVENT_H
-#define HLIB_EVENT_H
+#ifndef ANTOK_EVENT_H
+#define ANTOK_EVENT_H
 
 #include<vector>
 

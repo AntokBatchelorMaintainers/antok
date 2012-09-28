@@ -1,5 +1,5 @@
-#ifndef INITIALIZER_H
-#define INITIALIZER_H
+#ifndef ANTOK_INITIALIZER_H
+#define ANTOK_INITIALIZER_H
 
 #include<string>
 

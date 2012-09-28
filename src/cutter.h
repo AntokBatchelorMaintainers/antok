@@ -1,5 +1,5 @@
-#ifndef HLIB_CUTTER_H
-#define HLIB_CUTTER_H
+#ifndef ANTOK_CUTTER_H
+#define ANTOK_CUTTER_H
 
 #include<string>
 #include<vector>

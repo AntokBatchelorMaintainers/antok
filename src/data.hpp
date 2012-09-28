@@ -1,6 +1,6 @@
 
-#ifndef HLIB_DATA_H
-#define HLIB_DATA_H
+#ifndef ANTOK_DATA_H
+#define ANTOK_DATA_H
 
 #include<constants.hpp>
 

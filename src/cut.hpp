@@ -1,5 +1,5 @@
-#ifndef HLIB_CUT_H
-#define HLIB_CUT_H
+#ifndef ANTOK_CUT_H
+#define ANTOK_CUT_H
 
 #include<string>
 #include<sstream>

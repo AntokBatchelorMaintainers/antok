@@ -1,5 +1,5 @@
-#ifndef HLIB_PLOT_H
-#define HLIB_PLOT_H
+#ifndef ANTOK_PLOT_H
+#define ANTOK_PLOT_H
 
 #include<vector>
 

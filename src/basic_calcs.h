@@ -1,5 +1,5 @@
-#ifndef BASIC_CALCS_H
-#define BASIC_CALCS_H
+#ifndef ANTOK_BASIC_CALCS_H
+#define ANTOK_BASIC_CALCS_H
 
 class TLorentzVector;
 class TVector3;
