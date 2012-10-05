@@ -33,14 +33,14 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 	if(infile == 0) {
 		return;
 	}
-
-	TTree* tree_chain = (TTree*)infile->Get("kbicker/USR55");
-//	TTree* tree_chain = (TTree*)infile->Get("fhaas/USR52");
-	if(tree_chain == 0) {
+/*
+	TTree* inTree = (TTree*)infile->Get("kbicker/USR55");
+//	TTree* inTree = (TTree*)infile->Get("fhaas/USR52");
+	if(inTree == 0) {
 		std::cout<<"Error opening in-TTree."<<std::endl;
 		return;
 	}
-
+*/
 	TFile* outfile;
 	if(outfilename != 0) {
 		outfile = TFile::Open(outfilename, "NEW");
@@ -51,84 +51,86 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 		return;
 	}
 
-	TTree* out_tree = tree_chain->CloneTree(0);
-
 	antok::Initializer* initializer = antok::Initializer::instance();
 	if(not initializer->readConfigFile(configfilename)) {
 		std::cerr<<"Could not open config file. Aborting..."<<std::endl;
 		exit(1);
 	}
-	antok::Data data;
+//	antok::Data data;
+	TTree* inTree = 0;
+	antok::Data& data = initializer->get_data(infile, inTree);
 	antok::Event& event = initializer->get_event();
 	antok::Cutter& cutter = initializer->get_cutter();
 	antok::Plotter& plotter = initializer->get_plotter();
 
+	TTree* out_tree = inTree->CloneTree(0);
+
 	const unsigned int& N_PARTICLES = antok::Constants::n_particles();
 
-	tree_chain->SetBranchAddress("Run", &data.Run);
-	tree_chain->SetBranchAddress("TrigMask", &data.TrigMask);
-	tree_chain->SetBranchAddress("EvNbr", &data.EvNbr);
-	tree_chain->SetBranchAddress("SpillNbr", &data.SpillNbr);
+	inTree->SetBranchAddress("Run", &data.Run);
+	inTree->SetBranchAddress("TrigMask", &data.TrigMask);
+	inTree->SetBranchAddress("EvNbr", &data.EvNbr);
+	inTree->SetBranchAddress("SpillNbr", &data.SpillNbr);
 
-	tree_chain->SetBranchAddress("X_primV", &data.X_primV);
-	tree_chain->SetBranchAddress("Y_primV", &data.Y_primV);
-	tree_chain->SetBranchAddress("Z_primV", &data.Z_primV);
+	inTree->SetBranchAddress("X_primV", &data.X_primV);
+	inTree->SetBranchAddress("Y_primV", &data.Y_primV);
+	inTree->SetBranchAddress("Z_primV", &data.Z_primV);
 
-	tree_chain->SetBranchAddress("gradx", &data.gradx);
-	tree_chain->SetBranchAddress("grady", &data.grady);
+	inTree->SetBranchAddress("gradx", &data.gradx);
+	inTree->SetBranchAddress("grady", &data.grady);
 
-	tree_chain->SetBranchAddress("beam_time", &data.beam_time);
+	inTree->SetBranchAddress("beam_time", &data.beam_time);
 
 	for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 		std::stringstream sstr;
 		sstr<<"Mom_x"<<(i + 1);
-		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.Mom_x.at(i));
+		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_x.at(i));
 		sstr.str("");
 		sstr<<"Mom_y"<<(i + 1);
-		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.Mom_y.at(i));
+		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_y.at(i));
 		sstr.str("");
 		sstr<<"Mom_z"<<(i + 1);
-		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.Mom_z.at(i));
+		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_z.at(i));
 		sstr.str("");
 		sstr<<"theta_RICH_"<<(i + 1);
-		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.theta_RICH.at(i));
+		inTree->SetBranchAddress(sstr.str().c_str(), &data.theta_RICH.at(i));
 		sstr.str("");
 		sstr<<"PID_RICH_"<<(i + 1);
-		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.PID_RICH.at(i));
+		inTree->SetBranchAddress(sstr.str().c_str(), &data.PID_RICH.at(i));
 		sstr.str("");
 		sstr<<"zmax"<<(i + 1);
-		tree_chain->SetBranchAddress(sstr.str().c_str(), &data.z_max.at(i));
+		inTree->SetBranchAddress(sstr.str().c_str(), &data.z_max.at(i));
 	}
 
-	tree_chain->SetBranchAddress("chi2PV", &data.chi2PV);
+	inTree->SetBranchAddress("chi2PV", &data.chi2PV);
 
-	tree_chain->SetBranchAddress("RPD_Px", &data.RPD_Px);
-	tree_chain->SetBranchAddress("RPD_Py", &data.RPD_Py);
-	tree_chain->SetBranchAddress("RPD_Pz", &data.RPD_Pz);
-	tree_chain->SetBranchAddress("RPD_E", &data.RPD_E);
-	tree_chain->SetBranchAddress("RPD_Tz", &data.RPD_Tz);
-	tree_chain->SetBranchAddress("RPD_z", &data.RPD_z);
-	tree_chain->SetBranchAddress("RPD_beta", &data.RPD_beta);
-	tree_chain->SetBranchAddress("RPD_Phi", &data.RPD_Phi);
-	tree_chain->SetBranchAddress("RPD_dEA", &data.RPD_dEA);
-	tree_chain->SetBranchAddress("RPD_dEB", &data.RPD_dEB);
-	tree_chain->SetBranchAddress("nbrRPDTracks", &data.nbrRPDTracks);
+	inTree->SetBranchAddress("RPD_Px", &data.RPD_Px);
+	inTree->SetBranchAddress("RPD_Py", &data.RPD_Py);
+	inTree->SetBranchAddress("RPD_Pz", &data.RPD_Pz);
+	inTree->SetBranchAddress("RPD_E", &data.RPD_E);
+	inTree->SetBranchAddress("RPD_Tz", &data.RPD_Tz);
+	inTree->SetBranchAddress("RPD_z", &data.RPD_z);
+	inTree->SetBranchAddress("RPD_beta", &data.RPD_beta);
+	inTree->SetBranchAddress("RPD_Phi", &data.RPD_Phi);
+	inTree->SetBranchAddress("RPD_dEA", &data.RPD_dEA);
+	inTree->SetBranchAddress("RPD_dEB", &data.RPD_dEB);
+	inTree->SetBranchAddress("nbrRPDTracks", &data.nbrRPDTracks);
 
-	tree_chain->SetBranchAddress("cedarID_bayes", &data.cedarID_bayes);
-	tree_chain->SetBranchAddress("cedarTheta_X", &data.cedarTheta_X);
-	tree_chain->SetBranchAddress("cedarTheta_Y", &data.cedarTheta_Y);
-	tree_chain->SetBranchAddress("cedarProbK1", &data.cedarProbK1);
-	tree_chain->SetBranchAddress("cedarProbK2", &data.cedarProbK2);
-	tree_chain->SetBranchAddress("cedarProbK3", &data.cedarProbK3);
+	inTree->SetBranchAddress("cedarID_bayes", &data.cedarID_bayes);
+	inTree->SetBranchAddress("cedarTheta_X", &data.cedarTheta_X);
+	inTree->SetBranchAddress("cedarTheta_Y", &data.cedarTheta_Y);
+	inTree->SetBranchAddress("cedarProbK1", &data.cedarProbK1);
+	inTree->SetBranchAddress("cedarProbK2", &data.cedarProbK2);
+	inTree->SetBranchAddress("cedarProbK3", &data.cedarProbK3);
 
 	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
 	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
 
 	assert(cutter.set_stats_histogram(stats));
 
-	for(unsigned int i = 0; i < tree_chain->GetEntries(); ++i) {
+	for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
 
-		tree_chain->GetEntry(i);
+		inTree->GetEntry(i);
 
 		event.update(data);
 

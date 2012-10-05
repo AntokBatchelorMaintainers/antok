@@ -1,14 +1,57 @@
 
 NumberOfParticles: 5
 
-TreeEntries:
-    - Run
-    - TrigMask
-    - EvNbr
-    - SpillNbr
-    - X_primV
-    - Y_primV
-    - Z_primV
+TreeName: kbicker/USR55
+
+TreeBranches:
+    onePerEvent:
+        double:
+            - X_primV
+            - Y_primV
+            - Z_primV
+            - gradx
+            - grady
+            - beam_time
+            - chi2PV
+            - RPD_Px
+            - RPD_Py
+            - RPD_Pz
+            - RPD_E
+            - RPD_Tz
+            - RPD_z
+            - RPD_beta
+            - RPD_Phi
+            - RPD_dEA
+            - RPD_dEB
+            - cedarTheta_X
+            - cedarTheta_Y
+            - cedarProbK1
+            - cedarProbK2
+            - cedarProbK3
+
+        int:
+            - Run
+            - TrigMask
+            - SpillNbr
+            - nbrRPDTracks
+#           - isKaon
+            - cedarID_bayes
+
+        Long64_t:
+            - EvNbr
+
+    onePerParticle:
+
+        double:
+            - Mom_x
+            - Mom_y
+            - Mom_z
+            - zmax
+            - theta_RICH_
+
+        int:
+            - PID_RICH_
+
 
 Constants:
     ChargedKaonMass: 0.493677

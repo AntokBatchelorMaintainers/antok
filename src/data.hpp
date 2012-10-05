@@ -3,9 +3,18 @@
 
 #include<constants.h>
 
+#include<map>
+
 namespace antok {
 
 	struct Data {
+
+		std::map<std::string, double> doubles;
+		std::map<std::string, int> ints;
+		std::map<std::string, Long64_t> long64_ts;
+
+		std::map<std::string, std::vector<double> > particle_doubles;
+		std::map<std::string, std::vector<int> > particle_ints;
 
 		int Run;
 		int TrigMask;

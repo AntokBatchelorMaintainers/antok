@@ -3,8 +3,14 @@
 
 #include<string>
 
+#include<yaml-cpp/yaml.h>
+
+class TFile;
+class TTree;
+
 namespace antok {
 
+	class Data;
 	class Event;
 	class Cutter;
 	class Plotter;
@@ -20,6 +26,7 @@ namespace antok {
 		bool init();
 
 		antok::Cutter& get_cutter();
+		antok::Data& get_data(TFile* infile, TTree*& intree);
 		antok::Event& get_event();
 		antok::Plotter& get_plotter();
 
@@ -29,7 +36,10 @@ namespace antok {
 
 		static Initializer* _initializer;
 
+		YAML::Node* _config;
+
 		antok::Cutter* _cutter;
+		antok::Data* _data;
 		antok::Event* _event;
 		antok::Plotter* _plotter;
 
