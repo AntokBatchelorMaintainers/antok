@@ -8,11 +8,10 @@
 #include<cutter.h>
 #include<data.hpp>
 #include<event.h>
+#include<functions.hpp>
 #include<initializer.h>
 #include<object_manager.h>
 #include<plotter.h>
-
-#include<functions.hpp>
 
 antok::Initializer* antok::Initializer::_initializer = 0;
 
@@ -150,7 +149,6 @@ bool antok::Initializer::initializeData() {
 				std::cerr<<"Data type \""<<type<<"\" not supported."<<std::endl;
 				return false;
 			}
-//			std::cout<<typeIt->first.as<std::string>()<<": "<<valIt->as<std::string>()<<std::endl;
 		}
 	}
 	const unsigned int& N_PARTICLES = antok::Constants::n_particles();
@@ -179,7 +177,6 @@ bool antok::Initializer::initializeData() {
 				std::cerr<<"Data type \""<<type<<"\" not supported."<<std::endl;
 				return false;
 			}
-//			std::cout<<typeIt->first.as<std::string>()<<": "<<valIt->as<std::string>()<<std::endl;
 		}
 	}
 
@@ -198,15 +195,12 @@ bool antok::Initializer::initializeData() {
 
 	for(std::map<std::string, double>::iterator it = data.doubles.begin(); it != data.doubles.end(); ++it) {
 		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
-//		std::cout<<"double name: "<<it->first<<" value="<<it->second<<std::endl;
 	}
 	for(std::map<std::string, int>::iterator it = data.ints.begin(); it != data.ints.end(); ++it) {
 		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
-//		std::cout<<"int name: "<<it->first<<" value="<<it->second<<std::endl;
 	}
 	for(std::map<std::string, Long64_t>::iterator it = data.long64_ts.begin(); it != data.long64_ts.end(); ++it) {
 		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
-//		std::cout<<"Long64_t name: "<<it->first<<" value="<<it->second<<std::endl;
 	}
 
 	return true;
@@ -230,25 +224,34 @@ bool antok::Initializer::initializeEvent() {
 	if(not config["CalculatedQuantities"]) {
 		std::cerr<<"Warning: \"CalculatedQuantities\" not found in configuration file."<<std::endl;
 	}
-//	std::cout<<config["CalculatedQuantities"]<<std::endl;
 	for(YAML::const_iterator calcQuantity_it = config["CalculatedQuantities"].begin(); calcQuantity_it != config["CalculatedQuantities"].end(); calcQuantity_it++) {
-		std::cout<<calcQuantity_it->operator[]("Name").as<std::string>()<<std::endl;
-//		std::cout<<"first:"<<std::endl<<std::endl<<calcQuantity_it->first<<std::endl;
-//		std::cout<<"second:"<<std::endl<<std::endl<<calcQuantity_it->second<<std::endl;
-		std::string quantityName = calcQuantity_it->first.as<std::string>();
-		if(not (calcQuantity_it->second["Function"] and calcQuantity_it->second["Function"]["Name"])) {
-			std::cerr<<"No Function or no function name for calculated quantity \""<<quantityName<<"\"."<<std::endl;
+
+		YAML::Node calcQuantity = (*calcQuantity_it);
+		std::string quantityBaseName = calcQuantity["Name"].as<std::string>();
+
+		if(not (calcQuantity["Function"] and calcQuantity["Function"]["Name"])) {
+			std::cerr<<"No Function or no function name for calculated quantity \""<<quantityBaseName<<"\"."<<std::endl;
 			return false;
 		}
+
 		std::vector<int> indices;
-		if(calcQuantity_it->second["Indices"]) {
-			indices = calcQuantity_it->second["Indices"].as<std::vector<int> >();
+		if(calcQuantity["Indices"]) {
+			indices = calcQuantity["Indices"].as<std::vector<int> >();
 		} else {
 			indices.push_back(-1);
 		}
+
+		YAML::Node function = calcQuantity["Function"];
+		std::string functionName = function["Name"].as<std::string>();
+
 		for(unsigned int indices_i = 0; indices_i < indices.size(); ++indices_i) {
-			YAML::Node function = calcQuantity_it->second["Function"];
-			std::string functionName = function["Name"].as<std::string>();
+
+			std::string quantityName = quantityBaseName;
+			if(indices[indices_i] > 0) {
+				std::stringstream strStr;
+				strStr<<quantityName<<indices[indices_i];
+				quantityName = strStr.str();
+			}
 
 			if(functionName == "getLorentzVec") {
 				if(not (function["X"] and function["Y"] and function["Z"] and function["M"])) {
@@ -269,7 +272,6 @@ bool antok::Initializer::initializeEvent() {
 				double* xAddr;
 				double* yAddr;
 				double* zAddr;
-				std::string name = quantityName;
 				if(indices[indices_i] > 0) {
 					std::stringstream strStr;
 					strStr<<xArg<<indices[indices_i];
@@ -280,9 +282,6 @@ bool antok::Initializer::initializeEvent() {
 					strStr.str("");
 					strStr<<zArg<<indices[indices_i];
 					zArg = strStr.str();
-					strStr.str("");
-					strStr<<name<<indices[indices_i];
-					name = strStr.str();
 				}
 				xAddr = data.getDoubleAddr(xArg);
 				yAddr = data.getDoubleAddr(yArg);
@@ -292,23 +291,29 @@ bool antok::Initializer::initializeEvent() {
 					return false;
 				}
 
-				if(not data.insertLorentzVector(name)) {
-					std::cerr<<"Could not insert TLorentzVector \""<<name<<"\" when creating variable entry \""<<quantityName<<"\"."<<std::endl;
+				if(not data.insertLorentzVector(quantityName)) {
+					std::cerr<<"Could not insert TLorentzVector when creating variable entry \""<<quantityName<<"\"."<<std::endl;
 					return false;
 				}
-				event._functions.push_back(new antok::GetLorentzVec(xAddr, yAddr, zAddr, mAddr, data.getLorentzVectorAddr(name)));
-			}
+				event._functions.push_back(new antok::GetLorentzVec(xAddr, yAddr, zAddr, mAddr, data.getLorentzVectorAddr(quantityName)));
+			} // End of "getLorentzVec" function handling
 
-			if(functionName == "sum") {
+			// "sum" function handling
+			else if(functionName == "sum") {
+
 				std::vector<double*> doubleInputAddrs;
 				std::vector<int*> intInputAddrs;
 				std::vector<Long64_t*> long64_tInputAddrs;
 				std::vector<TLorentzVector*> lorentzVectorInputAddrs;
 				std::string typeName = "notInitialized";
+				std::vector<std::string> summandNames;
+
+				// Summing over one variable with indices
 				if(not function["Summands"]) {
 					std::cerr<<"Argument \"Summands\" is missing in configuration file for variable \""<<quantityName<<"\"."<<std::endl;
 					return false;
 				}
+
 				if(function["Summands"]["Indices"] or function["Summands"]["Name"]) {
 					if(not function["Summands"]["Indices"] and function["Summands"]["Name"]) {
 						std::cerr<<"Either \"Summands\" or \"Name\" found in sum function, but not both (Variable: \""<<quantityName<<"\")."<<std::endl;
@@ -319,19 +324,18 @@ bool antok::Initializer::initializeEvent() {
 						return false;
 					}
 					std::vector<int> inner_indices = function["Summands"]["Indices"].as<std::vector<int> >();
-					std::cout<<function["Summands"]["Name"].Scalar()<<std::endl;
-					std::cout<<function["Summands"]["Name"]<<std::endl;
 					typeName = function["Summands"]["Name"].as<std::string>();
+					std::string summandBaseName = typeName;
 					std::stringstream strStr;
 					strStr<<typeName<<inner_indices[0];
-					typeName = data.global_map[typeName];
+					typeName = data.global_map[strStr.str()];
 					for(unsigned int inner_indices_i = 0; inner_indices_i < inner_indices.size(); ++inner_indices_i) {
 						int inner_index = inner_indices[inner_indices_i];
-
-
+						std::stringstream strStr;
+						strStr<<summandBaseName<<inner_index;
+						summandNames.push_back(strStr.str());
 					}
-
-
+				// Summing over list of variable names
 				} else {
 					typeName = function["Summands"].begin()->second.as<std::string>();
 					if(indices[indices_i] > 0) {
@@ -347,10 +351,20 @@ bool antok::Initializer::initializeEvent() {
 							strStr<<variableName<<indices[indices_i];
 							variableName = strStr.str();
 						}
+						summandNames.push_back(variableName);
+					}
+				}
+
+				// Now do type checking and get all the addresses
+				for(unsigned int summandNames_i = 0; summandNames_i < summandNames.size(); ++summandNames_i) {
+
+						std::string variableName = summandNames[summandNames_i];
+
 						if(data.global_map[variableName] != typeName) {
 							std::cerr<<"Cannot sum terms of different type (\""<<typeName<<"\"<>\""<<data.global_map[variableName]<<"\")."<<std::endl;
 							return false;
 						}
+
 						if(typeName == "double") {
 							double* addr = data.getDoubleAddr(variableName);
 							if(addr == 0) {
@@ -383,8 +397,10 @@ bool antok::Initializer::initializeEvent() {
 							std::cerr<<"Type \""<<typeName<<"\" is not supported."<<std::endl;
 							return false;
 						}
+
 					}
-				}
+
+				// And produce the function
 				if(typeName == "double") {
 					data.insertDouble(quantityName);
 					event._functions.push_back(new antok::Sum<double>(doubleInputAddrs, data.getDoubleAddr(quantityName)));
@@ -398,15 +414,41 @@ bool antok::Initializer::initializeEvent() {
 					data.insertLorentzVector(quantityName);
 					event._functions.push_back(new antok::Sum<TLorentzVector>(lorentzVectorInputAddrs, data.getLorentzVectorAddr(quantityName)));
 				}
+
+			} // End of "sum" function handling
+
+			// "mass" function handling
+			else if(functionName == "mass") {
+				if(not function["Vector"]) {
+					std::cerr<<"\"Vector\" argument not found in \"mass\" function for variable \""<<quantityName<<"\"."<<std::endl;
+					return false;
+				}
+				std::string vectorName = function["Vector"].as<std::string>();
+				if(indices[indices_i] > 0) {
+					std::stringstream strStr;
+					strStr<<vectorName<<indices[indices_i];
+					vectorName = strStr.str();
+				}
+				TLorentzVector* vector = data.getLorentzVectorAddr(vectorName);
+				if(vector == 0) {
+					std::cerr<<"Did not find TLorentzVector \""<<vectorName<<"\" in Data for variable \""<<quantityName<<"\"."<<std::endl;
+					return false;
+				}
+				if(not data.insertDouble(quantityName)) {
+					std::cerr<<"Coud not insert double \""<<quantityName<<"\" (double entry?)."<<std::endl;
+					return false;
+				}
+				event._functions.push_back(new antok::Mass(vector, data.getDoubleAddr(quantityName)));
+			} // End of "mass" function handling
+
+			else {
+				std::cerr<<"Function type \""<<functionName<<"\" not supported."<<std::endl;
+				return false;
 			}
 
+		} // End of loop over all indices
 
-
-
-
-
-		}
-	}
+	} // End of loop over all CalculatedQuantities
 
 	return true;
 

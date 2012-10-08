@@ -82,16 +82,16 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 	inTree->SetBranchAddress("beam_time", &data.beam_time);
 
-/*	for(unsigned int i = 0; i < N_PARTICLES; ++i) {
+	for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 		std::stringstream sstr;
 		sstr<<"Mom_x"<<(i + 1);
-		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_x.at(i));
+//		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_x.at(i));
 		sstr.str("");
 		sstr<<"Mom_y"<<(i + 1);
-		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_y.at(i));
+//		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_y.at(i));
 		sstr.str("");
 		sstr<<"Mom_z"<<(i + 1);
-		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_z.at(i));
+//		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_z.at(i));
 		sstr.str("");
 		sstr<<"theta_RICH_"<<(i + 1);
 		inTree->SetBranchAddress(sstr.str().c_str(), &data.theta_RICH.at(i));
@@ -102,7 +102,7 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 		sstr<<"zmax"<<(i + 1);
 		inTree->SetBranchAddress(sstr.str().c_str(), &data.z_max.at(i));
 	}
-*/
+
 	inTree->SetBranchAddress("chi2PV", &data.chi2PV);
 
 	inTree->SetBranchAddress("RPD_Px", &data.RPD_Px);
@@ -129,6 +129,7 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 	assert(cutter.set_stats_histogram(stats));
 
+//	for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
 	for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
 
 		inTree->GetEntry(i);

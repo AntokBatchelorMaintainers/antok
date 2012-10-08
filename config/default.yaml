@@ -1,5 +1,6 @@
 
 NumberOfParticles: 5
+AllParticles: &allParticles [1, 2, 3, 4, 5]
 
 TreeName: kbicker/USR55
 
@@ -70,38 +71,28 @@ CalculatedQuantities:
           Y: *Mom_y
           Z: *Mom_z
           M: *ChargedPionMass
-      Indices: [1, 2, 3, 4, 5]
+      Indices: *allParticles
 
+    - Name: &TotalLorentzVec TotalLorentzVec
+      Function:
+          Name: sum
+          Summands:
+              Name: *LorentzVecName
+              Indices: *allParticles
 
-#    LorentzVec_: &LorentzVecName
-#        Function:
-#            Name: getLorentzVec
-#            X: *Mom_x
-#            Y: *Mom_y
-#            Z: *Mom_z
-#            M: *ChargedPionMass
-#        Indices: [1, 2, 3, 4, 5]
-#
-#    TotalLorentzVec: &TotalLorentzVec
-#        Function:
-#            Name: sum
-#            Summands:
-#                Name: *LorentzVecName
-#                Indices: [1, 2, 3, 4, 5]
-#
-#    MomSum:
-#        Function:
-#            Name: sum
-#            Summands:
-#                - *Mom_x
-#                - *Mom_y
-#                - *Mom_z
-#        Indices: [1, 2, 3, 4, 5]
-#
-#    TotalLorentzVecMass:
-#        Function:
-#            Name: mass
-#            Vector: *TotalLorentzVec
+    - Name: MomSum
+      Function:
+          Name: sum
+          Summands:
+              - *Mom_x
+              - *Mom_y
+              - *Mom_z
+      Indices: *allParticles
+
+    - Name: XMass
+      Function:
+          Name: mass
+          Vector: *TotalLorentzVec
 
 Cuts:
 

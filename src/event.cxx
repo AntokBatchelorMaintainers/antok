@@ -24,13 +24,14 @@ antok::Event::Event() {
 
 void antok::Event::update(antok::Data& data) {
 
-	const int& PION_MASS = antok::Constants::charged_pion_mass();
+	const double& PION_MASS = antok::Constants::charged_pion_mass();
 
 	rawData = &data;
 
 	_pSum.SetXYZT(0., 0., 0., 0.);
 	for(unsigned int i = 0; i < _p.size(); ++i) {
 		_p.at(i).SetXYZM(data.Mom_x.at(i), data.Mom_y.at(i), data.Mom_z.at(i), PION_MASS);
+//		_p.at(i).Print();
 		_pSum += _p.at(i);
 	}
 

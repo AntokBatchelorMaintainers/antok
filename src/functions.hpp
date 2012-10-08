@@ -85,6 +85,7 @@ namespace antok {
 
 		bool operator() () {
 			_outAddr->SetXYZM(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
+//			_outAddr->Print();
 			return true;
 		}
 

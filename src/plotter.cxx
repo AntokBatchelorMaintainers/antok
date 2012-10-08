@@ -1,9 +1,8 @@
 
 #include<assert.h>
 
+#include<object_manager.h>
 #include<plotter.h>
-
-#include<event.h>
 
 antok::Plotter* antok::Plotter::_plotter = 0;
 
@@ -41,7 +40,11 @@ antok::Plotter::Plotter() {
 
 	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	_plots.push_back(antok::Plot(cutmasks, new TH1D("mass_5pi", "mass_5Pi", 500, 0, 7), &XMass));
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	_plots.push_back(antok::Plot(cutmasks, new TH1D("mass_5pi_newWay", "mass_5Pi_newWay", 500, 0, 7), data.getDoubleAddr("XMass")));
 	cutmasks.clear();
+
+
 
 	cutmasks.insert(cutmasks.begin(), standard_cutmasks.begin(), standard_cutmasks.end());
 	cutmasks.push_back(128);
