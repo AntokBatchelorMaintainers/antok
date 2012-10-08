@@ -12,6 +12,7 @@ set(SOURCES
 	cutter.cxx
 	event.cxx
 	initializer.cxx
+	object_manager.cxx
 	plot.cxx
 	plotter.cxx
    )

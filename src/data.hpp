@@ -1,20 +1,89 @@
 #ifndef ANTOK_DATA_H
 #define ANTOK_DATA_H
 
+#include<iostream>
+#include<map>
+
 #include<constants.h>
 
-#include<map>
+
+class TLorentzVector;
 
 namespace antok {
 
 	struct Data {
 
+		std::map<std::string, std::string> global_map;
+
 		std::map<std::string, double> doubles;
 		std::map<std::string, int> ints;
 		std::map<std::string, Long64_t> long64_ts;
 
-		std::map<std::string, std::vector<double> > particle_doubles;
-		std::map<std::string, std::vector<int> > particle_ints;
+		std::map<std::string, TLorentzVector> lorentzVectors;
+
+		bool insertDouble(std::string name) {
+			if(doubles.count(name) > 0) {
+				return false;
+			}
+			global_map[name] = "double";
+			doubles[name] = -8888.8;
+			return true;
+		}
+
+		bool insertInt(std::string name) {
+			if(ints.count(name) > 0) {
+				return false;
+			}
+			global_map[name] = "int";
+			ints[name] = -8888;
+			return true;
+		}
+
+		bool insertLong64_t(std::string name) {
+			if(long64_ts.count(name) > 0) {
+				return false;
+			}
+			global_map[name] = "Long64_t";
+			long64_ts[name] = -8888;
+			return true;
+		}
+
+		bool insertLorentzVector(std::string name) {
+			if(lorentzVectors.count(name) > 0) {
+				return false;
+			}
+			global_map[name] = "TLorentzVector";
+			lorentzVectors[name] = *(new TLorentzVector);
+			return true;
+		}
+
+		double* getDoubleAddr(std::string name) {
+			if(doubles.count(name) < 1) {
+				return 0;
+			}
+			return &doubles[name];
+		}
+
+		int* getIntAddr(std::string name) {
+			if(ints.count(name) < 1) {
+				return 0;
+			}
+			return &ints[name];
+		}
+
+		Long64_t* getLong64_tAddr(std::string name) {
+			if(long64_ts.count(name) < 1) {
+				return 0;
+			}
+			return &long64_ts[name];
+		}
+
+		TLorentzVector* getLorentzVectorAddr(std::string name) {
+			if(lorentzVectors.count(name) < 1) {
+				return 0;
+			}
+			return &lorentzVectors[name];
+		}
 
 		int Run;
 		int TrigMask;

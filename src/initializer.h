@@ -10,9 +10,9 @@ class TTree;
 
 namespace antok {
 
-	class Data;
 	class Event;
 	class Cutter;
+	class ObjectManager;
 	class Plotter;
 
 	class Initializer {
@@ -23,12 +23,19 @@ namespace antok {
 
 		bool readConfigFile(const std::string& filename);
 
-		bool init();
+		bool initAll() {
+			return (
+				initializeData() and
+				initializeEvent() and
+				initializeCutter() and
+				initializePlotter()
+			);
+		}
 
-		antok::Cutter& get_cutter();
-		antok::Data& get_data(TFile* infile, TTree*& intree);
-		antok::Event& get_event();
-		antok::Plotter& get_plotter();
+		bool initializeCutter();
+		bool initializeData();
+		bool initializeEvent();
+		bool initializePlotter();
 
 	  private:
 
@@ -37,11 +44,6 @@ namespace antok {
 		static Initializer* _initializer;
 
 		YAML::Node* _config;
-
-		antok::Cutter* _cutter;
-		antok::Data* _data;
-		antok::Event* _event;
-		antok::Plotter* _plotter;
 
 	};
 

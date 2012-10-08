@@ -43,21 +43,70 @@ TreeBranches:
     onePerParticle:
 
         double:
-            - Mom_x
-            - Mom_y
-            - Mom_z
+            - &Mom_x Mom_x
+            - &Mom_y Mom_y
+            - &Mom_z Mom_z
             - zmax
             - theta_RICH_
 
         int:
             - PID_RICH_
 
-
 Constants:
     ChargedKaonMass: 0.493677
-    ChargedPionMass: 0.13957018
+    ChargedPionMass: &ChargedPionMass 0.13957018
     ProtonMass     : 0.938272046
 
 #   old values used by flo
 #   ChargedPionMass: 0.9382723
 #   ProtonMass     : 0.139567
+
+CalculatedQuantities:
+
+    - Name: &LorentzVecName LorentzVec_
+      Function:
+          Name: getLorentzVec
+          X: *Mom_x
+          Y: *Mom_y
+          Z: *Mom_z
+          M: *ChargedPionMass
+      Indices: [1, 2, 3, 4, 5]
+
+
+#    LorentzVec_: &LorentzVecName
+#        Function:
+#            Name: getLorentzVec
+#            X: *Mom_x
+#            Y: *Mom_y
+#            Z: *Mom_z
+#            M: *ChargedPionMass
+#        Indices: [1, 2, 3, 4, 5]
+#
+#    TotalLorentzVec: &TotalLorentzVec
+#        Function:
+#            Name: sum
+#            Summands:
+#                Name: *LorentzVecName
+#                Indices: [1, 2, 3, 4, 5]
+#
+#    MomSum:
+#        Function:
+#            Name: sum
+#            Summands:
+#                - *Mom_x
+#                - *Mom_y
+#                - *Mom_z
+#        Indices: [1, 2, 3, 4, 5]
+#
+#    TotalLorentzVecMass:
+#        Function:
+#            Name: mass
+#            Vector: *TotalLorentzVec
+
+Cuts:
+
+    RangeCut:
+        Variable: *Mom_x
+        LowerBound: -1
+        UpperBound: 1
+

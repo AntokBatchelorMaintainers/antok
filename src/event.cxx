@@ -1,6 +1,10 @@
+#include<event.h>
+
 #include<basic_calcs.h>
 #include<constants.h>
-#include<event.h>
+#include<functions.hpp>
+
+#include<object_manager.h>
 
 antok::Event* antok::Event::_event = 0;
 
@@ -18,7 +22,7 @@ antok::Event::Event() {
 
 };
 
-void antok::Event::update(const antok::Data& data) {
+void antok::Event::update(antok::Data& data) {
 
 	const int& PION_MASS = antok::Constants::charged_pion_mass();
 
@@ -42,6 +46,10 @@ void antok::Event::update(const antok::Data& data) {
 
 	antok::get_RPD_delta_phi_res(_pBeam, _pProton, _pSum, _RpdDeltaPhi, _RpdPhiRes);
 	antok::get_RPD_delta_phi_res_fhaas(_pBeam, _pProton, _pSum, _RpdDeltaPhi_fhaas, _RpdPhiRes_fhaas);
+
+	for(unsigned int i = 0; i < _functions.size(); ++i) {
+		(*_functions[i])();
+	}
 
 };
 

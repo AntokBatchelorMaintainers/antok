@@ -9,13 +9,15 @@
 
 namespace antok {
 
+	class Function;
+
 	class Event {
 
 	  public:
 
 		static Event* instance();
 
-		void update(const antok::Data& data);
+		void update(antok::Data& data);
 
 		const TLorentzVector& get_p(unsigned int n) const { return _p.at(n); };
 
@@ -42,6 +44,10 @@ namespace antok {
 		Event();
 
 		static Event* _event;
+
+		std::vector<antok::Function*> _functions;
+
+		friend class antok::Initializer;
 
 		TLorentzVector get_beam_energy(TVector3 p3_beam, const TLorentzVector& LV_X) const;
 

@@ -11,6 +11,7 @@
 #include<data.hpp>
 #include<event.h>
 #include<initializer.h>
+#include<object_manager.h>
 #include<plotter.h>
 
 #include<assert.h>
@@ -31,16 +32,10 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 // 		infile = TFile::Open("/afs/cern.ch/user/k/kbicker/scratch0/prefiltering_run1_merged/files_H_2008_26.root");
 	}
 	if(infile == 0) {
+		std::cerr<<"Could not open input file. Aborting..."<<std::endl;
 		return;
 	}
-/*
-	TTree* inTree = (TTree*)infile->Get("kbicker/USR55");
-//	TTree* inTree = (TTree*)infile->Get("fhaas/USR52");
-	if(inTree == 0) {
-		std::cout<<"Error opening in-TTree."<<std::endl;
-		return;
-	}
-*/
+
 	TFile* outfile;
 	if(outfilename != 0) {
 		outfile = TFile::Open(outfilename, "NEW");
@@ -51,17 +46,23 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 		return;
 	}
 
+	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
+	objectManager->setInFile(infile);
 	antok::Initializer* initializer = antok::Initializer::instance();
 	if(not initializer->readConfigFile(configfilename)) {
 		std::cerr<<"Could not open config file. Aborting..."<<std::endl;
 		exit(1);
 	}
-//	antok::Data data;
-	TTree* inTree = 0;
-	antok::Data& data = initializer->get_data(infile, inTree);
-	antok::Event& event = initializer->get_event();
-	antok::Cutter& cutter = initializer->get_cutter();
-	antok::Plotter& plotter = initializer->get_plotter();
+
+	if(not initializer->initAll()) {
+		std::cerr<<"Error while initializing. Aborting..."<<std::endl;
+		exit(1);
+	}
+	antok::Cutter& cutter = objectManager->getCutter();
+	antok::Data& data = objectManager->getData();
+	antok::Event& event = objectManager->getEvent();
+	antok::Plotter& plotter = objectManager->getPlotter();
+	TTree* inTree = objectManager->getInTree();
 
 	TTree* out_tree = inTree->CloneTree(0);
 
@@ -81,7 +82,7 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 	inTree->SetBranchAddress("beam_time", &data.beam_time);
 
-	for(unsigned int i = 0; i < N_PARTICLES; ++i) {
+/*	for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 		std::stringstream sstr;
 		sstr<<"Mom_x"<<(i + 1);
 		inTree->SetBranchAddress(sstr.str().c_str(), &data.Mom_x.at(i));
@@ -101,7 +102,7 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 		sstr<<"zmax"<<(i + 1);
 		inTree->SetBranchAddress(sstr.str().c_str(), &data.z_max.at(i));
 	}
-
+*/
 	inTree->SetBranchAddress("chi2PV", &data.chi2PV);
 
 	inTree->SetBranchAddress("RPD_Px", &data.RPD_Px);
