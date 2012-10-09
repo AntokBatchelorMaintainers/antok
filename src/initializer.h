@@ -41,12 +41,13 @@ namespace antok {
 
 		bool registerGetBeamLorentzVector(const YAML::Node& function, std::string& quantityName, int index);
 		bool registerGetLorentzVec(const YAML::Node& function, std::string& quantityName, int index);
+		bool registerGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityName, int index);
 		bool registerGetTs(const YAML::Node& function, std::vector<std::string>& quantityName, int index);
 		bool registerMass(const YAML::Node& function, std::string& quantityName, int index);
 		bool registerSum(const YAML::Node& function, std::string& quantityName, int index);
 		bool registerSum2(const YAML::Node& function, std::string& quantityName, int index);
 
-		bool argumentHandler(std::vector<std::string>& argNames, int index);
+		bool argumentHandler(std::vector<std::pair<std::string, std::string> >& args, int index);
 
 		Initializer();
 

@@ -184,6 +184,49 @@ namespace antok {
 
 	};
 
+	class GetRpdPhi : public Function
+	{
+
+	  public:
+
+		GetRpdPhi(TLorentzVector* beamLorentzVecAddr,
+		          TLorentzVector* rpdProtonLorentzVecAddr,
+		          TLorentzVector* xLorentzVecAddr,
+		          double* rpdDeltaPhiAddr,
+				  double* rpdDeltaPhiResAddr,
+		          int method
+		)
+			: _beamLorentzVecAddr(beamLorentzVecAddr),
+			  _rpdProtonLorentzVecAddr(rpdProtonLorentzVecAddr),
+			  _xLorentzVecAddr(xLorentzVecAddr),
+			  _rpdDeltaPhiAddr(rpdDeltaPhiAddr),
+			  _rpdDeltaPhiResAddr(rpdDeltaPhiResAddr),
+			  _method(method) { }
+
+		bool operator() () {
+			switch(_method)
+			{
+				case 0:
+					antok::get_RPD_delta_phi_res_projection((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+					return true;
+				case 1:
+					antok::get_RPD_delta_phi_res_rotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+					return true;
+			}
+			return false;
+		};
+
+	  private:
+
+		TLorentzVector* _beamLorentzVecAddr;
+		TLorentzVector* _rpdProtonLorentzVecAddr;
+		TLorentzVector* _xLorentzVecAddr;
+		double* _rpdDeltaPhiAddr;
+		double* _rpdDeltaPhiResAddr;
+		int _method;
+
+	};
+
 }
 
 #endif

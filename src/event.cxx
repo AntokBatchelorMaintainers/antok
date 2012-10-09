@@ -44,10 +44,10 @@ void antok::Event::update(antok::Data& data) {
 	_t = std::fabs((_pBeam - _pSum).Mag2());
 	_tMin = std::fabs((std::pow(_pSum.M2() - _pBeam.M2(), 2)) / (4. * _p3Beam.Mag2()));
 	_tPrime = _t - _tMin;
-*/
+
 	antok::get_RPD_delta_phi_res(_pBeam, _pProton, _pSum, _RpdDeltaPhi, _RpdPhiRes);
 	antok::get_RPD_delta_phi_res_fhaas(_pBeam, _pProton, _pSum, _RpdDeltaPhi_fhaas, _RpdPhiRes_fhaas);
-
+*/
 	for(unsigned int i = 0; i < _functions.size(); ++i) {
 		(*_functions[i])();
 	}

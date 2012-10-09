@@ -73,13 +73,13 @@ CalculatedQuantities:
           M: *ChargedPionMass
       Indices: *allParticles
 
-    - Name: RPDProton
+    - Name: &RPDProton RPDProton
       Function:
-        Name: getLorentzVec
-        Px: *RPD_Px
-        Py: *RPD_Py
-        Pz: *RPD_Pz
-        E: *RPD_E
+          Name: getLorentzVec
+          Px: *RPD_Px
+          Py: *RPD_Py
+          Pz: *RPD_Pz
+          E: *RPD_E
 
     - Name: &XLorentzVec XLorentzVec
       Function:
@@ -114,6 +114,14 @@ CalculatedQuantities:
           Name: getTs
           BeamLorentzVec: *BeamLV
           XLorentzVec: *XLorentzVec
+
+    - Name: [rpdDeltaPhiProjection, rpdDeltaPhiResProjection]
+      Function:
+        Name: getRpdPhi
+        Method: Projection
+        BeamLorentzVec: *BeamLV
+        RPDProtonLorentzVec: *RPDProton
+        XLorentzVec: *XLorentzVec
 
 Cuts:
 

@@ -8,15 +8,15 @@ namespace antok {
 
 	TLorentzVector get_beam_energy(TVector3 p3_beam, const TLorentzVector& LV_X);
 
-	void get_RPD_delta_phi_res(const TLorentzVector& pBeam,
-							   const TLorentzVector& pProton,
-							   const TLorentzVector& pX,
-							   double& delta_phi, double& res);
+	void get_RPD_delta_phi_res_projection(const TLorentzVector& pBeam,
+	                                      const TLorentzVector& pProton,
+	                                      const TLorentzVector& pX,
+	                                      double& delta_phi, double& res);
 
-	void get_RPD_delta_phi_res_fhaas(const TLorentzVector& pBeam,
-							         const TLorentzVector& pProton,
-							         const TLorentzVector& pX,
-							         double& delta_phi, double& res);
+	void get_RPD_delta_phi_res_rotation(const TLorentzVector& pBeam,
+	                                    const TLorentzVector& pProton,
+	                                    const TLorentzVector& pX,
+	                                    double& delta_phi, double& res);
 
 }
 

@@ -27,10 +27,10 @@ TLorentzVector antok::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX
 
 };
 
-void antok::get_RPD_delta_phi_res(const TLorentzVector& pBeam,
-								 const TLorentzVector& pProton,
-								 const TLorentzVector& pX,
-								 double& delta_phi, double& res)
+void antok::get_RPD_delta_phi_res_projection(const TLorentzVector& pBeam,
+                                             const TLorentzVector& pProton,
+                                             const TLorentzVector& pX,
+                                             double& delta_phi, double& res)
 {
 
 	double rpd_Phi = pProton.Phi() / TMath::TwoPi();
@@ -60,10 +60,10 @@ void antok::get_RPD_delta_phi_res(const TLorentzVector& pBeam,
 
 };
 
-void antok::get_RPD_delta_phi_res_fhaas(const TLorentzVector& pBeam,
-                                       const TLorentzVector& pProton,
-                                       const TLorentzVector& pX,
-                                       double& delta_phi, double& res)
+void antok::get_RPD_delta_phi_res_rotation(const TLorentzVector& pBeam,
+                                           const TLorentzVector& pProton,
+                                           const TLorentzVector& pX,
+                                           double& delta_phi, double& res)
 {
 
 	double rpd_Phi = pProton.Phi();
