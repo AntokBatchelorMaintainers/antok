@@ -10,14 +10,14 @@ TreeBranches:
             - X_primV
             - Y_primV
             - Z_primV
-            - gradx
-            - grady
+            - &gradx gradx
+            - &grady grady
             - beam_time
             - chi2PV
-            - RPD_Px
-            - RPD_Py
-            - RPD_Pz
-            - RPD_E
+            - &RPD_Px RPD_Px
+            - &RPD_Py RPD_Py
+            - &RPD_Pz RPD_Pz
+            - &RPD_E RPD_E
             - RPD_Tz
             - RPD_z
             - RPD_beta
@@ -73,7 +73,15 @@ CalculatedQuantities:
           M: *ChargedPionMass
       Indices: *allParticles
 
-    - Name: &TotalLorentzVec TotalLorentzVec
+    - Name: RPDProton
+      Function:
+        Name: getLorentzVec
+        Px: *RPD_Px
+        Py: *RPD_Py
+        Pz: *RPD_Pz
+        E: *RPD_E
+
+    - Name: &XLorentzVec XLorentzVec
       Function:
           Name: sum
           Summands:
@@ -92,7 +100,20 @@ CalculatedQuantities:
     - Name: XMass
       Function:
           Name: mass
-          Vector: *TotalLorentzVec
+          Vector: *XLorentzVec
+
+    - Name: &BeamLV BeamLV
+      Function:
+          Name: getBeamLorentzVector
+          dX: *gradx
+          dY: *grady
+          XLorentzVec: *XLorentzVec
+
+    - Name: [t, tMin, tPrime]
+      Function:
+          Name: getTs
+          BeamLorentzVec: *BeamLV
+          XLorentzVec: *XLorentzVec
 
 Cuts:
 

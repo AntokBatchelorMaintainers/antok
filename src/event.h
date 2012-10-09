@@ -49,7 +49,7 @@ namespace antok {
 
 		friend class antok::Initializer;
 
-		TLorentzVector get_beam_energy(TVector3 p3_beam, const TLorentzVector& LV_X) const;
+//		TLorentzVector get_beam_energy(TVector3 p3_beam, const TLorentzVector& LV_X) const;
 
 		std::vector<TLorentzVector> _p;
 

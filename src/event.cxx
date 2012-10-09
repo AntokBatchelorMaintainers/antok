@@ -24,10 +24,10 @@ antok::Event::Event() {
 
 void antok::Event::update(antok::Data& data) {
 
-	const double& PION_MASS = antok::Constants::charged_pion_mass();
+//	const double& PION_MASS = antok::Constants::charged_pion_mass();
 
 	rawData = &data;
-
+/*
 	_pSum.SetXYZT(0., 0., 0., 0.);
 	for(unsigned int i = 0; i < _p.size(); ++i) {
 		_p.at(i).SetXYZM(data.Mom_x.at(i), data.Mom_y.at(i), data.Mom_z.at(i), PION_MASS);
@@ -44,7 +44,7 @@ void antok::Event::update(antok::Data& data) {
 	_t = std::fabs((_pBeam - _pSum).Mag2());
 	_tMin = std::fabs((std::pow(_pSum.M2() - _pBeam.M2(), 2)) / (4. * _p3Beam.Mag2()));
 	_tPrime = _t - _tMin;
-
+*/
 	antok::get_RPD_delta_phi_res(_pBeam, _pProton, _pSum, _RpdDeltaPhi, _RpdPhiRes);
 	antok::get_RPD_delta_phi_res_fhaas(_pBeam, _pProton, _pSum, _RpdDeltaPhi_fhaas, _RpdPhiRes_fhaas);
 

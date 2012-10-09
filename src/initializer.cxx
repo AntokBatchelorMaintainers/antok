@@ -216,9 +216,6 @@ bool antok::Initializer::initializeEvent() {
 		return false;
 	}
 	objectManager->_event = antok::Event::instance();
-	antok::Event& event = objectManager->getEvent();
-	antok::Data& data = objectManager->getData();
-
 	YAML::Node& config = *_config;
 
 	if(not config["CalculatedQuantities"]) {
@@ -227,10 +224,19 @@ bool antok::Initializer::initializeEvent() {
 	for(YAML::const_iterator calcQuantity_it = config["CalculatedQuantities"].begin(); calcQuantity_it != config["CalculatedQuantities"].end(); calcQuantity_it++) {
 
 		YAML::Node calcQuantity = (*calcQuantity_it);
-		std::string quantityBaseName = calcQuantity["Name"].as<std::string>();
+		std::vector<std::string> quantityBaseNames;
+		if(calcQuantity["Name"].IsSequence()) {
+			quantityBaseNames = calcQuantity["Name"].as<std::vector<std::string> >();
+		} else {
+			quantityBaseNames.push_back(calcQuantity["Name"].as<std::string>());
+		}
+		if(quantityBaseNames.size() < 1) {
+			std::cerr<<"Did not find a name to save calculated quantity to."<<std::endl;
+			return false;
+		}
 
 		if(not (calcQuantity["Function"] and calcQuantity["Function"]["Name"])) {
-			std::cerr<<"No Function or no function name for calculated quantity \""<<quantityBaseName<<"\"."<<std::endl;
+			std::cerr<<"No Function or no function name for calculated quantity \""<<quantityBaseNames[0]<<"\"."<<std::endl;
 			return false;
 		}
 
@@ -241,207 +247,53 @@ bool antok::Initializer::initializeEvent() {
 			indices.push_back(-1);
 		}
 
-		YAML::Node function = calcQuantity["Function"];
+		const YAML::Node& function = calcQuantity["Function"];
 		std::string functionName = function["Name"].as<std::string>();
 
 		for(unsigned int indices_i = 0; indices_i < indices.size(); ++indices_i) {
 
-			std::string quantityName = quantityBaseName;
-			if(indices[indices_i] > 0) {
-				std::stringstream strStr;
-				strStr<<quantityName<<indices[indices_i];
-				quantityName = strStr.str();
+			std::vector<std::string> quantityNames;
+			for(unsigned int baseName_i = 0; baseName_i < quantityBaseNames.size(); ++baseName_i) {
+				if(indices[indices_i] > 0) {
+					std::stringstream strStr;
+					strStr<<quantityBaseNames[baseName_i]<<indices[indices_i];
+					quantityNames.push_back(strStr.str());
+				} else {
+					quantityNames.push_back(quantityBaseNames[baseName_i]);
+				}
+			}
+
+			if(functionName != "getTs" and quantityNames.size() > 1) {
+				std::cerr<<"Too many names for function \""<<functionName<<"\"."<<std::endl;
+				return false;
 			}
 
 			if(functionName == "getLorentzVec") {
-				if(not (function["X"] and function["Y"] and function["Z"] and function["M"])) {
-					std::cerr<<"Argument missing in configuration file for variable \""<<quantityName<<"\"."<<std::endl;
+				if(not registerGetLorentzVec(function, quantityNames[0], indices[indices_i])) {
 					return false;
 				}
-				std::string xArg = function["X"].as<std::string>();
-				std::string yArg = function["Y"].as<std::string>();
-				std::string zArg = function["Z"].as<std::string>();
-				try {
-					function["M"].as<double>();
-				} catch(YAML::TypedBadConversion<double> e) {
-					std::cerr<<"Mass in \""<<functionName<<"\" should be of type double."<<std::endl;
+				continue;
+			} else if(functionName == "mass") {
+				if(not registerMass(function, quantityNames[0], indices[indices_i])) {
 					return false;
 				}
-				double* mAddr = new double();
-				(*mAddr) = function["M"].as<double>();
-				double* xAddr;
-				double* yAddr;
-				double* zAddr;
-				if(indices[indices_i] > 0) {
-					std::stringstream strStr;
-					strStr<<xArg<<indices[indices_i];
-					xArg = strStr.str();
-					strStr.str("");
-					strStr<<yArg<<indices[indices_i];
-					yArg = strStr.str();
-					strStr.str("");
-					strStr<<zArg<<indices[indices_i];
-					zArg = strStr.str();
-				}
-				xAddr = data.getDoubleAddr(xArg);
-				yAddr = data.getDoubleAddr(yArg);
-				zAddr = data.getDoubleAddr(zArg);
-				if((xAddr == 0) or (yAddr == 0) or (zAddr == 0)) {
-					std::cerr<<"Arguments not found in Data's doubles map for function \""<<functionName<<"\"."<<std::endl;
+				continue;
+			} else if(functionName == "sum") {
+				if(not registerSum(function, quantityNames[0], indices[indices_i])) {
 					return false;
 				}
-
-				if(not data.insertLorentzVector(quantityName)) {
-					std::cerr<<"Could not insert TLorentzVector when creating variable entry \""<<quantityName<<"\"."<<std::endl;
+				continue;
+			} else if(functionName == "getBeamLorentzVector") {
+				if(not registerGetBeamLorentzVector(function, quantityNames[0], indices[indices_i])) {
 					return false;
 				}
-				event._functions.push_back(new antok::GetLorentzVec(xAddr, yAddr, zAddr, mAddr, data.getLorentzVectorAddr(quantityName)));
-			} // End of "getLorentzVec" function handling
-
-			// "sum" function handling
-			else if(functionName == "sum") {
-
-				std::vector<double*> doubleInputAddrs;
-				std::vector<int*> intInputAddrs;
-				std::vector<Long64_t*> long64_tInputAddrs;
-				std::vector<TLorentzVector*> lorentzVectorInputAddrs;
-				std::string typeName = "notInitialized";
-				std::vector<std::string> summandNames;
-
-				// Summing over one variable with indices
-				if(not function["Summands"]) {
-					std::cerr<<"Argument \"Summands\" is missing in configuration file for variable \""<<quantityName<<"\"."<<std::endl;
+				continue;
+			} else if(functionName == "getTs") {
+				if(not registerGetTs(function, quantityNames, indices[indices_i])) {
 					return false;
 				}
-
-				if(function["Summands"]["Indices"] or function["Summands"]["Name"]) {
-					if(not function["Summands"]["Indices"] and function["Summands"]["Name"]) {
-						std::cerr<<"Either \"Summands\" or \"Name\" found in sum function, but not both (Variable: \""<<quantityName<<"\")."<<std::endl;
-						return false;
-					}
-					if(indices[indices_i] > 0) {
-						std::cerr<<"Cannot have sum over indices for every particle (Variable: \""<<quantityName<<"\")."<<std::endl;
-						return false;
-					}
-					std::vector<int> inner_indices = function["Summands"]["Indices"].as<std::vector<int> >();
-					typeName = function["Summands"]["Name"].as<std::string>();
-					std::string summandBaseName = typeName;
-					std::stringstream strStr;
-					strStr<<typeName<<inner_indices[0];
-					typeName = data.global_map[strStr.str()];
-					for(unsigned int inner_indices_i = 0; inner_indices_i < inner_indices.size(); ++inner_indices_i) {
-						int inner_index = inner_indices[inner_indices_i];
-						std::stringstream strStr;
-						strStr<<summandBaseName<<inner_index;
-						summandNames.push_back(strStr.str());
-					}
-				// Summing over list of variable names
-				} else {
-					typeName = function["Summands"].begin()->second.as<std::string>();
-					if(indices[indices_i] > 0) {
-						std::stringstream strStr;
-						strStr<<typeName<<indices[indices_i];
-						typeName = strStr.str();
-					}
-					typeName = data.global_map[typeName];
-					for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
-						std::string variableName = summand_it->second.as<std::string>();
-						if(indices[indices_i] > 0) {
-							std::stringstream strStr;
-							strStr<<variableName<<indices[indices_i];
-							variableName = strStr.str();
-						}
-						summandNames.push_back(variableName);
-					}
-				}
-
-				// Now do type checking and get all the addresses
-				for(unsigned int summandNames_i = 0; summandNames_i < summandNames.size(); ++summandNames_i) {
-
-						std::string variableName = summandNames[summandNames_i];
-
-						if(data.global_map[variableName] != typeName) {
-							std::cerr<<"Cannot sum terms of different type (\""<<typeName<<"\"<>\""<<data.global_map[variableName]<<"\")."<<std::endl;
-							return false;
-						}
-
-						if(typeName == "double") {
-							double* addr = data.getDoubleAddr(variableName);
-							if(addr == 0) {
-								std::cerr<<"Did not find double \""<<variableName<<"\" in Data."<<std::endl;
-								return false;
-							}
-							doubleInputAddrs.push_back(addr);
-						} else if(typeName == "int") {
-							int* addr = data.getIntAddr(variableName);
-							if(addr == 0) {
-								std::cerr<<"Did not find int \""<<variableName<<"\" in Data."<<std::endl;
-								return false;
-							}
-							intInputAddrs.push_back(addr);
-						} else if(typeName == "Long64_t") {
-							Long64_t* addr = data.getLong64_tAddr(variableName);
-							if(addr == 0) {
-								std::cerr<<"Did not find Long64_t \""<<variableName<<"\" in Data."<<std::endl;
-								return false;
-							}
-							long64_tInputAddrs.push_back(&data.long64_ts[variableName]);
-						} else if(typeName == "TLorentzVector") {
-							TLorentzVector* addr = data.getLorentzVectorAddr(variableName);
-							if(addr == 0) {
-								std::cerr<<"Did not find TLorentzVector \""<<variableName<<"\" in Data."<<std::endl;
-								return false;
-							}
-							lorentzVectorInputAddrs.push_back(addr);
-						} else {
-							std::cerr<<"Type \""<<typeName<<"\" is not supported."<<std::endl;
-							return false;
-						}
-
-					}
-
-				// And produce the function
-				if(typeName == "double") {
-					data.insertDouble(quantityName);
-					event._functions.push_back(new antok::Sum<double>(doubleInputAddrs, data.getDoubleAddr(quantityName)));
-				} else if(typeName == "int") {
-					data.insertInt(quantityName);
-					event._functions.push_back(new antok::Sum<int>(intInputAddrs, data.getIntAddr(quantityName)));
-				} else if(typeName == "Long64_t") {
-					data.insertLong64_t(quantityName);
-					event._functions.push_back(new antok::Sum<Long64_t>(long64_tInputAddrs, data.getLong64_tAddr(quantityName)));
-				} else if(typeName == "TLorentzVector") {
-					data.insertLorentzVector(quantityName);
-					event._functions.push_back(new antok::Sum<TLorentzVector>(lorentzVectorInputAddrs, data.getLorentzVectorAddr(quantityName)));
-				}
-
-			} // End of "sum" function handling
-
-			// "mass" function handling
-			else if(functionName == "mass") {
-				if(not function["Vector"]) {
-					std::cerr<<"\"Vector\" argument not found in \"mass\" function for variable \""<<quantityName<<"\"."<<std::endl;
-					return false;
-				}
-				std::string vectorName = function["Vector"].as<std::string>();
-				if(indices[indices_i] > 0) {
-					std::stringstream strStr;
-					strStr<<vectorName<<indices[indices_i];
-					vectorName = strStr.str();
-				}
-				TLorentzVector* vector = data.getLorentzVectorAddr(vectorName);
-				if(vector == 0) {
-					std::cerr<<"Did not find TLorentzVector \""<<vectorName<<"\" in Data for variable \""<<quantityName<<"\"."<<std::endl;
-					return false;
-				}
-				if(not data.insertDouble(quantityName)) {
-					std::cerr<<"Coud not insert double \""<<quantityName<<"\" (double entry?)."<<std::endl;
-					return false;
-				}
-				event._functions.push_back(new antok::Mass(vector, data.getDoubleAddr(quantityName)));
-			} // End of "mass" function handling
-
-			else {
+				continue;
+			} else {
 				std::cerr<<"Function type \""<<functionName<<"\" not supported."<<std::endl;
 				return false;
 			}
@@ -462,6 +314,350 @@ bool antok::Initializer::initializePlotter() {
 		objectManager->_plotter = antok::Plotter::instance();
 	}
 	return true;
+
+};
+
+bool antok::Initializer::registerGetBeamLorentzVector(const YAML::Node& function, std::string& quantityName, int index)
+{
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	antok::Event& event = antok::ObjectManager::instance()->getEvent();
+
+	if(not (function["dX"] and function["dY"] and function["XLorentzVec"])) {
+		std::cerr<<"Argument missing in configuration file for variable \""<<quantityName<<"\"."<<std::endl;
+		return false;
+	}
+
+	std::string dXArg = function["dX"].as<std::string>();
+	std::string dYArg = function["dY"].as<std::string>();
+	std::string xLorentzVecArg = function["XLorentzVec"].as<std::string>();
+
+	if(index > 0) {
+		std::stringstream strStr;
+		strStr<<dXArg<<index;
+		dXArg = strStr.str();
+		strStr.str("");
+		strStr<<dYArg<<index;
+		dYArg = strStr.str();
+		strStr.str("");
+		strStr<<xLorentzVecArg<<index;
+		xLorentzVecArg = strStr.str();
+	}
+
+	double* dXaddr = data.getDoubleAddr(dXArg);
+	double* dYaddr = data.getDoubleAddr(dYArg);
+	TLorentzVector* xLorentzVecAddr = data.getLorentzVectorAddr(xLorentzVecArg);
+	if((dXaddr == 0) or (dYaddr == 0) or (xLorentzVecAddr == 0)) {
+		std::cerr<<"Arguments not found in Data's doubles map for variable entry  \""<<quantityName<<"\"."<<std::endl;
+		return false;
+	}
+
+	if(not data.insertLorentzVector(quantityName)) {
+		std::cerr<<"Could not insert TLorentzVector when creating variable entry \""<<quantityName<<"\"."<<std::endl;
+		return false;
+	}
+
+	event._functions.push_back(new antok::GetBeamLorentzVec(dXaddr, dYaddr, xLorentzVecAddr, data.getLorentzVectorAddr(quantityName)));
+
+	return true;
+
+};
+
+bool antok::Initializer::registerGetLorentzVec(const YAML::Node& function, std::string& quantityName, int index)
+{
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	antok::Event& event = antok::ObjectManager::instance()->getEvent();
+
+	bool pType;
+	if(function["X"] and function["Y"] and function["Z"] and function["M"]) {
+		pType = false;
+	} else if (function["Px"] and function["Py"] and function["Pz"] and function["E"]) {
+		pType = true;
+	} else {
+		std::cerr<<"Argument missing in configuration file for variable \""<<quantityName<<"\"."<<std::endl;
+		return false;
+	}
+	std::string xArg;
+    std::string yArg;
+    std::string zArg;
+	std::string mArg;
+	double* xAddr;
+	double* yAddr;
+	double* zAddr;
+	double* mAddr;
+	if(pType) {
+		xArg = function["Px"].as<std::string>();
+		yArg = function["Py"].as<std::string>();
+		zArg = function["Pz"].as<std::string>();
+		mArg = function["E"].as<std::string>();
+	} else {
+		xArg = function["X"].as<std::string>();
+		yArg = function["Y"].as<std::string>();
+		zArg = function["Z"].as<std::string>();
+		try {
+			function["M"].as<double>();
+		} catch(YAML::TypedBadConversion<double> e) {
+			std::cerr<<"Mass in function \"mass\" should be of type double."<<std::endl;
+			return false;
+		}
+		mAddr = new double();
+		(*mAddr) = function["M"].as<double>();
+	}
+	if(index > 0) {
+		std::stringstream strStr;
+		strStr<<xArg<<index;
+		xArg = strStr.str();
+		strStr.str("");
+		strStr<<yArg<<index;
+		yArg = strStr.str();
+		strStr.str("");
+		strStr<<zArg<<index;
+		zArg = strStr.str();
+		if(pType) {
+			strStr.str("");
+			strStr<<mArg<<index;
+			mArg = strStr.str();
+		}
+	}
+	xAddr = data.getDoubleAddr(xArg);
+	yAddr = data.getDoubleAddr(yArg);
+	zAddr = data.getDoubleAddr(zArg);
+	if(pType) {
+		mAddr = data.getDoubleAddr(mArg);
+	}
+	if((xAddr == 0) or (yAddr == 0) or (zAddr == 0)) {
+		std::cerr<<"Arguments not found in Data's doubles map for function \"mass\"."<<std::endl;
+		return false;
+	}
+
+	if(not data.insertLorentzVector(quantityName)) {
+		std::cerr<<"Could not insert TLorentzVector when creating variable entry \""<<quantityName<<"\"."<<std::endl;
+		return false;
+	}
+
+	event._functions.push_back(new antok::GetLorentzVec(xAddr, yAddr, zAddr, mAddr, data.getLorentzVectorAddr(quantityName), pType));
+	return true;
+
+};
+
+bool antok::Initializer::registerGetTs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	antok::Event& event = antok::ObjectManager::instance()->getEvent();
+
+	if(quantityNames.size() != 3) {
+		std::cerr<<"Need 3 names for function \"getTs\""<<std::endl;
+		return false;
+	}
+
+	if(not (function["BeamLorentzVec"] and function["XLorentzVec"])) {
+		std::cerr<<"Argument missing in configuration file for variables \"[";
+		for(unsigned int i = 0; i < quantityNames.size()-1; ++i) {
+			std::cerr<<quantityNames[i]<<", ";
+		}
+		std::cerr<<quantityNames[quantityNames.size()-1]<<"]\"."<<std::endl;
+		return false;
+	}
+
+	std::string beamLVArg = function["BeamLorentzVec"].as<std::string>();
+	std::string xLVArg = function["XLorentzVec"].as<std::string>();
+	if(index > 0) {
+		std::stringstream strStr;
+		strStr<<beamLVArg<<index;
+		beamLVArg = strStr.str();
+		strStr.str("");
+		strStr<<xLVArg<<index;
+		xLVArg = strStr.str();
+	}
+
+	TLorentzVector* beamLVAddr = data.getLorentzVectorAddr(beamLVArg);
+	TLorentzVector* xLVAddr = data.getLorentzVectorAddr(xLVArg);
+	if((beamLVAddr == 0) or (xLVAddr == 0)) {
+		std::cerr<<"Arguments not found in Data's doubles map for function \"GetTs\"."<<std::endl;
+		return false;
+	}
+
+	std::vector<double*> quantityAddrs;
+	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
+		if(not data.insertDouble(quantityNames[i])) {
+			std::cerr<<"Could not insert double \""<<quantityNames[i]<<"\" in function \"getTs\""<<std::endl;
+			return false;
+		}
+		quantityAddrs.push_back(data.getDoubleAddr(quantityNames[i]));
+	}
+	event._functions.push_back(new antok::GetTs(xLVAddr, beamLVAddr, quantityAddrs[0], quantityAddrs[1], quantityAddrs[2]));
+
+	return true;
+
+};
+
+bool antok::Initializer::registerMass(const YAML::Node& function, std::string& quantityName, int index)
+{
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	antok::Event& event = antok::ObjectManager::instance()->getEvent();
+
+	if(not function["Vector"]) {
+		std::cerr<<"\"Vector\" argument not found in \"mass\" function for variable \""<<quantityName<<"\"."<<std::endl;
+		return false;
+	}
+	std::string vectorName = function["Vector"].as<std::string>();
+	if(index > 0) {
+		std::stringstream strStr;
+		strStr<<vectorName<<index;
+		vectorName = strStr.str();
+	}
+	TLorentzVector* vector = data.getLorentzVectorAddr(vectorName);
+	if(vector == 0) {
+		std::cerr<<"Did not find TLorentzVector \""<<vectorName<<"\" in Data for variable \""<<quantityName<<"\"."<<std::endl;
+		return false;
+	}
+	if(not data.insertDouble(quantityName)) {
+		std::cerr<<"Coud not insert double \""<<quantityName<<"\" (double entry?)."<<std::endl;
+		return false;
+	}
+	event._functions.push_back(new antok::Mass(vector, data.getDoubleAddr(quantityName)));
+	return true;
+
+};
+
+bool antok::Initializer::registerSum(const YAML::Node& function, std::string& quantityName, int index)
+{
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	antok::Event& event = antok::ObjectManager::instance()->getEvent();
+
+	std::vector<double*> doubleInputAddrs;
+	std::vector<int*> intInputAddrs;
+	std::vector<Long64_t*> long64_tInputAddrs;
+	std::vector<TLorentzVector*> lorentzVectorInputAddrs;
+	std::string typeName = "notInitialized";
+	std::vector<std::string> summandNames;
+
+	// Summing over one variable with indices
+	if(not function["Summands"]) {
+		std::cerr<<"Argument \"Summands\" is missing in configuration file for variable \""<<quantityName<<"\"."<<std::endl;
+		return false;
+	}
+
+	if(function["Summands"]["Indices"] or function["Summands"]["Name"]) {
+		if(not function["Summands"]["Indices"] and function["Summands"]["Name"]) {
+			std::cerr<<"Either \"Summands\" or \"Name\" found in sum function, but not both (Variable: \""<<quantityName<<"\")."<<std::endl;
+			return false;
+		}
+		if(index > 0) {
+			std::cerr<<"Cannot have sum over indices for every particle (Variable: \""<<quantityName<<"\")."<<std::endl;
+			return false;
+		}
+		std::vector<int> inner_indices = function["Summands"]["Indices"].as<std::vector<int> >();
+		typeName = function["Summands"]["Name"].as<std::string>();
+		std::string summandBaseName = typeName;
+		std::stringstream strStr;
+		strStr<<typeName<<inner_indices[0];
+		typeName = data.global_map[strStr.str()];
+		for(unsigned int inner_indices_i = 0; inner_indices_i < inner_indices.size(); ++inner_indices_i) {
+			int inner_index = inner_indices[inner_indices_i];
+			std::stringstream strStr;
+			strStr<<summandBaseName<<inner_index;
+			summandNames.push_back(strStr.str());
+		}
+	// Summing over list of variable names
+	} else {
+		typeName = function["Summands"].begin()->as<std::string>();
+		if(index > 0) {
+			std::stringstream strStr;
+			strStr<<typeName<<index;
+			typeName = strStr.str();
+		}
+		typeName = data.global_map[typeName];
+		for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
+			std::string variableName = summand_it->as<std::string>();
+			if(index > 0) {
+				std::stringstream strStr;
+				strStr<<variableName<<index;
+				variableName = strStr.str();
+			}
+			summandNames.push_back(variableName);
+		}
+	}
+
+	// Now do type checking and get all the addresses
+	for(unsigned int summandNames_i = 0; summandNames_i < summandNames.size(); ++summandNames_i) {
+
+			std::string variableName = summandNames[summandNames_i];
+
+			if(data.global_map[variableName] != typeName) {
+				std::cerr<<"Cannot sum terms of different type (\""<<typeName<<"\"<>\""<<data.global_map[variableName]<<"\") when calculating variable \""<<quantityName<<"\")."<<std::endl;
+				return false;
+			}
+
+			if(typeName == "double") {
+				double* addr = data.getDoubleAddr(variableName);
+				if(addr == 0) {
+					std::cerr<<"Did not find double \""<<variableName<<"\" in Data."<<std::endl;
+					return false;
+				}
+				doubleInputAddrs.push_back(addr);
+			} else if(typeName == "int") {
+				int* addr = data.getIntAddr(variableName);
+				if(addr == 0) {
+					std::cerr<<"Did not find int \""<<variableName<<"\" in Data."<<std::endl;
+					return false;
+				}
+				intInputAddrs.push_back(addr);
+			} else if(typeName == "Long64_t") {
+				Long64_t* addr = data.getLong64_tAddr(variableName);
+				if(addr == 0) {
+					std::cerr<<"Did not find Long64_t \""<<variableName<<"\" in Data."<<std::endl;
+					return false;
+				}
+				long64_tInputAddrs.push_back(&data.long64_ts[variableName]);
+			} else if(typeName == "TLorentzVector") {
+				TLorentzVector* addr = data.getLorentzVectorAddr(variableName);
+				if(addr == 0) {
+					std::cerr<<"Did not find TLorentzVector \""<<variableName<<"\" in Data."<<std::endl;
+					return false;
+				}
+				lorentzVectorInputAddrs.push_back(addr);
+			} else {
+				std::cerr<<"Type \""<<typeName<<"\" is not supported in function \"sum\" (Calculated quantity: \""<<quantityName<<"\")."<<std::endl;
+				return false;
+			}
+
+		}
+
+	// And produce the function
+	if(typeName == "double") {
+		data.insertDouble(quantityName);
+		event._functions.push_back(new antok::Sum<double>(doubleInputAddrs, data.getDoubleAddr(quantityName)));
+	} else if(typeName == "int") {
+		data.insertInt(quantityName);
+		event._functions.push_back(new antok::Sum<int>(intInputAddrs, data.getIntAddr(quantityName)));
+	} else if(typeName == "Long64_t") {
+		data.insertLong64_t(quantityName);
+		event._functions.push_back(new antok::Sum<Long64_t>(long64_tInputAddrs, data.getLong64_tAddr(quantityName)));
+	} else if(typeName == "TLorentzVector") {
+		data.insertLorentzVector(quantityName);
+		event._functions.push_back(new antok::Sum<TLorentzVector>(lorentzVectorInputAddrs, data.getLorentzVectorAddr(quantityName)));
+	}
+
+	return true;
+
+};
+
+bool antok::Initializer::registerSum2(const YAML::Node& function, std::string& quantityName, int index)
+{
+
+
+
+};
+
+bool antok::Initializer::argumentHandler(std::vector<std::string>& argNames, int index)
+{
+
+
 
 };
 
