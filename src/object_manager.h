@@ -13,6 +13,8 @@ namespace antok {
 
 	class ObjectManager {
 
+		friend class Initializer;
+
 	  public:
 
 		static ObjectManager* instance();
@@ -40,8 +42,6 @@ namespace antok {
 
 		TFile* _inFile;
 		TTree* _inTree;
-
-		friend class Initializer;
 
 	};
 

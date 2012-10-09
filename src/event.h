@@ -13,6 +13,8 @@ namespace antok {
 
 	class Event {
 
+		friend class antok::Initializer;
+
 	  public:
 
 		static Event* instance();
@@ -46,10 +48,6 @@ namespace antok {
 		static Event* _event;
 
 		std::vector<antok::Function*> _functions;
-
-		friend class antok::Initializer;
-
-//		TLorentzVector get_beam_energy(TVector3 p3_beam, const TLorentzVector& LV_X) const;
 
 		std::vector<TLorentzVector> _p;
 

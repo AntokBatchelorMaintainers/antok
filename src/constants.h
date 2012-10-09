@@ -9,6 +9,8 @@ namespace antok {
 
 	class Constants {
 
+		friend class antok::Initializer;
+
 	  public:
 
 		static const double& charged_kaon_mass() { assert(initialized()); return _charged_kaon_mass; };
@@ -34,8 +36,6 @@ namespace antok {
 		static bool set_proton_mass(const double& proton_mass);
 
 		static bool set_n_particles(const unsigned int& n_particles);
-
-		friend class antok::Initializer;
 
 	};
 

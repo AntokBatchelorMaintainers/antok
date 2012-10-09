@@ -21,11 +21,62 @@ namespace antok {
 		std::string get_abbreviation() const { return abbreviation; };
 
 	  protected:
+
+		std::string _shortname;
+		std::string _longname;
+		std::string _abbreviation;
+
+		// LEGACY STUFF
 		std::string shortname;
 		std::string longname;
 		std::string abbreviation;
 
 	};
+
+	class RangeCut : public Cut {
+
+	  public:
+
+		RangeCut(std::string shortname, std::string longname, std::string abbreviation, double* lowerBoundAddr, double* upperBoundAddr, double* valueAddr, int mode)
+			: _lowerBoundAddr(lowerBoundAddr),
+			  _upperBoundAddr(upperBoundAddr),
+			  _valueAddr(valueAddr),
+			  _mode(mode)
+		{
+			_shortname = shortname;
+			_longname = longname;
+			_abbreviation = abbreviation;
+		}
+
+		bool operator() () const {
+			switch(_mode)
+			{
+				case 0:
+					// range inclusive
+					return (((*_valueAddr) <= (*_lowerBoundAddr)) or ((*_valueAddr) >= (*_upperBoundAddr)));
+				case 1:
+					// range exclusive
+					return (((*_valueAddr) < (*_lowerBoundAddr)) or ((*_valueAddr) > (*_upperBoundAddr)));
+				case 2:
+					// range open low
+					return ((*_valueAddr) > (*_upperBoundAddr));
+				case 3:
+					// range open high
+					return ((*_valueAddr) < (*_lowerBoundAddr));
+			}
+			throw 1;
+		};
+
+	  private:
+
+		double* _lowerBoundAddr;
+		double* _upperBoundAddr;
+		double* _valueAddr;
+		int _mode;
+
+	};
+
+// ---------------------------------- OLD STUFF
 
 	// Cut on the trigger mask.
 	class TrigMask : public Cut {

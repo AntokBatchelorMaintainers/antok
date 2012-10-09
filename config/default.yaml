@@ -125,8 +125,13 @@ CalculatedQuantities:
 
 Cuts:
 
-    RangeCut:
-        Variable: *Mom_x
-        LowerBound: -1
-        UpperBound: 1
+    - ShortName: bla
+      LongName: blup
+      Abbreviation: bb
+      Cut:
+          Name: Range
+          Type: Inclusive
+          LowerBound: -1
+          UpperBound: 1
+
 
