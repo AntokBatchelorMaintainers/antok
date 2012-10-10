@@ -227,6 +227,50 @@ namespace antok {
 
 	};
 
+	class Diff : public Function
+	{
+
+	  public:
+
+		Diff(double* inAddr1, double* inAddr2, double* outAddr)
+			: _inAddr1(inAddr1),
+			  _inAddr2(inAddr2),
+			  _outAddr(outAddr) { }
+
+		bool operator() () {
+			(*_outAddr) = (*_inAddr1) - (*_inAddr2);
+			return true;
+		}
+
+	  private:
+
+		double* _inAddr1;
+		double* _inAddr2;
+		double* _outAddr;
+
+	};
+
+	class Abs : public Function
+	{
+
+	  public:
+
+		Abs(double* inAddr, double* outAddr)
+			: _inAddr(inAddr),
+			  _outAddr(outAddr) { }
+
+		bool operator() () {
+			(*_outAddr) = std::fabs(*_inAddr);
+			return true;
+		}
+
+	  private:
+
+		double* _inAddr;
+		double* _outAddr;
+
+	};
+
 }
 
 #endif

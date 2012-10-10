@@ -7,9 +7,9 @@ TreeName: kbicker/USR55
 TreeBranches:
     onePerEvent:
         double:
-            - X_primV
-            - Y_primV
-            - Z_primV
+            - &X_primV X_primV
+            - &Y_primV Y_primV
+            - &Z_primV Z_primV
             - &gradx gradx
             - &grady grady
             - beam_time
@@ -32,9 +32,9 @@ TreeBranches:
 
         int:
             - Run
-            - TrigMask
+            - &TrigMask TrigMask
             - SpillNbr
-            - nbrRPDTracks
+            - &nbrRPDTracks nbrRPDTracks
 #           - isKaon
             - cedarID_bayes
 
@@ -81,6 +81,11 @@ CalculatedQuantities:
           Pz: *RPD_Pz
           E: *RPD_E
 
+    - Name: &RPDProtonMass RPDProtonMass
+      Function:
+          Name: mass
+          Vector: *RPDProton
+
     - Name: &XLorentzVec XLorentzVec
       Function:
           Name: sum
@@ -109,13 +114,13 @@ CalculatedQuantities:
           dY: *grady
           XLorentzVec: *XLorentzVec
 
-    - Name: [t, tMin, tPrime]
+    - Name: [t, tMin, &tPrime tPrime]
       Function:
           Name: getTs
           BeamLorentzVec: *BeamLV
           XLorentzVec: *XLorentzVec
 
-    - Name: [rpdDeltaPhiProjection, rpdDeltaPhiResProjection]
+    - Name: [&rpdDeltaPhiProjection rpdDeltaPhiProjection, &rpdDeltaPhiResProjection rpdDeltaPhiResProjection]
       Function:
         Name: getRpdPhi
         Method: Projection
@@ -123,15 +128,98 @@ CalculatedQuantities:
         RPDProtonLorentzVec: *RPDProton
         XLorentzVec: *XLorentzVec
 
+    - Name: &VertexR VertexR
+      Function:
+          Name: sum2
+          Summands:
+              - *X_primV
+              - *Y_primV
+
+    - Name: &AbsRpdPhiProjection AbsRpdPhiProjection
+      Function:
+          Name: abs
+          Arg: *rpdDeltaPhiProjection
+
+    - Name: &RpdPhiCutDiffProjection RpdPhiCutDiffProjection
+      Function:
+          Name: diff
+          Minuend: *AbsRpdPhiProjection
+          Subtrahend: *rpdDeltaPhiResProjection
+
 Cuts:
 
-    - ShortName: bla
-      LongName: blup
-      Abbreviation: bb
+#    _cuts.push_back(new TrigMask(0x1));             // 1    510
+#        _cuts.push_back(new VrtxZ(-29, -66));           // 2    508
+#            _cuts.push_back(new VrtxR(1.55));               // 4    504
+#                _cuts.push_back(new nRPDTracks(1));             // 8    496
+#                    _cuts.push_back(new RPDProtMass(0.2));          // 16   480
+#                        _cuts.push_back(new CedarKaon());               // 32   448
+#                            _cuts.push_back(new TPrime(0.1, 1.));           // 64   384
+#                                _cuts.push_back(new RPDPlanarity());            // 128  256
+#                                    _cuts.push_back(new Exclusivity(191.5, 3.78));  // 256  0
+
+    - ShortName: trigmask_&_0x1
+      LongName: Trigger Mask & 0x1
+      Abbreviation: Trig&0x1
+      Cut:
+          Name: TriggerMask
+          Type: Inclusive
+          Mask: 1
+          Variable: *TrigMask
+
+    - ShortName: -29<vtx_z<-66
+      LongName: "Vertex Z in ]-29, -66["
+      Abbreviation: VtxZ
       Cut:
           Name: Range
-          Type: Inclusive
-          LowerBound: -1
-          UpperBound: 1
+          Type: Exclusive
+          LowerBound: -66
+          UpperBound: -29
+          Variable: *Z_primV
 
+    - ShortName: Vtx_R<1.55
+      LongName: Vertex.R() < 1.55
+      Abbreviation: VtxR
+      Cut:
+          Name: Range
+          Type: Exclusive
+          UpperBound: 1.55
+          Variable: *VertexR
+
+    - ShortName: nRPDTracks=1
+      LongName: 1 RPD Track
+      Abbreviation: RPDtr
+      Cut:
+          Name: Equality
+          Type: ==
+          Value: 1
+          Variable: *nbrRPDTracks
+
+    - ShortName: p+_mass>0.2
+      LongName: RPD's proton mass > 0.2
+      Abbreviation: RPDpm
+      Cut:
+          Name: Range
+          Type: Exclusive
+          LowerBound: 0.2
+          Variable: *RPDProtonMass
+
+    - ShortName: t_prim
+      LongName: "t' in ]0.1, 1.["
+      Abbreviation: t'
+      Cut:
+          Name: Range
+          Type: Exclusive
+          LowerBound: 0.1
+          UpperBound: 1.0
+          Variable: *tPrime
+
+    - ShortName: RpdPlanarity
+      LongName: RPD planarity cut
+      Abbreviation: RpdPl
+      Cut:
+          Name: Range
+          Type: Exclusive
+          UpperBound: *rpdDeltaPhiResProjection
+          Variable: *AbsRpdPhiProjection
 

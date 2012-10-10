@@ -25,15 +25,17 @@ namespace antok {
 		antok::Plotter& getPlotter();
 
 		TFile* getInFile() { return _inFile; };
+		TFile* getOutFile() { return _outFile; };
 		TTree* getInTree() { return _inTree; };
 
 		bool setInFile(TFile* inFile);
+		bool setOutFile(TFile* outFile);
 
 	  private:
 
-		static ObjectManager* _objectManager;
-
 		ObjectManager();
+
+		static ObjectManager* _objectManager;
 
 		antok::Cutter* _cutter;
 		antok::Data* _data;
@@ -41,6 +43,7 @@ namespace antok {
 		antok::Plotter* _plotter;
 
 		TFile* _inFile;
+		TFile* _outFile;
 		TTree* _inTree;
 
 	};

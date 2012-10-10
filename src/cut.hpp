@@ -58,11 +58,17 @@ namespace antok {
 					// range exclusive
 					return (((*_valueAddr) < (*_lowerBoundAddr)) or ((*_valueAddr) > (*_upperBoundAddr)));
 				case 2:
-					// range open low
+					// range open low exclusive
 					return ((*_valueAddr) > (*_upperBoundAddr));
 				case 3:
-					// range open high
+					// range open high exclusive
 					return ((*_valueAddr) < (*_lowerBoundAddr));
+				case 4:
+					// range open low inclusive
+					return ((*_valueAddr) >= (*_upperBoundAddr));
+				case 5:
+					// range open high inclusive
+					return ((*_valueAddr) <= (*_lowerBoundAddr));
 			}
 			throw 1;
 		};

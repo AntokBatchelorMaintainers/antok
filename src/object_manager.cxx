@@ -19,6 +19,7 @@ antok::ObjectManager::ObjectManager()
 	  _event(0),
 	  _plotter(0),
 	  _inFile(0),
+	  _outFile(0),
 	  _inTree(0)
 {
 
@@ -70,6 +71,16 @@ bool antok::ObjectManager::setInFile(TFile* inFile) {
 		return false;
 	}
 	_inFile = inFile;
+	return true;
+
+}
+
+bool antok::ObjectManager::setOutFile(TFile* outFile) {
+
+	if(outFile == 0) {
+		return false;
+	}
+	_outFile = outFile;
 	return true;
 
 }

@@ -13,6 +13,8 @@ namespace antok {
 
 	class Cutter {
 
+		friend class Initializer;
+
 	  public:
 
 		static Cutter* instance();
