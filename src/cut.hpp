@@ -81,7 +81,7 @@ namespace antok {
 		int _mode;
 
 	};
-
+/*
 // ---------------------------------- OLD STUFF
 
 	// Cut on the trigger mask.
@@ -309,7 +309,7 @@ namespace antok {
 			abbreviation = sstr.str();
 		}
 	};
-
+*/
 }
 
 #endif

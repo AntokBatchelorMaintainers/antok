@@ -15,6 +15,7 @@ antok::Plotter* antok::Plotter::instance() {
 
 antok::Plotter::Plotter() {
 
+/*
 	std::vector<int> cutmasks;
 	std::vector<int> standard_cutmasks;
 
@@ -102,7 +103,7 @@ antok::Plotter::Plotter() {
 	_plots.push_back(antok::Plot(cutmasks, new TH2D("cedar_theta", "cedar_theta", 3000, -300, 300, 3000, -300, 300), &cedarTheta_X, &cedarTheta_Y));
 	cutmasks.clear();
 
-/*	cutmasks.push_back(384);
+	cutmasks.push_back(384);
 	_plots.push_back(antok::Plot(cutmasks, new TH1D("delta_phi", "delta_phi", 500, -7, 7), &RPDDeltaPhi));
 	_plots.push_back(antok::Plot(cutmasks, new TH1D("delta_phi_fhaas", "delta_phi", 500, -7, 7), &RPDDeltaPhi_fhaas));
 	_plots.push_back(antok::Plot(cutmasks, new TH2D("delta_phi_comparison", "delta_phi_comparison", 1000, -7, 7, 1000, -7, 7), &RPDDeltaPhi, &RPDDeltaPhi_fhaas));
@@ -117,6 +118,7 @@ antok::Plotter::Plotter() {
 
 void antok::Plotter::fill(const antok::Event& event, int cutmask) {
 
+/*
 	XMass = event.get_pSum().M();
 	XMom = event.get_pSum().Energy();
 	CalcBeamE = event.get_pBeam().E();
@@ -132,7 +134,7 @@ void antok::Plotter::fill(const antok::Event& event, int cutmask) {
 	cedarTheta_X = event.rawData->cedarTheta_X;
 	cedarTheta_Y = event.rawData->cedarTheta_Y;
 
-/*	RPDPhiRes = event.get_RpdPhiRes();
+	RPDPhiRes = event.get_RpdPhiRes();
 	RPDDeltaPhi_fhaas = event.get_RpdDeltaPhi_fhaas();
 	RPDPhiRes_fhaas = event.get_RpdPhiRes_fhaas();
 	RPDDeltaPhiAbs = std::fabs(RPDDeltaPhi);

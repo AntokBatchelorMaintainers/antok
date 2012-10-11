@@ -4,7 +4,7 @@
 
 #include<TLorentzVector.h>
 
-#include<data.hpp>
+#include<data.h>
 #include<functions.hpp>
 #include<initializer.h>
 #include<object_manager.h>
@@ -345,7 +345,7 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 		std::string summandBaseName = typeName;
 		std::stringstream strStr;
 		strStr<<typeName<<inner_indices[0];
-		typeName = data.global_map[strStr.str()];
+		typeName = data.getType(strStr.str());
 		for(unsigned int inner_indices_i = 0; inner_indices_i < inner_indices.size(); ++inner_indices_i) {
 			int inner_index = inner_indices[inner_indices_i];
 			std::stringstream strStr;
@@ -364,7 +364,7 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 			strStr<<typeName<<index;
 			typeName = strStr.str();
 		}
-		typeName = data.global_map[typeName];
+		typeName = data.getType(typeName);
 		for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
 			std::string variableName = antok::Initializer::getYAMLStringSafe(*summand_it);
 			if(variableName == "") {
@@ -389,7 +389,7 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 			} else if(typeName == "int") {
 				intInputAddrs.push_back(data.getIntAddr(variableName));
 			} else if(typeName == "Long64_t") {
-				long64_tInputAddrs.push_back(&data.long64_ts[variableName]);
+				long64_tInputAddrs.push_back(data.getLong64_tAddr(variableName));
 			} else if(typeName == "TLorentzVector") {
 				lorentzVectorInputAddrs.push_back(data.getLorentzVectorAddr(variableName));
 			} else {
@@ -541,12 +541,13 @@ bool antok::generators::functionArgumentHandler(std::vector<std::pair<std::strin
 			strStr<<argName<<index;
 			argName = strStr.str();
 		}
-		if(data.global_map.count(argName) < 1) {
+		std::string type = data.getType(argName);
+		if(type == "") {
 			std::cerr<<"Argument \""<<argName<<"\" not found in Data's global map."<<std::endl;
 			return 0;
 		}
-		if(data.global_map[argName] != args[i].second) {
-			std::cerr<<"Argument \""<<argName<<"\" has type \""<<data.global_map[argName]<<"\", expected \""<<args[i].second<<"\"."<<std::endl;
+		if(type != args[i].second) {
+			std::cerr<<"Argument \""<<argName<<"\" has type \""<<type<<"\", expected \""<<args[i].second<<"\"."<<std::endl;
 			return 0;
 		}
 	}

@@ -16,7 +16,7 @@ antok::Cutter* antok::Cutter::instance() {
 
 antok::Cutter::Cutter() {
 
-													// No cuts: 511
+/*													// No cuts: 511
 	_cuts.push_back(new TrigMask(0x1));				// 1	510
 	_cuts.push_back(new VrtxZ(-29, -66));			// 2	508
 	_cuts.push_back(new VrtxR(1.55));				// 4	504
@@ -26,7 +26,7 @@ antok::Cutter::Cutter() {
 	_cuts.push_back(new TPrime(0.1, 1.));			// 64	384
 	_cuts.push_back(new RPDPlanarity());			// 128	256
 	_cuts.push_back(new Exclusivity(191.5, 3.78));	// 256	0
-
+*/
 }
 
 int antok::Cutter::get_cutmask(const antok::Event& event) {

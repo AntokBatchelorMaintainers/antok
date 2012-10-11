@@ -10,6 +10,7 @@ set(SOURCES
 	basic_calcs.cxx
 	constants.cxx
 	cutter.cxx
+	data.cxx
 	event.cxx
 	generators_functions.cxx
 	initializer.cxx
