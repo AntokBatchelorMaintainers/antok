@@ -195,7 +195,7 @@ namespace antok {
 			          TLorentzVector* rpdProtonLorentzVecAddr,
 			          TLorentzVector* xLorentzVecAddr,
 			          double* rpdDeltaPhiAddr,
-					  double* rpdDeltaPhiResAddr,
+			          double* rpdDeltaPhiResAddr,
 			          int method
 			)
 				: _beamLorentzVecAddr(beamLorentzVecAddr),
