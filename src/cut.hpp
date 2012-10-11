@@ -14,7 +14,7 @@ namespace antok {
 
 		virtual ~Cut() { };
 
-		virtual bool operator() (const antok::Event& event) const = 0;
+		virtual bool operator() () const = 0;
 
 		std::string get_shortname() const { return shortname; };
 		std::string get_longname() const { return longname; };
@@ -79,6 +79,66 @@ namespace antok {
 		double* _upperBoundAddr;
 		double* _valueAddr;
 		int _mode;
+
+	};
+
+	template<typename T>
+	class EqualityCut : public Cut {
+
+	  public:
+
+		EqualityCut(std::string shortname, std::string longname, std::string abbreviation, T* leftAddr, T* rightAddr, int mode)
+			: _leftAddr(leftAddr),
+			  _rightAddr(rightAddr),
+			  _mode(mode)
+		{
+			_shortname = shortname;
+			_longname = longname;
+			_abbreviation = abbreviation;
+		}
+
+		bool operator() () const {
+			switch(_mode) {
+				case 0:
+					// ==
+					return ((*_leftAddr) == (*_rightAddr));
+				case 1:
+					// !=
+					return ((*_leftAddr) != (*_rightAddr));
+			}
+		}
+
+	  private:
+
+		T* _leftAddr;
+		T* _rightAddr;
+		int _mode;
+
+	};
+
+	class CutGroup : public Cut {
+
+	  public:
+
+		CutGroup(std::string shortname, std::string longname, std::string abbreviation, std::vector<Cut*> cuts)
+			: _cuts(cuts)
+		{
+			_shortname = shortname;
+			_longname = longname;
+			_abbreviation = abbreviation;
+		}
+
+		bool operator () () const {
+			bool retval = false;
+			for(unsigned int i = 0; i < _cuts.size(); ++i) {
+				retval = retval or (*_cuts[i])();
+			}
+			return retval;
+		}
+
+	  private:
+
+		std::vector<Cut*> _cuts;
 
 	};
 /*

@@ -29,12 +29,12 @@ antok::Cutter::Cutter() {
 */
 }
 
-int antok::Cutter::get_cutmask(const antok::Event& event) {
+int antok::Cutter::get_cutmask() {
 
 	int cutmask = 0;
 	bool cut_previously = false;
 	for(unsigned int i = 0; i < _cuts.size(); ++i) {
-		if((*(_cuts.at(i)))(event)) {
+		if((*(_cuts.at(i)))()) {
 			cutmask += (1<<i);
 			cut_previously = true;
 		} else if (!cut_previously) {

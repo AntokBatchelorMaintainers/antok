@@ -75,7 +75,7 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 		event.update();
 
-		int cutmask = cutter.get_cutmask(event);
+		int cutmask = cutter.get_cutmask();
 		if(cutmask == 0) {
 			out_tree->Fill();
 		}

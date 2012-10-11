@@ -19,7 +19,7 @@ namespace antok {
 
 		static Cutter* instance();
 
-		int get_cutmask(const antok::Event& event);
+		int get_cutmask();
 
 		std::string get_abbreviations(int bitmask);
 
