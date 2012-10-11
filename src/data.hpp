@@ -3,6 +3,10 @@
 
 #include<iostream>
 #include<map>
+#include<string>
+#include<sstream>
+
+#include<Rtypes.h>
 
 #include<constants.h>
 
@@ -84,6 +88,28 @@ namespace antok {
 			}
 			return &lorentzVectors[name];
 		}
+
+		static std::string getVariableInsertionErrorMsg(std::vector<std::string> quantityNames, std::string quantityName = "") {
+			std::stringstream msgStream;
+			if(quantityNames.size() > 1) {
+				msgStream<<"Could not insert variable \""<<quantityName<<"\" when registering calculation for quantities \"[";
+				for(unsigned int i = 0; i < quantityNames.size()-1; ++i) {
+					msgStream<<quantityNames[i]<<", ";
+				}
+				msgStream<<quantityNames[quantityNames.size()-1]<<"]\" (double entry?)."<<std::endl;
+			} else {
+				getVariableInsertionErrorMsg(quantityNames[0]);
+			}
+			return msgStream.str();
+		};
+
+		static std::string getVariableInsertionErrorMsg(std::string variableName) {
+
+			std::stringstream msgStream;
+			msgStream<<"Could not insert variable \""<<variableName<<"\" (double entry?)."<<std::endl;
+			return msgStream.str();
+
+		};
 
 // ---------------------------------------------- OLD STUFF
 
