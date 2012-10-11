@@ -11,7 +11,7 @@ set(SOURCES
 	constants.cxx
 	cutter.cxx
 	event.cxx
-	function_generators.cxx
+	generators_functions.cxx
 	initializer.cxx
 	object_manager.cxx
 	plot.cxx

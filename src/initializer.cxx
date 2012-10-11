@@ -9,7 +9,7 @@
 #include<data.hpp>
 #include<event.h>
 #include<functions.hpp>
-#include<function_generators.h>
+#include<generators_functions.h>
 #include<initializer.h>
 #include<object_manager.h>
 #include<plotter.h>
@@ -307,23 +307,23 @@ bool antok::Initializer::initializeEvent() {
 
 			antok::Function* antokFunctionPtr = 0;
 			if(functionName == "abs") {
-				antokFunctionPtr = antok::generators::registerAbs(function, quantityNames, indices[indices_i]);
+				antokFunctionPtr = antok::generators::generateAbs(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "diff") {
-				antokFunctionPtr = antok::generators::registerDiff(function, quantityNames, indices[indices_i]);
+				antokFunctionPtr = antok::generators::generateDiff(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getBeamLorentzVector") {
-				antokFunctionPtr = antok::generators::registerGetBeamLorentzVector(function, quantityNames, indices[indices_i]);
+				antokFunctionPtr = antok::generators::generateGetBeamLorentzVector(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getLorentzVec") {
-				antokFunctionPtr = antok::generators::registerGetLorentzVec(function, quantityNames, indices[indices_i]);
+				antokFunctionPtr = antok::generators::generateGetLorentzVec(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getRpdPhi") {
-				antokFunctionPtr = antok::generators::registerGetRpdPhi(function, quantityNames, indices[indices_i]);
+				antokFunctionPtr = antok::generators::generateGetRpdPhi(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getTs") {
-				antokFunctionPtr = antok::generators::registerGetTs(function, quantityNames, indices[indices_i]);
+				antokFunctionPtr = antok::generators::generateGetTs(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "mass") {
-				antokFunctionPtr = antok::generators::registerMass(function, quantityNames, indices[indices_i]);
+				antokFunctionPtr = antok::generators::generateMass(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "sum") {
-				antokFunctionPtr = antok::generators::registerSum(function, quantityNames, indices[indices_i]);
+				antokFunctionPtr = antok::generators::generateSum(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "sum2") {
-				antokFunctionPtr= antok::generators::registerSum2(function, quantityNames, indices[indices_i]);
+				antokFunctionPtr= antok::generators::generateSum2(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "") {
 				std::cerr<<"Could not convert function name to std::string for CalculatedQuantity \""<<quantityNames[0]<<"\"."<<std::endl;
 				return false;

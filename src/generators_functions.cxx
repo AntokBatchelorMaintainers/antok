@@ -1,4 +1,4 @@
-#include<function_generators.h>
+#include<generators_functions.h>
 
 #include<assert.h>
 
@@ -9,7 +9,7 @@
 #include<initializer.h>
 #include<object_manager.h>
 
-antok::Function* antok::generators::registerAbs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::generators::generateAbs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -39,7 +39,7 @@ antok::Function* antok::generators::registerAbs(const YAML::Node& function, std:
 
 };
 
-antok::Function* antok::generators::registerDiff(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::generators::generateDiff(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -71,7 +71,7 @@ antok::Function* antok::generators::registerDiff(const YAML::Node& function, std
 
 };
 
-antok::Function* antok::generators::registerGetBeamLorentzVector(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -106,7 +106,7 @@ antok::Function* antok::generators::registerGetBeamLorentzVector(const YAML::Nod
 
 };
 
-antok::Function* antok::generators::registerGetLorentzVec(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -173,7 +173,7 @@ antok::Function* antok::generators::registerGetLorentzVec(const YAML::Node& func
 
 };
 
-antok::Function* antok::generators::registerGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() != 2) {
@@ -230,7 +230,7 @@ antok::Function* antok::generators::registerGetRpdPhi(const YAML::Node& function
 
 };
 
-antok::Function* antok::generators::registerGetTs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::generators::generateGetTs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() != 3) {
@@ -266,7 +266,7 @@ antok::Function* antok::generators::registerGetTs(const YAML::Node& function, st
 
 };
 
-antok::Function* antok::generators::registerMass(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::generators::generateMass(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -295,7 +295,7 @@ antok::Function* antok::generators::registerMass(const YAML::Node& function, std
 
 };
 
-antok::Function* antok::generators::registerSum(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::generators::generateSum(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -432,7 +432,7 @@ antok::Function* antok::generators::registerSum(const YAML::Node& function, std:
 
 };
 
-antok::Function* antok::generators::registerSum2(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::generators::generateSum2(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
