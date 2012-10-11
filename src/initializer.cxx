@@ -128,8 +128,8 @@ bool antok::Initializer::initializeData() {
 	YAML::Node perParticleTreeBranches= config["TreeBranches"]["onePerParticle"];
 	for(YAML::const_iterator typeIt = perEventTreeBranches.begin(); typeIt != perEventTreeBranches.end(); ++typeIt) {
 		for(YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
-			std::string type = antok::generators::getYAMLStringSafe(typeIt->first);
-			std::string name = antok::generators::getYAMLStringSafe(*valIt);
+			std::string type = getYAMLStringSafe(typeIt->first);
+			std::string name = getYAMLStringSafe(*valIt);
 			if(name == "") {
 				std::cerr<<"Conversion to std::string failed for one of the \"TreeBranches\"' \"onePerEvent\" "<<type<<"s."<<std::endl;
 				return false;
@@ -161,8 +161,8 @@ bool antok::Initializer::initializeData() {
 	const unsigned int& N_PARTICLES = antok::Constants::n_particles();
 	for(YAML::const_iterator typeIt = perParticleTreeBranches.begin(); typeIt != perParticleTreeBranches.end(); ++typeIt) {
 		for(YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
-			std::string type = antok::generators::getYAMLStringSafe(typeIt->first);
-			std::string baseName = antok::generators::getYAMLStringSafe(*valIt);
+			std::string type = getYAMLStringSafe(typeIt->first);
+			std::string baseName = getYAMLStringSafe(*valIt);
 			if(baseName == "") {
 				std::cerr<<"Conversion to std::string failed for one of the \"TreeBranches\"' \"onePerParticle\" "<<type<<"s."<<std::endl;
 				return false;
@@ -202,7 +202,7 @@ bool antok::Initializer::initializeData() {
 		return false;
 	}
 	TFile* inFile = objectManager->getInFile();
-	std::string treeName = antok::generators::getYAMLStringSafe(config["TreeName"]);
+	std::string treeName = getYAMLStringSafe(config["TreeName"]);
 	if(treeName == "") {
 		std::cerr<<"Could not convert entry \"TreeName\" to std::string."<<std::endl;
 		return false;
@@ -257,7 +257,7 @@ bool antok::Initializer::initializeEvent() {
 				return false;
 			}
 		} else {
-			std::string baseName = antok::generators::getYAMLStringSafe(calcQuantity["Name"]);
+			std::string baseName = getYAMLStringSafe(calcQuantity["Name"]);
 			if(baseName == "") {
 				std::cerr<<"Could not convert one of the \"CalculatedQuantities\"' \"Name\"s to std::string."<<std::endl;
 				return false;
@@ -290,7 +290,7 @@ bool antok::Initializer::initializeEvent() {
 		}
 
 		const YAML::Node& function = calcQuantity["Function"];
-		std::string functionName = antok::generators::getYAMLStringSafe(function["Name"]);
+		std::string functionName = getYAMLStringSafe(function["Name"]);
 
 		for(unsigned int indices_i = 0; indices_i < indices.size(); ++indices_i) {
 
@@ -355,4 +355,12 @@ bool antok::Initializer::initializePlotter() {
 	return true;
 
 };
+
+std::string antok::Initializer::getYAMLStringSafe(const YAML::Node& node) {
+	try{
+		return node.as<std::string>();
+	} catch(YAML::TypedBadConversion<std::string> e) {
+		return "";
+	}
+}
 

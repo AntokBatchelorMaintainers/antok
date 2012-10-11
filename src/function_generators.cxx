@@ -6,6 +6,7 @@
 
 #include<data.hpp>
 #include<functions.hpp>
+#include<initializer.h>
 #include<object_manager.h>
 
 antok::Function* antok::generators::registerAbs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
@@ -182,7 +183,7 @@ antok::Function* antok::generators::registerGetRpdPhi(const YAML::Node& function
 
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
-	std::string method = getYAMLStringSafe(function["Method"]);
+	std::string method = antok::Initializer::getYAMLStringSafe(function["Method"]);
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
 	args.push_back(std::pair<std::string, std::string>("RPDProtonLorentzVec", "TLorentzVector"));
@@ -337,7 +338,7 @@ antok::Function* antok::generators::registerSum(const YAML::Node& function, std:
 			std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
 			return 0;
 		}
-		typeName = getYAMLStringSafe(function["Summands"]["Name"]);
+		typeName = antok::Initializer::getYAMLStringSafe(function["Summands"]["Name"]);
 		if(typeName == "") {
 			std::cerr<<"Could not convert \"Summands\"' \"Name\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 		}
@@ -353,7 +354,7 @@ antok::Function* antok::generators::registerSum(const YAML::Node& function, std:
 		}
 	// Summing over list of variable names
 	} else {
-		typeName = getYAMLStringSafe(*function["Summands"].begin());
+		typeName = antok::Initializer::getYAMLStringSafe(*function["Summands"].begin());
 		if(typeName == "") {
 			std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 			return 0;
@@ -365,7 +366,7 @@ antok::Function* antok::generators::registerSum(const YAML::Node& function, std:
 		}
 		typeName = data.global_map[typeName];
 		for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
-			std::string variableName = getYAMLStringSafe(*summand_it);
+			std::string variableName = antok::Initializer::getYAMLStringSafe(*summand_it);
 			if(variableName == "") {
 				std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 				return 0;
@@ -470,7 +471,7 @@ antok::Function* antok::generators::registerSum2(const YAML::Node& function, std
 			std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
 			return 0;
 		}
-		std::string summandBaseName = getYAMLStringSafe(function["Summands"]["Name"]);
+		std::string summandBaseName = antok::Initializer::getYAMLStringSafe(function["Summands"]["Name"]);
 		if(summandBaseName == "") {
 			std::cerr<<"Could not convert \"Summands\"' \"Name\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 			return 0;
@@ -484,7 +485,7 @@ antok::Function* antok::generators::registerSum2(const YAML::Node& function, std
 	// Summing over list of variable names
 	} else {
 		for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
-			std::string summandName = getYAMLStringSafe(*summand_it);
+			std::string summandName = antok::Initializer::getYAMLStringSafe(*summand_it);
 			if(summandName == "") {
 				std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 				return 0;
@@ -529,7 +530,7 @@ bool antok::generators::functionArgumentHandler(std::vector<std::pair<std::strin
 				std::cerr<<"Argument \""<<argName<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
 				return 0;
 			}
-			argName = getYAMLStringSafe(function[argName]);
+			argName = antok::Initializer::getYAMLStringSafe(function[argName]);
 			if(argName == "") {
 				std::cerr<<"Could not convert one of the arguments to std::string in function \""<<function["Name"]<<"\"."<<std::endl;
 				return 0;
@@ -553,14 +554,6 @@ bool antok::generators::functionArgumentHandler(std::vector<std::pair<std::strin
 	return true;
 
 };
-
-std::string antok::generators::getYAMLStringSafe(const YAML::Node& node) {
-	try{
-		return node.as<std::string>();
-	} catch(YAML::TypedBadConversion<std::string> e) {
-		return "";
-	}
-}
 
 std::string antok::generators::getFunctionArgumentHandlerErrorMsg(std::vector<std::string> quantityNames) {
 	std::stringstream msgStream;

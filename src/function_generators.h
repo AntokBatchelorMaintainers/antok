@@ -26,8 +26,6 @@ namespace antok {
 
 		std::string getFunctionArgumentHandlerErrorMsg(std::vector<std::string> quantityNames);
 
-		std::string getYAMLStringSafe(const YAML::Node& node);
-
 	}
 
 }
