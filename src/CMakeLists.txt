@@ -12,6 +12,7 @@ set(SOURCES
 	cutter.cxx
 	data.cxx
 	event.cxx
+	generators_cuts.cxx
 	generators_functions.cxx
 	initializer.cxx
 	object_manager.cxx

@@ -9,6 +9,7 @@
 #include<data.h>
 #include<event.h>
 #include<functions.hpp>
+#include<generators_cuts.h>
 #include<generators_functions.h>
 #include<initializer.h>
 #include<object_manager.h>
@@ -88,11 +89,37 @@ bool antok::Initializer::readConfigFile(const std::string& filename) {
 
 bool antok::Initializer::initializeCutter() {
 
+	if(_config == 0) {
+		std::cerr<<"Trying to initialize Cutter without having read the config file first."<<std::endl;
+		return false;
+	}
+
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 
-	if(objectManager->_cutter == 0) {
-		objectManager->_cutter = antok::Cutter::instance();
+	if(objectManager->_cutter != 0) {
+		std::cerr<<"Cutter seems to be initialized already."<<std::endl;
+		return false;
 	}
+	objectManager->_cutter = antok::Cutter::instance();
+	antok::Cutter& cutter = objectManager->getCutter();
+	YAML::Node& config = (*_config);
+
+	if(not config["Cuts"]) {
+		std::cerr<<"Could not find section \"Cuts\" in configuration file."<<std::endl;
+		return false;
+	}
+
+	std::vector<antok::Cut*>* cutVector = new std::vector<antok::Cut*>();
+	for(YAML::const_iterator cut_it = config["Cuts"].begin(); cut_it != config["Cuts"].end(); cut_it++) {
+
+		antok::Cut* antokCut = antok::generators::generateCut(*cut_it);
+		if(antokCut == 0) {
+			return false;
+		}
+		cutVector->push_back(antokCut);
+	}
+	cutter._cuts = (*cutVector);
+
 	return true;
 
 };
@@ -230,6 +257,11 @@ bool antok::Initializer::initializeData() {
 
 bool antok::Initializer::initializeEvent() {
 
+	if(_config == 0) {
+		std::cerr<<"Trying to initialize Cutter without having read the config file first."<<std::endl;
+		return false;
+	}
+
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 
 	if(objectManager->_event != 0) {
@@ -363,4 +395,30 @@ std::string antok::Initializer::getYAMLStringSafe(const YAML::Node& node) {
 		return "";
 	}
 }
+
+double* antok::Initializer::getYAMLDoubleAddress(const YAML::Node& node) {
+
+	double* retval = 0;
+	try {
+		double val = node.as<double>();
+		retval = new double(val);
+	} catch (YAML::TypedBadConversion<double> e) {
+		// not bad yet, could be a variable name there
+	}
+	if(retval == 0) {
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+		std::string name = antok::Initializer::getYAMLStringSafe(node);
+		if(name == "") {
+			std::cerr<<"Entry has to be either a variable name or of type double."<<std::endl;
+			return 0;
+		}
+		retval = data.getDoubleAddr(name);
+		if(retval == 0) {
+			std::cerr<<"Variable \""<<name<<"\" not found in Data."<<std::endl;
+			return 0;
+		}
+	}
+	return retval;
+
+};
 

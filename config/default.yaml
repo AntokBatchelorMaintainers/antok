@@ -150,14 +150,14 @@ Cuts:
 
 # Kaon cut is missing!
 
-    - ShortName: trigmask_&_0x1
-      LongName: Trigger Mask & 0x1
-      Abbreviation: Trig&0x1
-      Cut:
-          Name: TriggerMask
-          Type: Inclusive
-          Mask: 1
-          Variable: *TrigMask
+#    - ShortName: trigmask_&_0x1
+#      LongName: Trigger Mask & 0x1
+#      Abbreviation: Trig&0x1
+#      Cut:
+#          Name: TriggerMask
+#          Type: Inclusive
+#          Mask: 1
+#          Variable: *TrigMask
 
     - ShortName: -29<vtx_z<-66
       LongName: "Vertex Z in ]-29, -66["
@@ -178,14 +178,14 @@ Cuts:
           UpperBound: 1.55
           Variable: *VertexR
 
-    - ShortName: nRPDTracks=1
-      LongName: 1 RPD Track
-      Abbreviation: RPDtr
-      Cut:
-          Name: Equality
-          Type: ==
-          Value: 1
-          Variable: *nbrRPDTracks
+#    - ShortName: nRPDTracks=1
+#      LongName: 1 RPD Track
+#      Abbreviation: RPDtr
+#      Cut:
+#          Name: Equality
+#          Type: ==
+#          Value: 1
+#          Variable: *nbrRPDTracks
 
     - ShortName: p+_mass>0.2
       LongName: RPD's proton mass > 0.2
@@ -215,12 +215,13 @@ Cuts:
           UpperBound: *rpdDeltaPhiResProjection
           Variable: *AbsRpdPhiProjection
 
-    - ShortName: 187.72<X.E()<195.28
-      LongName: "X Energy in ]187.72, 195.28["
-      Abbreviation: Excl
-      Cut:
-          Name: Range
-          Type: Exclusive
-          LowerBound: 187.72
-          UpperBound: 195.28
+#    - ShortName: 187.72<X.E()<195.28
+#      LongName: "X Energy in ]187.72, 195.28["
+#      Abbreviation: Excl
+#      Cut:
+#          Name: Range
+#          Type: Exclusive
+#          LowerBound: 187.72
+#          UpperBound: 195.28
+#          Variable: void
 

@@ -33,114 +33,118 @@ namespace antok {
 
 	};
 
-	class RangeCut : public Cut {
+	namespace cuts {
 
-	  public:
+		class RangeCut : public Cut {
 
-		RangeCut(std::string shortname, std::string longname, std::string abbreviation, double* lowerBoundAddr, double* upperBoundAddr, double* valueAddr, int mode)
-			: _lowerBoundAddr(lowerBoundAddr),
-			  _upperBoundAddr(upperBoundAddr),
-			  _valueAddr(valueAddr),
-			  _mode(mode)
-		{
-			_shortname = shortname;
-			_longname = longname;
-			_abbreviation = abbreviation;
-		}
+		  public:
 
-		bool operator() () const {
-			switch(_mode)
+			RangeCut(std::string shortname, std::string longname, std::string abbreviation, double* lowerBoundAddr, double* upperBoundAddr, double* valueAddr, int mode)
+				: _lowerBoundAddr(lowerBoundAddr),
+				  _upperBoundAddr(upperBoundAddr),
+				  _valueAddr(valueAddr),
+				  _mode(mode)
 			{
-				case 0:
-					// range inclusive
-					return (((*_valueAddr) <= (*_lowerBoundAddr)) or ((*_valueAddr) >= (*_upperBoundAddr)));
-				case 1:
-					// range exclusive
-					return (((*_valueAddr) < (*_lowerBoundAddr)) or ((*_valueAddr) > (*_upperBoundAddr)));
-				case 2:
-					// range open low exclusive
-					return ((*_valueAddr) > (*_upperBoundAddr));
-				case 3:
-					// range open high exclusive
-					return ((*_valueAddr) < (*_lowerBoundAddr));
-				case 4:
-					// range open low inclusive
-					return ((*_valueAddr) >= (*_upperBoundAddr));
-				case 5:
-					// range open high inclusive
-					return ((*_valueAddr) <= (*_lowerBoundAddr));
+				_shortname = shortname;
+				_longname = longname;
+				_abbreviation = abbreviation;
 			}
-			throw 1;
+
+			bool operator() () const {
+				switch(_mode)
+				{
+					case 0:
+						// range exclusive
+						return (((*_valueAddr) < (*_lowerBoundAddr)) or ((*_valueAddr) > (*_upperBoundAddr)));
+					case 1:
+						// range inclusive
+						return (((*_valueAddr) <= (*_lowerBoundAddr)) or ((*_valueAddr) >= (*_upperBoundAddr)));
+					case 2:
+						// range open low exclusive
+						return ((*_valueAddr) > (*_upperBoundAddr));
+					case 3:
+						// range open low inclusive
+						return ((*_valueAddr) >= (*_upperBoundAddr));
+					case 4:
+						// range open high exclusive
+						return ((*_valueAddr) < (*_lowerBoundAddr));
+					case 5:
+						// range open high inclusive
+						return ((*_valueAddr) <= (*_lowerBoundAddr));
+				}
+				throw 1;
+			};
+
+		  private:
+
+			double* _lowerBoundAddr;
+			double* _upperBoundAddr;
+			double* _valueAddr;
+			int _mode;
+
 		};
 
-	  private:
+		template<typename T>
+		class EqualityCut : public Cut {
 
-		double* _lowerBoundAddr;
-		double* _upperBoundAddr;
-		double* _valueAddr;
-		int _mode;
+		  public:
 
-	};
-
-	template<typename T>
-	class EqualityCut : public Cut {
-
-	  public:
-
-		EqualityCut(std::string shortname, std::string longname, std::string abbreviation, T* leftAddr, T* rightAddr, int mode)
-			: _leftAddr(leftAddr),
-			  _rightAddr(rightAddr),
-			  _mode(mode)
-		{
-			_shortname = shortname;
-			_longname = longname;
-			_abbreviation = abbreviation;
-		}
-
-		bool operator() () const {
-			switch(_mode) {
-				case 0:
-					// ==
-					return ((*_leftAddr) == (*_rightAddr));
-				case 1:
-					// !=
-					return ((*_leftAddr) != (*_rightAddr));
+			EqualityCut(std::string shortname, std::string longname, std::string abbreviation, T* leftAddr, T* rightAddr, int mode)
+				: _leftAddr(leftAddr),
+				  _rightAddr(rightAddr),
+				  _mode(mode)
+			{
+				_shortname = shortname;
+				_longname = longname;
+				_abbreviation = abbreviation;
 			}
-		}
 
-	  private:
-
-		T* _leftAddr;
-		T* _rightAddr;
-		int _mode;
-
-	};
-
-	class CutGroup : public Cut {
-
-	  public:
-
-		CutGroup(std::string shortname, std::string longname, std::string abbreviation, std::vector<Cut*> cuts)
-			: _cuts(cuts)
-		{
-			_shortname = shortname;
-			_longname = longname;
-			_abbreviation = abbreviation;
-		}
-
-		bool operator () () const {
-			bool retval = false;
-			for(unsigned int i = 0; i < _cuts.size(); ++i) {
-				retval = retval or (*_cuts[i])();
+			bool operator() () const {
+				switch(_mode) {
+					case 0:
+						// ==
+						return ((*_leftAddr) == (*_rightAddr));
+					case 1:
+						// !=
+						return ((*_leftAddr) != (*_rightAddr));
+				}
 			}
-			return retval;
-		}
 
-	  private:
+		  private:
 
-		std::vector<Cut*> _cuts;
+			T* _leftAddr;
+			T* _rightAddr;
+			int _mode;
 
-	};
+		};
+
+		class CutGroup : public Cut {
+
+		  public:
+
+			CutGroup(std::string shortname, std::string longname, std::string abbreviation, std::vector<Cut*> cuts)
+				: _cuts(cuts)
+			{
+				_shortname = shortname;
+				_longname = longname;
+				_abbreviation = abbreviation;
+			}
+
+			bool operator () () const {
+				bool retval = false;
+				for(unsigned int i = 0; i < _cuts.size(); ++i) {
+					retval = retval or (*_cuts[i])();
+				}
+				return retval;
+			}
+
+		  private:
+
+			std::vector<Cut*> _cuts;
+
+		};
+
+	}
 /*
 // ---------------------------------- OLD STUFF
 
