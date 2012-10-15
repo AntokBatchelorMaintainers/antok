@@ -10,6 +10,105 @@
 #include<object_manager.h>
 #include<yaml_utils.hpp>
 
+namespace {
+
+	template<typename T>
+		antok::Function* _getSumFunction(std::vector<std::pair<std::string, std::string> >& summandNames, std::string quantityName) {
+
+			std::vector<T*> inputAddrs;
+			antok::Data& data = antok::ObjectManager::instance()->getData();
+
+			// Now do type checking and get all the addresses
+			for(unsigned int summandNames_i = 0; summandNames_i < summandNames.size(); ++summandNames_i) {
+
+				std::string variableName = summandNames[summandNames_i].first;
+				inputAddrs.push_back(data.getAddr<T>(variableName));
+
+			}
+
+			// And produce the function
+			if(not data.insert<T>(quantityName)) {
+				std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return 0;
+			}
+			return (new antok::functions::Sum<T>(inputAddrs, data.getAddr<T>(quantityName)));
+
+		};
+
+	std::vector<std::pair<std::string, std::string> >* _getSummandNames(const YAML::Node& function, std::string& quantityName, int index) {
+
+		std::string typeName = "notInitialized";
+		std::vector<std::pair<std::string, std::string> >* summandNames = new std::vector<std::pair<std::string, std::string> >();
+
+		// Summing over one variable with indices
+		if(not function["Summands"]) {
+			std::cerr<<"Argument \"Summands\" is missing in configuration file for variable \""<<quantityName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+
+		if(function["Summands"]["Indices"] or function["Summands"]["Name"]) {
+			if(not function["Summands"]["Indices"] and function["Summands"]["Name"]) {
+				std::cerr<<"Either \"Summands\" or \"Name\" found in sum function, but not both (Variable: \""<<quantityName<<"\")."<<std::endl;
+				return 0;
+			}
+			if(index > 0) {
+				std::cerr<<"Cannot have sum over indices for every particle (Variable: \""<<quantityName<<"\")."<<std::endl;
+				return 0;
+			}
+			std::vector<int> inner_indices;
+			try {
+				inner_indices = function["Summands"]["Indices"].as<std::vector<int> >();
+			} catch (YAML::TypedBadConversion<std::vector<int> > e) {
+				std::cerr<<"Could not convert YAML sequence to std::vector<int> when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
+				return 0;
+			} catch (YAML::TypedBadConversion<int> e) {
+				std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
+				return 0;
+			}
+			typeName = antok::YAMLUtils::getString(function["Summands"]["Name"]);
+			if(typeName == "") {
+				std::cerr<<"Could not convert \"Summands\"' \"Name\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
+			}
+			std::string summandBaseName = typeName;
+			std::stringstream strStr;
+			strStr<<typeName<<inner_indices[0];
+			typeName = data.getType(strStr.str());
+			for(unsigned int inner_indices_i = 0; inner_indices_i < inner_indices.size(); ++inner_indices_i) {
+				int inner_index = inner_indices[inner_indices_i];
+				std::stringstream strStr;
+				strStr<<summandBaseName<<inner_index;
+				summandNames->push_back(std::pair<std::string, std::string>(strStr.str(), typeName));
+			}
+			// Summing over list of variable names
+		} else {
+			typeName = antok::YAMLUtils::getString(*function["Summands"].begin());
+			if(typeName == "") {
+				std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
+				return 0;
+			}
+			if(index > 0) {
+				std::stringstream strStr;
+				strStr<<typeName<<index;
+				typeName = strStr.str();
+			}
+			typeName = data.getType(typeName);
+			for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
+				std::string variableName = antok::YAMLUtils::getString(*summand_it);
+				if(variableName == "") {
+					std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
+					return 0;
+				}
+				summandNames->push_back(std::pair<std::string, std::string>(variableName, typeName));
+			}
+		}
+		return summandNames;
+
+	};
+
+}
+
 antok::Function* antok::generators::generateAbs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
@@ -335,131 +434,37 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 	}
 	std::string quantityName = quantityNames[0];
 
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-
-	std::vector<double*> doubleInputAddrs;
-	std::vector<int*> intInputAddrs;
-	std::vector<Long64_t*> long64_tInputAddrs;
-	std::vector<TLorentzVector*> lorentzVectorInputAddrs;
-	std::string typeName = "notInitialized";
-	std::vector<std::pair<std::string, std::string> > summandNames;
-
-	// Summing over one variable with indices
-	if(not function["Summands"]) {
-		std::cerr<<"Argument \"Summands\" is missing in configuration file for variable \""<<quantityName<<"\"."<<std::endl;
+	std::vector<std::pair<std::string, std::string> >* summandNamesPtr = _getSummandNames(function, quantityName, index);
+	if(summandNamesPtr == 0) {
+		std::cerr<<"Could not generate summands for function \"Sum\" when trying to register calculation of \""<<quantityName<<"\"."<<std::endl;
 		return 0;
 	}
+	std::vector<std::pair<std::string, std::string> >& summandNames = (*summandNamesPtr);
 
-	if(function["Summands"]["Indices"] or function["Summands"]["Name"]) {
-		if(not function["Summands"]["Indices"] and function["Summands"]["Name"]) {
-			std::cerr<<"Either \"Summands\" or \"Name\" found in sum function, but not both (Variable: \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-		}
-		if(index > 0) {
-			std::cerr<<"Cannot have sum over indices for every particle (Variable: \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-		}
-		std::vector<int> inner_indices;
-		try {
-			inner_indices = function["Summands"]["Indices"].as<std::vector<int> >();
-		} catch (YAML::TypedBadConversion<std::vector<int> > e) {
-			std::cerr<<"Could not convert YAML sequence to std::vector<int> when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-		} catch (YAML::TypedBadConversion<int> e) {
-			std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-		}
-		typeName = antok::YAMLUtils::getString(function["Summands"]["Name"]);
-		if(typeName == "") {
-			std::cerr<<"Could not convert \"Summands\"' \"Name\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
-		}
-		std::string summandBaseName = typeName;
-		std::stringstream strStr;
-		strStr<<typeName<<inner_indices[0];
-		typeName = data.getType(strStr.str());
-		for(unsigned int inner_indices_i = 0; inner_indices_i < inner_indices.size(); ++inner_indices_i) {
-			int inner_index = inner_indices[inner_indices_i];
-			std::stringstream strStr;
-			strStr<<summandBaseName<<inner_index;
-			summandNames.push_back(std::pair<std::string, std::string>(strStr.str(), typeName));
-		}
-	// Summing over list of variable names
-	} else {
-		typeName = antok::YAMLUtils::getString(*function["Summands"].begin());
-		if(typeName == "") {
-			std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
-			return 0;
-		}
-		if(index > 0) {
-			std::stringstream strStr;
-			strStr<<typeName<<index;
-			typeName = strStr.str();
-		}
-		typeName = data.getType(typeName);
-		for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
-			std::string variableName = antok::YAMLUtils::getString(*summand_it);
-			if(variableName == "") {
-				std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
-				return 0;
-			}
-			summandNames.push_back(std::pair<std::string, std::string>(variableName, typeName));
-		}
-	}
 	if(not functionArgumentHandler(summandNames, function, index, true)) {
 		std::cerr<<getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
-	// Now do type checking and get all the addresses
-	for(unsigned int summandNames_i = 0; summandNames_i < summandNames.size(); ++summandNames_i) {
+	std::string typeName = summandNames[0].second;
 
-			std::string variableName = summandNames[summandNames_i].first;
-
-			if(typeName == "double") {
-				doubleInputAddrs.push_back(data.getAddr<double>(variableName));
-			} else if(typeName == "int") {
-				intInputAddrs.push_back(data.getAddr<int>(variableName));
-			} else if(typeName == "Long64_t") {
-				long64_tInputAddrs.push_back(data.getAddr<Long64_t>(variableName));
-			} else if(typeName == "TLorentzVector") {
-				lorentzVectorInputAddrs.push_back(data.getAddr<TLorentzVector>(variableName));
-			} else {
-				std::cerr<<"Type \""<<typeName<<"\" is not supported in function \"sum\" (Calculated quantity: \""<<quantityName<<"\")."<<std::endl;
-				return 0;
-			}
-
-		}
-
-	// And produce the function
-	antok::Function* returnFunction = 0;
+	antok::Function* antokFunction = 0;
 	if(typeName == "double") {
-		if(not data.insert<double>(quantityName)) {
-			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-			return 0;
-		}
-		returnFunction = new antok::functions::Sum<double>(doubleInputAddrs, data.getAddr<double>(quantityName));
-	} else if(typeName == "int") {
-		if(not data.insert<int>(quantityName)) {
-			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-			return 0;
-		}
-		returnFunction = new antok::functions::Sum<int>(intInputAddrs, data.getAddr<int>(quantityName));
-	} else if(typeName == "Long64_t") {
-		if(not data.insert<Long64_t>(quantityName)) {
-			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-			return 0;
-		}
-		returnFunction = new antok::functions::Sum<Long64_t>(long64_tInputAddrs, data.getAddr<Long64_t>(quantityName));
-	} else if(typeName == "TLorentzVector") {
-		if(not data.insert<TLorentzVector>(quantityName)) {
-			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-			return 0;
-		}
-		returnFunction = new antok::functions::Sum<TLorentzVector>(lorentzVectorInputAddrs, data.getAddr<TLorentzVector>(quantityName));
+		antokFunction = _getSumFunction<double>(summandNames, quantityName);
+	} else if (typeName == "int") {
+		antokFunction = _getSumFunction<int>(summandNames, quantityName);
+	} else if (typeName == "Long64_t") {
+		antokFunction = _getSumFunction<Long64_t>(summandNames, quantityName);
+	} else if (typeName == "TLorentzVector") {
+		antokFunction = _getSumFunction<TLorentzVector>(summandNames, quantityName);
+	} else {
+		std::cerr<<"Type \""<<typeName<<"\" not supported by \"sum\" (registering calculation of \""<<quantityName<<"\")."<<std::endl;
+		return 0;
 	}
-	assert(returnFunction != 0);
 
-	return returnFunction;
+	delete summandNamesPtr;
+
+	return (antokFunction);
 
 };
 
@@ -475,55 +480,13 @@ antok::Function* antok::generators::generateSum2(const YAML::Node& function, std
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
 	std::vector<double*> doubleInputAddrs;
-	std::vector<std::pair<std::string, std::string> > summandNames;
 
-	// Summing over one variable with indices
-	if(not function["Summands"]) {
-		std::cerr<<"Either trying to sum different types or input variable not found when calculating \""<<quantityName<<"\"."<<std::endl;
+	std::vector<std::pair<std::string, std::string> >* summandNamesPtr = _getSummandNames(function, quantityName, index);
+	if(summandNamesPtr == 0) {
+		std::cerr<<"Could not generate summands for function \"Sum\" when trying to register calculation of \""<<quantityName<<"\"."<<std::endl;
 		return 0;
 	}
-
-	if(function["Summands"]["Indices"] or function["Summands"]["Name"]) {
-		if(not function["Summands"]["Indices"] and function["Summands"]["Name"]) {
-			std::cerr<<"Either \"Summands\" or \"Name\" found in sum function, but not both (Variable: \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-		}
-		if(index > 0) {
-			std::cerr<<"Cannot have sum over indices for every particle (Variable: \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-		}
-		std::vector<int> inner_indices;
-		try {
-			inner_indices = function["Summands"]["Indices"].as<std::vector<int> >();
-		} catch (YAML::TypedBadConversion<std::vector<int> > e) {
-			std::cerr<<"Could not convert YAML sequence to std::vector<int> when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-		} catch (YAML::TypedBadConversion<int> e) {
-			std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-		}
-		std::string summandBaseName = antok::YAMLUtils::getString(function["Summands"]["Name"]);
-		if(summandBaseName == "") {
-			std::cerr<<"Could not convert \"Summands\"' \"Name\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
-			return 0;
-		}
-		for(unsigned int inner_indices_i = 0; inner_indices_i < inner_indices.size(); ++inner_indices_i) {
-			int inner_index = inner_indices[inner_indices_i];
-			std::stringstream strStr;
-			strStr<<summandBaseName<<inner_index;
-			summandNames.push_back(std::pair<std::string, std::string>(strStr.str(), "double"));
-		}
-	// Summing over list of variable names
-	} else {
-		for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
-			std::string summandName = antok::YAMLUtils::getString(*summand_it);
-			if(summandName == "") {
-				std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
-				return 0;
-			}
-			summandNames.push_back(std::pair<std::string, std::string>(summandName, "double"));
-		}
-	}
+	std::vector<std::pair<std::string, std::string> >& summandNames = (*summandNamesPtr);
 
 	if(not functionArgumentHandler(summandNames, function, index, true)) {
 		std::cerr<<getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -545,6 +508,8 @@ antok::Function* antok::generators::generateSum2(const YAML::Node& function, std
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
+
+	delete summandNamesPtr;
 
 	return (new antok::functions::Sum2(doubleInputAddrs, data.getAddr<double>(quantityName)));
 
