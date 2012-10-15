@@ -43,6 +43,23 @@ namespace antok {
 			return retval;
 		}
 
+		template<>
+		inline TLorentzVector* getAddress<TLorentzVector>(const YAML::Node& node) {
+			TLorentzVector* retval = 0;
+			antok::Data& data = antok::ObjectManager::instance()->getData();
+			std::string name = antok::YAMLUtils::getString(node);
+			if(name == "") {
+				std::cerr<<"Entry has to be either a variable name or a convertible type."<<std::endl;
+				return 0;
+			}
+			retval = data.getAddr<TLorentzVector>(name);
+			if(retval == 0) {
+				std::cerr<<"Variable \""<<name<<"\" not found in Data."<<std::endl;
+				return 0;
+			}
+			return retval;
+		}
+
 	}
 
 }

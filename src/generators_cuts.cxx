@@ -1,10 +1,38 @@
 #include<generators_cuts.h>
 
+#include<TLorentzVector.h>
+
 #include<cut.hpp>
 #include<data.h>
 #include<initializer.h>
 #include<object_manager.h>
 #include<yaml_utils.hpp>
+
+namespace {
+
+	template<typename T>
+	antok::Cut* _getEqualityCut(const YAML::Node& cut,
+	                            const std::string& shortName,
+	                            const std::string& longName,
+	                            const std::string& abbreviation,
+	                            int mode)
+	{
+
+		T* value = antok::YAMLUtils::getAddress<T>(cut["Value"]);
+		if(value == 0) {
+			std::cerr<<"Problem processing \"Value\" entry in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		T* variable = antok::YAMLUtils::getAddress<T>(cut["Variable"]);
+		if(variable == 0) {
+			std::cerr<<"Problem processing \"Variable\" entry in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		return (new antok::cuts::EqualityCut<T>(shortName, longName, abbreviation, variable, value, mode));
+
+	}
+
+}
 
 antok::Cut* antok::generators::generateRangeCut(const YAML::Node& cut,
                                                 const std::string& shortName,
@@ -96,8 +124,30 @@ antok::Cut* antok::generators::generateEqualityCut(const YAML::Node& cut,
 		return 0;
 	}
 
-	return 0;
-	return (new antok::cuts::EqualityCut<double>(shortName, longName, abbreviation, 0, 0, mode));
+	std::string variableName = antok::YAMLUtils::getString(cut["Variable"]);
+	if(variableName == "") {
+		std::cerr<<"Could not convert \"Equality\" cut \""<<shortName<<"\"'s \"Variable\" to std::string."<<std::endl;
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	std::string typeName = data.getType(variableName);
+
+	antok::Cut* antokCut = 0;
+	if(typeName == "double") {
+		antokCut = _getEqualityCut<double>(cut, shortName, longName, abbreviation, mode);
+	} else if (typeName == "int") {
+		antokCut = _getEqualityCut<int>(cut, shortName, longName, abbreviation, mode);
+	} else if (typeName == "Long64_t") {
+		antokCut = _getEqualityCut<Long64_t>(cut, shortName, longName, abbreviation, mode);
+	} else if (typeName == "TLorentzVector") {
+		antokCut = _getEqualityCut<TLorentzVector>(cut, shortName, longName, abbreviation, mode);
+	} else {
+		std::cerr<<"Type \""<<typeName<<"\" not supported in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
+		return 0;
+	}
+
+	return antokCut;
 
 };
 
