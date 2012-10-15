@@ -119,6 +119,36 @@ namespace antok {
 
 		};
 
+		class TriggerMaskCut: public Cut {
+
+		  public:
+
+			TriggerMaskCut(std::string shortname, std::string longname, std::string abbreviation, int* maskAddr, int* triggerAddr, int mode)
+				: _maskAddr(maskAddr),
+				  _triggerAddr(triggerAddr),
+				  _mode(mode)
+			{
+				_shortname = shortname;
+				_longname = longname;
+				_abbreviation = abbreviation;
+			}
+
+			bool operator() () {
+				switch(_mode) {
+					case 0:
+						return (not ((*_maskAddr)&(*_triggerAddr)));
+				}
+				throw 1;
+			}
+
+		  private:
+
+			int* _maskAddr;
+			int* _triggerAddr;
+			int _mode;
+
+		};
+
 		class CutGroup : public Cut {
 
 		  public:
