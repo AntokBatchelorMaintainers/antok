@@ -1,6 +1,8 @@
 #ifndef ANTOK_YAML_UTILS_HPP
 #define ANTOK_YAML_UTILS_HPP
 
+#include<iostream>
+
 #include<yaml-cpp/yaml.h>
 
 #include<data.h>
