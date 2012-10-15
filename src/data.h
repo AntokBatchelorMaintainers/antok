@@ -22,15 +22,9 @@ namespace antok {
 
 	  public:
 
-		bool insertDouble(std::string name);
-		bool insertInt(std::string name);
-		bool insertLong64_t(std::string name);
-		bool insertLorentzVector(std::string name);
+		template<typename T> bool insert(std::string name);
 
-		double* getDoubleAddr(std::string name);
-		int* getIntAddr(std::string name);
-		Long64_t* getLong64_tAddr(std::string name);
-		TLorentzVector* getLorentzVectorAddr(std::string name);
+		template<typename T> T* getAddr(std::string name);
 
 		std::string getType(std::string name);
 
@@ -54,3 +48,4 @@ namespace antok {
 }
 
 #endif
+

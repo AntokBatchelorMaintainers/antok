@@ -114,6 +114,11 @@ CalculatedQuantities:
           dY: *grady
           XLorentzVec: *XLorentzVec
 
+    - Name: &BeamE BeamE
+      Function:
+          Name: energy
+          Vector: *BeamLV
+
     - Name: [t, tMin, &tPrime tPrime]
       Function:
           Name: getTs
@@ -150,7 +155,8 @@ Cuts:
 
 # Kaon cut is missing!
 
-#    - ShortName: trigmask_&_0x1
+#    - &TriggerMaskCut
+#      ShortName: trigmask_&_0x1
 #      LongName: Trigger Mask & 0x1
 #      Abbreviation: Trig&0x1
 #      Cut:
@@ -159,7 +165,8 @@ Cuts:
 #          Mask: 1
 #          Variable: *TrigMask
 
-    - ShortName: -29<vtx_z<-66
+    - &VertexZCut
+      ShortName: -29<vtx_z<-66
       LongName: "Vertex Z in ]-29, -66["
       Abbreviation: VtxZ
       Cut:
@@ -169,7 +176,8 @@ Cuts:
           UpperBound: -29
           Variable: *Z_primV
 
-    - ShortName: Vtx_R<1.55
+    - &VertexRCut
+      ShortName: Vtx_R<1.55
       LongName: Vertex.R() < 1.55
       Abbreviation: VtxR
       Cut:
@@ -178,16 +186,18 @@ Cuts:
           UpperBound: 1.55
           Variable: *VertexR
 
-#    - ShortName: nRPDTracks=1
-#      LongName: 1 RPD Track
-#      Abbreviation: RPDtr
-#      Cut:
-#          Name: Equality
-#          Type: ==
-#          Value: 1
-#          Variable: *nbrRPDTracks
+    - &nRPDTracksCut
+      ShortName: nRPDTracks=1
+      LongName: 1 RPD Track
+      Abbreviation: RPDtr
+      Cut:
+          Name: Equality
+          Type: ==
+          Value: 1
+          Variable: *nbrRPDTracks
 
-    - ShortName: p+_mass>0.2
+    - &RPDProtonMassCut
+      ShortName: p+_mass>0.2
       LongName: RPD's proton mass > 0.2
       Abbreviation: RPDpm
       Cut:
@@ -196,7 +206,8 @@ Cuts:
           LowerBound: 0.2
           Variable: *RPDProtonMass
 
-    - ShortName: t_prim
+    - &TPrimeCut
+      ShortName: t_prim
       LongName: "t' in ]0.1, 1.["
       Abbreviation: t'
       Cut:
@@ -206,7 +217,8 @@ Cuts:
           UpperBound: 1.0
           Variable: *tPrime
 
-    - ShortName: RpdPlanarity
+    - &RPDPlanarityCut
+      ShortName: RpdPlanarity
       LongName: RPD planarity cut
       Abbreviation: RpdPl
       Cut:
@@ -215,13 +227,22 @@ Cuts:
           UpperBound: *rpdDeltaPhiResProjection
           Variable: *AbsRpdPhiProjection
 
-#    - ShortName: 187.72<X.E()<195.28
-#      LongName: "X Energy in ]187.72, 195.28["
-#      Abbreviation: Excl
-#      Cut:
-#          Name: Range
-#          Type: Exclusive
-#          LowerBound: 187.72
-#          UpperBound: 195.28
-#          Variable: void
+    - &ExclusivityCut
+      ShortName: 187.72<X.E()<195.28
+      LongName: "X Energy in ]187.72, 195.28["
+      Abbreviation: Excl
+      Cut:
+          Name: Range
+          Type: Exclusive
+          LowerBound: 187.72
+          UpperBound: 195.28
+          Variable: *BeamE
+
+CutTrains:
+
+    - Name: Standard Event Selection
+      Cuts:
+          - *VertexZCut
+          - *VertexRCut
+          - *nRPDTracksCut
 

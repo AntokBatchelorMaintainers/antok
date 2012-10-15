@@ -37,6 +37,8 @@ namespace antok {
 
 		std::vector<antok::Cut*> _cuts;
 
+		std::vector<std::vector<antok::Cut*> > _cutTrains;
+
 		TH1D* _statsHist;
 
 	};

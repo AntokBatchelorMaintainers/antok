@@ -9,7 +9,14 @@ namespace antok {
 
 	namespace generators {
 
-		antok::Cut* generateCut(const YAML::Node& cut);
+		antok::Cut* generateRangeCut(const YAML::Node& cut,
+		                             const std::string& shortName,
+		                             const std::string& longName,
+		                             const std::string& abbreviation);
+		antok::Cut* generateEqualityCut(const YAML::Node& cut,
+		                                const std::string& shortName,
+		                                const std::string& longName,
+		                                const std::string& abbreviation);
 
 	}
 

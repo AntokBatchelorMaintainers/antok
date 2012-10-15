@@ -8,6 +8,7 @@
 #include<functions.hpp>
 #include<initializer.h>
 #include<object_manager.h>
+#include<yaml_utils.hpp>
 
 antok::Function* antok::generators::generateAbs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
@@ -28,14 +29,14 @@ antok::Function* antok::generators::generateAbs(const YAML::Node& function, std:
 
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
-	double* argAddr = data.getDoubleAddr(args[0].first);
+	double* argAddr = data.getAddr<double>(args[0].first);
 
-	if(not data.insertDouble(quantityName)) {
+	if(not data.insert<double>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::functions::Abs(argAddr, data.getDoubleAddr(quantityName)));
+	return (new antok::functions::Abs(argAddr, data.getAddr<double>(quantityName)));
 
 };
 
@@ -59,15 +60,45 @@ antok::Function* antok::generators::generateDiff(const YAML::Node& function, std
 
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
-	double* arg1Addr = data.getDoubleAddr(args[0].first);
-	double* arg2Addr = data.getDoubleAddr(args[1].first);
+	double* arg1Addr = data.getAddr<double>(args[0].first);
+	double* arg2Addr = data.getAddr<double>(args[1].first);
 
-	if(not data.insertDouble(quantityName)) {
+	if(not data.insert<double>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::functions::Diff(arg1Addr, arg2Addr, data.getDoubleAddr(quantityName)));
+	return (new antok::functions::Diff(arg1Addr, arg2Addr, data.getAddr<double>(quantityName)));
+
+};
+
+antok::Function* antok::generators::generateEnergy(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
+
+	if(not functionArgumentHandler(args, function, index)) {
+		std::cerr<<getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	TLorentzVector* arg1Addr = data.getAddr<TLorentzVector>(args[0].first);
+
+	if(not data.insert<double>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::functions::Energy(arg1Addr, data.getAddr<double>(quantityName)));
 
 };
 
@@ -93,16 +124,16 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 		return 0;
 	}
 
-	double* dXaddr = data.getDoubleAddr(args[0].first);
-	double* dYaddr = data.getDoubleAddr(args[1].first);
-	TLorentzVector* xLorentzVecAddr = data.getLorentzVectorAddr(args[2].first);
+	double* dXaddr = data.getAddr<double>(args[0].first);
+	double* dYaddr = data.getAddr<double>(args[1].first);
+	TLorentzVector* xLorentzVecAddr = data.getAddr<TLorentzVector>(args[2].first);
 
-	if(not data.insertLorentzVector(quantityName)) {
+	if(not data.insert<TLorentzVector>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::functions::GetBeamLorentzVec(dXaddr, dYaddr, xLorentzVecAddr, data.getLorentzVectorAddr(quantityName)));
+	return (new antok::functions::GetBeamLorentzVec(dXaddr, dYaddr, xLorentzVecAddr, data.getAddr<TLorentzVector>(quantityName)));
 
 };
 
@@ -157,19 +188,19 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 		return 0;
 	}
 
-	xAddr = data.getDoubleAddr(args[0].first);
-	yAddr = data.getDoubleAddr(args[1].first);
-	zAddr = data.getDoubleAddr(args[2].first);
+	xAddr = data.getAddr<double>(args[0].first);
+	yAddr = data.getAddr<double>(args[1].first);
+	zAddr = data.getAddr<double>(args[2].first);
 	if(pType) {
-		mAddr = data.getDoubleAddr(args[3].first);
+		mAddr = data.getAddr<double>(args[3].first);
 	}
 
-	if(not data.insertLorentzVector(quantityName)) {
+	if(not data.insert<TLorentzVector>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::functions::GetLorentzVec(xAddr, yAddr, zAddr, mAddr, data.getLorentzVectorAddr(quantityName), pType));
+	return (new antok::functions::GetLorentzVec(xAddr, yAddr, zAddr, mAddr, data.getAddr<TLorentzVector>(quantityName), pType));
 
 };
 
@@ -183,7 +214,7 @@ antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function
 
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
-	std::string method = antok::Initializer::getYAMLStringSafe(function["Method"]);
+	std::string method = antok::YAMLUtils::getString(function["Method"]);
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
 	args.push_back(std::pair<std::string, std::string>("RPDProtonLorentzVec", "TLorentzVector"));
@@ -194,9 +225,9 @@ antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function
 		return 0;
 	}
 
-	TLorentzVector* beamLVAddr = data.getLorentzVectorAddr(args[0].first);
-	TLorentzVector* RPDprotLVAddr = data.getLorentzVectorAddr(args[1].first);
-	TLorentzVector* xLVAddr = data.getLorentzVectorAddr(args[2].first);
+	TLorentzVector* beamLVAddr = data.getAddr<TLorentzVector>(args[0].first);
+	TLorentzVector* RPDprotLVAddr = data.getAddr<TLorentzVector>(args[1].first);
+	TLorentzVector* xLVAddr = data.getAddr<TLorentzVector>(args[2].first);
 
 	int methodSwitch = -1;
 	if(method == "Projection") {
@@ -219,11 +250,11 @@ antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function
 
 	std::vector<double*> quantityAddrs;
 	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
-		if(not data.insertDouble(quantityNames[i])) {
+		if(not data.insert<double>(quantityNames[i])) {
 			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
 			return 0;
 		}
-		quantityAddrs.push_back(data.getDoubleAddr(quantityNames[i]));
+		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
 	}
 
 	return (new antok::functions::GetRpdPhi(beamLVAddr, RPDprotLVAddr, xLVAddr, quantityAddrs[0], quantityAddrs[1], methodSwitch));
@@ -250,16 +281,16 @@ antok::Function* antok::generators::generateGetTs(const YAML::Node& function, st
 		return 0;
 	}
 
-	TLorentzVector* beamLVAddr = data.getLorentzVectorAddr(args[0].first);
-	TLorentzVector* xLVAddr = data.getLorentzVectorAddr(args[1].first);
+	TLorentzVector* beamLVAddr = data.getAddr<TLorentzVector>(args[0].first);
+	TLorentzVector* xLVAddr = data.getAddr<TLorentzVector>(args[1].first);
 
 	std::vector<double*> quantityAddrs;
 	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
-		if(not data.insertDouble(quantityNames[i])) {
+		if(not data.insert<double>(quantityNames[i])) {
 			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
 			return 0;
 		}
-		quantityAddrs.push_back(data.getDoubleAddr(quantityNames[i]));
+		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
 	}
 
 	return (new antok::functions::GetTs(xLVAddr, beamLVAddr, quantityAddrs[0], quantityAddrs[1], quantityAddrs[2]));
@@ -285,13 +316,13 @@ antok::Function* antok::generators::generateMass(const YAML::Node& function, std
 		return 0;
 	}
 
-	TLorentzVector* vector = data.getLorentzVectorAddr(args[0].first);
-	if(not data.insertDouble(quantityName)) {
+	TLorentzVector* vector = data.getAddr<TLorentzVector>(args[0].first);
+	if(not data.insert<double>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::functions::Mass(vector, data.getDoubleAddr(quantityName)));
+	return (new antok::functions::Mass(vector, data.getAddr<double>(quantityName)));
 
 };
 
@@ -338,7 +369,7 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 			std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
 			return 0;
 		}
-		typeName = antok::Initializer::getYAMLStringSafe(function["Summands"]["Name"]);
+		typeName = antok::YAMLUtils::getString(function["Summands"]["Name"]);
 		if(typeName == "") {
 			std::cerr<<"Could not convert \"Summands\"' \"Name\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 		}
@@ -354,7 +385,7 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 		}
 	// Summing over list of variable names
 	} else {
-		typeName = antok::Initializer::getYAMLStringSafe(*function["Summands"].begin());
+		typeName = antok::YAMLUtils::getString(*function["Summands"].begin());
 		if(typeName == "") {
 			std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 			return 0;
@@ -366,7 +397,7 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 		}
 		typeName = data.getType(typeName);
 		for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
-			std::string variableName = antok::Initializer::getYAMLStringSafe(*summand_it);
+			std::string variableName = antok::YAMLUtils::getString(*summand_it);
 			if(variableName == "") {
 				std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 				return 0;
@@ -385,13 +416,13 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 			std::string variableName = summandNames[summandNames_i].first;
 
 			if(typeName == "double") {
-				doubleInputAddrs.push_back(data.getDoubleAddr(variableName));
+				doubleInputAddrs.push_back(data.getAddr<double>(variableName));
 			} else if(typeName == "int") {
-				intInputAddrs.push_back(data.getIntAddr(variableName));
+				intInputAddrs.push_back(data.getAddr<int>(variableName));
 			} else if(typeName == "Long64_t") {
-				long64_tInputAddrs.push_back(data.getLong64_tAddr(variableName));
+				long64_tInputAddrs.push_back(data.getAddr<Long64_t>(variableName));
 			} else if(typeName == "TLorentzVector") {
-				lorentzVectorInputAddrs.push_back(data.getLorentzVectorAddr(variableName));
+				lorentzVectorInputAddrs.push_back(data.getAddr<TLorentzVector>(variableName));
 			} else {
 				std::cerr<<"Type \""<<typeName<<"\" is not supported in function \"sum\" (Calculated quantity: \""<<quantityName<<"\")."<<std::endl;
 				return 0;
@@ -402,29 +433,29 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 	// And produce the function
 	antok::Function* returnFunction = 0;
 	if(typeName == "double") {
-		if(not data.insertDouble(quantityName)) {
+		if(not data.insert<double>(quantityName)) {
 			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return 0;
 		}
-		returnFunction = new antok::functions::Sum<double>(doubleInputAddrs, data.getDoubleAddr(quantityName));
+		returnFunction = new antok::functions::Sum<double>(doubleInputAddrs, data.getAddr<double>(quantityName));
 	} else if(typeName == "int") {
-		if(not data.insertInt(quantityName)) {
+		if(not data.insert<int>(quantityName)) {
 			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return 0;
 		}
-		returnFunction = new antok::functions::Sum<int>(intInputAddrs, data.getIntAddr(quantityName));
+		returnFunction = new antok::functions::Sum<int>(intInputAddrs, data.getAddr<int>(quantityName));
 	} else if(typeName == "Long64_t") {
-		if(not data.insertLong64_t(quantityName)) {
+		if(not data.insert<Long64_t>(quantityName)) {
 			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return 0;
 		}
-		returnFunction = new antok::functions::Sum<Long64_t>(long64_tInputAddrs, data.getLong64_tAddr(quantityName));
+		returnFunction = new antok::functions::Sum<Long64_t>(long64_tInputAddrs, data.getAddr<Long64_t>(quantityName));
 	} else if(typeName == "TLorentzVector") {
-		if(not data.insertLorentzVector(quantityName)) {
+		if(not data.insert<TLorentzVector>(quantityName)) {
 			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return 0;
 		}
-		returnFunction = new antok::functions::Sum<TLorentzVector>(lorentzVectorInputAddrs, data.getLorentzVectorAddr(quantityName));
+		returnFunction = new antok::functions::Sum<TLorentzVector>(lorentzVectorInputAddrs, data.getAddr<TLorentzVector>(quantityName));
 	}
 	assert(returnFunction != 0);
 
@@ -471,7 +502,7 @@ antok::Function* antok::generators::generateSum2(const YAML::Node& function, std
 			std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
 			return 0;
 		}
-		std::string summandBaseName = antok::Initializer::getYAMLStringSafe(function["Summands"]["Name"]);
+		std::string summandBaseName = antok::YAMLUtils::getString(function["Summands"]["Name"]);
 		if(summandBaseName == "") {
 			std::cerr<<"Could not convert \"Summands\"' \"Name\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 			return 0;
@@ -485,7 +516,7 @@ antok::Function* antok::generators::generateSum2(const YAML::Node& function, std
 	// Summing over list of variable names
 	} else {
 		for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
-			std::string summandName = antok::Initializer::getYAMLStringSafe(*summand_it);
+			std::string summandName = antok::YAMLUtils::getString(*summand_it);
 			if(summandName == "") {
 				std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;
 				return 0;
@@ -504,18 +535,18 @@ antok::Function* antok::generators::generateSum2(const YAML::Node& function, std
 
 			std::string variableName = summandNames[summandNames_i].first;
 
-			double* addr = data.getDoubleAddr(variableName);
+			double* addr = data.getAddr<double>(variableName);
 			doubleInputAddrs.push_back(addr);
 
 		}
 
 	// And produce the function
-	if(not data.insertDouble(quantityName)) {
+	if(not data.insert<double>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::functions::Sum2(doubleInputAddrs, data.getDoubleAddr(quantityName)));
+	return (new antok::functions::Sum2(doubleInputAddrs, data.getAddr<double>(quantityName)));
 
 };
 
@@ -530,7 +561,7 @@ bool antok::generators::functionArgumentHandler(std::vector<std::pair<std::strin
 				std::cerr<<"Argument \""<<argName<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
 				return 0;
 			}
-			argName = antok::Initializer::getYAMLStringSafe(function[argName]);
+			argName = antok::YAMLUtils::getString(function[argName]);
 			if(argName == "") {
 				std::cerr<<"Could not convert one of the arguments to std::string in function \""<<function["Name"]<<"\"."<<std::endl;
 				return 0;

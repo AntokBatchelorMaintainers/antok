@@ -6,14 +6,15 @@
 
 #include<constants.h>
 #include<cutter.h>
-#include<data.h>
 #include<event.h>
+#include<data.h>
 #include<functions.hpp>
 #include<generators_cuts.h>
 #include<generators_functions.h>
 #include<initializer.h>
 #include<object_manager.h>
 #include<plotter.h>
+#include<yaml_utils.hpp>
 
 antok::Initializer* antok::Initializer::_initializer = 0;
 
@@ -109,16 +110,79 @@ bool antok::Initializer::initializeCutter() {
 		return false;
 	}
 
-	std::vector<antok::Cut*>* cutVector = new std::vector<antok::Cut*>();
-	for(YAML::const_iterator cut_it = config["Cuts"].begin(); cut_it != config["Cuts"].end(); cut_it++) {
+	std::vector<std::vector<antok::Cut*> > cutTrains;
 
-		antok::Cut* antokCut = antok::generators::generateCut(*cut_it);
-		if(antokCut == 0) {
+	for(YAML::const_iterator cutTrain_it = config["CutTrains"].begin(); cutTrain_it != config["CutTrains"].end(); cutTrain_it++) {
+
+		const YAML::Node& cutTrain = (*cutTrain_it);
+		if(not cutTrain["Name"]) {
+			std::cerr<<"\"Name\" not found in one of the \"CutTrains\"."<<std::endl;
 			return false;
 		}
-		cutVector->push_back(antokCut);
+		std::string cutTrainName = antok::YAMLUtils::getString(cutTrain["Name"]);
+		if(cutTrainName == "") {
+			std::cerr<<"Could not convert \"Name\" to std::string for one of the \"CutTrains\"."<<std::endl;
+			return false;
+		}
+
+		if(not cutTrain["Cuts"]) {
+			std::cerr<<"\"Cuts\" not found in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
+			return false;
+		}
+
+		std::vector<antok::Cut*> cuts;
+
+		for(YAML::const_iterator cuts_it = cutTrain["Cuts"].begin(); cuts_it != cutTrain["Cuts"].end(); cuts_it++) {
+			const YAML::Node& cutEntry = (*cuts_it);
+
+			std::string shortName = antok::YAMLUtils::getString(cutEntry["ShortName"]);
+			std::string longName = antok::YAMLUtils::getString(cutEntry["LongName"]);
+			std::string abbreviation = antok::YAMLUtils::getString(cutEntry["Abbreviation"]);
+
+			if(shortName == "" or longName == "" or abbreviation == "") {
+				std::cerr<<"Did not find one of the cut's names (needed are \"ShortName\", \"LongName\" and \"Abbreviation\")."<<std::endl;
+				return false;
+			}
+
+			if(not cutEntry["Cut"]) {
+				std::cerr<<"Cut \""<<shortName<<"\" does not have required entry \"Cut\"."<<std::endl;
+				return false;
+			}
+
+			const YAML::Node& cut = cutEntry["Cut"];
+		
+			std::string cutName = antok::YAMLUtils::getString(cut["Name"]);
+			if(cutName == "") {
+				std::cerr<<"Could not get the cut's \"Cut\"->\"Name\" for cut \""<<shortName<<"\"."<<std::endl;
+				return false;
+			}
+
+			antok::Cut* antokCut = 0;
+			if(cutName == "Range") {
+				antokCut = antok::generators::generateRangeCut(cut, shortName, longName, abbreviation);
+			} else if (cutName == "Equality") {
+				antokCut = antok::generators::generateEqualityCut(cut, shortName, longName, abbreviation);
+			} else if (cutName == "TriggerMask") {
+				std::cerr<<"Trigger mask cut not implemented yet"<<std::endl;
+			} else if (cutName == "Group") {
+				std::cout<<"Groupcut "<<shortName<<std::endl;
+			} else {
+				std::cerr<<"Cut \""<<cutName<<"\" not supported."<<std::endl;
+				return false;
+			}
+			if(antokCut == 0) {
+				std::cerr<<"Could not generate cut \""<<shortName<<"\" in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
+				return false;
+			}
+			cuts.push_back(antokCut);
+
+		}
+
+		cutTrains.push_back(cuts);
+
 	}
-	cutter._cuts = (*cutVector);
+
+	cutter._cutTrains = cutTrains;
 
 	return true;
 
@@ -155,24 +219,24 @@ bool antok::Initializer::initializeData() {
 	YAML::Node perParticleTreeBranches= config["TreeBranches"]["onePerParticle"];
 	for(YAML::const_iterator typeIt = perEventTreeBranches.begin(); typeIt != perEventTreeBranches.end(); ++typeIt) {
 		for(YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
-			std::string type = getYAMLStringSafe(typeIt->first);
-			std::string name = getYAMLStringSafe(*valIt);
+			std::string type = antok::YAMLUtils::getString(typeIt->first);
+			std::string name = antok::YAMLUtils::getString(*valIt);
 			if(name == "") {
 				std::cerr<<"Conversion to std::string failed for one of the \"TreeBranches\"' \"onePerEvent\" "<<type<<"s."<<std::endl;
 				return false;
 			}
 			if(type == "double") {
-				if(not data.insertDouble(name)) {
+				if(not data.insert<double>(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
 			} else if(type == "int") {
-				if(not data.insertInt(name)) {
+				if(not data.insert<int>(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
 			} else if(type == "Long64_t") {
-				if(not data.insertLong64_t(name)) {
+				if(not data.insert<Long64_t>(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
@@ -188,8 +252,8 @@ bool antok::Initializer::initializeData() {
 	const unsigned int& N_PARTICLES = antok::Constants::n_particles();
 	for(YAML::const_iterator typeIt = perParticleTreeBranches.begin(); typeIt != perParticleTreeBranches.end(); ++typeIt) {
 		for(YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
-			std::string type = getYAMLStringSafe(typeIt->first);
-			std::string baseName = getYAMLStringSafe(*valIt);
+			std::string type = antok::YAMLUtils::getString(typeIt->first);
+			std::string baseName = antok::YAMLUtils::getString(*valIt);
 			if(baseName == "") {
 				std::cerr<<"Conversion to std::string failed for one of the \"TreeBranches\"' \"onePerParticle\" "<<type<<"s."<<std::endl;
 				return false;
@@ -199,7 +263,7 @@ bool antok::Initializer::initializeData() {
 				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 					std::stringstream strStr;
 					strStr<<baseName<<(i+1);
-					if(not data.insertDouble(strStr.str())) {
+					if(not data.insert<double>(strStr.str())) {
 						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
 						return false;
 					}
@@ -208,7 +272,7 @@ bool antok::Initializer::initializeData() {
 				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 					std::stringstream strStr;
 					strStr<<baseName<<(i+1);
-					if(not data.insertInt(strStr.str())) {
+					if(not data.insert<int>(strStr.str())) {
 						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
 						return false;
 					}
@@ -229,7 +293,7 @@ bool antok::Initializer::initializeData() {
 		return false;
 	}
 	TFile* inFile = objectManager->getInFile();
-	std::string treeName = getYAMLStringSafe(config["TreeName"]);
+	std::string treeName = antok::YAMLUtils::getString(config["TreeName"]);
 	if(treeName == "") {
 		std::cerr<<"Could not convert entry \"TreeName\" to std::string."<<std::endl;
 		return false;
@@ -289,7 +353,7 @@ bool antok::Initializer::initializeEvent() {
 				return false;
 			}
 		} else {
-			std::string baseName = getYAMLStringSafe(calcQuantity["Name"]);
+			std::string baseName = antok::YAMLUtils::getString(calcQuantity["Name"]);
 			if(baseName == "") {
 				std::cerr<<"Could not convert one of the \"CalculatedQuantities\"' \"Name\"s to std::string."<<std::endl;
 				return false;
@@ -322,7 +386,7 @@ bool antok::Initializer::initializeEvent() {
 		}
 
 		const YAML::Node& function = calcQuantity["Function"];
-		std::string functionName = getYAMLStringSafe(function["Name"]);
+		std::string functionName = antok::YAMLUtils::getString(function["Name"]);
 
 		for(unsigned int indices_i = 0; indices_i < indices.size(); ++indices_i) {
 
@@ -342,6 +406,8 @@ bool antok::Initializer::initializeEvent() {
 				antokFunctionPtr = antok::generators::generateAbs(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "diff") {
 				antokFunctionPtr = antok::generators::generateDiff(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "energy") {
+				antokFunctionPtr = antok::generators::generateEnergy(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getBeamLorentzVector") {
 				antokFunctionPtr = antok::generators::generateGetBeamLorentzVector(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getLorentzVec") {
@@ -385,40 +451,6 @@ bool antok::Initializer::initializePlotter() {
 		objectManager->_plotter = antok::Plotter::instance();
 	}
 	return true;
-
-};
-
-std::string antok::Initializer::getYAMLStringSafe(const YAML::Node& node) {
-	try{
-		return node.as<std::string>();
-	} catch(YAML::TypedBadConversion<std::string> e) {
-		return "";
-	}
-}
-
-double* antok::Initializer::getYAMLDoubleAddress(const YAML::Node& node) {
-
-	double* retval = 0;
-	try {
-		double val = node.as<double>();
-		retval = new double(val);
-	} catch (YAML::TypedBadConversion<double> e) {
-		// not bad yet, could be a variable name there
-	}
-	if(retval == 0) {
-		antok::Data& data = antok::ObjectManager::instance()->getData();
-		std::string name = antok::Initializer::getYAMLStringSafe(node);
-		if(name == "") {
-			std::cerr<<"Entry has to be either a variable name or of type double."<<std::endl;
-			return 0;
-		}
-		retval = data.getDoubleAddr(name);
-		if(retval == 0) {
-			std::cerr<<"Variable \""<<name<<"\" not found in Data."<<std::endl;
-			return 0;
-		}
-	}
-	return retval;
 
 };
 

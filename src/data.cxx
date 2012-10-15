@@ -5,68 +5,92 @@
 
 #include<TLorentzVector.h>
 
-bool antok::Data::insertDouble(std::string name) {
-	if(doubles.count(name) > 0) {
-		return false;
-	}
-	global_map[name] = "double";
-	doubles[name] = -8888.8;
-	return true;
+template<typename T>
+bool antok::Data::insert(std::string name) {
+	std::cerr<<"Could not insert variable of this type."<<std::endl;
+	return false;
 }
 
-bool antok::Data::insertInt(std::string name) {
-	if(ints.count(name) > 0) {
-		return false;
-	}
-	global_map[name] = "int";
-	ints[name] = -8888;
-	return true;
+template<typename T>
+T* antok::Data::getAddr(std::string name) {
+	std::cerr<<"Could not get address for variable of this type."<<std::endl;
+	return 0;
 }
 
-bool antok::Data::insertLong64_t(std::string name) {
-	if(long64_ts.count(name) > 0) {
-		return false;
-	}
-	global_map[name] = "Long64_t";
-	long64_ts[name] = -8888;
-	return true;
-}
+namespace antok {
 
-bool antok::Data::insertLorentzVector(std::string name) {
-	if(lorentzVectors.count(name) > 0) {
-		return false;
+	template<>
+	bool antok::Data::insert<double>(std::string name) {
+		if(doubles.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "double";
+		doubles[name] = -8888.8;
+		return true;
 	}
-	global_map[name] = "TLorentzVector";
-	lorentzVectors[name] = *(new TLorentzVector);
-	return true;
-}
 
-double* antok::Data::getDoubleAddr(std::string name) {
-	if(doubles.count(name) < 1) {
-		return 0;
+	template<>
+	bool antok::Data::insert<int>(std::string name) {
+		if(ints.count(name) > 0) {
+			return false;
+		}
+	   global_map[name] = "int";
+	   ints[name] = -8888;
+	   return true;
 	}
-	return &doubles[name];
-}
 
-int* antok::Data::getIntAddr(std::string name) {
-	if(ints.count(name) < 1) {
-		return 0;
+	template<>
+	bool antok::Data::insert<Long64_t>(std::string name) {
+		if(long64_ts.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "Long64_t";
+		long64_ts[name] = -8888;
+		return true;
 	}
-	return &ints[name];
-}
 
-Long64_t* antok::Data::getLong64_tAddr(std::string name) {
-	if(long64_ts.count(name) < 1) {
-		return 0;
+	template<>
+	bool antok::Data::insert<TLorentzVector>(std::string name) {
+		if(lorentzVectors.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "TLorentzVector";
+		lorentzVectors[name] = *(new TLorentzVector);
+		return true;
 	}
-	return &long64_ts[name];
-}
 
-TLorentzVector* antok::Data::getLorentzVectorAddr(std::string name) {
-	if(lorentzVectors.count(name) < 1) {
-		return 0;
+	template<>
+	double* antok::Data::getAddr<double>(std::string name) {
+		if(doubles.count(name) < 1) {
+			return 0;
+		}
+		return &doubles[name];
 	}
-	return &lorentzVectors[name];
+
+	template<>
+	int* antok::Data::getAddr<int>(std::string name) {
+		if(ints.count(name) < 1) {
+			return 0;
+		}
+		return &ints[name];
+	}
+
+	template<>
+	Long64_t* antok::Data::getAddr<Long64_t>(std::string name) {
+		if(long64_ts.count(name) < 1) {
+			return 0;
+		}
+		return &long64_ts[name];
+	}
+
+	template<>
+	TLorentzVector* antok::Data::getAddr<TLorentzVector>(std::string name) {
+		if(lorentzVectors.count(name) < 1) {
+			return 0;
+		}
+		return &lorentzVectors[name];
+	}
+
 }
 
 std::string antok::Data::getType(std::string name) {

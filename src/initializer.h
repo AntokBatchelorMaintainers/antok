@@ -37,9 +37,6 @@ namespace antok {
 		bool initializeEvent();
 		bool initializePlotter();
 
-		static std::string getYAMLStringSafe(const YAML::Node& node);
-		static double* getYAMLDoubleAddress(const YAML::Node& node);
-
 	  private:
 
 		Initializer();

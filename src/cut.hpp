@@ -108,6 +108,7 @@ namespace antok {
 						// !=
 						return ((*_leftAddr) != (*_rightAddr));
 				}
+				throw 1;
 			}
 
 		  private:

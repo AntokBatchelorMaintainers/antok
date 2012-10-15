@@ -273,6 +273,27 @@ namespace antok {
 
 		};
 
+		class Energy : public Function
+		{
+
+		  public:
+
+			Energy(TLorentzVector* inAddr, double* outAddr)
+				: _inAddr(inAddr),
+				  _outAddr(outAddr) { }
+
+			bool operator() () {
+				(*_outAddr) = _inAddr->E();
+				return true;
+			}
+
+		  private:
+
+			TLorentzVector* _inAddr;
+			double* _outAddr;
+
+		};
+
 	}
 
 }
