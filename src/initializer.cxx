@@ -111,8 +111,10 @@ bool antok::Initializer::initializeCutter() {
 	}
 
 	std::vector<std::vector<antok::Cut*> > cutTrains;
+	std::vector<std::vector<bool*> > cutTrainMasks;
 
 	for(YAML::const_iterator cutTrain_it = config["CutTrains"].begin(); cutTrain_it != config["CutTrains"].end(); cutTrain_it++) {
+
 
 		const YAML::Node& cutTrain = (*cutTrain_it);
 		if(not cutTrain["Name"]) {
@@ -124,65 +126,54 @@ bool antok::Initializer::initializeCutter() {
 			std::cerr<<"Could not convert \"Name\" to std::string for one of the \"CutTrains\"."<<std::endl;
 			return false;
 		}
-
 		if(not cutTrain["Cuts"]) {
 			std::cerr<<"\"Cuts\" not found in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
 			return false;
 		}
 
 		std::vector<antok::Cut*> cuts;
+		std::vector<bool*> cutMasks;
 
 		for(YAML::const_iterator cuts_it = cutTrain["Cuts"].begin(); cuts_it != cutTrain["Cuts"].end(); cuts_it++) {
+
 			const YAML::Node& cutEntry = (*cuts_it);
-
 			std::string shortName = antok::YAMLUtils::getString(cutEntry["ShortName"]);
-			std::string longName = antok::YAMLUtils::getString(cutEntry["LongName"]);
-			std::string abbreviation = antok::YAMLUtils::getString(cutEntry["Abbreviation"]);
-
-			if(shortName == "" or longName == "" or abbreviation == "") {
-				std::cerr<<"Did not find one of the cut's names (needed are \"ShortName\", \"LongName\" and \"Abbreviation\")."<<std::endl;
+			if(shortName == "") {
+				std::cerr<<"Did not find one of the cut's \"ShortName\"."<<std::endl;
+				return false;
+			}
+			if(cutter._cutTrainsMap[cutTrainName].count(shortName) > 0) {
+				std::cerr<<"Cannot have two cuts with the same \"ShortName\" \""<<shortName<<"\"."<<std::endl;
 				return false;
 			}
 
-			if(not cutEntry["Cut"]) {
-				std::cerr<<"Cut \""<<shortName<<"\" does not have required entry \"Cut\"."<<std::endl;
-				return false;
-			}
-
-			const YAML::Node& cut = cutEntry["Cut"];
-		
-			std::string cutName = antok::YAMLUtils::getString(cut["Name"]);
-			if(cutName == "") {
-				std::cerr<<"Could not get the cut's \"Cut\"->\"Name\" for cut \""<<shortName<<"\"."<<std::endl;
-				return false;
-			}
-
+			bool* result = 0;
 			antok::Cut* antokCut = 0;
-			if(cutName == "Range") {
-				antokCut = antok::generators::generateRangeCut(cut, shortName, longName, abbreviation);
-			} else if (cutName == "Equality") {
-				antokCut = antok::generators::generateEqualityCut(cut, shortName, longName, abbreviation);
-			} else if (cutName == "TriggerMask") {
-				std::cerr<<"Trigger mask cut not implemented yet"<<std::endl;
-			} else if (cutName == "Group") {
-				std::cout<<"Groupcut "<<shortName<<std::endl;
+
+			if(cutter._cutsMap[shortName] > 0) {
+				result = cutter._cutResultMap[antokCut];
+				antokCut = cutter._cutsMap[shortName];
 			} else {
-				std::cerr<<"Cut \""<<cutName<<"\" not supported."<<std::endl;
-				return false;
+				if(not antok::generators::generateCut(cutEntry, antokCut, result)) {
+					std::cerr<<"Could not generate cut \""<<shortName<<"\" in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
+					return false;
+				}
+				cutter._cutTrainsMap[cutTrainName][shortName] = antokCut;
+				cutter._cutResultMap[antokCut] = result;
 			}
-			if(antokCut == 0) {
-				std::cerr<<"Could not generate cut \""<<shortName<<"\" in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
-				return false;
-			}
+
+			cutMasks.push_back(result);
 			cuts.push_back(antokCut);
 
 		}
 
 		cutTrains.push_back(cuts);
+		cutTrainMasks.push_back(cutMasks);
 
 	}
 
 	cutter._cutTrains = cutTrains;
+	cutter._cutMasks = cutTrainMasks;
 
 	return true;
 

@@ -16,7 +16,7 @@ antok::Plot::Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1,
 	if(_cutmasks.size() == 0) {
 		_cutmasks.push_back(0);
 	}
-	antok::Cutter* cutter = antok::Cutter::instance();
+/*	antok::Cutter* cutter = antok::Cutter::instance();
 	unsigned int no_cuts = cutter->get_no_cuts();
 	std::stringstream sstr;
 	bool found_zero = false;
@@ -48,7 +48,7 @@ antok::Plot::Plot(std::vector<int>& cutmasks, TH1* hist_template, double* data1,
 		sstr.str("");
 		_histograms.push_back(new_hist);
 	}
-
+*/
 };
 
 void antok::Plot::fill(int cutmask) {

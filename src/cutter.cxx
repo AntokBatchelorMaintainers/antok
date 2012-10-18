@@ -9,7 +9,7 @@ antok::Cutter* antok::Cutter::_cutter = 0;
 antok::Cutter* antok::Cutter::instance() {
 	if(_cutter == 0) {
 		_cutter = new antok::Cutter();
-		_cutter->_statsHist = 0;
+//		_cutter->_statsHist = 0;
 	}
 	return _cutter;
 }
@@ -29,9 +29,18 @@ antok::Cutter::Cutter() {
 */
 }
 
-int antok::Cutter::get_cutmask() {
+bool antok::Cutter::cut() {
 
-	int cutmask = 0;
+	bool success = true;
+	for(unsigned int i = 0; i < _cutTrains.size(); ++i) {
+		for(unsigned int j = 0; j < _cutTrains[i].size(); ++j) {
+			antok::Cut& cut = (*_cutTrains[i][j]);
+			success = success and cut();
+		}
+	}
+	return success;
+
+/*	int cutmask = 0;
 	bool cut_previously = false;
 	for(unsigned int i = 0; i < _cuts.size(); ++i) {
 		if((*(_cuts.at(i)))()) {
@@ -42,9 +51,9 @@ int antok::Cutter::get_cutmask() {
 		}
 	}
 	return cutmask;
-
+*/
 };
-
+/*
 std::string antok::Cutter::get_abbreviations(int bitmask) {
 
 	unsigned int size = _cuts.size();
@@ -91,3 +100,4 @@ antok::Cutter::~Cutter() {
 	}
 
 };
+*/

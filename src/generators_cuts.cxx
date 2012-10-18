@@ -12,11 +12,18 @@
 
 namespace {
 
+	antok::Cut* _generateCut(const YAML::Node& cut,
+	                         const std::string& shortName,
+	                         const std::string& longName,
+	                         const std::string& abbreviation,
+	                         bool*& result);
+
 	template<typename T>
 	antok::Cut* _getEqualityCut(const YAML::Node& cut,
 	                            const std::string& shortName,
 	                            const std::string& longName,
 	                            const std::string& abbreviation,
+								bool* result,
 	                            int mode)
 	{
 
@@ -30,126 +37,298 @@ namespace {
 			std::cerr<<"Problem processing \"Variable\" entry in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
 			return 0;
 		}
-		return (new antok::cuts::EqualityCut<T>(shortName, longName, abbreviation, variable, value, mode));
+		return (new antok::cuts::EqualityCut<T>(shortName, longName, abbreviation, result, variable, value, mode));
 
+	}
+
+
+	antok::Cut* generateRangeCut(const YAML::Node& cut,
+	                             const std::string& shortName,
+	                             const std::string& longName,
+	                             const std::string& abbreviation,
+								 bool* result)
+	{
+
+		if(not (cut["Type"] and cut["Variable"])) {
+			std::cerr<<"A required entry is missing for \"Range\" cut \""<<shortName<<"\" (either \"Type\" or \"Variable\")"<<std::endl;
+			return 0;
+		}
+		int method = -1;
+		double* lowerBound = 0;
+		double* upperBound = 0;
+		if(cut["LowerBound"] and cut["UpperBound"]) {
+			lowerBound = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
+			upperBound = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
+			if(lowerBound == 0 or upperBound == 0) {
+				std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
+			}
+			method = 0;
+		} else if(cut["LowerBound"]) {
+			lowerBound = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
+			if(lowerBound == 0) {
+				std::cerr<<"Entry \"LowerBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
+			}
+			method = 4;
+		} else if(cut["UpperBound"]) {
+			upperBound = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
+			if(upperBound == 0) {
+				std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
+			}
+			method = 2;
+		} else {
+			std::cerr<<"Either \"LowerBound\" or \"UpperBound\" has to be present in \"Range\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		std::string type = antok::YAMLUtils::getString(cut["Type"]);
+		if(type == "Inclusive") {
+			++method;
+		} else if(type == "Exclusive") {
+			// nothing to do
+		} else if(type == "") {
+			std::cerr<<"Could not convert \"Type\" to std::string for \"Range\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		} else {
+			std::cerr<<"\"Type\" entry in \"Range\" cut \""<<shortName<<"\" has either to be \"Exclusive\" or \"Inclusive\""<<std::endl;
+			return 0;
+		}
+		std::string varName = antok::YAMLUtils::getString(cut["Variable"]);
+		if(varName == "") {
+			std::cerr<<"Could not convert \"Range\" cut \""<<shortName<<"\"'s \"Variable\" entry to std::string."<<std::endl;
+			return 0;
+		}
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+		double* variable = data.getAddr<double>(varName);
+		if(variable == 0) {
+			std::cerr<<"Could not find \"Range\" cut \""<<shortName<<"\"'s \"Variable\" entry \""<<varName<<"\" in Data."<<std::endl;
+			return 0;
+		}
+		return (new antok::cuts::RangeCut(shortName, longName, abbreviation, result, lowerBound, upperBound, variable, method));
+
+	};
+
+	antok::Cut* generateEqualityCut(const YAML::Node& cut,
+	                                const std::string& shortName,
+	                                const std::string& longName,
+	                                const std::string& abbreviation,
+									bool* result)
+	{
+
+		if(not (cut["Type"] and cut["Value"] and cut["Variable"])) {
+			std::cerr<<"One of the required arguments (\"Type\", \"Value\" and \"Variable\") for \"Equality\" cut \""<<shortName<<"\" is missing."<<std::endl;
+			return 0;
+		}
+
+		std::string type = antok::YAMLUtils::getString(cut["Type"]);
+		if(type == "") {
+			std::cerr<<"Could not convert \"Type\" to std::string in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		int mode = -1;
+		if(type == "==") {
+			mode = 0;
+		} else if (type == "!=") {
+			mode = 1;
+		} else {
+			std::cerr<<"\"Type\" \""<<type<<"\" not supported by \"Equality\" cut."<<std::endl;
+			return 0;
+		}
+
+		std::string variableName = antok::YAMLUtils::getString(cut["Variable"]);
+		if(variableName == "") {
+			std::cerr<<"Could not convert \"Equality\" cut \""<<shortName<<"\"'s \"Variable\" to std::string."<<std::endl;
+			return 0;
+		}
+
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+		std::string typeName = data.getType(variableName);
+
+		antok::Cut* antokCut = 0;
+		if(typeName == "double") {
+			antokCut = _getEqualityCut<double>(cut, shortName, longName, abbreviation, result, mode);
+		} else if (typeName == "int") {
+			antokCut = _getEqualityCut<int>(cut, shortName, longName, abbreviation, result, mode);
+		} else if (typeName == "Long64_t") {
+			antokCut = _getEqualityCut<Long64_t>(cut, shortName, longName, abbreviation, result, mode);
+		} else if (typeName == "TLorentzVector") {
+			antokCut = _getEqualityCut<TLorentzVector>(cut, shortName, longName, abbreviation, result, mode);
+		} else {
+			std::cerr<<"Type \""<<typeName<<"\" not supported in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		return antokCut;
+
+	};
+
+	antok::Cut* generateTriggerMaskCut(const YAML::Node& cut,
+	                                   const std::string& shortName,
+	                                   const std::string& longName,
+	                                   const std::string& abbreviation,
+									   bool* result)
+	{
+
+		if(not (cut["Type"] and cut["Mask"] and cut["Variable"])) {
+			std::cerr<<"One of the required arguments (\"Type\", \"Mask\" and \"Variable\") for \"TriggerMask\" cut \""<<shortName<<"\" is missing."<<std::endl;
+			return 0;
+		}
+
+		std::string type = antok::YAMLUtils::getString(cut["Type"]);
+		if(type == "") {
+			std::cerr<<"Could not convert \"Type\" to std::string in \"TriggerMask\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		int mode = 0;
+		if(type != "Inclusive") {
+			std::cerr<<"Only \"Inclusive\" supported as \"Type\" for TriggerMask cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		int* maskAddr = antok::YAMLUtils::getAddress<int>(cut["Mask"]);
+		if(maskAddr == 0) {
+			std::cerr<<"\"Mask\" entry invalid in \"TriggerMask\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		int* variable = antok::YAMLUtils::getAddress<int>(cut["Variable"]);
+		if(variable == 0) {
+			std::cerr<<"\"Variable\" entry invalid in \"TriggerMask\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		return (new antok::cuts::TriggerMaskCut(shortName, longName, abbreviation, result, maskAddr, variable, mode));
+
+	};
+
+	antok::Cut* generateGroupCut(const YAML::Node& cut,
+	                             const std::string& shortName,
+	                             const std::string& longName,
+	                             const std::string& abbreviation,
+								 bool* result)
+	{
+
+		if(not cut["Cuts"]) {
+			std::cerr<<"The required argument \"Cuts\" is missing for \"GroupCut\" \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		if(not cut["Cuts"].IsSequence()) {
+			std::cerr<<"The \"Cuts\" entry for a \"GroupCut\" has to be a YAML sequence (in cut \""<<shortName<<"\")."<<std::endl;
+			return 0;
+		}
+
+		std::vector<antok::Cut*> cuts;
+		std::vector<bool*> results;
+
+		unsigned int index = 0;
+		for(YAML::const_iterator cuts_it = cut["Cuts"].begin(); cuts_it != cut["Cuts"].end(); cuts_it++) {
+
+			std::string innerShortName = shortName;
+			std::string innerLongName = longName;
+			std::string innerAbbreviation = abbreviation;
+
+			std::stringstream strStr;
+			strStr<<innerShortName<<index;
+			innerShortName = strStr.str();
+			strStr.str("");
+			strStr<<innerLongName<<index;
+			innerLongName = strStr.str();
+			strStr.str("");
+			strStr<<innerAbbreviation<<index;
+			innerAbbreviation = strStr.str();
+
+			const YAML::Node& cutEntry = (*cuts_it);
+
+			if(not cutEntry["Cut"]) {
+				std::cerr<<"Cut \""<<shortName<<"\" does not have required entry \"Cut\"."<<std::endl;
+				return false;
+			}
+
+			const YAML::Node& cut = cutEntry["Cut"];
+			bool* innerResult = 0;
+
+			antok::Cut* antokCut = _generateCut(cut, innerShortName, innerLongName, innerAbbreviation, innerResult);
+
+			if(antokCut == 0) {
+				std::cerr<<"Could not generate cut \""<<shortName<<"\" in \"Group\" cut \""<<shortName<<"\"."<<std::endl;
+				delete innerResult;
+				return false;
+			}
+
+			cuts.push_back(antokCut);
+			results.push_back(innerResult);
+
+			++index;
+
+		}
+
+		return (new antok::cuts::CutGroup(shortName, longName, abbreviation, result, cuts, results));
+
+	};
+
+	antok::Cut* _generateCut(const YAML::Node& cut,
+	                         const std::string& shortName,
+	                         const std::string& longName,
+	                         const std::string& abbreviation,
+	                         bool*& result)
+	{
+		std::string cutName = antok::YAMLUtils::getString(cut["Name"]);
+		if(cutName == "") {
+			std::cerr<<"Could not get the cut's \"Cut\"->\"Name\" for cut \""<<shortName<<"\"."<<std::endl;
+			return false;
+		}
+
+		result = new bool();
+		antok::Cut* antokCut = 0;
+		if(cutName == "Range") {
+			antokCut = generateRangeCut(cut, shortName, longName, abbreviation, result);
+		} else if (cutName == "Equality") {
+			antokCut = generateEqualityCut(cut, shortName, longName, abbreviation, result);
+		} else if (cutName == "TriggerMask") {
+			antokCut = generateTriggerMaskCut(cut, shortName, longName, abbreviation, result);
+		} else if (cutName == "Group") {
+			antokCut = generateGroupCut(cut, shortName, longName, abbreviation, result);
+		} else {
+			std::cerr<<"Cut \""<<cutName<<"\" not supported."<<std::endl;
+			delete result;
+			return 0;
+		}
+		if(antokCut == 0) {
+			delete result;
+			return 0;
+		}
+		return antokCut;
 	}
 
 }
 
-antok::Cut* antok::generators::generateRangeCut(const YAML::Node& cut,
-                                                const std::string& shortName,
-                                                const std::string& longName,
-                                                const std::string& abbreviation)
-{
+bool antok::generators::generateCut(const YAML::Node& cutEntry, antok::Cut*& antokCut, bool*& result) {
 
-	if(not (cut["Type"] and cut["Variable"])) {
-		std::cerr<<"A required entry is missing for \"Range\" cut \""<<shortName<<"\" (either \"Type\" or \"Variable\")"<<std::endl;
-		return 0;
-	}
-	int method = -1;
-	double* lowerBound = 0;
-	double* upperBound = 0;
-	if(cut["LowerBound"] and cut["UpperBound"]) {
-		lowerBound = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
-		upperBound = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
-		if(lowerBound == 0 or upperBound == 0) {
-			std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
-		}
-		method = 0;
-	} else if(cut["LowerBound"]) {
-		lowerBound = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
-		if(lowerBound == 0) {
-			std::cerr<<"Entry \"LowerBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
-		}
-		method = 4;
-	} else if(cut["UpperBound"]) {
-		upperBound = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
-		if(upperBound == 0) {
-			std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
-		}
-		method = 2;
-	} else {
-		std::cerr<<"Either \"LowerBound\" or \"UpperBound\" has to be present in \"Range\" cut \""<<shortName<<"\"."<<std::endl;
-		return 0;
-	}
-	std::string type = antok::YAMLUtils::getString(cut["Type"]);
-	if(type == "Inclusive") {
-		++method;
-	} else if(type == "Exclusive") {
-		// nothing to do
-	} else if(type == "") {
-		std::cerr<<"Could not convert \"Type\" to std::string for \"Range\" cut \""<<shortName<<"\"."<<std::endl;
-		return 0;
-	} else {
-		std::cerr<<"\"Type\" entry in \"Range\" cut \""<<shortName<<"\" has either to be \"Exclusive\" or \"Inclusive\""<<std::endl;
-		return 0;
-	}
-	std::string varName = antok::YAMLUtils::getString(cut["Variable"]);
-	if(varName == "") {
-		std::cerr<<"Could not convert \"Range\" cut \""<<shortName<<"\"'s \"Variable\" entry to std::string."<<std::endl;
-		return 0;
-	}
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-	double* variable = data.getAddr<double>(varName);
-	if(variable == 0) {
-		std::cerr<<"Could not find \"Range\" cut \""<<shortName<<"\"'s \"Variable\" entry \""<<varName<<"\" in Data."<<std::endl;
-		return 0;
-	}
-	return (new antok::cuts::RangeCut(shortName, longName, abbreviation, lowerBound, upperBound, variable, method));
+	std::string shortName = antok::YAMLUtils::getString(cutEntry["ShortName"]);
+	std::string longName = antok::YAMLUtils::getString(cutEntry["LongName"]);
+	std::string abbreviation = antok::YAMLUtils::getString(cutEntry["Abbreviation"]);
 
-};
-
-antok::Cut* antok::generators::generateEqualityCut(const YAML::Node& cut,
-                                                   const std::string& shortName,
-                                                   const std::string& longName,
-                                                   const std::string& abbreviation)
-{
-
-	if(not (cut["Type"] and cut["Value"] and cut["Variable"])) {
-		std::cerr<<"One of the required arguments (\"Type\", \"Value\" and \"Variable\") for \"Equality\" cut \""<<shortName<<"\" is missing."<<std::endl;
-		return 0;
+	if(shortName == "" or longName == "" or abbreviation == "") {
+		std::cerr<<"Did not find one of the cut's names (needed are \"ShortName\", \"LongName\" and \"Abbreviation\")."<<std::endl;
+		return false;
 	}
 
-	std::string type = antok::YAMLUtils::getString(cut["Type"]);
-	if(type == "") {
-		std::cerr<<"Could not convert \"Type\" to std::string in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
-		return 0;
+	if(not cutEntry["Cut"]) {
+		std::cerr<<"Cut \""<<shortName<<"\" does not have required entry \"Cut\"."<<std::endl;
+		return false;
 	}
 
-	int mode = -1;
-	if(type == "==") {
-		mode = 0;
-	} else if (type == "!=") {
-		mode = 1;
-	} else {
-		std::cerr<<"\"Type\" \""<<type<<"\" not supported by \"Equality\" cut."<<std::endl;
-		return 0;
+	const YAML::Node& cut = cutEntry["Cut"];
+
+	antokCut = _generateCut(cut, shortName, longName, abbreviation, result);
+
+	if(antokCut == 0) {
+		delete result;
+		return false;
 	}
 
-	std::string variableName = antok::YAMLUtils::getString(cut["Variable"]);
-	if(variableName == "") {
-		std::cerr<<"Could not convert \"Equality\" cut \""<<shortName<<"\"'s \"Variable\" to std::string."<<std::endl;
-		return 0;
-	}
-
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::string typeName = data.getType(variableName);
-
-	antok::Cut* antokCut = 0;
-	if(typeName == "double") {
-		antokCut = _getEqualityCut<double>(cut, shortName, longName, abbreviation, mode);
-	} else if (typeName == "int") {
-		antokCut = _getEqualityCut<int>(cut, shortName, longName, abbreviation, mode);
-	} else if (typeName == "Long64_t") {
-		antokCut = _getEqualityCut<Long64_t>(cut, shortName, longName, abbreviation, mode);
-	} else if (typeName == "TLorentzVector") {
-		antokCut = _getEqualityCut<TLorentzVector>(cut, shortName, longName, abbreviation, mode);
-	} else {
-		std::cerr<<"Type \""<<typeName<<"\" not supported in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
-		return 0;
-	}
-
-	return antokCut;
+	return true;
 
 };
 

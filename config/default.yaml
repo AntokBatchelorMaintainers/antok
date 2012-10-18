@@ -152,18 +152,19 @@ CalculatedQuantities:
           Subtrahend: *rpdDeltaPhiResProjection
 
 Cuts:
+#ShortName is the UID
 
 # Kaon cut is missing!
 
-#    - &TriggerMaskCut
-#      ShortName: trigmask_&_0x1
-#      LongName: Trigger Mask & 0x1
-#      Abbreviation: Trig&0x1
-#      Cut:
-#          Name: TriggerMask
-#          Type: Inclusive
-#          Mask: 1
-#          Variable: *TrigMask
+    - &TriggerMaskCut
+      ShortName: trigmask_&_0x1
+      LongName: Trigger Mask & 0x1
+      Abbreviation: Trig&0x1
+      Cut:
+          Name: TriggerMask
+          Type: Inclusive
+          Mask: 1
+          Variable: *TrigMask
 
     - &VertexZCut
       ShortName: -29<vtx_z<-66
@@ -242,7 +243,14 @@ CutTrains:
 
     - Name: Standard Event Selection
       Cuts:
-          - *VertexZCut
-          - *VertexRCut
+          - ShortName: Vertex_Z&R
+            LongName: Vertex Z and R cuts
+            Abbreviation: StdKin
+            Cut:
+                Name: Group
+                Cuts:
+                    - *VertexZCut
+                    - *VertexRCut
+          - *TriggerMaskCut
           - *nRPDTracksCut
 

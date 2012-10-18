@@ -1,6 +1,7 @@
 #ifndef ANTOK_CUTTER_H
 #define ANTOK_CUTTER_H
 
+#include<map>
 #include<string>
 #include<vector>
 
@@ -19,27 +20,32 @@ namespace antok {
 
 		static Cutter* instance();
 
-		int get_cutmask();
+		bool cut();
 
-		std::string get_abbreviations(int bitmask);
+//		std::string get_abbreviations(int bitmask);
 
-		unsigned int get_no_cuts() { return _cuts.size(); };
+//		unsigned int get_no_cuts() { return _cuts.size(); };
 
-		bool set_stats_histogram(TH1D* stats);
-		TH1D* get_stats_histogram() { return _statsHist; };
+//		bool set_stats_histogram(TH1D* stats);
+//		TH1D* get_stats_histogram() { return _statsHist; };
 
 	  private:
 
 		Cutter();
-		~Cutter();
+//		~Cutter();
 
 		static Cutter* _cutter;
 
-		std::vector<antok::Cut*> _cuts;
+//		std::vector<antok::Cut*> _cuts;
+
+		std::map<std::string, std::map<std::string, antok::Cut*> > _cutTrainsMap;
+		std::map<std::string, antok::Cut*> _cutsMap;
+		std::map<antok::Cut*, bool*> _cutResultMap;
 
 		std::vector<std::vector<antok::Cut*> > _cutTrains;
+		std::vector<std::vector<bool*> > _cutMasks;
 
-		TH1D* _statsHist;
+//		TH1D* _statsHist;
 
 	};
 

@@ -64,10 +64,10 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 	TTree* out_tree = inTree->CloneTree(0);
 
-	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
-	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
+//	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
+//	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
 
-	assert(cutter.set_stats_histogram(stats));
+//	assert(cutter.set_stats_histogram(stats));
 
 	for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
 
@@ -75,19 +75,21 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 		event.update();
 
-		int cutmask = cutter.get_cutmask();
+		assert(cutter.cut());
+
+/*		int cutmask = cutter.get_cutmask();
 		if(cutmask == 0) {
 			out_tree->Fill();
 		}
 
 		plotter.fill(event, cutmask);
-
+*/
 	}
 
 	plotter.save(outfile);
 	outfile->cd();
 	out_tree->Write();
-	(cutter.get_stats_histogram())->Write();
+//	(cutter.get_stats_histogram())->Write();
 
 	infile->Close();
 	outfile->Close();

@@ -12,13 +12,19 @@ namespace antok {
 
 	  public:
 
+		Cut(const std::string& shortname, const std::string& longname, const std::string& abbreviation, bool* outAddr)
+			: _shortname(shortname),
+			  _longname(longname),
+			  _abbreviation(abbreviation),
+			  _outAddr(outAddr) { };
+
 		virtual ~Cut() { };
 
-		virtual bool operator() () const = 0;
+		virtual bool operator() () = 0;
 
-		std::string get_shortname() const { return shortname; };
-		std::string get_longname() const { return longname; };
-		std::string get_abbreviation() const { return abbreviation; };
+		std::string get_shortname() const { return _shortname; };
+		std::string get_longname() const { return _longname; };
+		std::string get_abbreviation() const { return _abbreviation; };
 
 	  protected:
 
@@ -26,11 +32,13 @@ namespace antok {
 		std::string _longname;
 		std::string _abbreviation;
 
+		bool* _outAddr;
+/*
 		// LEGACY STUFF
 		std::string shortname;
 		std::string longname;
 		std::string abbreviation;
-
+*/
 	};
 
 	namespace cuts {
@@ -39,40 +47,49 @@ namespace antok {
 
 		  public:
 
-			RangeCut(std::string shortname, std::string longname, std::string abbreviation, double* lowerBoundAddr, double* upperBoundAddr, double* valueAddr, int mode)
-				: _lowerBoundAddr(lowerBoundAddr),
+			RangeCut(const std::string& shortname,
+			         const std::string& longname,
+			         const std::string& abbreviation,
+			         bool* outAddr,
+			         double* lowerBoundAddr,
+			         double* upperBoundAddr,
+			         double* valueAddr,
+			         int mode)
+				: Cut(shortname, longname, abbreviation, outAddr),
+				  _lowerBoundAddr(lowerBoundAddr),
 				  _upperBoundAddr(upperBoundAddr),
 				  _valueAddr(valueAddr),
-				  _mode(mode)
-			{
-				_shortname = shortname;
-				_longname = longname;
-				_abbreviation = abbreviation;
-			}
+				  _mode(mode) { }
 
-			bool operator() () const {
+			bool operator() () {
 				switch(_mode)
 				{
 					case 0:
 						// range exclusive
-						return (((*_valueAddr) < (*_lowerBoundAddr)) or ((*_valueAddr) > (*_upperBoundAddr)));
+						(*_outAddr) = ((*_valueAddr) < (*_lowerBoundAddr)) or ((*_valueAddr) > (*_upperBoundAddr));
+						return true;
 					case 1:
 						// range inclusive
-						return (((*_valueAddr) <= (*_lowerBoundAddr)) or ((*_valueAddr) >= (*_upperBoundAddr)));
+						(*_outAddr) = ((*_valueAddr) <= (*_lowerBoundAddr)) or ((*_valueAddr) >= (*_upperBoundAddr));
+						return true;
 					case 2:
 						// range open low exclusive
-						return ((*_valueAddr) > (*_upperBoundAddr));
+						(*_outAddr) = (*_valueAddr) > (*_upperBoundAddr);
+						return true;
 					case 3:
 						// range open low inclusive
-						return ((*_valueAddr) >= (*_upperBoundAddr));
+						(*_outAddr) = (*_valueAddr) >= (*_upperBoundAddr);
+						return true;
 					case 4:
 						// range open high exclusive
-						return ((*_valueAddr) < (*_lowerBoundAddr));
+						(*_outAddr) = (*_valueAddr) < (*_lowerBoundAddr);
+						return true;
 					case 5:
 						// range open high inclusive
-						return ((*_valueAddr) <= (*_lowerBoundAddr));
+						(*_outAddr) = (*_valueAddr) <= (*_lowerBoundAddr);
+						return true;
 				}
-				throw 1;
+				return false;
 			};
 
 		  private:
@@ -89,26 +106,30 @@ namespace antok {
 
 		  public:
 
-			EqualityCut(std::string shortname, std::string longname, std::string abbreviation, T* leftAddr, T* rightAddr, int mode)
-				: _leftAddr(leftAddr),
+			EqualityCut(const std::string& shortname,
+			            const std::string& longname,
+			            const std::string& abbreviation,
+			            bool* outAddr,
+			            T* leftAddr,
+			            T* rightAddr,
+			            int mode)
+				: Cut(shortname, longname, abbreviation, outAddr),
+				  _leftAddr(leftAddr),
 				  _rightAddr(rightAddr),
-				  _mode(mode)
-			{
-				_shortname = shortname;
-				_longname = longname;
-				_abbreviation = abbreviation;
-			}
+				  _mode(mode) { }
 
-			bool operator() () const {
+			bool operator() () {
 				switch(_mode) {
 					case 0:
 						// ==
-						return ((*_leftAddr) == (*_rightAddr));
+						(*_outAddr) = (*_leftAddr) == (*_rightAddr);
+						return true;
 					case 1:
 						// !=
-						return ((*_leftAddr) != (*_rightAddr));
+						(*_outAddr) = (*_leftAddr) != (*_rightAddr);
+						return true;
 				}
-				throw 1;
+				return false;
 			}
 
 		  private:
@@ -123,22 +144,25 @@ namespace antok {
 
 		  public:
 
-			TriggerMaskCut(std::string shortname, std::string longname, std::string abbreviation, int* maskAddr, int* triggerAddr, int mode)
-				: _maskAddr(maskAddr),
+			TriggerMaskCut(const std::string& shortname,
+			               const std::string& longname,
+			               const std::string& abbreviation,
+			               bool* outAddr,
+			               int* maskAddr,
+			               int* triggerAddr,
+			               int mode)
+				: Cut(shortname, longname, abbreviation, outAddr),
+				  _maskAddr(maskAddr),
 				  _triggerAddr(triggerAddr),
-				  _mode(mode)
-			{
-				_shortname = shortname;
-				_longname = longname;
-				_abbreviation = abbreviation;
-			}
+				  _mode(mode) { }
 
 			bool operator() () {
 				switch(_mode) {
 					case 0:
-						return (not ((*_maskAddr)&(*_triggerAddr)));
+						(*_outAddr) = (not ((*_maskAddr)&(*_triggerAddr)));
+						return true;
 				}
-				throw 1;
+				return false;
 			}
 
 		  private:
@@ -153,25 +177,30 @@ namespace antok {
 
 		  public:
 
-			CutGroup(std::string shortname, std::string longname, std::string abbreviation, std::vector<Cut*> cuts)
-				: _cuts(cuts)
-			{
-				_shortname = shortname;
-				_longname = longname;
-				_abbreviation = abbreviation;
-			}
+			CutGroup(const std::string& shortname,
+			         const std::string& longname,
+			         const std::string& abbreviation,
+			         bool* outAddr,
+			         std::vector<antok::Cut*> cuts,
+			         std::vector<bool*> results)
+				: Cut(shortname, longname, abbreviation, outAddr),
+				  _cuts(cuts),
+				  _results(results) { }
 
-			bool operator () () const {
+			bool operator () () {
 				bool retval = false;
 				for(unsigned int i = 0; i < _cuts.size(); ++i) {
-					retval = retval or (*_cuts[i])();
+					(*_cuts[i])();
+					retval = retval or (*_results[i]);
 				}
-				return retval;
+				(*_outAddr) = retval;
+				return true;
 			}
 
 		  private:
 
-			std::vector<Cut*> _cuts;
+			std::vector<antok::Cut*> _cuts;
+			std::vector<bool*> _results;
 
 		};
 
