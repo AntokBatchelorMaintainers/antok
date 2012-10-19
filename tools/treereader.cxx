@@ -46,7 +46,9 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 	}
 
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
-	objectManager->setInFile(infile);
+	assert(objectManager->setInFile(infile));
+	assert(objectManager->setOutFile(outfile));
+
 	antok::Initializer* initializer = antok::Initializer::instance();
 	if(not initializer->readConfigFile(configfilename)) {
 		std::cerr<<"Could not open config file. Aborting..."<<std::endl;
@@ -59,10 +61,10 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 	}
 	antok::Cutter& cutter = objectManager->getCutter();
 	antok::Event& event = objectManager->getEvent();
-	antok::Plotter& plotter = objectManager->getPlotter();
+//	antok::Plotter& plotter = objectManager->getPlotter();
 	TTree* inTree = objectManager->getInTree();
 
-	TTree* out_tree = inTree->CloneTree(0);
+//	TTree* out_tree = inTree->CloneTree(0);
 
 //	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
 //	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
@@ -77,22 +79,11 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 		assert(cutter.cut());
 
-/*		int cutmask = cutter.get_cutmask();
-		if(cutmask == 0) {
-			out_tree->Fill();
-		}
-
-		plotter.fill(event, cutmask);
-*/
 	}
 
-	plotter.save(outfile);
-	outfile->cd();
-	out_tree->Write();
-//	(cutter.get_stats_histogram())->Write();
-
-	infile->Close();
-	outfile->Close();
+	if(not objectManager->finish()) {
+		std::cerr<<"Problem when writing TObjects and/or closing output file."<<std::endl;
+	}
 
 }
 

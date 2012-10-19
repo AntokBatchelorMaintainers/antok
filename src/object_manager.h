@@ -1,7 +1,10 @@
 #ifndef ANTOK_OBJECTMANAGER_H
 #define ANTOK_OBJECTMANAGER_H
 
+#include<vector>
+
 class TFile;
+class TObject;
 class TTree;
 
 namespace antok {
@@ -31,6 +34,10 @@ namespace antok {
 		bool setInFile(TFile* inFile);
 		bool setOutFile(TFile* outFile);
 
+		bool registerObjectToWrite(TObject* object);
+
+		bool finish();
+
 	  private:
 
 		ObjectManager();
@@ -45,6 +52,7 @@ namespace antok {
 		TFile* _inFile;
 		TFile* _outFile;
 		TTree* _inTree;
+		std::vector<TObject*> _objectsToWrite;
 
 	};
 

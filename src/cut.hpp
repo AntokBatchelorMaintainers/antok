@@ -33,12 +33,7 @@ namespace antok {
 		std::string _abbreviation;
 
 		bool* _outAddr;
-/*
-		// LEGACY STUFF
-		std::string shortname;
-		std::string longname;
-		std::string abbreviation;
-*/
+
 	};
 
 	namespace cuts {
@@ -66,27 +61,27 @@ namespace antok {
 				{
 					case 0:
 						// range exclusive
-						(*_outAddr) = ((*_valueAddr) < (*_lowerBoundAddr)) or ((*_valueAddr) > (*_upperBoundAddr));
+						(*_outAddr) = ((*_valueAddr) > (*_lowerBoundAddr)) and ((*_valueAddr) < (*_upperBoundAddr));
 						return true;
 					case 1:
 						// range inclusive
-						(*_outAddr) = ((*_valueAddr) <= (*_lowerBoundAddr)) or ((*_valueAddr) >= (*_upperBoundAddr));
+						(*_outAddr) = ((*_valueAddr) >= (*_lowerBoundAddr)) and ((*_valueAddr) <= (*_upperBoundAddr));
 						return true;
 					case 2:
 						// range open low exclusive
-						(*_outAddr) = (*_valueAddr) > (*_upperBoundAddr);
+						(*_outAddr) = (*_valueAddr) < (*_upperBoundAddr);
 						return true;
 					case 3:
 						// range open low inclusive
-						(*_outAddr) = (*_valueAddr) >= (*_upperBoundAddr);
+						(*_outAddr) = (*_valueAddr) <= (*_upperBoundAddr);
 						return true;
 					case 4:
 						// range open high exclusive
-						(*_outAddr) = (*_valueAddr) < (*_lowerBoundAddr);
+						(*_outAddr) = (*_valueAddr) > (*_lowerBoundAddr);
 						return true;
 					case 5:
 						// range open high inclusive
-						(*_outAddr) = (*_valueAddr) <= (*_lowerBoundAddr);
+						(*_outAddr) = (*_valueAddr) >= (*_lowerBoundAddr);
 						return true;
 				}
 				return false;
@@ -159,7 +154,7 @@ namespace antok {
 			bool operator() () {
 				switch(_mode) {
 					case 0:
-						(*_outAddr) = (not ((*_maskAddr)&(*_triggerAddr)));
+						(*_outAddr) = (*_maskAddr)&(*_triggerAddr);
 						return true;
 				}
 				return false;
@@ -188,10 +183,10 @@ namespace antok {
 				  _results(results) { }
 
 			bool operator () () {
-				bool retval = false;
+				bool retval = true;
 				for(unsigned int i = 0; i < _cuts.size(); ++i) {
 					(*_cuts[i])();
-					retval = retval or (*_results[i]);
+					retval = retval and (*_results[i]);
 				}
 				(*_outAddr) = retval;
 				return true;

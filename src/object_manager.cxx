@@ -2,6 +2,9 @@
 
 #include<iostream>
 
+#include<TFile.h>
+#include<TObject.h>
+
 antok::ObjectManager* antok::ObjectManager::_objectManager = 0;
 
 antok::ObjectManager* antok::ObjectManager::instance() {
@@ -82,6 +85,34 @@ bool antok::ObjectManager::setOutFile(TFile* outFile) {
 	}
 	_outFile = outFile;
 	return true;
+
+}
+
+bool antok::ObjectManager::registerObjectToWrite(TObject* object) {
+
+	bool found = false;
+	for(unsigned int i = 0; i < _objectsToWrite.size(); ++i) {
+		if(object == _objectsToWrite[i]) {
+			found = true;
+		}
+	}
+	if(found) {
+		return false;
+	}
+	_objectsToWrite.push_back(object);
+	return true;
+
+}
+
+bool antok::ObjectManager::finish() {
+
+	bool success = true;
+	if(_outFile->Write() == 0) {
+		success = false;
+	}
+	_outFile->Close();
+	_inFile->Close();
+	return success;
 
 }
 

@@ -113,6 +113,17 @@ bool antok::Initializer::initializeCutter() {
 	std::vector<std::vector<antok::Cut*> > cutTrains;
 	std::vector<std::vector<bool*> > cutTrainMasks;
 
+	TFile* outFile = objectManager->getOutFile();
+	if(outFile == 0) {
+		std::cerr<<"Output file not registered."<<std::endl;
+		return false;
+	}
+	TTree* inTree = objectManager->getInTree();
+	if(inTree == 0) {
+		std::cerr<<"Input TTree not registered."<<std::endl;
+		return false;
+	}
+
 	for(YAML::const_iterator cutTrain_it = config["CutTrains"].begin(); cutTrain_it != config["CutTrains"].end(); cutTrain_it++) {
 
 
@@ -129,6 +140,32 @@ bool antok::Initializer::initializeCutter() {
 		if(not cutTrain["Cuts"]) {
 			std::cerr<<"\"Cuts\" not found in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
 			return false;
+		}
+		if(not cutTrain["Pertinent"]) {
+			std::cerr<<"\"Pertinent\" not found in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
+			return false;
+		}
+
+		bool pertinent = false;
+		{
+			std::string pertinence = antok::YAMLUtils::getString(cutTrain["Pertinent"]);
+			if(pertinence == "Yes") {
+				pertinent = true;
+			} else if (pertinence == "No") {
+				pertinent = false;
+			} else {
+				std::cerr<<"Entry \"Pertinent\" has to be either \"Yes\" or \"No\" (cutTrain \""<<cutTrainName<<"\")."<<std::endl;
+				return false;
+			}
+		}
+
+		outFile->cd();
+		outFile->mkdir(cutTrainName.c_str());
+		if(pertinent) {
+			outFile->cd(cutTrainName.c_str());
+			TTree* outTree = inTree->CloneTree(0);
+			cutter._outTreeMap[cutTrainName] = outTree;
+			objectManager->registerObjectToWrite(outTree);
 		}
 
 		std::vector<antok::Cut*> cuts;
@@ -423,12 +460,12 @@ bool antok::Initializer::initializeEvent() {
 			if(antokFunctionPtr == 0) {
 				return false;
 			}
-			antok::Event& event = antok::ObjectManager::instance()->getEvent();
+			antok::Event& event = objectManager->getEvent();
 			event._functions.push_back(antokFunctionPtr);
 
-		} // End of loop over all indices
+		}
 
-	} // End of loop over all CalculatedQuantities
+	}
 
 	return true;
 
@@ -436,11 +473,34 @@ bool antok::Initializer::initializeEvent() {
 
 bool antok::Initializer::initializePlotter() {
 
+	if(_config == 0) {
+		std::cerr<<"Trying to initialize Plotter without having read the config file first."<<std::endl;
+		return false;
+	}
+
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 
-	if(objectManager->_plotter == 0) {
-		objectManager->_plotter = antok::Plotter::instance();
+	if(objectManager->_plotter != 0) {
+		std::cerr<<"Event seems to be initialized already."<<std::endl;
+		return false;
 	}
+
+	objectManager->_plotter = antok::Plotter::instance();
+
+	//antok::Plotter& plotter = antok::ObjectManager::instance()->getPlotter();
+	antok::Cutter& cutter = objectManager->getCutter();
+
+/*	TFile* outFile = objectManager->getOutFile();
+	if(outFile == 0) {
+		std::cerr<<"Output file not registered."<<std::endl;
+		return false;
+	}
+*/	for(std::map<std::string, std::map<std::string, antok::Cut*> >::const_iterator cutTrain_it = cutter._cutTrainsMap.begin(); cutTrain_it != cutter._cutTrainsMap.end(); cutTrain_it++) {
+/*		std::string cutTrainName = cutTrain_it->first;
+		outFile->cd();
+		outFile->mkdir(cutTrainName.c_str());
+*/	}
+
 	return true;
 
 };

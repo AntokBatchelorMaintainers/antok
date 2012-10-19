@@ -10,6 +10,8 @@
 #include<cut.hpp>
 #include<event.h>
 
+class TTree;
+
 namespace antok {
 
 	class Cutter {
@@ -41,6 +43,7 @@ namespace antok {
 		std::map<std::string, std::map<std::string, antok::Cut*> > _cutTrainsMap;
 		std::map<std::string, antok::Cut*> _cutsMap;
 		std::map<antok::Cut*, bool*> _cutResultMap;
+		std::map<std::string, TTree*> _outTreeMap;
 
 		std::vector<std::vector<antok::Cut*> > _cutTrains;
 		std::vector<std::vector<bool*> > _cutMasks;

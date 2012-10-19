@@ -102,7 +102,7 @@ CalculatedQuantities:
               - *Mom_z
       Indices: *allParticles
 
-    - Name: XMass
+    - Name: &XMass XMass
       Function:
           Name: mass
           Vector: *XLorentzVec
@@ -239,18 +239,55 @@ Cuts:
           UpperBound: 195.28
           Variable: *BeamE
 
+    - &StdKin
+      ShortName: Vertex_Z&R
+      LongName: Vertex Z and R cuts
+      Abbreviation: StdKin
+      Cut:
+          Name: Group
+          Cuts:
+              - *VertexZCut
+              - *VertexRCut
+
 CutTrains:
 
-    - Name: Standard Event Selection
+    - &StdEvSel
+      Name: Standard Event Selection
       Cuts:
-          - ShortName: Vertex_Z&R
-            LongName: Vertex Z and R cuts
-            Abbreviation: StdKin
-            Cut:
-                Name: Group
-                Cuts:
-                    - *VertexZCut
-                    - *VertexRCut
           - *TriggerMaskCut
+          - *VertexZCut
+          - *VertexRCut
+          - *TPrimeCut
           - *nRPDTracksCut
+          - *RPDProtonMassCut
+          - *RPDPlanarityCut
+          - *ExclusivityCut
+      Pertinent: Yes
+
+    - Name: All Cuts (Debug)
+      Cuts:
+          - *TriggerMaskCut
+          - *VertexZCut
+          - *VertexRCut
+          - *nRPDTracksCut
+          - *RPDProtonMassCut
+          - *TPrimeCut
+          - *RPDPlanarityCut
+          - *ExclusivityCut
+          - *StdKin
+      Pertinent: No
+
+Plots:
+
+    - Name: 5 pion mass
+      Variable: *XMass
+      LowerBound: 0
+      UpperBound: 7
+      NBins: 750
+
+    - Name: Vertex Distribution
+      Variables: [ *X_primV, *Y_primV ]
+      LowerBounds: [ -5, -5 ]
+      UpperBounds: [ 5, 5 ]
+      NBins: [ 1000, 1000 ]
 

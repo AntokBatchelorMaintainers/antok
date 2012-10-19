@@ -14,6 +14,8 @@ namespace antok {
 
 	class Plotter {
 
+		friend class Initializer;
+
 	  public:
 
 		static Plotter* instance();
@@ -21,7 +23,7 @@ namespace antok {
 		void fill(const antok::Event& event, int cutmask);
 
 		void save(TDirectory* dir);
-
+/*
 		double XMass;
 		double XMom;
 		double CalcBeamE;
@@ -37,7 +39,7 @@ namespace antok {
 		double cedarTheta_Y;
 
 		double RPDDeltaPhi;
-/*		double RPDPhiRes;
+		double RPDPhiRes;
 		double RPDDeltaPhi_fhaas;
 		double RPDPhiRes_fhaas;
 		double RPDDeltaPhiAbs;
