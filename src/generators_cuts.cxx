@@ -324,7 +324,6 @@ bool antok::generators::generateCut(const YAML::Node& cutEntry, antok::Cut*& ant
 	antokCut = _generateCut(cut, shortName, longName, abbreviation, result);
 
 	if(antokCut == 0) {
-		delete result;
 		return false;
 	}
 

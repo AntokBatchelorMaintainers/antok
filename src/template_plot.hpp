@@ -53,6 +53,7 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
 		const std::vector<long>& masks = cutmasks_it->second;
 		const std::vector<antok::Cut*>& cuts = cutter.getCutsForCutTrain(cutTrainName);
 
+		histTemplate->SetDirectory(0);
 		outFile->cd(cutTrainName.c_str());
 		TDirectory* dir = TDirectory::CurrentDirectory();
 		dir->mkdir(histTemplate->GetName());
@@ -85,6 +86,7 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
 
 	}
 
+	outFile->cd();
 	histTemplate->Delete();
 
 };

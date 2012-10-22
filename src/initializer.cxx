@@ -165,6 +165,7 @@ bool antok::Initializer::initializeCutter() {
 			cutter._outTreeMap[cutTrainName] = outTree;
 			assert(objectManager->registerObjectToWrite(outTree));
 		}
+		outFile->cd();
 
 		std::vector<std::string> waterfallNames;
 		std::vector<long> waterfallCutmasks;

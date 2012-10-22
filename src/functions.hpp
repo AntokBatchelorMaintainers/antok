@@ -173,7 +173,7 @@ namespace antok {
 			bool operator() () {
 				(*_outAddr) = 0.;
 				for(unsigned int i = 0; i < _inAddrs.size(); ++i) {
-					(*_outAddr) += (*_inAddrs[i]);
+					(*_outAddr) += ((*_inAddrs[i]) * (*_inAddrs[i]));
 				}
 				(*_outAddr) = std::sqrt(*_outAddr);
 				return true;
