@@ -277,6 +277,15 @@ CutTrains:
           - *StdKin
       Pertinent: No
 
+    - Name: Test (Debug)
+      Cuts:
+          - *VertexRCut
+          - *RPDProtonMassCut
+          - *RPDPlanarityCut
+          - *StdKin
+          - *TriggerMaskCut
+      Pertinent: No
+
 Plots:
 
     - Name: 5 pion mass

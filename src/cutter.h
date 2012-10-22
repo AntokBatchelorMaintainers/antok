@@ -24,7 +24,16 @@ namespace antok {
 
 		bool cut();
 
-//		std::string get_abbreviations(int bitmask);
+		long getCutmaskForNames(std::vector<std::string> names) const;
+
+		const long& getCutPattern() const { return _cutPattern; };
+
+		long getAllCutsCutmaskForCutTrain(std::string cutTrainName) const;
+		const std::vector<antok::Cut*>& getCutsForCutTrain(std::string cutTrainName) const;
+
+		bool cutOnInCutmask(long mask, const antok::Cut* cut) const;
+
+		std::string getAbbreviations(long cutPattern, std::string cutTrainName) const;
 
 //		unsigned int get_no_cuts() { return _cuts.size(); };
 
@@ -38,15 +47,16 @@ namespace antok {
 
 		static Cutter* _cutter;
 
-//		std::vector<antok::Cut*> _cuts;
+		long _cutPattern;
 
 		std::map<std::string, std::map<std::string, antok::Cut*> > _cutTrainsMap;
+		std::map<std::string, std::vector<antok::Cut*> > _cutTrainsCutOrderMap;
 		std::map<std::string, antok::Cut*> _cutsMap;
-		std::map<antok::Cut*, bool*> _cutResultMap;
 		std::map<std::string, TTree*> _outTreeMap;
 
-		std::vector<std::vector<antok::Cut*> > _cutTrains;
-		std::vector<std::vector<bool*> > _cutMasks;
+		std::map<std::string, std::vector<long > > _cutTrainsWaterfallCutMasks;
+
+		std::vector<std::pair<antok::Cut*, bool*> > _cuts;
 
 //		TH1D* _statsHist;
 

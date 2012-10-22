@@ -22,9 +22,9 @@ namespace antok {
 
 		virtual bool operator() () = 0;
 
-		std::string get_shortname() const { return _shortname; };
-		std::string get_longname() const { return _longname; };
-		std::string get_abbreviation() const { return _abbreviation; };
+		std::string getShortName() const { return _shortname; };
+		std::string getLongName() const { return _longname; };
+		std::string getAbbreviation() const { return _abbreviation; };
 
 	  protected:
 

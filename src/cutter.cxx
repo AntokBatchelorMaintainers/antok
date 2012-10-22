@@ -32,10 +32,12 @@ antok::Cutter::Cutter() {
 bool antok::Cutter::cut() {
 
 	bool success = true;
-	for(unsigned int i = 0; i < _cutTrains.size(); ++i) {
-		for(unsigned int j = 0; j < _cutTrains[i].size(); ++j) {
-			antok::Cut& cut = (*_cutTrains[i][j]);
-			success = success and cut();
+	_cutPattern = 0;
+	for(unsigned int i = 0; i < _cuts.size(); ++i) {
+		success = success and (*(_cuts[i].first))();
+		bool result = (*(_cuts[i].second));
+		if(result) {
+			_cutPattern += (1<<i);
 		}
 	}
 	return success;
@@ -53,9 +55,83 @@ bool antok::Cutter::cut() {
 	return cutmask;
 */
 };
-/*
-std::string antok::Cutter::get_abbreviations(int bitmask) {
 
+long antok::Cutter::getAllCutsCutmaskForCutTrain(std::string cutTrainName) const {
+
+	std::map<std::string, std::map<std::string, antok::Cut*> >::const_iterator cutTrainsMap_it = _cutTrainsMap.find(cutTrainName);
+	assert(cutTrainsMap_it != _cutTrainsMap.end());
+	const std::map<std::string, antok::Cut*>& cuts = cutTrainsMap_it->second;
+	std::vector<std::string> names;
+	for(std::map<std::string, antok::Cut*>::const_iterator cuts_it = cuts.begin(); cuts_it != cuts.end(); cuts_it++) {
+		names.push_back(cuts_it->first);
+	}
+	return getCutmaskForNames(names);
+
+}
+
+const std::vector<antok::Cut*>& antok::Cutter::getCutsForCutTrain(std::string cutTrainName) const {
+
+	std::map<std::string, std::vector<antok::Cut*> >::const_iterator cutTrainsMap_it = _cutTrainsCutOrderMap.find(cutTrainName);
+	assert(cutTrainsMap_it != _cutTrainsCutOrderMap.end());
+	return cutTrainsMap_it->second;
+
+};
+
+bool antok::Cutter::cutOnInCutmask(long mask, const antok::Cut* cut) const {
+
+	for(unsigned int i = 0; i < _cuts.size(); ++i) {
+		const antok::Cut* innerCut = _cuts[i].first;
+		if(cut == innerCut) {
+			return ((mask>>i)&1);
+		}
+	}
+	assert(false);
+
+}
+
+long antok::Cutter::getCutmaskForNames(std::vector<std::string> names) const {
+
+	long cutmask = 0;
+	for(unsigned int i = 0; i < names.size(); ++i) {
+		std::map<std::string, antok::Cut*>::const_iterator cutsMap_it = _cutsMap.find(names[i]);
+		assert(cutsMap_it != _cutsMap.end());
+		const antok::Cut* cut = cutsMap_it->second;
+		unsigned int index = 0;
+		for( ; _cuts[index].first != cut && index < _cuts.size(); ++index);
+		assert(index < _cuts.size());
+		cutmask += 1<<index;
+	}
+	return cutmask;
+
+};
+
+std::string antok::Cutter::getAbbreviations(long cutPattern, std::string cutTrainName) const {
+
+	const std::vector<antok::Cut*>& cuts = getCutsForCutTrain(cutTrainName);
+
+	std::stringstream strStr;
+	strStr<<"(";
+
+	bool noCuts = true;
+	bool first = true;
+	for(unsigned int i = 0; i < cuts.size(); ++i) {
+		if(cutOnInCutmask(cutPattern, cuts[i])) {
+			noCuts = false;
+			if(first) {
+				first = false;
+			} else {
+				strStr<<"|";
+			}
+			strStr<<cuts[i]->getAbbreviation();
+		}
+	}
+	if(noCuts) {
+		return "(NoCuts)";
+	}
+	strStr<<")";
+	return strStr.str();
+
+/*
 	unsigned int size = _cuts.size();
 	assert(bitmask>>(size) == 0);
 	std::stringstream sstr;
@@ -80,9 +156,9 @@ std::string antok::Cutter::get_abbreviations(int bitmask) {
 	sstr<<")";
 	std::string retval = sstr.str();
 	return retval;
-
+*/
 };
-
+/*
 bool antok::Cutter::set_stats_histogram(TH1D* stats) {
 
 	if(_statsHist != 0) {

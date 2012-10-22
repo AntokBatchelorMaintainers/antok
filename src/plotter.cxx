@@ -149,7 +149,7 @@ void antok::Plotter::fill(const antok::Event& event, int cutmask) {
 }
 
 void antok::Plotter::save(TDirectory* dir) {
-
+/*
 	dir->cd();
 	for(unsigned int i = 0; i < _plots.size(); ++i) {
 
@@ -165,5 +165,5 @@ void antok::Plotter::save(TDirectory* dir) {
 		}
 
 	}
-
+*/
 }

@@ -242,7 +242,7 @@ namespace {
 
 			if(not cutEntry["Cut"]) {
 				std::cerr<<"Cut \""<<shortName<<"\" does not have required entry \"Cut\"."<<std::endl;
-				return false;
+				return 0;
 			}
 
 			const YAML::Node& cut = cutEntry["Cut"];
@@ -253,7 +253,7 @@ namespace {
 			if(antokCut == 0) {
 				std::cerr<<"Could not generate cut \""<<shortName<<"\" in \"Group\" cut \""<<shortName<<"\"."<<std::endl;
 				delete innerResult;
-				return false;
+				return 0;
 			}
 
 			cuts.push_back(antokCut);
@@ -276,7 +276,7 @@ namespace {
 		std::string cutName = antok::YAMLUtils::getString(cut["Name"]);
 		if(cutName == "") {
 			std::cerr<<"Could not get the cut's \"Cut\"->\"Name\" for cut \""<<shortName<<"\"."<<std::endl;
-			return false;
+			return 0;
 		}
 
 		result = new bool();

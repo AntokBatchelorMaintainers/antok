@@ -110,9 +110,6 @@ bool antok::Initializer::initializeCutter() {
 		return false;
 	}
 
-	std::vector<std::vector<antok::Cut*> > cutTrains;
-	std::vector<std::vector<bool*> > cutTrainMasks;
-
 	TFile* outFile = objectManager->getOutFile();
 	if(outFile == 0) {
 		std::cerr<<"Output file not registered."<<std::endl;
@@ -165,11 +162,11 @@ bool antok::Initializer::initializeCutter() {
 			outFile->cd(cutTrainName.c_str());
 			TTree* outTree = inTree->CloneTree(0);
 			cutter._outTreeMap[cutTrainName] = outTree;
-			objectManager->registerObjectToWrite(outTree);
+			assert(objectManager->registerObjectToWrite(outTree));
 		}
 
-		std::vector<antok::Cut*> cuts;
-		std::vector<bool*> cutMasks;
+		std::vector<std::string> waterfallNames;
+		std::vector<long> waterfallCutmasks;
 
 		for(YAML::const_iterator cuts_it = cutTrain["Cuts"].begin(); cuts_it != cutTrain["Cuts"].end(); cuts_it++) {
 
@@ -188,29 +185,25 @@ bool antok::Initializer::initializeCutter() {
 			antok::Cut* antokCut = 0;
 
 			if(cutter._cutsMap[shortName] > 0) {
-				result = cutter._cutResultMap[antokCut];
 				antokCut = cutter._cutsMap[shortName];
 			} else {
 				if(not antok::generators::generateCut(cutEntry, antokCut, result)) {
 					std::cerr<<"Could not generate cut \""<<shortName<<"\" in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
 					return false;
 				}
-				cutter._cutTrainsMap[cutTrainName][shortName] = antokCut;
-				cutter._cutResultMap[antokCut] = result;
+				cutter._cutsMap[shortName] = antokCut;
+				cutter._cuts.push_back(std::pair<antok::Cut*, bool*>(antokCut, result));
 			}
-
-			cutMasks.push_back(result);
-			cuts.push_back(antokCut);
+			cutter._cutTrainsMap[cutTrainName][shortName] = antokCut;
+			cutter._cutTrainsCutOrderMap[cutTrainName].push_back(antokCut);
+			waterfallNames.push_back(shortName);
+			waterfallCutmasks.push_back(cutter.getCutmaskForNames(waterfallNames));
 
 		}
 
-		cutTrains.push_back(cuts);
-		cutTrainMasks.push_back(cutMasks);
+		cutter._cutTrainsWaterfallCutMasks[cutTrainName] = waterfallCutmasks;
 
-	}
-
-	cutter._cutTrains = cutTrains;
-	cutter._cutMasks = cutTrainMasks;
+	} // End loop over CutTrains
 
 	return true;
 
@@ -495,11 +488,16 @@ bool antok::Initializer::initializePlotter() {
 		std::cerr<<"Output file not registered."<<std::endl;
 		return false;
 	}
-*/	for(std::map<std::string, std::map<std::string, antok::Cut*> >::const_iterator cutTrain_it = cutter._cutTrainsMap.begin(); cutTrain_it != cutter._cutTrainsMap.end(); cutTrain_it++) {
+*/
+
+	new antok::Plot(cutter._cutTrainsWaterfallCutMasks, new TH1D("mom_5pi", "mom_5Pi", 500, 0, 250), 0);
+
+	for(std::map<std::string, std::map<std::string, antok::Cut*> >::const_iterator cutTrain_it = cutter._cutTrainsMap.begin(); cutTrain_it != cutter._cutTrainsMap.end(); cutTrain_it++) {
 /*		std::string cutTrainName = cutTrain_it->first;
 		outFile->cd();
 		outFile->mkdir(cutTrainName.c_str());
-*/	}
+*/
+	}
 
 	return true;
 
