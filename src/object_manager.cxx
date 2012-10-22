@@ -5,6 +5,10 @@
 #include<TFile.h>
 #include<TObject.h>
 
+#include<cutter.h>
+#include<event.h>
+#include<plotter.h>
+
 antok::ObjectManager* antok::ObjectManager::_objectManager = 0;
 
 antok::ObjectManager* antok::ObjectManager::instance() {
@@ -25,6 +29,15 @@ antok::ObjectManager::ObjectManager()
 	  _outFile(0),
 	  _inTree(0)
 {
+
+}
+
+bool antok::ObjectManager::magic() {
+
+	bool success = _event->update() and _cutter->cut();
+	long cutPattern = _cutter->getCutPattern();
+	_plotter->fill(cutPattern);
+	return success;
 
 }
 

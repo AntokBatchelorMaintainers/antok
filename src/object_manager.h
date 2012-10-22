@@ -22,6 +22,8 @@ namespace antok {
 
 		static ObjectManager* instance();
 
+		bool magic();
+
 		antok::Cutter& getCutter();
 		antok::Data& getData();
 		antok::Event& getEvent();

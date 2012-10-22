@@ -11,6 +11,7 @@
 #include<functions.hpp>
 #include<generators_cuts.h>
 #include<generators_functions.h>
+#include<generators_plots.h>
 #include<initializer.h>
 #include<object_manager.h>
 #include<plotter.h>
@@ -167,6 +168,7 @@ bool antok::Initializer::initializeCutter() {
 
 		std::vector<std::string> waterfallNames;
 		std::vector<long> waterfallCutmasks;
+		waterfallCutmasks.push_back(0);
 
 		for(YAML::const_iterator cuts_it = cutTrain["Cuts"].begin(); cuts_it != cutTrain["Cuts"].end(); cuts_it++) {
 
@@ -346,6 +348,7 @@ bool antok::Initializer::initializeEvent() {
 		std::cerr<<"Trying to initialize Cutter without having read the config file first."<<std::endl;
 		return false;
 	}
+	YAML::Node& config = *_config;
 
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 
@@ -354,7 +357,6 @@ bool antok::Initializer::initializeEvent() {
 		return false;
 	}
 	objectManager->_event = antok::Event::instance();
-	YAML::Node& config = *_config;
 
 	if(not config["CalculatedQuantities"]) {
 		std::cerr<<"Warning: \"CalculatedQuantities\" not found in configuration file."<<std::endl;
@@ -470,6 +472,7 @@ bool antok::Initializer::initializePlotter() {
 		std::cerr<<"Trying to initialize Plotter without having read the config file first."<<std::endl;
 		return false;
 	}
+	YAML::Node& config = *_config;
 
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 
@@ -480,23 +483,75 @@ bool antok::Initializer::initializePlotter() {
 
 	objectManager->_plotter = antok::Plotter::instance();
 
-	//antok::Plotter& plotter = antok::ObjectManager::instance()->getPlotter();
-	antok::Cutter& cutter = objectManager->getCutter();
+	antok::Plotter& plotter = antok::ObjectManager::instance()->getPlotter();
 
-/*	TFile* outFile = objectManager->getOutFile();
-	if(outFile == 0) {
-		std::cerr<<"Output file not registered."<<std::endl;
-		return false;
+	if(not config["Plots"]) {
+		std::cerr<<"Warning: \"Plots\" not found in configuration file."<<std::endl;
 	}
-*/
+	for(YAML::const_iterator plots_it = config["Plots"].begin(); plots_it != config["Plots"].end(); plots_it++) {
 
-	new antok::Plot(cutter._cutTrainsWaterfallCutMasks, new TH1D("mom_5pi", "mom_5Pi", 500, 0, 250), 0);
+		const YAML::Node& plot = *plots_it;
 
-	for(std::map<std::string, std::map<std::string, antok::Cut*> >::const_iterator cutTrain_it = cutter._cutTrainsMap.begin(); cutTrain_it != cutter._cutTrainsMap.end(); cutTrain_it++) {
-/*		std::string cutTrainName = cutTrain_it->first;
-		outFile->cd();
-		outFile->mkdir(cutTrainName.c_str());
-*/
+		if(not plot["Name"]) {
+			std::cerr<<"\"Name\" not found for one of the \"Plots\"."<<std::endl;
+			return false;
+		}
+		std::string plotName = antok::YAMLUtils::getString(plot["Name"]);
+
+		if((not((plot["Variable"] and plot["LowerBound"] and plot["UpperBound"]) or
+		       (plot["Variables"] and plot["LowerBounds"] and plot["UpperBounds"]))) or
+			not plot["NBins"])
+		{
+			std::cerr<<"Required variables not found for \"Plot\" \""<<plotName;
+			std::cerr<<"\" (\"Variable(s)\"|\"LowerBound(s)\"|\"UpperBound(s)\"|\"NBins\")."<<std::endl;
+			return false;
+		}
+
+		antok::Plot* antokPlot = 0;
+		if(plot["Variables"]) {
+			if(plot["Variables"].IsSequence()) {
+				if(not (plot["Variables"].IsSequence() and
+				        plot["LowerBounds"].IsSequence() and
+				        plot["UpperBounds"].IsSequence() and
+						plot["NBins"].IsSequence()))
+				{
+					std::cerr<<"\"Variables\", \"LowerBounds\", \"UpperBounds\" and \"NBins\" all need to be sequences (in \"Plot\" \""<<plotName<<"\")."<<std::endl;
+					return false;
+				}
+				if(plot["Variables"].size() > 2) {
+					std::cerr<<"Cannot have \"Plot\" \""<<plotName<<"\" with more than 2 \"Variables\""<<std::endl;
+					return false;
+				}
+				if((plot["Variables"].size() != plot["LowerBounds"].size()) or
+				   (plot["Variables"].size() != plot["UpperBounds"].size()) or
+				   (plot["Variables"].size() != plot["NBins"].size()))
+				{
+					std::cerr<<"\"Variables\", \"LowerBounds\", \"UpperBounds\" and \"NBins\" need to have the same number of entries (in \"Plot\" \""<<plotName<<"\")."<<std::endl;
+					return false;
+				}
+				if(plot["Variables"].size() == 2) {
+					antokPlot = antok::generators::generate2DPlot(plot);
+				} else if (plot["Variables"].size() == 1) {
+					antokPlot = antok::generators::generate1DPlot(plot);
+				} else {
+					std::cerr<<"Empty \"Variables\" sequence found in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+					return false;
+				}
+			} else {
+				std::cerr<<"\"Variables\" implies 2D plot and needs to be a list (in \"Plot\" \""<<plotName<<"\")."<<std::endl;
+				return false;
+			}
+		} else if(plot["Variable"]) {
+			antokPlot = antok::generators::generate1DPlot(plot);
+		} else {
+			assert(false);
+		}
+
+		if(antokPlot == 0) {
+			std::cerr<<"Could not generate \"Plot\" \""<<plotName<<"\"."<<std::endl;
+			return false;
+		}
+		plotter._plots.push_back(antokPlot);
 	}
 
 	return true;

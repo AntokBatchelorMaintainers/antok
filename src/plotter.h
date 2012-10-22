@@ -3,14 +3,9 @@
 
 #include<vector>
 
-#include<TDirectory.h>
-#include<TH1D.h>
-#include<TH2D.h>
-
-#include<event.h>
-#include<plot.h>
-
 namespace antok {
+
+	class Plot;
 
 	class Plotter {
 
@@ -20,38 +15,15 @@ namespace antok {
 
 		static Plotter* instance();
 
-		void fill(const antok::Event& event, int cutmask);
+		void fill(long cutPattern);
 
-		void save(TDirectory* dir);
-/*
-		double XMass;
-		double XMom;
-		double CalcBeamE;
-		double RPDMult;
-		double PrimVX;
-		double PrimVY;
-		double PrimVZ;
-		double ProtonMass;
-		double TPrim;
-		double TrigMask;
-		double beam_time;
-		double cedarTheta_X;
-		double cedarTheta_Y;
-
-		double RPDDeltaPhi;
-		double RPDPhiRes;
-		double RPDDeltaPhi_fhaas;
-		double RPDPhiRes_fhaas;
-		double RPDDeltaPhiAbs;
-		double RPDDeltaPhiAbs_fhaas;
-*/
 	  private:
 
 		Plotter();
 
 		static Plotter* _plotter;
 
-		std::vector<antok::Plot> _plots;
+		std::vector<antok::Plot*> _plots;
 
 	};
 

@@ -17,7 +17,7 @@ namespace antok {
 
 		static Event* instance();
 
-		void update();
+		bool update();
 
 	  private:
 

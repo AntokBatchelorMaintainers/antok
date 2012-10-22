@@ -1,14 +1,41 @@
+#ifndef ANTOK_TEMPLATE_PLOT_HPP
+#define ANTOK_TEMPLATE_PLOT_HPP
 
 #include<assert.h>
-#include<sstream>
+#include<map>
+#include<vector>
 
+#include<TH1.h>
 #include<TFile.h>
 
+#include<cut.hpp>
 #include<cutter.h>
-#include<plot.h>
-#include<object_manager.h>
+#include<plot.hpp>
 
-antok::Plot::Plot(std::map<std::string, std::vector<long> >& cutmasks, TH1* histTemplate, double* data1, double* data2)
+namespace antok {
+
+	template<typename T>
+	class TemplatePlot : public Plot {
+
+	  public:
+
+		TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks, TH1* hist_template, T* data1, T* data2 = 0);
+
+		void fill(long cutmask);
+
+	  private:
+		TH1* _histTemplate;
+		std::vector<std::pair<TH1*, long> > _histograms;
+
+		T* _data1;
+		T* _data2;
+
+	};
+
+}
+#include<iostream>
+template<typename T>
+antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks, TH1* histTemplate, T* data1, T* data2)
 	: _histTemplate(histTemplate),
 	  _data1(data1),
 	  _data2(data2)
@@ -19,11 +46,17 @@ antok::Plot::Plot(std::map<std::string, std::vector<long> >& cutmasks, TH1* hist
 
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 	antok::Cutter& cutter = objectManager->getCutter();
+	TFile* outFile = objectManager->getOutFile();
 
 	for(std::map<std::string, std::vector<long> >::const_iterator cutmasks_it = cutmasks.begin(); cutmasks_it != cutmasks.end(); cutmasks_it++) {
 		const std::string& cutTrainName = cutmasks_it->first;
 		const std::vector<long>& masks = cutmasks_it->second;
 		const std::vector<antok::Cut*>& cuts = cutter.getCutsForCutTrain(cutTrainName);
+
+		outFile->cd(cutTrainName.c_str());
+		TDirectory* dir = TDirectory::CurrentDirectory();
+		dir->mkdir(histTemplate->GetName());
+		dir->cd(histTemplate->GetName());
 
 		for(unsigned int cutmask_i = 0; cutmask_i < masks.size(); ++cutmask_i) {
 
@@ -39,8 +72,6 @@ antok::Plot::Plot(std::map<std::string, std::vector<long> >& cutmasks, TH1* hist
 				}
 			}
 
-			TFile* outFile = objectManager->getOutFile();
-			outFile->cd(cutTrainName.c_str());
 			TH1* new_hist = dynamic_cast<TH1*>(histTemplate->Clone(strStr.str().c_str()));
 			assert(new_hist != 0);
 			strStr.str("");
@@ -54,9 +85,12 @@ antok::Plot::Plot(std::map<std::string, std::vector<long> >& cutmasks, TH1* hist
 
 	}
 
+	histTemplate->Delete();
+
 };
 
-void antok::Plot::fill(long cutPattern) {
+template<typename T>
+void antok::TemplatePlot<T>::fill(long cutPattern) {
 
 	for(unsigned int i = 0; i < _histograms.size(); ++i) {
 		TH1* hist = _histograms[i].first;
@@ -72,3 +106,4 @@ void antok::Plot::fill(long cutPattern) {
 
 }
 
+#endif

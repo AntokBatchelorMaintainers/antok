@@ -21,6 +21,16 @@ namespace antok {
 		}
 
 		template<typename T>
+		inline bool getValue(const YAML::Node& node, T* valPtr) {
+			try{
+				*valPtr = node.as<T>();
+				return true;
+			} catch(YAML::TypedBadConversion<T> e) {
+				return false;
+			}
+		}
+
+		template<typename T>
 		inline T* getAddress(const YAML::Node& node) {
 			T* retval = 0;
 			try {

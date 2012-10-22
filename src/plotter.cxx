@@ -1,8 +1,7 @@
-
-#include<assert.h>
+#include<plotter.h>
 
 #include<object_manager.h>
-#include<plotter.h>
+#include<plot.hpp>
 
 antok::Plotter* antok::Plotter::_plotter = 0;
 
@@ -116,54 +115,11 @@ antok::Plotter::Plotter() {
 */
 };
 
-void antok::Plotter::fill(const antok::Event& event, int cutmask) {
-
-/*
-	XMass = event.get_pSum().M();
-	XMom = event.get_pSum().Energy();
-	CalcBeamE = event.get_pBeam().E();
-	RPDMult = event.rawData->nbrRPDTracks;
-	PrimVX = event.rawData->X_primV;
-	PrimVY = event.rawData->Y_primV;
-	PrimVZ = event.rawData->Z_primV;
-	ProtonMass = event.get_pProton().M();
-	TPrim = event.get_tPrime();
-	RPDDeltaPhi = event.get_RpdDeltaPhi();
-	TrigMask = event.rawData->TrigMask;
-	beam_time = event.rawData->beam_time;
-	cedarTheta_X = event.rawData->cedarTheta_X;
-	cedarTheta_Y = event.rawData->cedarTheta_Y;
-
-	RPDPhiRes = event.get_RpdPhiRes();
-	RPDDeltaPhi_fhaas = event.get_RpdDeltaPhi_fhaas();
-	RPDPhiRes_fhaas = event.get_RpdPhiRes_fhaas();
-	RPDDeltaPhiAbs = std::fabs(RPDDeltaPhi);
-	RPDDeltaPhiAbs_fhaas = std::fabs(RPDDeltaPhi_fhaas);
-*/
-
+void antok::Plotter::fill(long cutPattern) {
 
 	for(unsigned int i = 0; i < _plots.size(); ++i) {
-		_plots.at(i).fill(cutmask);
+		_plots[i]->fill(cutPattern);
 	}
 
 }
 
-void antok::Plotter::save(TDirectory* dir) {
-/*
-	dir->cd();
-	for(unsigned int i = 0; i < _plots.size(); ++i) {
-
-		antok::Plot plot = _plots.at(i);
-		const char* name = plot.get_template()->GetName();
-		TDirectory* new_dir = dir->mkdir(name);
-		assert(new_dir != 0);
-		new_dir->cd();
-		std::vector<TH1*> histograms = plot.get_histograms();
-		for(unsigned int j = 0; j < histograms.size(); ++j) {
-			TH1* hist = histograms.at(j);
-			hist->Write();
-		}
-
-	}
-*/
-}

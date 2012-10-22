@@ -13,11 +13,13 @@ antok::Event* antok::Event::instance() {
 	return _event;
 }
 
-void antok::Event::update() {
+bool antok::Event::update() {
 
+	bool success = true;
 	for(unsigned int i = 0; i < _functions.size(); ++i) {
-		assert((*_functions[i])());
+		success = success and (*_functions[i])();
 	}
+	return success;
 
 };
 

@@ -14,9 +14,9 @@ set(SOURCES
 	event.cxx
 	generators_cuts.cxx
 	generators_functions.cxx
+	generators_plots.cxx
 	initializer.cxx
 	object_manager.cxx
-	plot.cxx
 	plotter.cxx
    )
 

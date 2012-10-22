@@ -35,7 +35,8 @@ namespace antok {
 
 		std::string getAbbreviations(long cutPattern, std::string cutTrainName) const;
 
-//		unsigned int get_no_cuts() { return _cuts.size(); };
+		const std::map<std::string, std::vector<long> >& getWaterfallCutmasks() const { return _cutTrainsWaterfallCutMasks; };
+
 
 //		bool set_stats_histogram(TH1D* stats);
 //		TH1D* get_stats_histogram() { return _statsHist; };
@@ -54,7 +55,7 @@ namespace antok {
 		std::map<std::string, antok::Cut*> _cutsMap;
 		std::map<std::string, TTree*> _outTreeMap;
 
-		std::map<std::string, std::vector<long > > _cutTrainsWaterfallCutMasks;
+		std::map<std::string, std::vector<long> > _cutTrainsWaterfallCutMasks;
 
 		std::vector<std::pair<antok::Cut*, bool*> > _cuts;
 

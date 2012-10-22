@@ -59,12 +59,7 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 		std::cerr<<"Error while initializing. Aborting..."<<std::endl;
 		exit(1);
 	}
-	antok::Cutter& cutter = objectManager->getCutter();
-	antok::Event& event = objectManager->getEvent();
-//	antok::Plotter& plotter = objectManager->getPlotter();
 	TTree* inTree = objectManager->getInTree();
-
-//	TTree* out_tree = inTree->CloneTree(0);
 
 //	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
 //	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
@@ -75,9 +70,10 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 		inTree->GetEntry(i);
 
-		event.update();
-
-		assert(cutter.cut());
+		if(not objectManager->magic()) {
+			std::cerr<<"Could not process event "<<i<<". Aborting..."<<std::endl;
+			exit(1);
+		}
 
 	}
 
