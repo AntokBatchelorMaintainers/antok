@@ -13,43 +13,45 @@
 namespace {
 
 	template<typename T>
-		antok::Function* _getSumFunction(std::vector<std::pair<std::string, std::string> >& summandNames, std::string quantityName) {
+	antok::Function* _getSumFunction(std::vector<std::pair<std::string, std::string> >& summandNames, std::string quantityName) {
 
-			std::vector<T*> inputAddrs;
-			antok::Data& data = antok::ObjectManager::instance()->getData();
+		std::vector<T*> inputAddrs;
+		antok::Data& data = antok::ObjectManager::instance()->getData();
 
-			// Now do type checking and get all the addresses
-			for(unsigned int summandNames_i = 0; summandNames_i < summandNames.size(); ++summandNames_i) {
+		// Now do type checking and get all the addresses
+		for(unsigned int summandNames_i = 0; summandNames_i < summandNames.size(); ++summandNames_i) {
 
-				std::string variableName = summandNames[summandNames_i].first;
-				inputAddrs.push_back(data.getAddr<T>(variableName));
+			std::string variableName = summandNames[summandNames_i].first;
+			inputAddrs.push_back(data.getAddr<T>(variableName));
 
-			}
+		}
 
-			// And produce the function
-			if(not data.insert<T>(quantityName)) {
-				std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return 0;
-			}
-			return (new antok::functions::Sum<T>(inputAddrs, data.getAddr<T>(quantityName)));
+		// And produce the function
+		if(not data.insert<T>(quantityName)) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityName);
+			return 0;
+		}
+		return (new antok::functions::Sum<T>(inputAddrs, data.getAddr<T>(quantityName)));
 
-		};
+	};
 
 	std::vector<std::pair<std::string, std::string> >* _getSummandNames(const YAML::Node& function, std::string& quantityName, int index) {
+
+		using antok::YAMLUtils::hasNodeKey;
 
 		std::string typeName = "notInitialized";
 		std::vector<std::pair<std::string, std::string> >* summandNames = new std::vector<std::pair<std::string, std::string> >();
 
 		// Summing over one variable with indices
-		if(not function["Summands"]) {
+		if(not hasNodeKey(function, "Summands")) {
 			std::cerr<<"Argument \"Summands\" is missing in configuration file for variable \""<<quantityName<<"\"."<<std::endl;
 			return 0;
 		}
 
 		antok::Data& data = antok::ObjectManager::instance()->getData();
 
-		if(function["Summands"]["Indices"] or function["Summands"]["Name"]) {
-			if(not function["Summands"]["Indices"] and function["Summands"]["Name"]) {
+		if(hasNodeKey(function["Summands"], "Indices") or hasNodeKey(function["Summands"], "Name")) {
+			if(not hasNodeKey(function["Summands"], "Indices") and hasNodeKey(function["Summands"], "Name")) {
 				std::cerr<<"Either \"Summands\" or \"Name\" found in sum function, but not both (Variable: \""<<quantityName<<"\")."<<std::endl;
 				return 0;
 			}
@@ -375,7 +377,7 @@ antok::Function* antok::generators::generateGetTs(const YAML::Node& function, st
 	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
 	args.push_back(std::pair<std::string, std::string>("XLorentzVec", "TLorentzVector"));
 
-	if( not functionArgumentHandler(args, function, index)) {
+	if(not functionArgumentHandler(args, function, index)) {
 		std::cerr<<getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -518,11 +520,13 @@ antok::Function* antok::generators::generateSum2(const YAML::Node& function, std
 bool antok::generators::functionArgumentHandler(std::vector<std::pair<std::string, std::string> >& args, const YAML::Node& function, int index, bool argStringsAlreadyValues)
 {
 
+	using antok::YAMLUtils::hasNodeKey;
+
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	for(unsigned int i = 0; i < args.size(); ++i) {
 		std::string& argName = args[i].first;
 		if(not argStringsAlreadyValues) {
-			if(not function[argName]) {
+			if(not hasNodeKey(function, argName)) {
 				std::cerr<<"Argument \""<<argName<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
 				return 0;
 			}

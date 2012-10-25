@@ -72,6 +72,14 @@ namespace antok {
 			return retval;
 		}
 
+		inline bool hasNodeKey(const YAML::Node& node, std::string key) {
+			try {
+				return node[key];
+			} catch(YAML::BadSubscript) {
+				return false;
+			}
+		}
+
 	}
 
 }

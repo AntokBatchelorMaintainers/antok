@@ -49,27 +49,29 @@ namespace {
 								 bool* result)
 	{
 
-		if(not (cut["Type"] and cut["Variable"])) {
+		using antok::YAMLUtils::hasNodeKey;
+
+		if(not (hasNodeKey(cut, "Type") and hasNodeKey(cut, "Variable"))) {
 			std::cerr<<"A required entry is missing for \"Range\" cut \""<<shortName<<"\" (either \"Type\" or \"Variable\")"<<std::endl;
 			return 0;
 		}
 		int method = -1;
 		double* lowerBound = 0;
 		double* upperBound = 0;
-		if(cut["LowerBound"] and cut["UpperBound"]) {
+		if(hasNodeKey(cut, "LowerBound") and hasNodeKey(cut, "UpperBound")) {
 			lowerBound = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
 			upperBound = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
 			if(lowerBound == 0 or upperBound == 0) {
 				std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
 			}
 			method = 0;
-		} else if(cut["LowerBound"]) {
+		} else if(hasNodeKey(cut, "LowerBound")) {
 			lowerBound = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
 			if(lowerBound == 0) {
 				std::cerr<<"Entry \"LowerBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
 			}
 			method = 4;
-		} else if(cut["UpperBound"]) {
+		} else if(hasNodeKey(cut, "UpperBound")) {
 			upperBound = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
 			if(upperBound == 0) {
 				std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
@@ -113,7 +115,9 @@ namespace {
 									bool* result)
 	{
 
-		if(not (cut["Type"] and cut["Value"] and cut["Variable"])) {
+		using antok::YAMLUtils::hasNodeKey;
+
+		if(not (hasNodeKey(cut, "Type") and hasNodeKey(cut, "Value") and hasNodeKey(cut, "Variable"))) {
 			std::cerr<<"One of the required arguments (\"Type\", \"Value\" and \"Variable\") for \"Equality\" cut \""<<shortName<<"\" is missing."<<std::endl;
 			return 0;
 		}
@@ -168,7 +172,9 @@ namespace {
 									   bool* result)
 	{
 
-		if(not (cut["Type"] and cut["Mask"] and cut["Variable"])) {
+		using antok::YAMLUtils::hasNodeKey;
+
+		if(not (hasNodeKey(cut, "Type") and hasNodeKey(cut, "Mask") and hasNodeKey(cut, "Variable"))) {
 			std::cerr<<"One of the required arguments (\"Type\", \"Mask\" and \"Variable\") for \"TriggerMask\" cut \""<<shortName<<"\" is missing."<<std::endl;
 			return 0;
 		}
@@ -208,7 +214,9 @@ namespace {
 								 bool* result)
 	{
 
-		if(not cut["Cuts"]) {
+		using antok::YAMLUtils::hasNodeKey;
+
+		if(not hasNodeKey(cut, "Cuts")) {
 			std::cerr<<"The required argument \"Cuts\" is missing for \"GroupCut\" \""<<shortName<<"\"."<<std::endl;
 			return 0;
 		}
@@ -305,6 +313,8 @@ namespace {
 
 bool antok::generators::generateCut(const YAML::Node& cutEntry, antok::Cut*& antokCut, bool*& result) {
 
+	using antok::YAMLUtils::hasNodeKey;
+
 	std::string shortName = antok::YAMLUtils::getString(cutEntry["ShortName"]);
 	std::string longName = antok::YAMLUtils::getString(cutEntry["LongName"]);
 	std::string abbreviation = antok::YAMLUtils::getString(cutEntry["Abbreviation"]);
@@ -314,7 +324,7 @@ bool antok::generators::generateCut(const YAML::Node& cutEntry, antok::Cut*& ant
 		return false;
 	}
 
-	if(not cutEntry["Cut"]) {
+	if(not hasNodeKey(cutEntry, "Cut")) {
 		std::cerr<<"Cut \""<<shortName<<"\" does not have required entry \"Cut\"."<<std::endl;
 		return false;
 	}

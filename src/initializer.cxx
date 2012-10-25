@@ -36,6 +36,8 @@ antok::Initializer::Initializer()
 
 bool antok::Initializer::readConfigFile(const std::string& filename) {
 
+	using antok::YAMLUtils::hasNodeKey;
+
 	if(_config != 0) {
 		std::cerr<<"Attempting to read config file twice."<<std::endl;
 		return false;
@@ -54,7 +56,7 @@ bool antok::Initializer::readConfigFile(const std::string& filename) {
 
 	// Number of particles
 	try {
-		if(not (config["NumberOfParticles"] and antok::Constants::set_n_particles(config["NumberOfParticles"].as<unsigned int>()))) {
+		if(not (hasNodeKey(config, "NumberOfParticles") and antok::Constants::set_n_particles(config["NumberOfParticles"].as<unsigned int>()))) {
 			std::cerr<<"Could not set number of particles."<<std::endl;
 			return false;
 		}
@@ -66,15 +68,15 @@ bool antok::Initializer::readConfigFile(const std::string& filename) {
 	// Get the constants
 	YAML::Node constants = config["Constants"];
 	try {
-		if(not (constants["ChargedKaonMass"] and antok::Constants::set_charged_kaon_mass(constants["ChargedKaonMass"].as<double>()))) {
+		if(not (hasNodeKey(constants, "ChargedKaonMass") and antok::Constants::set_charged_kaon_mass(constants["ChargedKaonMass"].as<double>()))) {
 			std::cerr<<"Could not set charged kaon mass."<<std::endl;
 			return false;
 		}
-		if(not (constants["ChargedPionMass"] and antok::Constants::set_charged_pion_mass(constants["ChargedPionMass"].as<double>()))) {
+		if(not (hasNodeKey(constants, "ChargedPionMass") and antok::Constants::set_charged_pion_mass(constants["ChargedPionMass"].as<double>()))) {
 			std::cerr<<"Could not set pion mass."<<std::endl;
 			return false;
 		}
-		if(not (constants["ProtonMass"] and antok::Constants::set_proton_mass(constants["ProtonMass"].as<double>()))) {
+		if(not (hasNodeKey(constants, "ProtonMass") and antok::Constants::set_proton_mass(constants["ProtonMass"].as<double>()))) {
 			std::cerr<<"Coud not set proton mass."<<std::endl;
 			return false;
 		}
@@ -91,6 +93,8 @@ bool antok::Initializer::readConfigFile(const std::string& filename) {
 
 bool antok::Initializer::initializeCutter() {
 
+	using antok::YAMLUtils::hasNodeKey;
+
 	if(_config == 0) {
 		std::cerr<<"Trying to initialize Cutter without having read the config file first."<<std::endl;
 		return false;
@@ -106,7 +110,7 @@ bool antok::Initializer::initializeCutter() {
 	antok::Cutter& cutter = objectManager->getCutter();
 	YAML::Node& config = (*_config);
 
-	if(not config["Cuts"]) {
+	if(not hasNodeKey(config, "Cuts")) {
 		std::cerr<<"Could not find section \"Cuts\" in configuration file."<<std::endl;
 		return false;
 	}
@@ -126,7 +130,7 @@ bool antok::Initializer::initializeCutter() {
 
 
 		const YAML::Node& cutTrain = (*cutTrain_it);
-		if(not cutTrain["Name"]) {
+		if(not hasNodeKey(cutTrain, "Name")) {
 			std::cerr<<"\"Name\" not found in one of the \"CutTrains\"."<<std::endl;
 			return false;
 		}
@@ -135,11 +139,11 @@ bool antok::Initializer::initializeCutter() {
 			std::cerr<<"Could not convert \"Name\" to std::string for one of the \"CutTrains\"."<<std::endl;
 			return false;
 		}
-		if(not cutTrain["Cuts"]) {
+		if(not hasNodeKey(cutTrain, "Cuts")) {
 			std::cerr<<"\"Cuts\" not found in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
 			return false;
 		}
-		if(not cutTrain["Pertinent"]) {
+		if(not hasNodeKey(cutTrain, "Pertinent")) {
 			std::cerr<<"\"Pertinent\" not found in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
 			return false;
 		}
@@ -206,6 +210,8 @@ bool antok::Initializer::initializeCutter() {
 
 bool antok::Initializer::initializeData() {
 
+	using antok::YAMLUtils::hasNodeKey;
+
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 
 	if(objectManager->_data != 0) {
@@ -221,11 +227,11 @@ bool antok::Initializer::initializeData() {
 	};
 	YAML::Node& config = *_config;
 
-	if(not config["TreeBranches"]) {
+	if(not hasNodeKey(config, "TreeBranches")) {
 		std::cerr<<"TreeBranches not found in configuration file."<<std::endl;
 		return false;
 	};
-	if(not config["TreeBranches"]["onePerEvent"] or not config["TreeBranches"]["onePerParticle"]) {
+	if(not hasNodeKey(config["TreeBranches"], "onePerEvent") or not hasNodeKey(config["TreeBranches"], "onePerParticle")) {
 		std::cerr<<"TreeBranches[{\"onePerEvent\"|\"onePerParticle\"}] not found in configuration file."<<std::endl;
 		return false;
 	}
@@ -304,7 +310,7 @@ bool antok::Initializer::initializeData() {
 	}
 
 	// Set the branch addresses of the tree
-	if(not config["TreeName"]) {
+	if(not hasNodeKey(config, "TreeName")) {
 		std::cerr<<"\"TreeName\" not found in configuration file."<<std::endl;
 		return false;
 	}
@@ -337,6 +343,8 @@ bool antok::Initializer::initializeData() {
 
 bool antok::Initializer::initializeEvent() {
 
+	using antok::YAMLUtils::hasNodeKey;
+
 	if(_config == 0) {
 		std::cerr<<"Trying to initialize Cutter without having read the config file first."<<std::endl;
 		return false;
@@ -351,21 +359,25 @@ bool antok::Initializer::initializeEvent() {
 	}
 	objectManager->_event = antok::Event::instance();
 
-	if(not config["CalculatedQuantities"]) {
+	if(not hasNodeKey(config, "CalculatedQuantities")) {
 		std::cerr<<"Warning: \"CalculatedQuantities\" not found in configuration file."<<std::endl;
 	}
 	for(YAML::const_iterator calcQuantity_it = config["CalculatedQuantities"].begin(); calcQuantity_it != config["CalculatedQuantities"].end(); ++calcQuantity_it) {
 
 		YAML::Node calcQuantity = (*calcQuantity_it);
 		std::vector<std::string> quantityBaseNames;
+		if(not hasNodeKey(calcQuantity, "Name")) {
+			std::cerr<<"Could not convert a \"Name\" of an entry in \"CalculatedQuantities\"."<<std::endl;
+			return false;
+		}
 		if(calcQuantity["Name"].IsSequence()) {
 			try {
 				quantityBaseNames = calcQuantity["Name"].as<std::vector<std::string> >();
 			} catch (YAML::TypedBadConversion<std::vector<std::string> > e) {
-				std::cerr<<"Could not convert YAML sequence to std::vector<std::string> when parsing \"CalculatedQuantities\"' \"Name\""<<std::endl;
+				std::cerr<<"Could not convert YAML sequence to std::vector<std::string> when parsing \"CalculatedQuantities\"' \"Name\"."<<std::endl;
 				return false;
 			} catch (YAML::TypedBadConversion<std::string> e) {
-				std::cerr<<"Could not entries in YAML sequence to std::string when parsing \"CalculatedQuantities\"' \"Name\""<<std::endl;
+				std::cerr<<"Could not entries in YAML sequence to std::string when parsing \"CalculatedQuantities\"' \"Name\"."<<std::endl;
 				return false;
 			}
 		} else {
@@ -381,13 +393,13 @@ bool antok::Initializer::initializeEvent() {
 			return false;
 		}
 
-		if(not (calcQuantity["Function"] and calcQuantity["Function"]["Name"])) {
+		if(not (hasNodeKey(calcQuantity, "Function") and hasNodeKey(calcQuantity["Function"], "Name"))) {
 			std::cerr<<"No Function or no function name for calculated quantity \""<<quantityBaseNames[0]<<"\"."<<std::endl;
 			return false;
 		}
 
 		std::vector<int> indices;
-		if(calcQuantity["Indices"]) {
+		if(hasNodeKey(calcQuantity, "Indices")) {
 			try {
 				indices = calcQuantity["Indices"].as<std::vector<int> >();
 			} catch (YAML::TypedBadConversion<std::vector<int> > e) {
@@ -461,6 +473,8 @@ bool antok::Initializer::initializeEvent() {
 
 bool antok::Initializer::initializePlotter() {
 
+	using antok::YAMLUtils::hasNodeKey;
+
 	if(_config == 0) {
 		std::cerr<<"Trying to initialize Plotter without having read the config file first."<<std::endl;
 		return false;
@@ -480,22 +494,22 @@ bool antok::Initializer::initializePlotter() {
 
 	antok::plotUtils::GlobalPlotOptions plotOptions(config["GlobalPlotOptions"]);
 
-	if(not config["Plots"]) {
+	if(not hasNodeKey(config, "Plots")) {
 		std::cerr<<"Warning: \"Plots\" not found in configuration file."<<std::endl;
 	}
 	for(YAML::const_iterator plots_it = config["Plots"].begin(); plots_it != config["Plots"].end(); ++plots_it) {
 
 		const YAML::Node& plot = *plots_it;
 
-		if(not plot["Name"]) {
+		if(not hasNodeKey(plot, "Name")) {
 			std::cerr<<"\"Name\" not found for one of the \"Plots\"."<<std::endl;
 			return false;
 		}
 		std::string plotName = antok::YAMLUtils::getString(plot["Name"]);
 
-		if((not((plot["Variable"] and plot["LowerBound"] and plot["UpperBound"]) or
-		       (plot["Variables"] and plot["LowerBounds"] and plot["UpperBounds"]))) or
-			not plot["NBins"])
+		if((not((hasNodeKey(plot, "Variable") and hasNodeKey(plot, "LowerBound") and hasNodeKey(plot, "UpperBound")) or
+		       (hasNodeKey(plot, "Variables") and hasNodeKey(plot, "LowerBounds") and hasNodeKey(plot, "UpperBounds")))) or
+			not hasNodeKey(plot, "NBins"))
 		{
 			std::cerr<<"Required variables not found for \"Plot\" \""<<plotName;
 			std::cerr<<"\" (\"Variable(s)\"|\"LowerBound(s)\"|\"UpperBound(s)\"|\"NBins\")."<<std::endl;
@@ -503,7 +517,7 @@ bool antok::Initializer::initializePlotter() {
 		}
 
 		antok::Plot* antokPlot = 0;
-		if(plot["Variables"]) {
+		if(hasNodeKey(plot, "Variables")) {
 			if(plot["Variables"].IsSequence()) {
 				if(not (plot["Variables"].IsSequence() and
 				        plot["LowerBounds"].IsSequence() and
@@ -536,7 +550,7 @@ bool antok::Initializer::initializePlotter() {
 				std::cerr<<"\"Variables\" implies 2D plot and needs to be a list (in \"Plot\" \""<<plotName<<"\")."<<std::endl;
 				return false;
 			}
-		} else if(plot["Variable"]) {
+		} else if(hasNodeKey(plot, "Variable")) {
 			antokPlot = antok::generators::generate1DPlot(plot, plotOptions);
 		} else {
 			assert(false);

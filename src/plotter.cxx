@@ -186,10 +186,12 @@ namespace {
 
 bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<std::string, std::vector<long> >& map) {
 
+	using antok::YAMLUtils::hasNodeKey;
+
 	bool error = false;
 	for(YAML::const_iterator trainList_it = trainList.begin(); trainList_it != trainList.end(); ++trainList_it) {
 		const YAML::Node& entry = *trainList_it;
-		if((not (entry["CutTrain"])) or (not entry["CutTrain"]["Name"])) {
+		if((not (hasNodeKey(entry, "CutTrain"))) or (not hasNodeKey(entry["CutTrain"], "Name"))) {
 			std::cerr<<"Warning: \"CutTrain\" missing or invalid for an entry, skipping it."<<std::endl;
 			continue;
 		}
@@ -198,7 +200,7 @@ bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<
 			std::cerr<<"Warning: Could not convert \"CutTrain\" to std::string for an entry, skipping it."<<std::endl;
 			continue;
 		}
-		if(not (entry["WithCuts"] and entry["WithoutCuts"])) {
+		if(not (hasNodeKey(entry, "WithCuts") and hasNodeKey(entry, "WithoutCuts"))) {
 			std::cerr<<"Warning: Either \"WithCuts\" or \"WithoutCuts\" missing for \"CutTrain\" \""<<cutTrainName<<"\", skipping entry."<<std::endl;
 			continue;
 		}
@@ -242,6 +244,8 @@ bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<
 
 antok::plotUtils::GlobalPlotOptions::GlobalPlotOptions(const YAML::Node& optionNode) {
 
+	using antok::YAMLUtils::hasNodeKey;
+
 	plotsForSequentialCuts = false;
 	plotsWithSingleCutsOn = false;
 	plotsWithSingleCutsOff = false;
@@ -257,13 +261,13 @@ antok::plotUtils::GlobalPlotOptions::GlobalPlotOptions(const YAML::Node& optionN
 	plotsWithSingleCutsOn = handleOnOffOption("PlotsWithSingleCutsOn", optionNode, "GobalPlotOptions");
 	plotsWithSingleCutsOff = handleOnOffOption("PlotsWithSingleCutsOff", optionNode, "GobalPlotOptions");
 
-	if(not optionNode["StaticsticsHistogram"]) {
+	if(not hasNodeKey(optionNode, "StaticsticsHistogram")) {
 		std::cerr<<"Warning: \"StaticsticsHistogram\" not found in \"GobalPlotOptions\", switching it off"<<std::endl;
 	} else {
 		const YAML::Node& statsHistOpt = optionNode["StaticsticsHistogram"];
 		bool state = handleOnOffOption("State", statsHistOpt, "StaticsticsHistogram");
 		if(state) {
-			if(not (statsHistOpt["InputName"] and statsHistOpt["OutputName"])) {
+			if(not (hasNodeKey(statsHistOpt, "InputName") and hasNodeKey(statsHistOpt, "OutputName"))) {
 				std::cerr<<"Warning: \"InputName\" or \"OutputName\" not found in \"GobalPlotOptions\"'s \"StaticsticsHistogram\", switching histogram off."<<std::endl;
 			} else {
 				statisticsHistInName = antok::YAMLUtils::getString(statsHistOpt["InputName"]);
@@ -275,7 +279,7 @@ antok::plotUtils::GlobalPlotOptions::GlobalPlotOptions(const YAML::Node& optionN
 		}
 	}
 
-	if(not optionNode["GlobalCuts"]) {
+	if(not hasNodeKey(optionNode, "GlobalCuts")) {
 		std::cerr<<"Warning: \"GlobalCuts\" not found in \"GobalPlotOptions\", not adding additional cuts."<<std::endl;
 	} else {
 		if(not antok::Plotter::handleAdditionalCuts(optionNode["GlobalCuts"], cutMasks)) {
@@ -287,7 +291,9 @@ antok::plotUtils::GlobalPlotOptions::GlobalPlotOptions(const YAML::Node& optionN
 
 bool antok::plotUtils::GlobalPlotOptions::handleOnOffOption(std::string optionName, const YAML::Node& option, std::string location) const {
 
-	if(not option[optionName]) {
+	using antok::YAMLUtils::hasNodeKey;
+
+	if(not hasNodeKey(option, optionName)) {
 		std::cerr<<"Warning: \""<<optionName<<"\" not found in \""<<location<<"\", switching it off"<<std::endl;
 	} else {
 		std::string optionValue = antok::YAMLUtils::getString(option[optionName]);
