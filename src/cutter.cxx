@@ -158,6 +158,35 @@ std::string antok::Cutter::getAbbreviations(long cutPattern, std::string cutTrai
 	return retval;
 */
 };
+
+const std::map<std::string, std::vector<long> >& antok::Cutter::getWaterfallCutmasks() {
+
+	if(_waterfallCutmasksCache.empty()) {
+
+		for(std::map<std::string, std::vector<antok::Cut*> >::const_iterator cutTrainsCutOrder_it = _cutTrainsCutOrderMap.begin();
+		    cutTrainsCutOrder_it != _cutTrainsCutOrderMap.end();
+		    cutTrainsCutOrder_it++)
+		{
+
+			const std::string& cutTrainName = cutTrainsCutOrder_it->first;
+			const std::vector<antok::Cut*> cuts = cutTrainsCutOrder_it->second;
+
+			std::vector<std::string> cutNames;
+			_waterfallCutmasksCache[cutTrainName].push_back(0);
+
+			for(unsigned int i = 0; i < cuts.size(); ++i) {
+				cutNames.push_back(cuts[i]->getShortName());
+				_waterfallCutmasksCache[cutTrainName].push_back(getCutmaskForNames(cutNames));
+			}
+
+		}
+
+	}
+
+	return _waterfallCutmasksCache;
+
+}
+
 /*
 bool antok::Cutter::set_stats_histogram(TH1D* stats) {
 

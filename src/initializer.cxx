@@ -167,10 +167,6 @@ bool antok::Initializer::initializeCutter() {
 		}
 		outFile->cd();
 
-		std::vector<std::string> waterfallNames;
-		std::vector<long> waterfallCutmasks;
-		waterfallCutmasks.push_back(0);
-
 		for(YAML::const_iterator cuts_it = cutTrain["Cuts"].begin(); cuts_it != cutTrain["Cuts"].end(); cuts_it++) {
 
 			const YAML::Node& cutEntry = (*cuts_it);
@@ -199,12 +195,8 @@ bool antok::Initializer::initializeCutter() {
 			}
 			cutter._cutTrainsMap[cutTrainName][shortName] = antokCut;
 			cutter._cutTrainsCutOrderMap[cutTrainName].push_back(antokCut);
-			waterfallNames.push_back(shortName);
-			waterfallCutmasks.push_back(cutter.getCutmaskForNames(waterfallNames));
 
 		}
-
-		cutter._cutTrainsWaterfallCutMasks[cutTrainName] = waterfallCutmasks;
 
 	} // End loop over CutTrains
 
