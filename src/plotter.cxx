@@ -1,7 +1,11 @@
 #include<plotter.h>
 
+#include<yaml-cpp/yaml.h>
+
+#include<cutter.h>
 #include<object_manager.h>
 #include<plot.hpp>
+#include<yaml_utils.hpp>
 
 antok::Plotter* antok::Plotter::_plotter = 0;
 
@@ -120,6 +124,182 @@ void antok::Plotter::fill(long cutPattern) {
 	for(unsigned int i = 0; i < _plots.size(); ++i) {
 		_plots[i]->fill(cutPattern);
 	}
+
+}
+
+namespace {
+
+	std::string getCutnamesOffNode(const YAML::Node& withCut, const std::string& cutTrainName) {
+
+		std::string cutName = antok::YAMLUtils::getString(withCut["ShortName"]);
+		if(cutName == "") {
+			std::cerr<<"Warning: One of the \"WithCuts\" or \"WithoutCuts\" appears to have a missing or invalid ";
+			std::cout<<"\"ShortName\" for \"CutTrain\" \""<<cutTrainName<<"\", skipping entry."<<std::endl;
+			return "";
+		}
+		antok::Cutter& cutter = antok::ObjectManager::instance()->getCutter();
+		if(cutter.cutInCutTrain(cutName, cutTrainName)) {
+			return cutName;
+		} else {
+			std::cerr<<"Warning: \"WithCuts\" or \"WithoutCuts\" entry \""<<cutName;
+			std::cout<<"\" is not in \"CutTrain\" \""<<cutTrainName<<"\", skipping entry."<<std::endl;
+			return "";
+		}
+
+	}
+
+	long handleCutList(const YAML::Node& cutNode, const std::string& cutTrainName, bool invertSelection) {
+
+		std::vector<std::string> cutNames;
+		if(cutNode.IsMap()) {
+			std::string cutName = getCutnamesOffNode(cutNode, cutTrainName);
+			if(cutName == "") {
+				return -1;
+			}
+			cutNames.push_back(cutName);
+		} else if (cutNode.IsSequence()) {
+			for(YAML::const_iterator innerCuts_it = cutNode.begin(); innerCuts_it != cutNode.end(); ++innerCuts_it) {
+				std::string cutName = getCutnamesOffNode(*innerCuts_it, cutTrainName);
+				if(cutName == "") {
+					cutNames.clear();
+					break;
+				}
+				cutNames.push_back(cutName);
+			}
+			if(cutNames.size() == 0) {
+				return -1;
+			}
+		} else {
+			std::cerr<<"Warning: One of the \"WithCuts\" or \"WithoutCuts\" appears to have invalid format for \"CutTrain\" \""<<cutTrainName<<"\", skipping entry."<<std::endl;
+			return -1;
+		}
+		antok::Cutter& cutter = antok::ObjectManager::instance()->getCutter();
+		long cutmask = cutter.getCutmaskForNames(cutNames);
+		if(invertSelection) {
+			long allCuts = cutter.getAllCutsCutmaskForCutTrain(cutTrainName);
+			cutmask = (~cutmask)&allCuts;
+		}
+		return cutmask;
+	}
+
+}
+
+bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<std::string, std::vector<long> >& map) {
+
+	bool error = false;
+	for(YAML::const_iterator trainList_it = trainList.begin(); trainList_it != trainList.end(); ++trainList_it) {
+		const YAML::Node& entry = *trainList_it;
+		if((not (entry["CutTrain"])) or (not entry["CutTrain"]["Name"])) {
+			std::cerr<<"Warning: \"CutTrain\" missing or invalid for an entry, skipping it."<<std::endl;
+			continue;
+		}
+		std::string cutTrainName = antok::YAMLUtils::getString(entry["CutTrain"]["Name"]);
+		if(cutTrainName == "") {
+			std::cerr<<"Warning: Could not convert \"CutTrain\" to std::string for an entry, skipping it."<<std::endl;
+			continue;
+		}
+		if(not (entry["WithCuts"] and entry["WithoutCuts"])) {
+			std::cerr<<"Warning: Either \"WithCuts\" or \"WithoutCuts\" missing for \"CutTrain\" \""<<cutTrainName<<"\", skipping entry."<<std::endl;
+			continue;
+		}
+		if(not (entry["WithCuts"].IsSequence() and entry["WithoutCuts"].IsSequence())) {
+			std::cerr<<"Warning: Either \"WithCuts\" or \"WithoutCuts\" is not a sequence for \"CutTrain\" \""<<cutTrainName<<"\", skipping entry."<<std::endl;
+			continue;
+		}
+		bool innerError = false;
+		std::vector<long> cutMasks;
+		for(YAML::const_iterator withCuts_it = entry["WithCuts"].begin(); withCuts_it != entry["WithCuts"].end(); ++withCuts_it) {
+			const YAML::Node& withCut = *withCuts_it;
+			long cutmask = handleCutList(withCut, cutTrainName, false);
+			if(cutmask < 0) {
+				innerError = true;
+				error = true;
+				break;
+			}
+			cutMasks.push_back(cutmask);
+		}
+		if(innerError) {
+			continue;
+		}
+		for(YAML::const_iterator withoutCuts_it = entry["WithoutCuts"].begin(); withoutCuts_it != entry["WithoutCuts"].end(); ++withoutCuts_it) {
+			const YAML::Node& withoutCut = *withoutCuts_it;
+			long cutmask = handleCutList(withoutCut, cutTrainName, true);
+			if(cutmask < 0) {
+				innerError = true;
+				error = true;
+				break;
+			}
+			cutMasks.push_back(cutmask);
+		}
+		if(innerError) {
+			continue;
+		}
+		map[cutTrainName] = cutMasks;
+	}
+	return (not error);
+
+}
+
+antok::plotUtils::GlobalPlotOptions::GlobalPlotOptions(const YAML::Node& optionNode) {
+
+	plotsForSequentialCuts = false;
+	plotsWithSingleCutsOn = false;
+	plotsWithSingleCutsOff = false;
+	statisticsHistInName = "";
+	statisticsHistOutName = "";
+
+	if(not optionNode) {
+		std::cerr<<"Warning: \"GlobalPlotOptions\" not found in configuration file."<<std::endl;
+		return;
+	}
+
+	plotsForSequentialCuts = handleOnOffOption("PlotsForSequentialCuts", optionNode, "GobalPlotOptions");
+	plotsWithSingleCutsOn = handleOnOffOption("PlotsWithSingleCutsOn", optionNode, "GobalPlotOptions");
+	plotsWithSingleCutsOff = handleOnOffOption("PlotsWithSingleCutsOff", optionNode, "GobalPlotOptions");
+
+	if(not optionNode["StaticsticsHistogram"]) {
+		std::cerr<<"Warning: \"StaticsticsHistogram\" not found in \"GobalPlotOptions\", switching it off"<<std::endl;
+	} else {
+		const YAML::Node& statsHistOpt = optionNode["StaticsticsHistogram"];
+		bool state = handleOnOffOption("State", statsHistOpt, "StaticsticsHistogram");
+		if(state) {
+			if(not (statsHistOpt["InputName"] and statsHistOpt["OutputName"])) {
+				std::cerr<<"Warning: \"InputName\" or \"OutputName\" not found in \"GobalPlotOptions\"'s \"StaticsticsHistogram\", switching histogram off."<<std::endl;
+			} else {
+				statisticsHistInName = antok::YAMLUtils::getString(statsHistOpt["InputName"]);
+				statisticsHistOutName = antok::YAMLUtils::getString(statsHistOpt["OutputName"]);
+				if(statisticsHistInName == "" or statisticsHistOutName == "") {
+					std::cerr<<"Warning: Could not convert either \"InputName\" or \"OutputName\" to std::string, switching histogram off."<<std::endl;
+				}
+			}
+		}
+	}
+
+	if(not optionNode["GlobalCuts"]) {
+		std::cerr<<"Warning: \"GlobalCuts\" not found in \"GobalPlotOptions\", not adding additional cuts."<<std::endl;
+	} else {
+		if(not antok::Plotter::handleAdditionalCuts(optionNode["GlobalCuts"], cutMasks)) {
+			std::cerr<<"Warning: There was a problem when processing the \"GlobalCuts\" in \"GobalPlotOptions\"."<<std::endl;
+		}
+	}
+
+}
+
+bool antok::plotUtils::GlobalPlotOptions::handleOnOffOption(std::string optionName, const YAML::Node& option, std::string location) const {
+
+	if(not option[optionName]) {
+		std::cerr<<"Warning: \""<<optionName<<"\" not found in \""<<location<<"\", switching it off"<<std::endl;
+	} else {
+		std::string optionValue = antok::YAMLUtils::getString(option[optionName]);
+		if(optionValue == "On") {
+			return true;
+		} else if (optionValue == "Off") {
+			// returning at end of function
+		} else {
+			std::cerr<<"Warning: \""<<location<<"\"'s \""<<optionName<<"\" is \""<<optionValue<<"\" instead of \"On\" or \"Off\", switching it off"<<std::endl;
+		}
+	}
+	return false;
 
 }
 

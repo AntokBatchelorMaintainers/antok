@@ -48,7 +48,7 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
 	antok::Cutter& cutter = objectManager->getCutter();
 	TFile* outFile = objectManager->getOutFile();
 
-	for(std::map<std::string, std::vector<long> >::const_iterator cutmasks_it = cutmasks.begin(); cutmasks_it != cutmasks.end(); cutmasks_it++) {
+	for(std::map<std::string, std::vector<long> >::const_iterator cutmasks_it = cutmasks.begin(); cutmasks_it != cutmasks.end(); ++cutmasks_it) {
 		const std::string& cutTrainName = cutmasks_it->first;
 		const std::vector<long>& masks = cutmasks_it->second;
 		const std::vector<antok::Cut*>& cuts = cutter.getCutsForCutTrain(cutTrainName);

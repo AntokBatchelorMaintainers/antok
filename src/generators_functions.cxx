@@ -94,7 +94,7 @@ namespace {
 				typeName = strStr.str();
 			}
 			typeName = data.getType(typeName);
-			for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); summand_it++) {
+			for(YAML::const_iterator summand_it = function["Summands"].begin(); summand_it != function["Summands"].end(); ++summand_it) {
 				std::string variableName = antok::YAMLUtils::getString(*summand_it);
 				if(variableName == "") {
 					std::cerr<<"Could not convert one of the \"Summands\" to std::string when registering calculation of \""<<quantityName<<"\"."<<std::endl;

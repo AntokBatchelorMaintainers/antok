@@ -122,7 +122,7 @@ bool antok::Initializer::initializeCutter() {
 		return false;
 	}
 
-	for(YAML::const_iterator cutTrain_it = config["CutTrains"].begin(); cutTrain_it != config["CutTrains"].end(); cutTrain_it++) {
+	for(YAML::const_iterator cutTrain_it = config["CutTrains"].begin(); cutTrain_it != config["CutTrains"].end(); ++cutTrain_it) {
 
 
 		const YAML::Node& cutTrain = (*cutTrain_it);
@@ -167,7 +167,7 @@ bool antok::Initializer::initializeCutter() {
 		}
 		outFile->cd();
 
-		for(YAML::const_iterator cuts_it = cutTrain["Cuts"].begin(); cuts_it != cutTrain["Cuts"].end(); cuts_it++) {
+		for(YAML::const_iterator cuts_it = cutTrain["Cuts"].begin(); cuts_it != cutTrain["Cuts"].end(); ++cuts_it) {
 
 			const YAML::Node& cutEntry = (*cuts_it);
 			std::string shortName = antok::YAMLUtils::getString(cutEntry["ShortName"]);
@@ -354,7 +354,7 @@ bool antok::Initializer::initializeEvent() {
 	if(not config["CalculatedQuantities"]) {
 		std::cerr<<"Warning: \"CalculatedQuantities\" not found in configuration file."<<std::endl;
 	}
-	for(YAML::const_iterator calcQuantity_it = config["CalculatedQuantities"].begin(); calcQuantity_it != config["CalculatedQuantities"].end(); calcQuantity_it++) {
+	for(YAML::const_iterator calcQuantity_it = config["CalculatedQuantities"].begin(); calcQuantity_it != config["CalculatedQuantities"].end(); ++calcQuantity_it) {
 
 		YAML::Node calcQuantity = (*calcQuantity_it);
 		std::vector<std::string> quantityBaseNames;
@@ -478,10 +478,12 @@ bool antok::Initializer::initializePlotter() {
 
 	antok::Plotter& plotter = antok::ObjectManager::instance()->getPlotter();
 
+	antok::plotUtils::GlobalPlotOptions plotOptions(config["GlobalPlotOptions"]);
+
 	if(not config["Plots"]) {
 		std::cerr<<"Warning: \"Plots\" not found in configuration file."<<std::endl;
 	}
-	for(YAML::const_iterator plots_it = config["Plots"].begin(); plots_it != config["Plots"].end(); plots_it++) {
+	for(YAML::const_iterator plots_it = config["Plots"].begin(); plots_it != config["Plots"].end(); ++plots_it) {
 
 		const YAML::Node& plot = *plots_it;
 
@@ -523,9 +525,9 @@ bool antok::Initializer::initializePlotter() {
 					return false;
 				}
 				if(plot["Variables"].size() == 2) {
-					antokPlot = antok::generators::generate2DPlot(plot);
+					antokPlot = antok::generators::generate2DPlot(plot, plotOptions);
 				} else if (plot["Variables"].size() == 1) {
-					antokPlot = antok::generators::generate1DPlot(plot);
+					antokPlot = antok::generators::generate1DPlot(plot, plotOptions);
 				} else {
 					std::cerr<<"Empty \"Variables\" sequence found in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 					return false;
@@ -535,7 +537,7 @@ bool antok::Initializer::initializePlotter() {
 				return false;
 			}
 		} else if(plot["Variable"]) {
-			antokPlot = antok::generators::generate1DPlot(plot);
+			antokPlot = antok::generators::generate1DPlot(plot, plotOptions);
 		} else {
 			assert(false);
 		}

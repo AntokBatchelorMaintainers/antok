@@ -35,8 +35,8 @@ TreeBranches:
             - &TrigMask TrigMask
             - SpillNbr
             - &nbrRPDTracks nbrRPDTracks
-#           - isKaon
-            - cedarID_bayes
+#            - &isKaon isKaon
+            - &isKaon cedarID_bayes
 
         Long64_t:
             - EvNbr
@@ -154,8 +154,6 @@ CalculatedQuantities:
 Cuts:
 #ShortName is the UID
 
-# Kaon cut is missing!
-
     - &TriggerMaskCut
       ShortName: trigmask_&_0x1
       LongName: Trigger Mask & 0x1
@@ -206,6 +204,16 @@ Cuts:
           Type: Exclusive
           LowerBound: 0.2
           Variable: *RPDProtonMass
+
+    - &KaonCut
+      ShortName: IsKaon=0
+      LongName: "IsKaon == 0"
+      Abbreviation: IsK
+      Cut:
+          Name: Equality
+          Type: ==
+          Variable: *isKaon
+          Value: 0
 
     - &TPrimeCut
       ShortName: t_prim
@@ -258,6 +266,7 @@ CutTrains:
           - *VertexZCut
           - *VertexRCut
           - *TPrimeCut
+          - *KaonCut
           - *nRPDTracksCut
           - *RPDProtonMassCut
           - *RPDPlanarityCut
@@ -277,14 +286,30 @@ CutTrains:
           - *StdKin
       Pertinent: No
 
-    - Name: Test (Debug)
+    - &DebugCutTrain
+      Name: Test (Debug)
       Cuts:
+          - *KaonCut
           - *VertexRCut
           - *RPDProtonMassCut
           - *RPDPlanarityCut
           - *StdKin
           - *TriggerMaskCut
       Pertinent: No
+
+GlobalPlotOptions:
+
+    PlotsForSequentialCuts: On
+    PlotsWithSingleCutsOn: On
+    PlotsWithSingleCutsOff: On
+    StaticsticsHistogram:
+        State: On
+        InputName: statistic
+        OutputName: waterfallPlot
+    GlobalCuts:
+        - CutTrain: *StdEvSel
+          WithCuts: [ *TPrimeCut, *KaonCut, [ *nRPDTracksCut, *RPDProtonMassCut ] ]
+          WithoutCuts: [ *RPDPlanarityCut, [ *RPDProtonMassCut, *nRPDTracksCut ] ]
 
 Plots:
 
@@ -293,6 +318,10 @@ Plots:
       LowerBound: 0
       UpperBound: 7
       NBins: 750
+      CustomCuts:
+          - CutTrain: *DebugCutTrain
+            WithCuts: [ *KaonCut, [ *StdKin, *RPDPlanarityCut ] ]
+            WithoutCuts: [ *StdKin ]
 
     - Name: Vertex Distribution
       Variables: [ *X_primV, *Y_primV ]

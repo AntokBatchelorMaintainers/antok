@@ -7,10 +7,16 @@ namespace antok {
 
 	class Plot;
 
+	namespace plotUtils {
+
+		class GlobalPlotOptions;
+
+	}
+
 	namespace generators {
 
-		antok::Plot* generate1DPlot(const YAML::Node& plot);
-		antok::Plot* generate2DPlot(const YAML::Node& plot);
+		antok::Plot* generate1DPlot(const YAML::Node& plot, antok::plotUtils::GlobalPlotOptions plotOptions);
+		antok::Plot* generate2DPlot(const YAML::Node& plot, antok::plotUtils::GlobalPlotOptions plotOptions);
 
 	}
 

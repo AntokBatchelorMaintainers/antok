@@ -222,7 +222,7 @@ namespace {
 		std::vector<bool*> results;
 
 		unsigned int index = 0;
-		for(YAML::const_iterator cuts_it = cut["Cuts"].begin(); cuts_it != cut["Cuts"].end(); cuts_it++) {
+		for(YAML::const_iterator cuts_it = cut["Cuts"].begin(); cuts_it != cut["Cuts"].end(); ++cuts_it) {
 
 			std::string innerShortName = shortName;
 			std::string innerLongName = longName;
