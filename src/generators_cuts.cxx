@@ -12,19 +12,19 @@
 
 namespace {
 
-	antok::Cut* _generateCut(const YAML::Node& cut,
-	                         const std::string& shortName,
-	                         const std::string& longName,
-	                         const std::string& abbreviation,
-	                         bool*& result);
+	antok::Cut* __generateCut(const YAML::Node& cut,
+	                          const std::string& shortName,
+	                          const std::string& longName,
+	                          const std::string& abbreviation,
+	                          bool*& result);
 
 	template<typename T>
-	antok::Cut* _getEqualityCut(const YAML::Node& cut,
-	                            const std::string& shortName,
-	                            const std::string& longName,
-	                            const std::string& abbreviation,
-								bool* result,
-	                            int mode)
+	antok::Cut* __getEqualityCut(const YAML::Node& cut,
+	                             const std::string& shortName,
+	                             const std::string& longName,
+	                             const std::string& abbreviation,
+	                             bool* result,
+	                             int mode)
 	{
 
 		T* value = antok::YAMLUtils::getAddress<T>(cut["Value"]);
@@ -42,11 +42,11 @@ namespace {
 	}
 
 
-	antok::Cut* generateRangeCut(const YAML::Node& cut,
-	                             const std::string& shortName,
-	                             const std::string& longName,
-	                             const std::string& abbreviation,
-								 bool* result)
+	antok::Cut* __generateRangeCut(const YAML::Node& cut,
+	                               const std::string& shortName,
+	                               const std::string& longName,
+	                               const std::string& abbreviation,
+	                               bool* result)
 	{
 
 		using antok::YAMLUtils::hasNodeKey;
@@ -108,11 +108,11 @@ namespace {
 
 	};
 
-	antok::Cut* generateEqualityCut(const YAML::Node& cut,
-	                                const std::string& shortName,
-	                                const std::string& longName,
-	                                const std::string& abbreviation,
-									bool* result)
+	antok::Cut* __generateEqualityCut(const YAML::Node& cut,
+	                                  const std::string& shortName,
+	                                  const std::string& longName,
+	                                  const std::string& abbreviation,
+	                                  bool* result)
 	{
 
 		using antok::YAMLUtils::hasNodeKey;
@@ -149,13 +149,13 @@ namespace {
 
 		antok::Cut* antokCut = 0;
 		if(typeName == "double") {
-			antokCut = _getEqualityCut<double>(cut, shortName, longName, abbreviation, result, mode);
+			antokCut = __getEqualityCut<double>(cut, shortName, longName, abbreviation, result, mode);
 		} else if (typeName == "int") {
-			antokCut = _getEqualityCut<int>(cut, shortName, longName, abbreviation, result, mode);
+			antokCut = __getEqualityCut<int>(cut, shortName, longName, abbreviation, result, mode);
 		} else if (typeName == "Long64_t") {
-			antokCut = _getEqualityCut<Long64_t>(cut, shortName, longName, abbreviation, result, mode);
+			antokCut = __getEqualityCut<Long64_t>(cut, shortName, longName, abbreviation, result, mode);
 		} else if (typeName == "TLorentzVector") {
-			antokCut = _getEqualityCut<TLorentzVector>(cut, shortName, longName, abbreviation, result, mode);
+			antokCut = __getEqualityCut<TLorentzVector>(cut, shortName, longName, abbreviation, result, mode);
 		} else {
 			std::cerr<<"Type \""<<typeName<<"\" not supported in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
 			return 0;
@@ -165,11 +165,11 @@ namespace {
 
 	};
 
-	antok::Cut* generateTriggerMaskCut(const YAML::Node& cut,
-	                                   const std::string& shortName,
-	                                   const std::string& longName,
-	                                   const std::string& abbreviation,
-									   bool* result)
+	antok::Cut* __generateTriggerMaskCut(const YAML::Node& cut,
+	                                     const std::string& shortName,
+	                                     const std::string& longName,
+	                                     const std::string& abbreviation,
+	                                     bool* result)
 	{
 
 		using antok::YAMLUtils::hasNodeKey;
@@ -207,11 +207,11 @@ namespace {
 
 	};
 
-	antok::Cut* generateGroupCut(const YAML::Node& cut,
-	                             const std::string& shortName,
-	                             const std::string& longName,
-	                             const std::string& abbreviation,
-								 bool* result)
+	antok::Cut* __generateGroupCut(const YAML::Node& cut,
+	                               const std::string& shortName,
+	                               const std::string& longName,
+	                               const std::string& abbreviation,
+	                               bool* result)
 	{
 
 		using antok::YAMLUtils::hasNodeKey;
@@ -256,7 +256,7 @@ namespace {
 			const YAML::Node& cut = cutEntry["Cut"];
 			bool* innerResult = 0;
 
-			antok::Cut* antokCut = _generateCut(cut, innerShortName, innerLongName, innerAbbreviation, innerResult);
+			antok::Cut* antokCut = __generateCut(cut, innerShortName, innerLongName, innerAbbreviation, innerResult);
 
 			if(antokCut == 0) {
 				std::cerr<<"Could not generate cut \""<<shortName<<"\" in \"Group\" cut \""<<shortName<<"\"."<<std::endl;
@@ -275,11 +275,11 @@ namespace {
 
 	};
 
-	antok::Cut* _generateCut(const YAML::Node& cut,
-	                         const std::string& shortName,
-	                         const std::string& longName,
-	                         const std::string& abbreviation,
-	                         bool*& result)
+	antok::Cut* __generateCut(const YAML::Node& cut,
+	                          const std::string& shortName,
+	                          const std::string& longName,
+	                          const std::string& abbreviation,
+	                          bool*& result)
 	{
 		std::string cutName = antok::YAMLUtils::getString(cut["Name"]);
 		if(cutName == "") {
@@ -290,13 +290,13 @@ namespace {
 		result = new bool();
 		antok::Cut* antokCut = 0;
 		if(cutName == "Range") {
-			antokCut = generateRangeCut(cut, shortName, longName, abbreviation, result);
+			antokCut = __generateRangeCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "Equality") {
-			antokCut = generateEqualityCut(cut, shortName, longName, abbreviation, result);
+			antokCut = __generateEqualityCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "TriggerMask") {
-			antokCut = generateTriggerMaskCut(cut, shortName, longName, abbreviation, result);
+			antokCut = __generateTriggerMaskCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "Group") {
-			antokCut = generateGroupCut(cut, shortName, longName, abbreviation, result);
+			antokCut = __generateGroupCut(cut, shortName, longName, abbreviation, result);
 		} else {
 			std::cerr<<"Cut \""<<cutName<<"\" not supported."<<std::endl;
 			delete result;
@@ -331,7 +331,7 @@ bool antok::generators::generateCut(const YAML::Node& cutEntry, antok::Cut*& ant
 
 	const YAML::Node& cut = cutEntry["Cut"];
 
-	antokCut = _generateCut(cut, shortName, longName, abbreviation, result);
+	antokCut = __generateCut(cut, shortName, longName, abbreviation, result);
 
 	if(antokCut == 0) {
 		return false;

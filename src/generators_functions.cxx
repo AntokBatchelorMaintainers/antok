@@ -13,7 +13,7 @@
 namespace {
 
 	template<typename T>
-	antok::Function* _getSumFunction(std::vector<std::pair<std::string, std::string> >& summandNames, std::string quantityName) {
+	antok::Function* __getSumFunction(std::vector<std::pair<std::string, std::string> >& summandNames, std::string quantityName) {
 
 		std::vector<T*> inputAddrs;
 		antok::Data& data = antok::ObjectManager::instance()->getData();
@@ -35,7 +35,7 @@ namespace {
 
 	};
 
-	std::vector<std::pair<std::string, std::string> >* _getSummandNames(const YAML::Node& function, std::string& quantityName, int index) {
+	std::vector<std::pair<std::string, std::string> >* __getSummandNames(const YAML::Node& function, std::string& quantityName, int index) {
 
 		using antok::YAMLUtils::hasNodeKey;
 
@@ -436,7 +436,7 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 	}
 	std::string quantityName = quantityNames[0];
 
-	std::vector<std::pair<std::string, std::string> >* summandNamesPtr = _getSummandNames(function, quantityName, index);
+	std::vector<std::pair<std::string, std::string> >* summandNamesPtr = __getSummandNames(function, quantityName, index);
 	if(summandNamesPtr == 0) {
 		std::cerr<<"Could not generate summands for function \"Sum\" when trying to register calculation of \""<<quantityName<<"\"."<<std::endl;
 		return 0;
@@ -452,13 +452,13 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 
 	antok::Function* antokFunction = 0;
 	if(typeName == "double") {
-		antokFunction = _getSumFunction<double>(summandNames, quantityName);
+		antokFunction = __getSumFunction<double>(summandNames, quantityName);
 	} else if (typeName == "int") {
-		antokFunction = _getSumFunction<int>(summandNames, quantityName);
+		antokFunction = __getSumFunction<int>(summandNames, quantityName);
 	} else if (typeName == "Long64_t") {
-		antokFunction = _getSumFunction<Long64_t>(summandNames, quantityName);
+		antokFunction = __getSumFunction<Long64_t>(summandNames, quantityName);
 	} else if (typeName == "TLorentzVector") {
-		antokFunction = _getSumFunction<TLorentzVector>(summandNames, quantityName);
+		antokFunction = __getSumFunction<TLorentzVector>(summandNames, quantityName);
 	} else {
 		std::cerr<<"Type \""<<typeName<<"\" not supported by \"sum\" (registering calculation of \""<<quantityName<<"\")."<<std::endl;
 		return 0;
@@ -483,7 +483,7 @@ antok::Function* antok::generators::generateSum2(const YAML::Node& function, std
 
 	std::vector<double*> doubleInputAddrs;
 
-	std::vector<std::pair<std::string, std::string> >* summandNamesPtr = _getSummandNames(function, quantityName, index);
+	std::vector<std::pair<std::string, std::string> >* summandNamesPtr = __getSummandNames(function, quantityName, index);
 	if(summandNamesPtr == 0) {
 		std::cerr<<"Could not generate summands for function \"Sum\" when trying to register calculation of \""<<quantityName<<"\"."<<std::endl;
 		return 0;

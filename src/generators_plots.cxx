@@ -11,7 +11,7 @@
 
 namespace {
 
-	void cleanDuplicatesFromMap(std::map<std::string, std::vector<long> >& map) {
+	void __cleanDuplicatesFromMap(std::map<std::string, std::vector<long> >& map) {
 
 		for(std::map<std::string, std::vector<long> >::iterator it = map.begin(); it != map.end(); ++it) {
 			std::vector<long>& vec = it->second;
@@ -26,7 +26,7 @@ namespace {
 
 	}
 
-	std::map<std::string, std::vector<long> > mergeMaps(const std::map<std::string, std::vector<long> >& map1, const std::map<std::string, std::vector<long> >& map2) {
+	std::map<std::string, std::vector<long> > __mergeMaps(const std::map<std::string, std::vector<long> >& map1, const std::map<std::string, std::vector<long> >& map2) {
 		std::map<std::string, std::vector<long> > returnMap = map1;
 		for(std::map<std::string, std::vector<long> >::const_iterator it = map2.begin(); it != map2.end(); ++it) {
 			std::map<std::string, std::vector<long> >::const_iterator finder = returnMap.find(it->first);
@@ -40,20 +40,20 @@ namespace {
 		return returnMap;
 	}
 
-	std::map<std::string, std::vector<long> > getCutmasks(antok::plotUtils::GlobalPlotOptions plotOptions) {
+	std::map<std::string, std::vector<long> > __getCutmasks(antok::plotUtils::GlobalPlotOptions plotOptions) {
 		antok::Cutter& cutter = antok::ObjectManager::instance()->getCutter();
 		std::map<std::string, std::vector<long> > returnCutmasks;
-		returnCutmasks = mergeMaps(plotOptions.cutMasks, returnCutmasks);
+		returnCutmasks = __mergeMaps(plotOptions.cutMasks, returnCutmasks);
 		if(plotOptions.plotsWithSingleCutsOff) {
-			returnCutmasks = mergeMaps(cutter.getCutmasksAllCutsOffSeparately(), returnCutmasks);
+			returnCutmasks = __mergeMaps(cutter.getCutmasksAllCutsOffSeparately(), returnCutmasks);
 		}
 		if(plotOptions.plotsWithSingleCutsOn) {
-			returnCutmasks = mergeMaps(cutter.getCutmasksAllCutsOnSeparately(), returnCutmasks);
+			returnCutmasks = __mergeMaps(cutter.getCutmasksAllCutsOnSeparately(), returnCutmasks);
 		}
 		if(plotOptions.plotsForSequentialCuts) {
-			returnCutmasks = mergeMaps(cutter.getWaterfallCutmasks(), returnCutmasks);
+			returnCutmasks = __mergeMaps(cutter.getWaterfallCutmasks(), returnCutmasks);
 		}
-		cleanDuplicatesFromMap(returnCutmasks);
+		__cleanDuplicatesFromMap(returnCutmasks);
 		return returnCutmasks;
 	}
 
@@ -86,7 +86,7 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, antok::pl
 	}
 
 	antok::Data& data = ObjectManager::instance()->getData();
-	std::map<std::string, std::vector<long> > cutmasks = getCutmasks(plotOptions);
+	std::map<std::string, std::vector<long> > cutmasks = __getCutmasks(plotOptions);
 	std::string variableType = data.getType(variableName);
 	antok::Plot* antokPlot = 0;
 
@@ -155,7 +155,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, antok::pl
 	}
 
 	antok::Data& data = ObjectManager::instance()->getData();
-	std::map<std::string, std::vector<long> > cutmasks = getCutmasks(plotOptions);
+	std::map<std::string, std::vector<long> > cutmasks = __getCutmasks(plotOptions);
 
 	std::string variableType = data.getType(variable1Name);
 	std::string variable2Type = data.getType(variable2Name);

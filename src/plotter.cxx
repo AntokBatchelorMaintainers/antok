@@ -129,7 +129,7 @@ void antok::Plotter::fill(long cutPattern) {
 
 namespace {
 
-	std::string getCutnamesOffNode(const YAML::Node& withCut, const std::string& cutTrainName) {
+	std::string __getCutnamesOffNode(const YAML::Node& withCut, const std::string& cutTrainName) {
 
 		std::string cutName = antok::YAMLUtils::getString(withCut["ShortName"]);
 		if(cutName == "") {
@@ -148,18 +148,18 @@ namespace {
 
 	}
 
-	long handleCutList(const YAML::Node& cutNode, const std::string& cutTrainName, bool invertSelection) {
+	long __handleCutList(const YAML::Node& cutNode, const std::string& cutTrainName, bool invertSelection) {
 
 		std::vector<std::string> cutNames;
 		if(cutNode.IsMap()) {
-			std::string cutName = getCutnamesOffNode(cutNode, cutTrainName);
+			std::string cutName = __getCutnamesOffNode(cutNode, cutTrainName);
 			if(cutName == "") {
 				return -1;
 			}
 			cutNames.push_back(cutName);
 		} else if (cutNode.IsSequence()) {
 			for(YAML::const_iterator innerCuts_it = cutNode.begin(); innerCuts_it != cutNode.end(); ++innerCuts_it) {
-				std::string cutName = getCutnamesOffNode(*innerCuts_it, cutTrainName);
+				std::string cutName = __getCutnamesOffNode(*innerCuts_it, cutTrainName);
 				if(cutName == "") {
 					cutNames.clear();
 					break;
@@ -212,7 +212,7 @@ bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<
 		std::vector<long> cutMasks;
 		for(YAML::const_iterator withCuts_it = entry["WithCuts"].begin(); withCuts_it != entry["WithCuts"].end(); ++withCuts_it) {
 			const YAML::Node& withCut = *withCuts_it;
-			long cutmask = handleCutList(withCut, cutTrainName, false);
+			long cutmask = __handleCutList(withCut, cutTrainName, false);
 			if(cutmask < 0) {
 				innerError = true;
 				error = true;
@@ -225,7 +225,7 @@ bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<
 		}
 		for(YAML::const_iterator withoutCuts_it = entry["WithoutCuts"].begin(); withoutCuts_it != entry["WithoutCuts"].end(); ++withoutCuts_it) {
 			const YAML::Node& withoutCut = *withoutCuts_it;
-			long cutmask = handleCutList(withoutCut, cutTrainName, true);
+			long cutmask = __handleCutList(withoutCut, cutTrainName, true);
 			if(cutmask < 0) {
 				innerError = true;
 				error = true;
