@@ -498,6 +498,45 @@ bool antok::Initializer::initializePlotter() {
 
 	antok::plotUtils::GlobalPlotOptions plotOptions(config["GlobalPlotOptions"]);
 
+	if((plotOptions.statisticsHistInName == "" or plotOptions.statisticsHistOutName == "") and
+	   not (plotOptions.statisticsHistInName == "" and plotOptions.statisticsHistOutName == ""))
+	{
+		std::cerr<<"Something went wrong when parsing the \"GlobalPlotOptions\"."<<std::endl;
+		return false;
+	}
+
+	if(plotOptions.statisticsHistInName != "") {
+		TFile* inFile = objectManager->getInFile();
+		TH1D* statsHistTemplate = dynamic_cast<TH1D*>(inFile->Get(plotOptions.statisticsHistInName.c_str()));
+		if(statsHistTemplate == 0) {
+			std::cerr<<"Could not get the input \"StatisticsHistogram\" from the input file."<<std::endl;
+			return false;
+		}
+		antok::Cutter& cutter = objectManager->getCutter();
+		TFile* outFile = objectManager->getOutFile();
+		std::vector<antok::plotUtils::waterfallHistogramContainer> waterfallHists;
+		for(std::map<std::string, std::vector<antok::Cut*> >::const_iterator cutTrain_it = cutter._cutTrainsCutOrderMap.begin();
+		    cutTrain_it != cutter._cutTrainsCutOrderMap.end();
+		    ++cutTrain_it)
+		{
+			std::string cutTrainName = cutTrain_it->first;
+			outFile->cd(cutTrainName.c_str());
+			TH1D* statsHist = (TH1D*)statsHistTemplate->Clone(plotOptions.statisticsHistOutName.c_str());
+			if(statsHist == 0) {
+				std::cerr<<"Could not generate the output \"StatisticsHistogram\" for \"CutTrain\" \""<<cutTrainName<<"\"."<<std::endl;
+				return false;
+			}
+			std::vector<antok::Cut*> cuts = cutTrain_it->second;
+			std::vector<std::pair<const char*, const bool*> > cutsAndResults;
+			for(unsigned int i = 0; i < cuts.size(); ++i) {
+				cutsAndResults.push_back(std::pair<const char*, const bool*>(cuts[i]->getLongName().c_str(), cutter.getCutResult(cuts[i])));
+			}
+			waterfallHists.push_back(antok::plotUtils::waterfallHistogramContainer(statsHist, cutsAndResults));
+		}
+		plotter._waterfallHistograms = waterfallHists;
+		outFile->cd();
+	}
+
 	if(not hasNodeKey(config, "Plots")) {
 		std::cerr<<"Warning: \"Plots\" not found in configuration file."<<std::endl;
 	}

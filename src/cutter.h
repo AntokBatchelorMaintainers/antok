@@ -41,16 +41,13 @@ namespace antok {
 		const std::map<std::string, std::vector<long> >& getCutmasksAllCutsOffSeparately();
 		const std::map<std::string, std::vector<long> >& getCutmasksAllCutsOnSeparately();
 
-
 		bool cutInCutTrain(std::string cutName, std::string cutTrainName) const;
 
-//		bool set_stats_histogram(TH1D* stats);
-//		TH1D* get_stats_histogram() { return _statsHist; };
+		const bool* getCutResult(antok::Cut*) const;
 
 	  private:
 
 		Cutter();
-//		~Cutter();
 
 		static Cutter* _cutter;
 
@@ -68,8 +65,6 @@ namespace antok {
 		std::vector<std::pair<TTree*, long> > _treesToFill;
 
 		std::vector<std::pair<antok::Cut*, bool*> > _cuts;
-
-//		TH1D* _statsHist;
 
 	};
 

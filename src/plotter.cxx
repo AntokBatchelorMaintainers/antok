@@ -124,6 +124,17 @@ void antok::Plotter::fill(long cutPattern) {
 	for(unsigned int i = 0; i < _plots.size(); ++i) {
 		_plots[i]->fill(cutPattern);
 	}
+	for(unsigned int i = 0; i < _waterfallHistograms.size(); ++i) {
+		TH1* hist = _waterfallHistograms[i].histogram;
+		for(unsigned int j = 0; j < _waterfallHistograms[i].cuts.size(); ++j) {
+			const bool* result = _waterfallHistograms[i].cuts[j].second;
+			if(*result) {
+				hist->Fill(_waterfallHistograms[i].cuts[j].first, 1);
+			} else {
+				break;
+			}
+		}
+	}
 
 }
 
@@ -261,19 +272,21 @@ antok::plotUtils::GlobalPlotOptions::GlobalPlotOptions(const YAML::Node& optionN
 	plotsWithSingleCutsOn = handleOnOffOption("PlotsWithSingleCutsOn", optionNode, "GobalPlotOptions");
 	plotsWithSingleCutsOff = handleOnOffOption("PlotsWithSingleCutsOff", optionNode, "GobalPlotOptions");
 
-	if(not hasNodeKey(optionNode, "StaticsticsHistogram")) {
-		std::cerr<<"Warning: \"StaticsticsHistogram\" not found in \"GobalPlotOptions\", switching it off"<<std::endl;
+	if(not hasNodeKey(optionNode, "StatisticsHistogram")) {
+		std::cerr<<"Warning: \"StatisticsHistogram\" not found in \"GobalPlotOptions\", switching it off"<<std::endl;
 	} else {
-		const YAML::Node& statsHistOpt = optionNode["StaticsticsHistogram"];
-		bool state = handleOnOffOption("State", statsHistOpt, "StaticsticsHistogram");
+		const YAML::Node& statsHistOpt = optionNode["StatisticsHistogram"];
+		bool state = handleOnOffOption("State", statsHistOpt, "StatisticsHistogram");
 		if(state) {
 			if(not (hasNodeKey(statsHistOpt, "InputName") and hasNodeKey(statsHistOpt, "OutputName"))) {
-				std::cerr<<"Warning: \"InputName\" or \"OutputName\" not found in \"GobalPlotOptions\"'s \"StaticsticsHistogram\", switching histogram off."<<std::endl;
+				std::cerr<<"Warning: \"InputName\" or \"OutputName\" not found in \"GobalPlotOptions\"'s \"StatisticsHistogram\", switching histogram off."<<std::endl;
 			} else {
 				statisticsHistInName = antok::YAMLUtils::getString(statsHistOpt["InputName"]);
 				statisticsHistOutName = antok::YAMLUtils::getString(statsHistOpt["OutputName"]);
 				if(statisticsHistInName == "" or statisticsHistOutName == "") {
 					std::cerr<<"Warning: Could not convert either \"InputName\" or \"OutputName\" to std::string, switching histogram off."<<std::endl;
+					statisticsHistInName = "";
+					statisticsHistOutName = "";
 				}
 			}
 		}

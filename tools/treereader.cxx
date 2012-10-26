@@ -61,11 +61,6 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 	}
 	TTree* inTree = objectManager->getInTree();
 
-//	TH1D* stats_pre = (TH1D*)infile->Get("kbicker/statistic");
-//	TH1D* stats = (TH1D*)stats_pre->Clone("statistics");
-
-//	assert(cutter.set_stats_histogram(stats));
-
 	for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
 
 		inTree->GetEntry(i);

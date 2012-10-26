@@ -302,9 +302,9 @@ GlobalPlotOptions:
     PlotsForSequentialCuts: On
     PlotsWithSingleCutsOn: On
     PlotsWithSingleCutsOff: On
-    StaticsticsHistogram:
+    StatisticsHistogram:
         State: On
-        InputName: statistic
+        InputName: kbicker/statistic
         OutputName: waterfallPlot
     GlobalCuts:
         - CutTrain: *StdEvSel

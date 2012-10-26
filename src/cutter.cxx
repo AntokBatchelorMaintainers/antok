@@ -10,7 +10,6 @@ antok::Cutter* antok::Cutter::_cutter = 0;
 antok::Cutter* antok::Cutter::instance() {
 	if(_cutter == 0) {
 		_cutter = new antok::Cutter();
-//		_cutter->_statsHist = 0;
 	}
 	return _cutter;
 }
@@ -43,18 +42,6 @@ bool antok::Cutter::cut() {
 	}
 	return success;
 
-/*	int cutmask = 0;
-	bool cut_previously = false;
-	for(unsigned int i = 0; i < _cuts.size(); ++i) {
-		if((*(_cuts.at(i)))()) {
-			cutmask += (1<<i);
-			cut_previously = true;
-		} else if (!cut_previously) {
-			_statsHist->Fill(((_cuts.at(i))->get_longname()).c_str(), 1);
-		}
-	}
-	return cutmask;
-*/
 };
 
 long antok::Cutter::getAllCutsCutmaskForCutTrain(std::string cutTrainName) const {
@@ -132,32 +119,6 @@ std::string antok::Cutter::getAbbreviations(long cutPattern, std::string cutTrai
 	strStr<<")";
 	return strStr.str();
 
-/*
-	unsigned int size = _cuts.size();
-	assert(bitmask>>(size) == 0);
-	std::stringstream sstr;
-	sstr<<"(";
-	if(bitmask == 0) {
-		sstr<<"AllCuts";
-	} else if (bitmask == ((1<<size)-1)) {
-		sstr<<"NoCuts";
-	} else {
-		bool first = true;
-		for(unsigned int i = 0; i < size; ++i) {
-			if(!((bitmask>>i)&0x1)) {
-				if(first) {
-					first = false;
-				} else {
-					sstr<<"|";
-				}
-				sstr<<_cuts.at(i)->get_abbreviation();
-			}
-		}
-	}
-	sstr<<")";
-	std::string retval = sstr.str();
-	return retval;
-*/
 };
 
 const std::map<std::string, std::vector<long> >& antok::Cutter::getWaterfallCutmasks() {
@@ -258,22 +219,14 @@ bool antok::Cutter::fillOutTrees() const {
 
 }
 
-/*
-bool antok::Cutter::set_stats_histogram(TH1D* stats) {
+const bool* antok::Cutter::getCutResult(antok::Cut* cut) const {
 
-	if(_statsHist != 0) {
-		return false;
+	for(unsigned int i = 0; i < _cuts.size(); ++i) {
+		if(cut == _cuts[i].first) {
+			return _cuts[i].second;
+		}
 	}
-	_statsHist = stats;
-	return true;
+	assert(false);
 
 }
 
-antok::Cutter::~Cutter() {
-
-	for(unsigned int i = 0; i < _cuts.size(); ++i) {
-		delete _cuts.at(i);
-	}
-
-};
-*/
