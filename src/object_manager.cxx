@@ -34,7 +34,7 @@ antok::ObjectManager::ObjectManager()
 
 bool antok::ObjectManager::magic() {
 
-	bool success = _event->update() and _cutter->cut();
+	bool success = _event->update() and _cutter->cut() and _cutter->fillOutTrees();
 	long cutPattern = _cutter->getCutPattern();
 	_plotter->fill(cutPattern);
 	return success;

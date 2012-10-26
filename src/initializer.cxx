@@ -204,6 +204,10 @@ bool antok::Initializer::initializeCutter() {
 
 	} // End loop over CutTrains
 
+	for(std::map<std::string, TTree*>::const_iterator outTree_it = cutter._outTreeMap.begin(); outTree_it != cutter._outTreeMap.end(); ++outTree_it) {
+		cutter._treesToFill.push_back(std::pair<TTree*, long>(outTree_it->second, cutter.getAllCutsCutmaskForCutTrain(outTree_it->first)));
+	}
+
 	return true;
 
 };

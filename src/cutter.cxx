@@ -1,8 +1,9 @@
+#include<cutter.h>
 
 #include<assert.h>
 #include<sstream>
 
-#include<cutter.h>
+#include<TTree.h>
 
 antok::Cutter* antok::Cutter::_cutter = 0;
 
@@ -240,6 +241,20 @@ bool antok::Cutter::cutInCutTrain(std::string cutName, std::string cutTrainName)
 	assert(cutTrainsMap_it != _cutTrainsMap.end());
 	std::map<std::string, antok::Cut*>::const_iterator cuts_it = cutTrainsMap_it->second.find(cutName);
 	return (cuts_it != cutTrainsMap_it->second.end());
+
+}
+
+bool antok::Cutter::fillOutTrees() const {
+
+	bool success = true;
+	for(unsigned int i = 0; i < _treesToFill.size(); ++i) {
+		TTree* tree = _treesToFill[i].first;
+		long mask = _treesToFill[i].second;
+		if((mask&_cutPattern) == mask) {
+			success = success and (tree->Fill() > 0);
+		}
+	}
+	return success;
 
 }
 

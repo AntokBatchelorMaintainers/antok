@@ -24,9 +24,11 @@ namespace antok {
 
 		bool cut();
 
-		long getCutmaskForNames(std::vector<std::string> names) const;
-
 		const long& getCutPattern() const { return _cutPattern; };
+
+		bool fillOutTrees() const;
+
+		long getCutmaskForNames(std::vector<std::string> names) const;
 
 		long getAllCutsCutmaskForCutTrain(std::string cutTrainName) const;
 		const std::vector<antok::Cut*>& getCutsForCutTrain(std::string cutTrainName) const;
@@ -62,6 +64,8 @@ namespace antok {
 		std::map<std::string, std::vector<long> > _waterfallCutmasksCache;
 		std::map<std::string, std::vector<long> > _singleOffCutmasksCache;
 		std::map<std::string, std::vector<long> > _singleOnCutmasksCache;
+
+		std::vector<std::pair<TTree*, long> > _treesToFill;
 
 		std::vector<std::pair<antok::Cut*, bool*> > _cuts;
 
