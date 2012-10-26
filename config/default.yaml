@@ -313,7 +313,7 @@ GlobalPlotOptions:
 
 Plots:
 
-    - Name: 5_pion_mass
+    - Name: "5 Pion mass"
       Variable: *XMass
       LowerBound: 0
       UpperBound: 7

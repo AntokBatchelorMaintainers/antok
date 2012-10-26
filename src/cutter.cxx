@@ -159,13 +159,18 @@ const std::map<std::string, std::vector<long> >& antok::Cutter::getCutmasksAllCu
 		{
 			const std::string& cutTrainName = cutTrainsCutOrder_it->first;
 			long cutmaskTemplate = getAllCutsCutmaskForCutTrain(cutTrainName);
-			for(unsigned int i = 0; i < _cuts.size(); ++i) {
-				if((cutmaskTemplate>>i)&1) {
-					long cutmask = cutmaskTemplate - (1<<i);
-					_singleOffCutmasksCache[cutTrainName].push_back(cutmask);
+			const std::vector<antok::Cut*>& cuts = cutTrainsCutOrder_it->second;
+			for(unsigned int i = 0; i < cuts.size(); ++i) {
+				for(unsigned int j = 0; j < _cuts.size(); ++j) {
+					if(cuts[i] == _cuts[j].first) {
+						long cutmask = cutmaskTemplate - (1<<j);
+						_singleOffCutmasksCache[cutTrainName].push_back(cutmask);
+						break;
+					}
 				}
 			}
 		}
+
 	}
 
 	return _singleOffCutmasksCache;
@@ -181,11 +186,14 @@ const std::map<std::string, std::vector<long> >& antok::Cutter::getCutmasksAllCu
 		    ++cutTrainsCutOrder_it)
 		{
 			const std::string& cutTrainName = cutTrainsCutOrder_it->first;
-			long cutmaskTemplate = getAllCutsCutmaskForCutTrain(cutTrainName);
-			for(unsigned int i = 0; i < _cuts.size(); ++i) {
-				if((cutmaskTemplate>>i)&1) {
-					long cutmask = (1<<i);
-					_singleOnCutmasksCache[cutTrainName].push_back(cutmask);
+			const std::vector<antok::Cut*>& cuts = cutTrainsCutOrder_it->second;
+			for(unsigned int i = 0; i < cuts.size(); ++i) {
+				for(unsigned int j = 0; j < _cuts.size(); ++j) {
+					if(cuts[i] == _cuts[j].first) {
+						long cutmask = 1<<j;
+						_singleOnCutmasksCache[cutTrainName].push_back(cutmask);
+						break;
+					}
 				}
 			}
 		}
