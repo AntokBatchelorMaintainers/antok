@@ -39,7 +39,7 @@ namespace antok {
 			bool operator() () {
 				(*_outAddr) = *(_inputAddrs[0]);
 				for(unsigned int i = 1; i < _inputAddrs.size(); ++i) {
-					*_outAddr = *_outAddr + *(_inputAddrs.at(i));
+					*_outAddr = *_outAddr + *(_inputAddrs[i]);
 				}
 				return true;
 			};
