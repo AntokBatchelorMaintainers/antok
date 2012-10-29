@@ -12,7 +12,7 @@ include(CommonMacros)
 enforce_out_of_source_build()
 
 #C++ Flags
-set(CMAKE_CXX_FLAGS "-g -Wall")
+set(CMAKE_CXX_FLAGS "-g -Wall -Werror")
 
 # redirect output files
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")

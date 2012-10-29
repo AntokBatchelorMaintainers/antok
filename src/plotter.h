@@ -1,58 +1,78 @@
-#ifndef HLIB_PLOTTER_H
-#define HLIB_PLOTTER_H
+#ifndef ANTOK_PLOTTER_H
+#define ANTOK_PLOTTER_H
 
+#include<map>
+#include<string>
 #include<vector>
 
-#include<TDirectory.h>
-#include<TH1D.h>
-#include<TH2D.h>
+namespace YAML {
+	class Node;
+}
 
-#include<event.h>
-#include<plot.h>
+class TH1;
 
 namespace antok {
 
+	class Plot;
+
+	namespace plotUtils {
+
+		struct GlobalPlotOptions {
+
+			GlobalPlotOptions(const YAML::Node& optionNode);
+			bool plotsForSequentialCuts;
+			bool plotsWithSingleCutsOn;
+			bool plotsWithSingleCutsOff;
+			std::string statisticsHistInName;
+			std::string statisticsHistOutName;
+			std::map<std::string, std::vector<long> > cutMasks;
+
+		  private:
+
+			bool handleOnOffOption(std::string optionName, const YAML::Node& option, std::string location) const;
+
+		};
+
+		struct waterfallHistogramContainer {
+
+			waterfallHistogramContainer(TH1* hist,
+			                            std::vector<std::pair<const char*, const bool*> > cuts_)
+				: histogram(hist),
+				  cuts(cuts_) { };
+
+			TH1* histogram;
+			std::vector<std::pair<const char*, const bool*> > cuts;
+
+		};
+
+	}
+
+
 	class Plotter {
+
+		friend class Initializer;
 
 	  public:
 
 		static Plotter* instance();
 
-		void fill(const antok::Event& event, int cutmask);
+		void fill(long cutPattern);
 
-		void save(TDirectory* dir);
+		static bool handleAdditionalCuts(const YAML::Node& cuts, std::map<std::string, std::vector<long> >& map);
 
-		double XMass;
-		double XMom;
-		double CalcBeamE;
-		double RPDMult;
-		double PrimVX;
-		double PrimVY;
-		double PrimVZ;
-		double ProtonMass;
-		double TPrim;
-		double TrigMask;
-		double beam_time;
-		double cedarTheta_X;
-		double cedarTheta_Y;
-
-		double RPDDeltaPhi;
-/*		double RPDPhiRes;
-		double RPDDeltaPhi_fhaas;
-		double RPDPhiRes_fhaas;
-		double RPDDeltaPhiAbs;
-		double RPDDeltaPhiAbs_fhaas;
-*/
 	  private:
 
 		Plotter();
 
 		static Plotter* _plotter;
 
-		std::vector<antok::Plot> _plots;
+		std::vector<antok::Plot*> _plots;
+
+		std::vector<antok::plotUtils::waterfallHistogramContainer> _waterfallHistograms;
 
 	};
 
 }
 
 #endif
+
