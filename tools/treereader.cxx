@@ -1,5 +1,6 @@
 
 #include<iostream>
+#include<signal.h>
 
 #include<TApplication.h>
 #include<TFile.h>
@@ -14,6 +15,12 @@
 #include<plotter.h>
 
 #include<assert.h>
+
+static bool ABORT = false;
+
+void signal_handler(int signum) {
+	ABORT = true;
+}
 
 void treereader(char* infilename=0, char* outfilename=0, std::string configfilename = "../config/default.yaml") {
 
@@ -63,6 +70,13 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 	for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
 
+		if(ABORT) {
+			double percent = 100. * ((double)i / (double)(inTree->GetEntries()));
+			std::cout<<"At event "<<i<<" of "<<inTree->GetEntries()<<" ("<<percent<<"%)."<<std::endl;
+			std::cout<<"Caught CTRL-C, aborting..."<<std::endl;
+			break;
+		}
+
 		inTree->GetEntry(i);
 
 		if(not objectManager->magic()) {
@@ -79,6 +93,9 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 }
 
 int main(int argc, char* argv[]) {
+
+	signal(SIGINT, signal_handler);
+
 	if(argc == 1) {
 		treereader();
 	} else if (argc == 3) {
