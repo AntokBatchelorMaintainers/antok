@@ -292,9 +292,7 @@ antok::plotUtils::GlobalPlotOptions::GlobalPlotOptions(const YAML::Node& optionN
 		}
 	}
 
-	if(not hasNodeKey(optionNode, "GlobalCuts")) {
-		std::cerr<<"Warning: \"GlobalCuts\" not found in \"GobalPlotOptions\", not adding additional cuts."<<std::endl;
-	} else {
+	if(hasNodeKey(optionNode, "GlobalCuts")) {
 		if(not antok::Plotter::handleAdditionalCuts(optionNode["GlobalCuts"], cutMasks)) {
 			std::cerr<<"Warning: There was a problem when processing the \"GlobalCuts\" in \"GobalPlotOptions\"."<<std::endl;
 		}
