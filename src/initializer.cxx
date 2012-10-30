@@ -438,6 +438,8 @@ bool antok::Initializer::initializeEvent() {
 			antok::Function* antokFunctionPtr = 0;
 			if(functionName == "abs") {
 				antokFunctionPtr = antok::generators::generateAbs(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "convertIntToDouble") {
+				antokFunctionPtr = antok::generators::generateConvertIntToDouble(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "diff") {
 				antokFunctionPtr = antok::generators::generateDiff(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "energy") {

@@ -157,6 +157,12 @@ CalculatedQuantities:
           Angle: *theta_RICH
       Indices: *allParticles
 
+    - Name: PID_RICH_double_
+      Function:
+          Name: convertIntToDouble
+          Int: *PID_RICH
+      Indices: *allParticles
+
 Cuts:
 #ShortName is the UID
 

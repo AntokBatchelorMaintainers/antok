@@ -315,6 +315,27 @@ namespace antok {
 
 		};
 
+		class ConvertIntToDouble : public Function
+		{
+
+		  public:
+
+			ConvertIntToDouble(int* inAddr, double* outAddr)
+				: _inAddr(inAddr),
+				  _outAddr(outAddr) { }
+
+			bool operator() () {
+				(*_outAddr) = (*_inAddr);
+				return true;
+			}
+
+		  private:
+
+			int* _inAddr;
+			double* _outAddr;
+
+		};
+
 	}
 
 }
