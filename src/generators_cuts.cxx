@@ -221,6 +221,25 @@ namespace {
 			return 0;
 		}
 
+		if(not hasNodeKey(cut, "Type")) {
+			std::cerr<<"The required argument \"Type\" is missing for \"GroupCut\" \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		std::string type = antok::YAMLUtils::getString(cut["Type"]);
+		int mode;
+		if(type == "And") {
+			mode = 0;
+		} else if (type == "Or") {
+			mode = 1;
+		} else if (type == "") {
+			std::cerr<<"Could not convert \"GroupCut\" \""<<shortName<<"\"'s \"Type\" to std::string."<<std::endl;
+			return 0;
+		} else {
+			std::cerr<<"\"Type\" in \"GroupCut\" \""<<shortName<<"\" has to be either \"And\" or \"Or\"."<<std::endl;
+			return 0;
+		}
+
 		if(not cut["Cuts"].IsSequence()) {
 			std::cerr<<"The \"Cuts\" entry for a \"GroupCut\" has to be a YAML sequence (in cut \""<<shortName<<"\")."<<std::endl;
 			return 0;
@@ -248,7 +267,7 @@ namespace {
 
 			const YAML::Node& cutEntry = (*cuts_it);
 
-			if(not cutEntry["Cut"]) {
+			if(not hasNodeKey(cutEntry, "Cut")) {
 				std::cerr<<"Cut \""<<shortName<<"\" does not have required entry \"Cut\"."<<std::endl;
 				return 0;
 			}
@@ -271,7 +290,7 @@ namespace {
 
 		}
 
-		return (new antok::cuts::CutGroup(shortName, longName, abbreviation, result, cuts, results));
+		return (new antok::cuts::CutGroup(shortName, longName, abbreviation, result, cuts, results, mode));
 
 	};
 

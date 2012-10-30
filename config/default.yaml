@@ -253,6 +253,7 @@ Cuts:
       Abbreviation: StdKin
       Cut:
           Name: Group
+          Type: And
           Cuts:
               - *VertexZCut
               - *VertexRCut

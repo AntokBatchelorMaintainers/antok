@@ -177,25 +177,43 @@ namespace antok {
 			         const std::string& abbreviation,
 			         bool* outAddr,
 			         std::vector<antok::Cut*> cuts,
-			         std::vector<bool*> results)
+			         std::vector<bool*> results,
+					 int mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
 				  _cuts(cuts),
-				  _results(results) { }
+				  _results(results),
+				  _mode(mode) { }
 
 			bool operator () () {
-				bool retval = true;
-				for(unsigned int i = 0; i < _cuts.size(); ++i) {
-					(*_cuts[i])();
-					retval = retval and (*_results[i]);
+				bool retval;
+				switch(_mode) {
+					case 0:
+						// and
+						retval = true;
+						for(unsigned int i = 0; i < _cuts.size(); ++i) {
+							(*_cuts[i])();
+							retval = retval and (*_results[i]);
+						}
+						(*_outAddr) = retval;
+						return true;
+					case 1:
+						// or
+						retval = false;
+						for(unsigned int i = 0; i < _cuts.size(); ++i) {
+							(*_cuts[i])();
+							retval = retval or (*_results[i]);
+						}
+						(*_outAddr) = retval;
+						return true;
 				}
-				(*_outAddr) = retval;
-				return true;
+				return false;
 			}
 
 		  private:
 
 			std::vector<antok::Cut*> _cuts;
 			std::vector<bool*> _results;
+			int _mode;
 
 		};
 
