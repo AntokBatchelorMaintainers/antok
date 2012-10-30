@@ -51,7 +51,7 @@ TreeBranches:
             - theta_RICH_
 
         int:
-            - PID_RICH_
+            - &PID_RICH PID_RICH_
 
 Constants:
     ChargedKaonMass: 0.493677
@@ -328,4 +328,18 @@ Plots:
       LowerBounds: [ -5, -5 ]
       UpperBounds: [ 5, 5 ]
       NBins: [ 1000, 1000 ]
+
+    - Name: RICH PID (all)
+      Variable: *PID_RICH
+      Indices: *allParticles
+      LowerBound: -5
+      UpperBound: 10
+      NBins: 15
+
+    - Name: Momentum Plane
+      Variables: [ *Mom_x, *Mom_y ]
+      Indices: *allParticles
+      LowerBounds: [ -10, -10 ]
+      UpperBounds: [ 10, 10 ]
+      NBins: [ 200, 200 ]
 

@@ -55,6 +55,37 @@ namespace {
 		__cleanDuplicatesFromMap(cutmasks);
 	}
 
+	std::vector<int> __getIndices(const YAML::Node& plot, std::string plotName) {
+		std::vector<int> indices;
+		try {
+			indices = plot["Indices"].as<std::vector<int> >();
+		} catch (YAML::TypedBadConversion<std::vector<int> > e) {
+			std::cerr<<"Could not convert YAML sequence to std::vector<int> when parsing \"Indices\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+		} catch (YAML::TypedBadConversion<int> e) {
+			std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"Indices\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+		}
+		return indices;
+	}
+
+	template<typename T>
+	std::vector<T*> __getDataVector(const YAML::Node& plot, std::string plotName, std::string variableName, const std::vector<int>& indices) {
+
+		std::vector<T*> vecData;
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+		for(unsigned int i = 0; i < indices.size(); ++i) {
+			std::stringstream strStr;
+			strStr<<variableName<<indices[i];
+			T* addr = data.getAddr<T>(strStr.str());
+			if(addr == 0) {
+				std::cerr<<"All variables for \"Plot\" with \"Indices\" need to have the same type (in \""<<plotName<<"\")."<<std::endl;
+				return std::vector<T*>();
+			}
+			vecData.push_back(addr);
+		}
+		return(vecData);
+
+	}
+
 }
 
 antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const antok::plotUtils::GlobalPlotOptions& plotOptions) {
@@ -94,19 +125,52 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 	}
 	__getCutmasks(plotOptions, cutmasks);
 
-	std::string variableType = data.getType(variableName);
 	antok::Plot* antokPlot = 0;
 
-	if(variableType == "double") {
-		antokPlot = new antok::TemplatePlot<double>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), data.getAddr<double>(variableName));
-	} else if (variableType == "int") {
-		antokPlot = new antok::TemplatePlot<int>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), data.getAddr<int>(variableName));
-	} else if(variableType == "") {
-		std::cerr<<"Could not find \"Variable\" \""<<variableName<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
-		return 0;
+	if(not hasNodeKey(plot, "Indices")) {
+
+		std::string variableType = data.getType(variableName);
+		if(variableType == "double") {
+			antokPlot = new antok::TemplatePlot<double>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), data.getAddr<double>(variableName));
+		} else if (variableType == "int") {
+			antokPlot = new antok::TemplatePlot<int>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), data.getAddr<int>(variableName));
+		} else if(variableType == "") {
+			std::cerr<<"Could not find \"Variable\" \""<<variableName<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+			return 0;
+		} else {
+			std::cerr<<"\"Variable\"'s type \""<<variableType<<"\" not supported by \"Plot\" (in \""<<plotName<<"\")."<<std::endl;
+			return 0;
+		}
+
 	} else {
-		std::cerr<<"\"Variable\"'s type \""<<variableType<<"\" not supported by \"Plot\" (in \""<<plotName<<"\")."<<std::endl;
-		return 0;
+
+		std::vector<int> indices = __getIndices(plot, plotName);
+		if(indices.size() == 0) {
+			return 0;
+		}
+		std::stringstream strStr;
+		strStr<<variableName<<indices[0];
+		std::string variableType = data.getType(strStr.str());
+		if(variableType == "double") {
+			std::vector<double*> vecData = __getDataVector<double>(plot, plotName, variableName, indices);
+			if(vecData.size() == 0) {
+				return 0;
+			}
+			antokPlot = new antok::TemplatePlot<double>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), &vecData);
+		} else if(variableType == "int") {
+			std::vector<int*> vecData = __getDataVector<int>(plot, plotName, variableName, indices);
+			if(vecData.size() == 0) {
+				return 0;
+			}
+			antokPlot = new antok::TemplatePlot<int>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), &vecData);
+		} else if(variableType == "") {
+			std::cerr<<"Could not find \"Variable\" \""<<variableName<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+			return 0;
+		} else {
+			std::cerr<<"\"Variable\"'s type \""<<variableType<<"\" not supported by \"Plot\" (in \""<<plotName<<"\")."<<std::endl;
+			return 0;
+		}
+
 	}
 
 	return antokPlot;
@@ -172,29 +236,80 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 	}
 	__getCutmasks(plotOptions, cutmasks);
 
-	std::string variableType = data.getType(variable1Name);
-	std::string variable2Type = data.getType(variable2Name);
-	if(variableType != variable2Type) {
-		std::cerr<<"Cannot plot 2D \"Plot\" \""<<plotName<<"\" with \"Variables\" of different type (\""<<variableType<<"\"<>\""<<variable2Type<<"\")."<<std::endl;
-		return 0;
-	}
 	antok::Plot* antokPlot = 0;
-	if(variableType == "double") {
-		antokPlot = new antok::TemplatePlot<double>(cutmasks,
-		                                            new TH2D(plotName.c_str(), plotName.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
-		                                            data.getAddr<double>(variable1Name),
-		                                            data.getAddr<double>(variable2Name));
-	} else if (variableType == "int") {
-		antokPlot = new antok::TemplatePlot<int>(cutmasks,
-		                                         new TH2D(plotName.c_str(), plotName.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
-		                                         data.getAddr<int>(variable1Name),
-		                                         data.getAddr<int>(variable2Name));
-	} else if(variableType == "") {
-		std::cerr<<"Could not find \"Variable\" \""<<variable1Name<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
-		return 0;
+
+	if(not hasNodeKey(plot, "Indices")) {
+
+		std::string variableType = data.getType(variable1Name);
+		std::string variable2Type = data.getType(variable2Name);
+		if(variableType != variable2Type) {
+			std::cerr<<"Cannot plot 2D \"Plot\" \""<<plotName<<"\" with \"Variables\" of different type (\""<<variableType<<"\"<>\""<<variable2Type<<"\")."<<std::endl;
+			return 0;
+		}
+
+		if(variableType == "double") {
+			antokPlot = new antok::TemplatePlot<double>(cutmasks,
+			                                            new TH2D(plotName.c_str(), plotName.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                            data.getAddr<double>(variable1Name),
+			                                            data.getAddr<double>(variable2Name));
+		} else if (variableType == "int") {
+			antokPlot = new antok::TemplatePlot<int>(cutmasks,
+			                                         new TH2D(plotName.c_str(), plotName.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                         data.getAddr<int>(variable1Name),
+			                                         data.getAddr<int>(variable2Name));
+		} else if(variableType == "") {
+			std::cerr<<"Could not find \"Variable\" \""<<variable1Name<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+			return 0;
+		} else {
+			std::cerr<<"\"Variable\"'s type \""<<variableType<<"\" not supported by \"Plot\" (in \""<<plotName<<"\")."<<std::endl;
+			return 0;
+		}
+
 	} else {
-		std::cerr<<"\"Variable\"'s type \""<<variableType<<"\" not supported by \"Plot\" (in \""<<plotName<<"\")."<<std::endl;
-		return 0;
+
+		std::vector<int> indices = __getIndices(plot, plotName);
+		if(indices.size() == 0) {
+			return 0;
+		}
+		std::stringstream strStr;
+		strStr<<variable1Name<<indices[0];
+		std::string variableType = data.getType(strStr.str());
+		strStr.str("");
+		strStr<<variable2Name<<indices[0];
+		std::string variable2Type =  data.getType(strStr.str());
+		if(variableType != data.getType(strStr.str())) {
+			std::cerr<<"Cannot plot 2D \"Plot\" \""<<plotName<<"\" with \"Variables\" of different type (\""<<variableType<<"\"<>\""<<variable2Type<<"\")."<<std::endl;
+			return 0;
+		}
+
+		if(variableType == "double") {
+			std::vector<double*> vec1Data = __getDataVector<double>(plot, plotName, variable1Name, indices);
+			std::vector<double*> vec2Data = __getDataVector<double>(plot, plotName, variable2Name, indices);
+			if((vec1Data.size() == 0) or (vec2Data.size() == 0)) {
+				return 0;
+			}
+			antokPlot = new antok::TemplatePlot<double>(cutmasks,
+			                                            new TH2D(plotName.c_str(), plotName.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                            &vec1Data,
+			                                            &vec2Data);
+		} else if(variableType == "int") {
+			std::vector<int*> vec1Data = __getDataVector<int>(plot, plotName, variable1Name, indices);
+			std::vector<int*> vec2Data = __getDataVector<int>(plot, plotName, variable2Name, indices);
+			if((vec1Data.size() == 0) or (vec2Data.size() == 0)) {
+				return 0;
+			}
+			antokPlot = new antok::TemplatePlot<int>(cutmasks,
+			                                         new TH2D(plotName.c_str(), plotName.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                         &vec1Data,
+			                                         &vec2Data);
+		} else if(variableType == "") {
+			std::cerr<<"Could not find \"Variable\" \""<<variable1Name<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+			return 0;
+		} else {
+			std::cerr<<"\"Variable\"'s type \""<<variableType<<"\" not supported by \"Plot\" (in \""<<plotName<<"\")."<<std::endl;
+			return 0;
+		}
+
 	}
 
 	return antokPlot;
