@@ -1,5 +1,5 @@
-#ifndef ANTOK_FUNCTIONS_H
-#define ANTOK_FUNCTIONS_H
+#ifndef ANTOK_FUNCTIONS_HPP
+#define ANTOK_FUNCTIONS_HPP
 
 #include<iostream>
 #include<vector>

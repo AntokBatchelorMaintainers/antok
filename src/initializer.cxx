@@ -1,10 +1,13 @@
+#include<initializer.h>
 
 #include<sstream>
 
 #include<TFile.h>
+#include<TH1D.h>
 #include<TTree.h>
 
 #include<constants.h>
+#include<cut.hpp>
 #include<cutter.h>
 #include<event.h>
 #include<data.h>
@@ -12,7 +15,6 @@
 #include<generators_cuts.h>
 #include<generators_functions.h>
 #include<generators_plots.h>
-#include<initializer.h>
 #include<object_manager.h>
 #include<plotter.h>
 #include<yaml_utils.hpp>

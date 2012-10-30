@@ -5,14 +5,11 @@
 #include<string>
 #include<vector>
 
-#include<TH1D.h>
-
-#include<cut.hpp>
-#include<event.h>
-
 class TTree;
 
 namespace antok {
+
+	class Cut;
 
 	class Cutter {
 
@@ -47,7 +44,7 @@ namespace antok {
 
 	  private:
 
-		Cutter();
+		Cutter() { };
 
 		static Cutter* _cutter;
 

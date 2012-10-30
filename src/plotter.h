@@ -47,7 +47,6 @@ namespace antok {
 
 	}
 
-
 	class Plotter {
 
 		friend class Initializer;
@@ -62,7 +61,7 @@ namespace antok {
 
 	  private:
 
-		Plotter();
+		Plotter() { };
 
 		static Plotter* _plotter;
 

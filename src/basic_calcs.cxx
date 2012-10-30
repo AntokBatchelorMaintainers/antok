@@ -1,10 +1,10 @@
-
 #include<basic_calcs.h>
-#include<constants.h>
 
 #include<TLorentzVector.h>
 #include<TLorentzRotation.h>
 #include<TVector3.h>
+
+#include<constants.h>
 
 TLorentzVector antok::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX) {
 
@@ -93,3 +93,4 @@ void antok::get_RPD_delta_phi_res_rotation(const TLorentzVector& pBeam,
 	res = std::sqrt(res*res + 0.067260*0.067260);
 
 };
+

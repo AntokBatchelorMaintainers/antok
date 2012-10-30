@@ -3,7 +3,6 @@
 
 #include<vector>
 
-
 namespace antok {
 
 	class Function;
@@ -32,3 +31,4 @@ namespace antok {
 }
 
 #endif
+

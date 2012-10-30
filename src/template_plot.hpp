@@ -168,3 +168,4 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 }
 
 #endif
+
