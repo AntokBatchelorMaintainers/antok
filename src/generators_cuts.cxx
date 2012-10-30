@@ -279,7 +279,6 @@ namespace {
 
 			if(antokCut == 0) {
 				std::cerr<<"Could not generate cut \""<<shortName<<"\" in \"Group\" cut \""<<shortName<<"\"."<<std::endl;
-				delete innerResult;
 				return 0;
 			}
 
