@@ -294,6 +294,27 @@ namespace antok {
 
 		};
 
+		class RadToDegree : public Function
+		{
+
+		  public:
+
+			RadToDegree(double* inAddr, double* outAddr)
+				: _inAddr(inAddr),
+				  _outAddr(outAddr) { }
+
+			bool operator() () {
+				(*_outAddr) = ((*_inAddr) / TMath::Pi()) * 180.;
+				return true;
+			}
+
+		  private:
+
+			double* _inAddr;
+			double* _outAddr;
+
+		};
+
 	}
 
 }

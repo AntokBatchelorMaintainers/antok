@@ -48,7 +48,7 @@ TreeBranches:
             - &Mom_y Mom_y
             - &Mom_z Mom_z
             - zmax
-            - theta_RICH_
+            - &theta_RICH theta_RICH_
 
         int:
             - &PID_RICH PID_RICH_
@@ -150,6 +150,12 @@ CalculatedQuantities:
           Name: diff
           Minuend: *AbsRpdPhiProjection
           Subtrahend: *rpdDeltaPhiResProjection
+
+    - Name: &theta_RICH_degree theta_RICH_degree_
+      Function:
+          Name: radToDegree
+          Angle: *theta_RICH
+      Indices: *allParticles
 
 Cuts:
 #ShortName is the UID

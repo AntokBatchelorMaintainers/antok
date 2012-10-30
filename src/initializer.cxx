@@ -452,6 +452,8 @@ bool antok::Initializer::initializeEvent() {
 				antokFunctionPtr = antok::generators::generateGetTs(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "mass") {
 				antokFunctionPtr = antok::generators::generateMass(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "radToDegree") {
+				antokFunctionPtr = antok::generators::generateRadToDegree(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "sum") {
 				antokFunctionPtr = antok::generators::generateSum(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "sum2") {

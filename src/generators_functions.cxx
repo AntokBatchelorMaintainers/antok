@@ -480,6 +480,35 @@ antok::Function* antok::generators::generateMass(const YAML::Node& function, std
 
 };
 
+antok::Function* antok::generators::generateRadToDegree(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	antok::Data& data = antok::ObjectManager::instance() ->getData();
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Angle", "double"));
+
+	if(not __functionArgumentHandler(args, function, index)) {
+		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	double* angle = data.getAddr<double>(args[0].first);
+	if(not data.insert<double>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::functions::RadToDegree(angle, data.getAddr<double>(quantityName)));
+
+};
+
 antok::Function* antok::generators::generateSum(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
