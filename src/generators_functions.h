@@ -20,13 +20,6 @@ namespace antok {
 		antok::Function* generateSum(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateSum2(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 
-		bool functionArgumentHandler(std::vector<std::pair<std::string, std::string> >& args,
-		                             const YAML::Node& function,
-		                             int index,
-		                             bool argStringsAlreadyValues = false);
-
-		std::string getFunctionArgumentHandlerErrorMsg(std::vector<std::string> quantityNames);
-
 	}
 
 }
