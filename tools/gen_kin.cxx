@@ -35,10 +35,15 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 		infile = TFile::Open(infile_name);
 	}
 	if(infile == 0) {
+		std::cerr<<"Could not open input file. Aborting..."<<std::endl;
 		return;
 	}
 
-	TTree* intree = (TTree*)infile->Get("USR55");
+	TTree* intree = (TTree*)infile->Get("Standard Event Selection/USR55");
+	if(intree == 0) {
+		std::cerr<<"Could not get input TTree. Aborting..."<<std::endl;
+		return;
+	}
 
 	TFile* outfile;
 	if(outfile_name == 0) {
