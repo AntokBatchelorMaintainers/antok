@@ -1,0 +1,66 @@
+
+Installation instructions for antok
+-----------------------------------
+
+Prerequisites
+-------------
+
+* ROOT
+
+  ROOT is available from http://root.cern.ch
+
+* CMake
+
+  CMake is available from http://cmake.org
+
+  In case your distribution does not include a recent version of CMake, you can
+  compile it yourself:
+
+  1. Download CMake from http://www.cmake.org/cmake/resources/software.html
+  2. Prepare installation
+     > bootstrap --prefix=<install directory> [--parallel=<# of jobs>] \
+                 [--qt-gui]
+  3. Compile
+     > make && make install
+  4. Add <install directory>/bin to your path or use an alias for cmake.
+
+* Boost
+
+  While antok itself does not use the Boost libraries, the YAML prerequisite
+  (see below) needs it. Boost is available at http://www.boos.org. As Boost is
+  a header only library, nothing has to be compiled.
+
+* YAML
+
+  The configuration files for antok are written in the YAML format. The library
+  yaml-cpp reads parses these files. It is available from
+  http://code.google.com/p/yaml-cpp/
+  It is recommended to use the Mercurial checkout like so
+
+  1. > mkdir <install directory>
+  2. > cd <install directory>
+  3. > hg clone https://code.google.com/p/yaml-cpp/ .
+  4. > mkdir build
+  5. > cd build
+  6. > cmake .. -DBUILD_SHARED_LIBS=ON
+  7. > make [-j <# of jobs>]
+
+Building antok
+--------------
+
+1. Make sure you have all prerequisites.
+
+2. Make sure the ROOT environmental variables are set up correctly.
+
+3. Make sure $BOOST_ROOT points to the Boost top level directory.
+
+4. Make sure $YAML_CPP points to the yaml-cpp top level directory (not the
+   build directory!).
+
+5. Go to the build directory in the antok directory.
+
+6. Execute
+     > cmake .. && make [-j <# of jobs>]
+
+7. Enjoy
+
