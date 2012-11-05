@@ -62,7 +62,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 	if(infile == 0) {
 		return;
 	}
-	TTree* tree = (TTree*)infile->Get("USR55");
+	TTree* tree = (TTree*)infile->Get("Standard Event Selection/USR55");
 	if(tree == 0) {
 		std::cout<<"Error opening in-TTree."<<std::endl;
 		return;
@@ -163,6 +163,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 	} // End loop over events
 
 	for(unsigned int i = 0; i < tfiles.size(); ++i) {
+		std::cout<<"Mass bin "<<i<<" has "<<trees.at(i)->GetEntries()<<" events."<<std::endl;
 		tfiles.at(i)->cd();
 		trees.at(i)->Write();
 		tfiles.at(i)->Close();
