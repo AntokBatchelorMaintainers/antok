@@ -27,7 +27,7 @@ Prerequisites
 * Boost
 
   While antok itself does not use the Boost libraries, the YAML prerequisite
-  (see below) needs it. Boost is available at http://www.boos.org. As Boost is
+  (see below) needs it. Boost is available at http://www.boost.org. As Boost is
   a header only library, nothing has to be compiled.
 
 * YAML
