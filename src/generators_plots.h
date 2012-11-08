@@ -9,7 +9,7 @@ namespace antok {
 
 	namespace plotUtils {
 
-		class GlobalPlotOptions;
+		struct GlobalPlotOptions;
 
 	}
 
