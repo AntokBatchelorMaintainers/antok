@@ -16,6 +16,7 @@ namespace antok {
 	  public:
 
 		virtual bool operator() () = 0;
+		virtual ~Function() { }
 
 	};
 
@@ -35,6 +36,8 @@ namespace antok {
 					throw 1;
 				}
 			};
+
+			virtual ~Sum() { }
 
 			bool operator() () {
 				(*_outAddr) = *(_inputAddrs[0]);
@@ -61,6 +64,8 @@ namespace antok {
 				: _inputAddr(inputAddr),
 				  _outAddr(outAddr) { }
 
+			virtual ~Mass() { }
+
 			bool operator() () {
 				(*_outAddr) = _inputAddr->M();
 				return true;
@@ -85,6 +90,8 @@ namespace antok {
 				  _mAddr(mAddr),
 				  _outAddr(outAddr),
 				  _pType(pType) { }
+
+			virtual ~GetLorentzVec() { }
 
 			bool operator() () {
 				if(_pType) {
@@ -112,10 +119,12 @@ namespace antok {
 		  public:
 
 			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr)
-			: _gradxAddr(gradxAddr),
-			  _gradyAddr(gradyAddr),
-			  _xLorentzVec(xLorentzVec),
-			  _outAddr(outAddr) { }
+				: _gradxAddr(gradxAddr),
+				  _gradyAddr(gradyAddr),
+				  _xLorentzVec(xLorentzVec),
+				  _outAddr(outAddr) { }
+
+			virtual ~GetBeamLorentzVec() { }
 
 			bool operator() () {
 				TVector3 p3Beam((*_gradxAddr), (*_gradyAddr), 1.);
@@ -144,6 +153,8 @@ namespace antok {
 				  _tMinAddr(tMinAddr),
 				  _tPrimeAddr(tPrimeAddr) { }
 
+			virtual ~GetTs() { }
+
 			bool operator() () {
 			    (*_tAddr) = std::fabs(((*_beamLorentzVec) - (*_xLorentzVec)).Mag2());
 			    (*_tMinAddr) = std::fabs((std::pow((*_xLorentzVec).M2() - (*_beamLorentzVec).M2(), 2)) / (4. * (_beamLorentzVec->Vect()).Mag2()));
@@ -169,6 +180,8 @@ namespace antok {
 			Sum2(std::vector<double*> inAddrs, double* outAddr)
 				: _inAddrs(inAddrs),
 				  _outAddr(outAddr) { }
+
+			virtual ~Sum2() { }
 
 			bool operator() () {
 				(*_outAddr) = 0.;
@@ -205,6 +218,8 @@ namespace antok {
 				  _rpdDeltaPhiResAddr(rpdDeltaPhiResAddr),
 				  _method(method) { }
 
+			virtual ~GetRpdPhi() { }
+
 			bool operator() () {
 				switch(_method)
 				{
@@ -239,6 +254,8 @@ namespace antok {
 				  _inAddr2(inAddr2),
 				  _outAddr(outAddr) { }
 
+			virtual ~Diff() { }
+
 			bool operator() () {
 				(*_outAddr) = (*_inAddr1) - (*_inAddr2);
 				return true;
@@ -261,6 +278,8 @@ namespace antok {
 				: _inAddr(inAddr),
 				  _outAddr(outAddr) { }
 
+			virtual ~Abs() { }
+
 			bool operator() () {
 				(*_outAddr) = std::fabs(*_inAddr);
 				return true;
@@ -281,6 +300,8 @@ namespace antok {
 			Energy(TLorentzVector* inAddr, double* outAddr)
 				: _inAddr(inAddr),
 				  _outAddr(outAddr) { }
+
+			virtual ~Energy() { }
 
 			bool operator() () {
 				(*_outAddr) = _inAddr->E();
@@ -303,6 +324,8 @@ namespace antok {
 				: _inAddr(inAddr),
 				  _outAddr(outAddr) { }
 
+			virtual ~RadToDegree() { }
+
 			bool operator() () {
 				(*_outAddr) = ((*_inAddr) / TMath::Pi()) * 180.;
 				return true;
@@ -323,6 +346,8 @@ namespace antok {
 			ConvertIntToDouble(int* inAddr, double* outAddr)
 				: _inAddr(inAddr),
 				  _outAddr(outAddr) { }
+
+			virtual ~ConvertIntToDouble() { }
 
 			bool operator() () {
 				(*_outAddr) = (*_inAddr);

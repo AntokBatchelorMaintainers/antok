@@ -8,6 +8,7 @@ namespace antok {
 	  public:
 
 		virtual void fill(long cutmask) = 0;
+		virtual ~Plot() { };
 
 	};
 

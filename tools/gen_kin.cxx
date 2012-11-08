@@ -287,7 +287,7 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 	double spl2d = needed / spl1;
 	int spl2;
 	if((spl2d - std::floor(spl2d)) > 0.) {
-		spl2 = std::floor(spl2d + 1.);
+		spl2 = (int)std::floor(spl2d + 1.);
 	} else {
 		spl2 = (int)spl2d;
 	}

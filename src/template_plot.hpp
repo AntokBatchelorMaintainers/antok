@@ -31,6 +31,8 @@ namespace antok {
 
 		void fill(long cutmask);
 
+		~TemplatePlot() { };
+
 	  private:
 
 		void makePlot(std::map<std::string, std::vector<long> >& cutmasks, TH1* histTemplate);
