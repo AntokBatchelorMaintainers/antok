@@ -1,9 +1,11 @@
 #ifndef ANTOK_OBJECTMANAGER_H
 #define ANTOK_OBJECTMANAGER_H
 
+#include<string>
 #include<vector>
 
 class TFile;
+class TH1;
 class TObject;
 class TTree;
 
@@ -37,10 +39,26 @@ namespace antok {
 		bool setOutFile(TFile* outFile);
 
 		bool registerObjectToWrite(TObject* object);
+		bool registerHistogramToCopy(TH1* histogram,
+		                             std::string path,
+		                             std::string newName,
+		                             std::string newTitle);
 
 		bool finish();
 
 	  private:
+
+		struct histogramCopyInformation {
+			TH1* histogram;
+			std::string path;
+			std::string newName;
+			std::string newTitle;
+			histogramCopyInformation(TH1* hist, std::string inPath, std::string nName, std::string nTitle)
+				: histogram(hist),
+				  path(inPath),
+				  newName(nName),
+				  newTitle(nTitle) { };
+		};
 
 		ObjectManager();
 
@@ -55,6 +73,7 @@ namespace antok {
 		TFile* _outFile;
 		TTree* _inTree;
 		std::vector<TObject*> _objectsToWrite;
+		std::vector<histogramCopyInformation> _histogramsToCopy;
 
 	};
 

@@ -1,8 +1,10 @@
 #include<object_manager.h>
 
+#include<assert.h>
 #include<iostream>
 
 #include<TFile.h>
+#include<TH1.h>
 #include<TObject.h>
 
 #include<cutter.h>
@@ -117,9 +119,29 @@ bool antok::ObjectManager::registerObjectToWrite(TObject* object) {
 
 }
 
+bool antok::ObjectManager::registerHistogramToCopy(TH1* histogram,
+                                                   std::string path,
+                                                   std::string newName,
+                                                   std::string newTitle)
+{
+	histogramCopyInformation histCopyInfo(histogram, path, newName, newTitle);
+	_histogramsToCopy.push_back(histCopyInfo);
+	return true;
+}
+
 bool antok::ObjectManager::finish() {
 
 	bool success = true;
+	for(unsigned int i = 0; i < _histogramsToCopy.size(); ++i) {
+		histogramCopyInformation info = _histogramsToCopy[i];
+		TH1* histToCopy = info.histogram;
+		_outFile->cd(info.path.c_str());
+		TH1* copiedHist = dynamic_cast<TH1*>(histToCopy->Clone(info.newName.c_str()));
+		assert(copiedHist != 0);
+		copiedHist->SetTitle(info.newTitle.c_str());
+		registerObjectToWrite(copiedHist);
+	}
+	_outFile->cd();
 	if(_outFile->Write() == 0) {
 		success = false;
 	}

@@ -39,6 +39,8 @@ namespace antok {
 
 		std::vector<std::pair<TH1*, long> > _histograms;
 
+		std::map<long, TH1*> _cutmaskIndex;
+
 		unsigned int _mode;
 
 		std::vector<T*> _vecData1;
@@ -150,15 +152,33 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 					strStr<<"0";
 				}
 			}
+			std::string histName = strStr.str();
 
-			TH1* new_hist = dynamic_cast<TH1*>(histTemplate->Clone(strStr.str().c_str()));
-			assert(new_hist != 0);
 			strStr.str("");
 			strStr<<histTemplate->GetTitle();
 			strStr<<" "<<cutter.getAbbreviations(mask, cutTrainName);
-			new_hist->SetTitle(strStr.str().c_str());
-			assert(objectManager->registerObjectToWrite(new_hist));
-			_histograms.push_back(std::pair<TH1*, long>(new_hist, mask));
+			std::string histTitle = strStr.str();
+
+			if(_cutmaskIndex.find(mask) == _cutmaskIndex.end()) {
+
+				TH1* newHist = dynamic_cast<TH1*>(histTemplate->Clone(histName.c_str()));
+				assert(newHist != 0);
+				newHist->SetTitle(histTitle.c_str());
+				assert(objectManager->registerObjectToWrite(newHist));
+				_histograms.push_back(std::pair<TH1*, long>(newHist, mask));
+				_cutmaskIndex[mask] = newHist;
+
+			} else {
+
+				TH1* histToCopy = _cutmaskIndex.find(mask)->second;
+				strStr.str("");
+				strStr << cutTrainName << "/" << histTemplate->GetName();
+				assert(objectManager->registerHistogramToCopy(histToCopy,
+				                                              strStr.str(),
+				                                              histName,
+				                                              histTitle));
+
+			}
 
 		}
 
