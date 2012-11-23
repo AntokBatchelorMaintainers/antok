@@ -5,6 +5,7 @@
 #include<string>
 #include<vector>
 
+class TDirectory;
 class TFile;
 class TH1;
 class TObject;
@@ -39,13 +40,11 @@ namespace antok {
 		bool setInFile(TFile* inFile);
 		bool setOutFile(TFile* outFile);
 
-		bool registerObjectToWrite(TObject* object);
+		bool registerObjectToWrite(TDirectory* path, TObject* object);
 		bool registerHistogramToCopy(TH1* histogram,
-		                             std::string cutTrainName,
-		                             std::string dirName,
+		                             std::string path,
 		                             std::string newName,
-		                             std::string newTitle,
-		                             unsigned int orderParameter);
+		                             std::string newTitle);
 
 		bool finish();
 
@@ -55,15 +54,12 @@ namespace antok {
 			TH1* histogram;
 			std::string newName;
 			std::string newTitle;
-			unsigned int orderParameter;
 			histogramCopyInformation(TH1* hist,
 			                         std::string nName,
-			                         std::string nTitle,
-			                         unsigned int orderParam)
+			                         std::string nTitle)
 				: histogram(hist),
 				  newName(nName),
-				  newTitle(nTitle),
-				  orderParameter(orderParam) { };
+				  newTitle(nTitle) { };
 		};
 
 		ObjectManager();
@@ -78,9 +74,8 @@ namespace antok {
 		TFile* _inFile;
 		TFile* _outFile;
 		TTree* _inTree;
-		std::vector<TObject*> _objectsToWrite;
+		std::map<TObject*, TDirectory*> _objectsToWrite;
 		std::map<std::string, std::vector<histogramCopyInformation> > _histogramsToCopy;
-		std::map<std::string, std::map<unsigned int, TH1*> > _histogramOrder;
 
 	};
 

@@ -17,7 +17,6 @@
 #include<generators_plots.h>
 #include<object_manager.h>
 #include<plotter.h>
-#include<plot.hpp>
 #include<yaml_utils.hpp>
 
 antok::Initializer* antok::Initializer::_initializer = 0;
@@ -123,6 +122,7 @@ bool antok::Initializer::initializeCutter() {
 		std::cerr<<"Output file not registered."<<std::endl;
 		return false;
 	}
+	outFile->mkdir("tmptmptmp");
 	TTree* inTree = objectManager->getInTree();
 	if(inTree == 0) {
 		std::cerr<<"Input TTree not registered."<<std::endl;
@@ -166,11 +166,13 @@ bool antok::Initializer::initializeCutter() {
 
 		outFile->cd();
 		outFile->mkdir(cutTrainName.c_str());
+		outFile->cd("tmptmptmp");
+		TDirectory::CurrentDirectory()->mkdir(cutTrainName.c_str());
 		if(pertinent) {
 			outFile->cd(cutTrainName.c_str());
 			TTree* outTree = inTree->CloneTree(0);
 			cutter._outTreeMap[cutTrainName] = outTree;
-			assert(objectManager->registerObjectToWrite(outTree));
+			assert(objectManager->registerObjectToWrite(TDirectory::CurrentDirectory(), outTree));
 		}
 		outFile->cd();
 
@@ -533,6 +535,7 @@ bool antok::Initializer::initializePlotter() {
 				std::cerr<<"Could not generate the output \"StatisticsHistogram\" for \"CutTrain\" \""<<cutTrainName<<"\"."<<std::endl;
 				return false;
 			}
+			objectManager->registerObjectToWrite(TDirectory::CurrentDirectory(), statsHist);
 			std::vector<antok::Cut*> cuts = cutTrain_it->second;
 			std::vector<std::pair<const char*, const bool*> > cutsAndResults;
 			for(unsigned int i = 0; i < cuts.size(); ++i) {
@@ -543,8 +546,6 @@ bool antok::Initializer::initializePlotter() {
 		plotter._waterfallHistograms = waterfallHists;
 		outFile->cd();
 	}
-
-	std::map<std::string, std::map<unsigned int, TH1*> > histogramOrder;
 
 	if(not hasNodeKey(config, "Plots")) {
 		std::cerr<<"Warning: \"Plots\" not found in configuration file."<<std::endl;
@@ -613,19 +614,7 @@ bool antok::Initializer::initializePlotter() {
 			return false;
 		}
 		plotter._plots.push_back(antokPlot);
-
-		std::map<std::string, std::map<unsigned int, TH1*> > tmpHistOrder = antokPlot->getHistogramOrder();
-		for(std::map<std::string, std::map<unsigned int, TH1*> >::const_iterator it = tmpHistOrder.begin();
-			it != tmpHistOrder.end();
-			++it)
-		{
-			const std::string& path = it->first;
-			assert(histogramOrder.find(path) == histogramOrder.end());
-			histogramOrder[path] = it->second;
-		}
 	}
-
-	objectManager->_histogramOrder = histogramOrder;
 
 	return true;
 

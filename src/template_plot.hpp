@@ -136,7 +136,9 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 		const std::vector<antok::Cut*>& cuts = cutter.getCutsForCutTrain(cutTrainName);
 
 		histTemplate->SetDirectory(0);
-		outFile->cd(cutTrainName.c_str());
+		std::stringstream strStr;
+		strStr<<"tmptmptmp/"<<cutTrainName;
+		outFile->cd(strStr.str().c_str());
 		TDirectory* dir = TDirectory::CurrentDirectory();
 		dir->mkdir(histTemplate->GetName());
 		dir->cd(histTemplate->GetName());
@@ -144,7 +146,7 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 		for(unsigned int cutmask_i = 0; cutmask_i < masks.size(); ++cutmask_i) {
 
 			long mask = masks[cutmask_i];
-			std::stringstream strStr;
+			strStr.str("");
 			strStr<<histTemplate->GetName()<<"_";
 
 			for(unsigned int i = 0; i < cuts.size(); ++i) {
@@ -161,31 +163,24 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 			strStr<<" "<<cutter.getAbbreviations(mask, cutTrainName);
 			std::string histTitle = strStr.str();
 
+			strStr.str("");
+			strStr<<cutTrainName<<"/"<<histTemplate->GetName();
+			std::string path = strStr.str();
+
+			TH1* hist = 0;
 			if(_cutmaskIndex.find(mask) == _cutmaskIndex.end()) {
-
-				TH1* newHist = dynamic_cast<TH1*>(histTemplate->Clone(histName.c_str()));
-				assert(newHist != 0);
-				newHist->SetTitle(histTitle.c_str());
-				assert(objectManager->registerObjectToWrite(newHist));
-				_histograms.push_back(std::pair<TH1*, long>(newHist, mask));
-				_cutmaskIndex[mask] = newHist;
-				strStr.str("");
-				strStr<<cutTrainName<<"/"<<histTemplate->GetName();
-				_histogramOrder[strStr.str()][cutmask_i] = newHist;
-
-
+				hist = dynamic_cast<TH1*>(histTemplate->Clone(histName.c_str()));
+				assert(hist != 0);
+				hist->SetTitle(histTitle.c_str());
+				_histograms.push_back(std::pair<TH1*, long>(hist, mask));
+				_cutmaskIndex[mask] = hist;
 			} else {
-
-				TH1* histToCopy = _cutmaskIndex.find(mask)->second;
-				assert(objectManager->registerHistogramToCopy(histToCopy,
-				                                              cutTrainName,
-				                                              histTemplate->GetName(),
-				                                              histName,
-				                                              histTitle,
-				                                              cutmask_i));
-
+				hist = _cutmaskIndex.find(mask)->second;
 			}
-
+			assert(objectManager->registerHistogramToCopy(hist,
+			                                              path,
+			                                              histName,
+			                                              histTitle));
 		}
 
 	}

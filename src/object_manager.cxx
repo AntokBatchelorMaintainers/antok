@@ -104,77 +104,66 @@ bool antok::ObjectManager::setOutFile(TFile* outFile) {
 
 }
 
-bool antok::ObjectManager::registerObjectToWrite(TObject* object) {
+bool antok::ObjectManager::registerObjectToWrite(TDirectory* path, TObject* object) {
 
-	bool found = false;
-	for(unsigned int i = 0; i < _objectsToWrite.size(); ++i) {
-		if(object == _objectsToWrite[i]) {
-			found = true;
-		}
-	}
-	if(found) {
+	if(_objectsToWrite.find(object) != _objectsToWrite.end()) {
 		return false;
 	}
-	_objectsToWrite.push_back(object);
+	_objectsToWrite[object] = path;
 	return true;
 
 }
 
 bool antok::ObjectManager::registerHistogramToCopy(TH1* histogram,
-                                                   std::string cutTrainName,
-                                                   std::string dirName,
+                                                   std::string path,
                                                    std::string newName,
-                                                   std::string newTitle,
-                                                   unsigned int orderParameter)
+                                                   std::string newTitle)
 {
-	histogramCopyInformation histCopyInfo(histogram, newName, newTitle, orderParameter);
-	std::stringstream strStr;
-	strStr<<cutTrainName<<"/"<<dirName;
-	_histogramsToCopy[strStr.str()].push_back(histCopyInfo);
+	histogramCopyInformation histCopyInfo(histogram, newName, newTitle);
+	_histogramsToCopy[path].push_back(histCopyInfo);
 	return true;
 }
 
 bool antok::ObjectManager::finish() {
 
 	bool success = true;
-	for(std::map<std::string, std::map<unsigned int, TH1*> >::const_iterator it = _histogramOrder.begin();
-	    it != _histogramOrder.end();
-	    ++it)
+
+	for(std::map<std::string, std::vector<histogramCopyInformation> >::const_iterator histsToCopy_it = _histogramsToCopy.begin();
+	    histsToCopy_it != _histogramsToCopy.end();
+	    ++histsToCopy_it)
 	{
-		std::string dirName = it->first;
-		TDirectory* dir = dynamic_cast<TDirectory*>(_outFile->Get(dirName.c_str()));
-		assert(dir != 0);
-		dir->cd();
-		if(_histogramsToCopy.find(dirName) != _histogramsToCopy.end()) {
-			std::vector<histogramCopyInformation>::const_iterator histogramsToCopy_it= _histogramsToCopy[dirName].begin();
-			std::map<unsigned int, TH1*>::const_iterator orderOfExistingHistograms_it = it->second.begin();
-			for(unsigned int i = 0;
-			    orderOfExistingHistograms_it != it->second.end() || histogramsToCopy_it != _histogramsToCopy[dirName].end();
-			    ++i)
-			{
-				if(orderOfExistingHistograms_it == it->second.end() || i == histogramsToCopy_it->orderParameter) {
-					histogramCopyInformation info = (*histogramsToCopy_it);
-					assert(i == info.orderParameter);
-					TH1* copiedHist = dynamic_cast<TH1*>(info.histogram->Clone(info.newName.c_str()));
-					assert(copiedHist != 0);
-					copiedHist->SetTitle(info.newTitle.c_str());
-					registerObjectToWrite(copiedHist);
-					++histogramsToCopy_it;
-				} else if(histogramsToCopy_it == _histogramsToCopy[dirName].end() || i == orderOfExistingHistograms_it->first) {
-					TH1* hist = orderOfExistingHistograms_it->second;
-					dir->Remove(hist);
-					dir->Append(hist);
-					++orderOfExistingHistograms_it;
-				} else {
-					assert(false);
-				}
-			}
+		std::string path = histsToCopy_it->first;
+		std::vector<histogramCopyInformation> histsToCopy = histsToCopy_it->second;
+		if(histsToCopy.size() == 0) {
+			continue;
 		}
-		_outFile->cd();
+		TDirectory* dir = _outFile->GetDirectory(path.c_str(), false);
+		if(not dir) {
+			std::string cutTrainDirName = path.substr(0, path.find_last_of('/'));
+			std::string plotDirName = path.substr(path.find_last_of('/')+1);
+			TDirectory* cutTrainDir = _outFile->GetDirectory(cutTrainDirName.c_str());
+			assert(cutTrainDir != 0);
+			dir = cutTrainDir->mkdir(plotDirName.c_str());
+			assert(dir != 0);
+		}
+		dir->cd();
+		for(unsigned int i = 0; i < histsToCopy.size(); ++i) {
+			histogramCopyInformation info = histsToCopy[i];
+			TH1* copiedHist = dynamic_cast<TH1*>(info.histogram->Clone(info.newName.c_str()));
+			assert(copiedHist != 0);
+			copiedHist->SetTitle(info.newTitle.c_str());
+			copiedHist->Write();
+		}
+		dir->Close();
 	}
-	if(_outFile->Write() == 0) {
-		success = false;
+	_outFile->cd();
+	_outFile->Delete("tmptmptmp;*");
+
+	for(std::map<TObject*, TDirectory*>::const_iterator it = _objectsToWrite.begin(); it != _objectsToWrite.end(); ++it) {
+		it->second->cd();
+		it->first->Write();
 	}
+
 	_outFile->Close();
 	_inFile->Close();
 	return success;
