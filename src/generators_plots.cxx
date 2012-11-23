@@ -26,7 +26,9 @@ namespace {
 
 	}
 
-	std::map<std::string, std::vector<long> > __mergeMaps(const std::map<std::string, std::vector<long> >& map1, const std::map<std::string, std::vector<long> >& map2) {
+	std::map<std::string, std::vector<long> > __mergeMaps(const std::map<std::string, std::vector<long> >& map1,
+	                                                      const std::map<std::string, std::vector<long> >& map2)
+	{
 		std::map<std::string, std::vector<long> > returnMap = map1;
 		for(std::map<std::string, std::vector<long> >::const_iterator it = map2.begin(); it != map2.end(); ++it) {
 			std::map<std::string, std::vector<long> >::const_iterator finder = returnMap.find(it->first);
@@ -40,7 +42,9 @@ namespace {
 		return returnMap;
 	}
 
-	void __getCutmasks(const antok::plotUtils::GlobalPlotOptions& plotOptions, std::map<std::string, std::vector<long> >& cutmasks) {
+	void __getCutmasks(const antok::plotUtils::GlobalPlotOptions& plotOptions,
+	                   std::map<std::string, std::vector<long> >& cutmasks)
+	{
 		antok::Cutter& cutter = antok::ObjectManager::instance()->getCutter();
 		cutmasks = __mergeMaps(plotOptions.cutMasks, cutmasks);
 		if(plotOptions.plotsWithSingleCutsOff) {
@@ -131,9 +135,21 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 
 		std::string variableType = data.getType(variableName);
 		if(variableType == "double") {
-			antokPlot = new antok::TemplatePlot<double>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), data.getAddr<double>(variableName));
+			antokPlot = new antok::TemplatePlot<double>(cutmasks,
+			                                            new TH1D(plotName.c_str(),
+			                                                     plotName.c_str(),
+			                                                     nBins,
+			                                                     lowerBound,
+			                                                     upperBound),
+			                                            data.getAddr<double>(variableName));
 		} else if (variableType == "int") {
-			antokPlot = new antok::TemplatePlot<int>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), data.getAddr<int>(variableName));
+			antokPlot = new antok::TemplatePlot<int>(cutmasks,
+			                                         new TH1D(plotName.c_str(),
+			                                                  plotName.c_str(),
+			                                                  nBins,
+			                                                  lowerBound,
+			                                                  upperBound),
+			                                         data.getAddr<int>(variableName));
 		} else if(variableType == "") {
 			std::cerr<<"Could not find \"Variable\" \""<<variableName<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 			return 0;
