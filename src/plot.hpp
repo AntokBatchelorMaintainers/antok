@@ -7,8 +7,13 @@ namespace antok {
 
 	  public:
 
-		virtual void fill(long cutmask) = 0;
+		Plot() { };
 		virtual ~Plot() { };
+		virtual void fill(long cutmask) = 0;
+		std::map<std::string, std::map<unsigned int, TH1*> > getHistogramOrder() const { return _histogramOrder; };
+
+	  protected:
+		std::map<std::string, std::map<unsigned int, TH1*> > _histogramOrder;
 
 	};
 

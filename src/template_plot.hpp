@@ -55,7 +55,8 @@ namespace antok {
 
 template<typename T>
 antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks, TH1* histTemplate, T* data1, T* data2)
-	: _data1(data1),
+	: Plot(),
+	  _data1(data1),
 	  _data2(data2)
 {
 
@@ -71,6 +72,7 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
                                      TH1* histTemplate,
                                      std::vector<T*>* vecData1,
                                      std::vector<T*>* vecData2)
+	: Plot()
 {
 
 	assert(histTemplate != 0);
@@ -167,16 +169,20 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 				assert(objectManager->registerObjectToWrite(newHist));
 				_histograms.push_back(std::pair<TH1*, long>(newHist, mask));
 				_cutmaskIndex[mask] = newHist;
+				strStr.str("");
+				strStr<<cutTrainName<<"/"<<histTemplate->GetName();
+				_histogramOrder[strStr.str()][cutmask_i] = newHist;
+
 
 			} else {
 
 				TH1* histToCopy = _cutmaskIndex.find(mask)->second;
-				strStr.str("");
-				strStr << cutTrainName << "/" << histTemplate->GetName();
 				assert(objectManager->registerHistogramToCopy(histToCopy,
-				                                              strStr.str(),
+				                                              cutTrainName,
+				                                              histTemplate->GetName(),
 				                                              histName,
-				                                              histTitle));
+				                                              histTitle,
+				                                              cutmask_i));
 
 			}
 

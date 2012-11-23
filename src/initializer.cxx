@@ -17,6 +17,7 @@
 #include<generators_plots.h>
 #include<object_manager.h>
 #include<plotter.h>
+#include<plot.hpp>
 #include<yaml_utils.hpp>
 
 antok::Initializer* antok::Initializer::_initializer = 0;
@@ -543,6 +544,8 @@ bool antok::Initializer::initializePlotter() {
 		outFile->cd();
 	}
 
+	std::map<std::string, std::map<unsigned int, TH1*> > histogramOrder;
+
 	if(not hasNodeKey(config, "Plots")) {
 		std::cerr<<"Warning: \"Plots\" not found in configuration file."<<std::endl;
 	}
@@ -610,7 +613,19 @@ bool antok::Initializer::initializePlotter() {
 			return false;
 		}
 		plotter._plots.push_back(antokPlot);
+
+		std::map<std::string, std::map<unsigned int, TH1*> > tmpHistOrder = antokPlot->getHistogramOrder();
+		for(std::map<std::string, std::map<unsigned int, TH1*> >::const_iterator it = tmpHistOrder.begin();
+			it != tmpHistOrder.end();
+			++it)
+		{
+			const std::string& path = it->first;
+			assert(histogramOrder.find(path) == histogramOrder.end());
+			histogramOrder[path] = it->second;
+		}
 	}
+
+	objectManager->_histogramOrder = histogramOrder;
 
 	return true;
 

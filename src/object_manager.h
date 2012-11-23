@@ -1,6 +1,7 @@
 #ifndef ANTOK_OBJECTMANAGER_H
 #define ANTOK_OBJECTMANAGER_H
 
+#include<map>
 #include<string>
 #include<vector>
 
@@ -40,9 +41,11 @@ namespace antok {
 
 		bool registerObjectToWrite(TObject* object);
 		bool registerHistogramToCopy(TH1* histogram,
-		                             std::string path,
+		                             std::string cutTrainName,
+		                             std::string dirName,
 		                             std::string newName,
-		                             std::string newTitle);
+		                             std::string newTitle,
+		                             unsigned int orderParameter);
 
 		bool finish();
 
@@ -50,14 +53,17 @@ namespace antok {
 
 		struct histogramCopyInformation {
 			TH1* histogram;
-			std::string path;
 			std::string newName;
 			std::string newTitle;
-			histogramCopyInformation(TH1* hist, std::string inPath, std::string nName, std::string nTitle)
+			unsigned int orderParameter;
+			histogramCopyInformation(TH1* hist,
+			                         std::string nName,
+			                         std::string nTitle,
+			                         unsigned int orderParam)
 				: histogram(hist),
-				  path(inPath),
 				  newName(nName),
-				  newTitle(nTitle) { };
+				  newTitle(nTitle),
+				  orderParameter(orderParam) { };
 		};
 
 		ObjectManager();
@@ -73,7 +79,8 @@ namespace antok {
 		TFile* _outFile;
 		TTree* _inTree;
 		std::vector<TObject*> _objectsToWrite;
-		std::vector<histogramCopyInformation> _histogramsToCopy;
+		std::map<std::string, std::vector<histogramCopyInformation> > _histogramsToCopy;
+		std::map<std::string, std::map<unsigned int, TH1*> > _histogramOrder;
 
 	};
 
