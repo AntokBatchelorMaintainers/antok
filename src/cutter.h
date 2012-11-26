@@ -44,7 +44,8 @@ namespace antok {
 
 	  private:
 
-		Cutter() { };
+		Cutter()
+			: _cutPattern(0) { };
 
 		static Cutter* _cutter;
 

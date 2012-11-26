@@ -63,9 +63,9 @@ namespace {
 		std::vector<int> indices;
 		try {
 			indices = plot["Indices"].as<std::vector<int> >();
-		} catch (YAML::TypedBadConversion<std::vector<int> > e) {
+		} catch (const YAML::TypedBadConversion<std::vector<int> >& e) {
 			std::cerr<<"Could not convert YAML sequence to std::vector<int> when parsing \"Indices\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
-		} catch (YAML::TypedBadConversion<int> e) {
+		} catch (const YAML::TypedBadConversion<int>& e) {
 			std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"Indices\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		}
 		return indices;
@@ -161,7 +161,7 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 	} else {
 
 		std::vector<int> indices = __getIndices(plot, plotName);
-		if(indices.size() == 0) {
+		if(indices.empty()) {
 			return 0;
 		}
 		std::stringstream strStr;
@@ -169,13 +169,13 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 		std::string variableType = data.getType(strStr.str());
 		if(variableType == "double") {
 			std::vector<double*> vecData = __getDataVector<double>(plot, plotName, variableName, indices);
-			if(vecData.size() == 0) {
+			if(vecData.empty()) {
 				return 0;
 			}
 			antokPlot = new antok::TemplatePlot<double>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), &vecData);
 		} else if(variableType == "int") {
 			std::vector<int*> vecData = __getDataVector<int>(plot, plotName, variableName, indices);
-			if(vecData.size() == 0) {
+			if(vecData.empty()) {
 				return 0;
 			}
 			antokPlot = new antok::TemplatePlot<int>(cutmasks, new TH1D(plotName.c_str(), plotName.c_str(), nBins, lowerBound, upperBound), &vecData);
@@ -284,7 +284,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 	} else {
 
 		std::vector<int> indices = __getIndices(plot, plotName);
-		if(indices.size() == 0) {
+		if(indices.empty()) {
 			return 0;
 		}
 		std::stringstream strStr;
@@ -301,7 +301,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 		if(variableType == "double") {
 			std::vector<double*> vec1Data = __getDataVector<double>(plot, plotName, variable1Name, indices);
 			std::vector<double*> vec2Data = __getDataVector<double>(plot, plotName, variable2Name, indices);
-			if((vec1Data.size() == 0) or (vec2Data.size() == 0)) {
+			if((vec1Data.empty()) or (vec2Data.empty())) {
 				return 0;
 			}
 			antokPlot = new antok::TemplatePlot<double>(cutmasks,
@@ -311,7 +311,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 		} else if(variableType == "int") {
 			std::vector<int*> vec1Data = __getDataVector<int>(plot, plotName, variable1Name, indices);
 			std::vector<int*> vec2Data = __getDataVector<int>(plot, plotName, variable2Name, indices);
-			if((vec1Data.size() == 0) or (vec2Data.size() == 0)) {
+			if((vec1Data.empty()) or (vec2Data.empty())) {
 				return 0;
 			}
 			antokPlot = new antok::TemplatePlot<int>(cutmasks,

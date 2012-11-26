@@ -76,7 +76,7 @@ namespace {
 				}
 				cutNames.push_back(cutName);
 			}
-			if(cutNames.size() == 0) {
+			if(cutNames.empty()) {
 				return -1;
 			}
 		} else {

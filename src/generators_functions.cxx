@@ -115,10 +115,10 @@ namespace {
 			std::vector<int> inner_indices;
 			try {
 				inner_indices = function["Summands"]["Indices"].as<std::vector<int> >();
-			} catch (YAML::TypedBadConversion<std::vector<int> > e) {
+			} catch (const YAML::TypedBadConversion<std::vector<int> >& e) {
 				std::cerr<<"Could not convert YAML sequence to std::vector<int> when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
 				return 0;
-			} catch (YAML::TypedBadConversion<int> e) {
+			} catch (const YAML::TypedBadConversion<int>& e) {
 				std::cerr<<"Could not convert entries in YAML sequence to int when parsing \"sum\"' \"Indices\" (for variable \""<<quantityName<<"\")."<<std::endl;
 				return 0;
 			}
@@ -359,7 +359,7 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 		args.push_back(std::pair<std::string, std::string>("Z", "double"));
 		try {
 			function["M"].as<double>();
-		} catch(YAML::TypedBadConversion<double> e) {
+		} catch(const YAML::TypedBadConversion<double>& e) {
 			std::cerr<<"Argument \"M\" in function \"mass\" should be of type double (variable \""<<quantityName<<"\")."<<std::endl;
 			return 0;
 		}

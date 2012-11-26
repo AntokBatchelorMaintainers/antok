@@ -51,7 +51,7 @@ bool antok::Initializer::readConfigFile(const std::string& filename) {
 	// Load the config file
 	try {
 		config = YAML::LoadFile(filename);
-	} catch (YAML::ParserException e) {
+	} catch (const YAML::ParserException& e) {
 		std::cerr<<"Error parsing config file: "<<e.what()<<"."<<std::endl;
 		return false;
 	}
@@ -62,7 +62,7 @@ bool antok::Initializer::readConfigFile(const std::string& filename) {
 			std::cerr<<"Could not set number of particles."<<std::endl;
 			return false;
 		}
-	} catch (YAML::TypedBadConversion<int> e) {
+	} catch (const YAML::TypedBadConversion<int>& e) {
 		std::cerr<<"Conversion error when reading \"NumberOfParticles\": "<<e.what()<<"."<<std::endl;
 		return false;
 	}
@@ -82,7 +82,7 @@ bool antok::Initializer::readConfigFile(const std::string& filename) {
 			std::cerr<<"Coud not set proton mass."<<std::endl;
 			return false;
 		}
-	} catch (YAML::TypedBadConversion<double> e) {
+	} catch (const YAML::TypedBadConversion<double>& e) {
 		std::cerr<<"Conversion error when reading constants: "<<e.what()<<"."<<std::endl;
 		return false;
 	}
@@ -186,12 +186,12 @@ bool antok::Initializer::initializeCutter() {
 				return false;
 			}
 
-			bool* result = 0;
 			antok::Cut* antokCut = 0;
 
 			if(cutter._cutsMap[shortName] > 0) {
 				antokCut = cutter._cutsMap[shortName];
 			} else {
+				bool* result = 0;
 				if(not antok::generators::generateCut(cutEntry, antokCut, result)) {
 					std::cerr<<"Could not generate cut \""<<shortName<<"\" in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
 					return false;
@@ -379,10 +379,10 @@ bool antok::Initializer::initializeEvent() {
 		if(calcQuantity["Name"].IsSequence()) {
 			try {
 				quantityBaseNames = calcQuantity["Name"].as<std::vector<std::string> >();
-			} catch (YAML::TypedBadConversion<std::vector<std::string> > e) {
+			} catch (const YAML::TypedBadConversion<std::vector<std::string> >& e) {
 				std::cerr<<"Could not convert YAML sequence to std::vector<std::string> when parsing \"CalculatedQuantities\"' \"Name\"."<<std::endl;
 				return false;
-			} catch (YAML::TypedBadConversion<std::string> e) {
+			} catch (const YAML::TypedBadConversion<std::string>& e) {
 				std::cerr<<"Could not entries in YAML sequence to std::string when parsing \"CalculatedQuantities\"' \"Name\"."<<std::endl;
 				return false;
 			}
@@ -394,7 +394,7 @@ bool antok::Initializer::initializeEvent() {
 			}
 			quantityBaseNames.push_back(baseName);
 		}
-		if(quantityBaseNames.size() < 1) {
+		if(quantityBaseNames.empty()) {
 			std::cerr<<"Did not find a name to save calculated quantity to."<<std::endl;
 			return false;
 		}
@@ -408,10 +408,10 @@ bool antok::Initializer::initializeEvent() {
 		if(hasNodeKey(calcQuantity, "Indices")) {
 			try {
 				indices = calcQuantity["Indices"].as<std::vector<int> >();
-			} catch (YAML::TypedBadConversion<std::vector<int> > e) {
+			} catch (const YAML::TypedBadConversion<std::vector<int> >& e) {
 				std::cerr<<"Could not convert YAML sequence to std::vector<int> when parsing CalculatedQuantities' \""<<quantityBaseNames[0]<<"\" \"Indices\"."<<std::endl;
 				return false;
-			} catch (YAML::TypedBadConversion<int> e) {
+			} catch (const YAML::TypedBadConversion<int>& e) {
 				std::cerr<<"Could not convert entries in YAML sequence to int when parsing CalculatedQuantities' \""<<quantityBaseNames[0]<<"\" \"Indices\"."<<std::endl;
 				return false;
 			}

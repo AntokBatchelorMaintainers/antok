@@ -15,7 +15,7 @@ namespace antok {
 		inline std::string getString(const YAML::Node& node) {
 			try{
 				return node.as<std::string>();
-			} catch(YAML::TypedBadConversion<std::string> e) {
+			} catch(const YAML::TypedBadConversion<std::string>& e) {
 				return "";
 			}
 		}
@@ -25,7 +25,7 @@ namespace antok {
 			try{
 				*valPtr = node.as<T>();
 				return true;
-			} catch(YAML::TypedBadConversion<T> e) {
+			} catch(const YAML::TypedBadConversion<T>& e) {
 				return false;
 			}
 		}
@@ -36,7 +36,7 @@ namespace antok {
 			try {
 				T val = node.as<T>();
 				retval = new T(val);
-			} catch (YAML::TypedBadConversion<T> e) {
+			} catch (const YAML::TypedBadConversion<T>& e) {
 				// not bad yet, could be a variable name there
 			}
 			if(retval == 0) {
@@ -75,7 +75,7 @@ namespace antok {
 		inline bool hasNodeKey(const YAML::Node& node, std::string key) {
 			try {
 				return node[key];
-			} catch(YAML::BadSubscript) {
+			} catch(const YAML::BadSubscript&) {
 				return false;
 			}
 		}

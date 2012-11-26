@@ -45,7 +45,6 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 	std::vector<TFile*> tfiles;
 	tfiles.resize(bounds.size()-1, 0);
 	for(unsigned int i = 0; i < tfiles.size(); ++i) {
-		std::string dir_to_make = outfile_name;
 		std::ostringstream strs;
 		strs<<outfile_name<<"/"<<(int)(bounds.at(i)*1000.)<<"."<<(int)((bounds.at(i+1))*1000.);
 		mkdir(strs.str().c_str(), S_IRWXU | S_IRWXG);
