@@ -122,6 +122,7 @@ bool antok::Initializer::initializeCutter() {
 		std::cerr<<"Output file not registered."<<std::endl;
 		return false;
 	}
+	outFile->mkdir("tmptmptmp");
 	TTree* inTree = objectManager->getInTree();
 	if(inTree == 0) {
 		std::cerr<<"Input TTree not registered."<<std::endl;
@@ -165,11 +166,13 @@ bool antok::Initializer::initializeCutter() {
 
 		outFile->cd();
 		outFile->mkdir(cutTrainName.c_str());
+		outFile->cd("tmptmptmp");
+		TDirectory::CurrentDirectory()->mkdir(cutTrainName.c_str());
 		if(pertinent) {
 			outFile->cd(cutTrainName.c_str());
 			TTree* outTree = inTree->CloneTree(0);
 			cutter._outTreeMap[cutTrainName] = outTree;
-			assert(objectManager->registerObjectToWrite(outTree));
+			assert(objectManager->registerObjectToWrite(TDirectory::CurrentDirectory(), outTree));
 		}
 		outFile->cd();
 
@@ -532,6 +535,7 @@ bool antok::Initializer::initializePlotter() {
 				std::cerr<<"Could not generate the output \"StatisticsHistogram\" for \"CutTrain\" \""<<cutTrainName<<"\"."<<std::endl;
 				return false;
 			}
+			objectManager->registerObjectToWrite(TDirectory::CurrentDirectory(), statsHist);
 			std::vector<antok::Cut*> cuts = cutTrain_it->second;
 			std::vector<std::pair<const char*, const bool*> > cutsAndResults;
 			for(unsigned int i = 0; i < cuts.size(); ++i) {

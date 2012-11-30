@@ -39,6 +39,8 @@ namespace antok {
 
 		std::vector<std::pair<TH1*, long> > _histograms;
 
+		std::map<long, TH1*> _cutmaskIndex;
+
 		unsigned int _mode;
 
 		std::vector<T*> _vecData1;
@@ -53,7 +55,8 @@ namespace antok {
 
 template<typename T>
 antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks, TH1* histTemplate, T* data1, T* data2)
-	: _data1(data1),
+	: Plot(),
+	  _data1(data1),
 	  _data2(data2)
 {
 
@@ -69,6 +72,7 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
                                      TH1* histTemplate,
                                      std::vector<T*>* vecData1,
                                      std::vector<T*>* vecData2)
+	: Plot()
 {
 
 	assert(histTemplate != 0);
@@ -132,7 +136,9 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 		const std::vector<antok::Cut*>& cuts = cutter.getCutsForCutTrain(cutTrainName);
 
 		histTemplate->SetDirectory(0);
-		outFile->cd(cutTrainName.c_str());
+		std::stringstream strStr;
+		strStr<<"tmptmptmp/"<<cutTrainName;
+		outFile->cd(strStr.str().c_str());
 		TDirectory* dir = TDirectory::CurrentDirectory();
 		dir->mkdir(histTemplate->GetName());
 		dir->cd(histTemplate->GetName());
@@ -140,7 +146,7 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 		for(unsigned int cutmask_i = 0; cutmask_i < masks.size(); ++cutmask_i) {
 
 			long mask = masks[cutmask_i];
-			std::stringstream strStr;
+			strStr.str("");
 			strStr<<histTemplate->GetName()<<"_";
 
 			for(unsigned int i = 0; i < cuts.size(); ++i) {
@@ -150,16 +156,31 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 					strStr<<"0";
 				}
 			}
+			std::string histName = strStr.str();
 
-			TH1* new_hist = dynamic_cast<TH1*>(histTemplate->Clone(strStr.str().c_str()));
-			assert(new_hist != 0);
 			strStr.str("");
 			strStr<<histTemplate->GetTitle();
 			strStr<<" "<<cutter.getAbbreviations(mask, cutTrainName);
-			new_hist->SetTitle(strStr.str().c_str());
-			assert(objectManager->registerObjectToWrite(new_hist));
-			_histograms.push_back(std::pair<TH1*, long>(new_hist, mask));
+			std::string histTitle = strStr.str();
 
+			strStr.str("");
+			strStr<<cutTrainName<<"/"<<histTemplate->GetName();
+			std::string path = strStr.str();
+
+			TH1* hist = 0;
+			if(_cutmaskIndex.find(mask) == _cutmaskIndex.end()) {
+				hist = dynamic_cast<TH1*>(histTemplate->Clone(histName.c_str()));
+				assert(hist != 0);
+				hist->SetTitle(histTitle.c_str());
+				_histograms.push_back(std::pair<TH1*, long>(hist, mask));
+				_cutmaskIndex[mask] = hist;
+			} else {
+				hist = _cutmaskIndex.find(mask)->second;
+			}
+			assert(objectManager->registerHistogramToCopy(hist,
+			                                              path,
+			                                              histName,
+			                                              histTitle));
 		}
 
 	}
