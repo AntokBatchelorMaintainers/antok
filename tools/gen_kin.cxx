@@ -137,7 +137,7 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 	hists.push_back(new TH2D("5_pi_mass_ag_rapidity", "5 Pion Mass against Rapidity", 250, 0.5, 3.5, 1000, 0., 10.));
 
 	hists.push_back(new TH2D("4_pi_mass_ag_tp", "4 Pion Mass against t prime", 250, 0.5, 3.5, 1000, 0.1, 1.));
-	hists.push_back(new TH2D("5_pi_mass_ag_tp", "5 Pion Mass against t prime", 250, 0.5, 3.5, 1000, 0.1, 1.));
+	hists.push_back(new TH2D("5_pi_mass_ag_tp", "5 Pion Mass against t prime", 1000, 0., 8., 1000, 0., 1.1));
 
 	hists.push_back(new TH1D("2_kaon_mass", "2 Kaon (assumption) Subsystem", 1000, 0.9, 2));
 
