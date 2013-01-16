@@ -128,6 +128,11 @@ bool antok::ObjectManager::finish() {
 
 	bool success = true;
 
+	for(std::map<TObject*, TDirectory*>::const_iterator it = _objectsToWrite.begin(); it != _objectsToWrite.end(); ++it) {
+		it->second->cd();
+		it->first->Write();
+	}
+
 	for(std::map<std::string, std::vector<histogramCopyInformation> >::const_iterator histsToCopy_it = _histogramsToCopy.begin();
 	    histsToCopy_it != _histogramsToCopy.end();
 	    ++histsToCopy_it)
@@ -158,11 +163,6 @@ bool antok::ObjectManager::finish() {
 	}
 	_outFile->cd();
 	_outFile->Delete("tmptmptmp;*");
-
-	for(std::map<TObject*, TDirectory*>::const_iterator it = _objectsToWrite.begin(); it != _objectsToWrite.end(); ++it) {
-		it->second->cd();
-		it->first->Write();
-	}
 
 	_outFile->Close();
 	_inFile->Close();
