@@ -1,4 +1,5 @@
 
+#include<cmath>
 #include<iostream>
 #include<sstream>
 #include<sys/stat.h>
@@ -29,7 +30,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 	double mass_range_lb = 1.3;		//GeV
 	double mass_range_ub = 4.;		//GeV
 
-	if((int)(mass_range_ub*1000. - mass_range_lb*1000.) % (int)(bin_width*1000.)) {
+	if((int)(floor(mass_range_ub*1000. - mass_range_lb*1000.) + 0.5) % (int)(floor(bin_width*1000. + 0.5))) {
 		std::cout<<"Mass bins don't fit into range"<<std::endl;
 		return;
 	}
@@ -46,9 +47,9 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 	tfiles.resize(bounds.size()-1, 0);
 	for(unsigned int i = 0; i < tfiles.size(); ++i) {
 		std::ostringstream strs;
-		strs<<outfile_name<<"/"<<(int)(bounds.at(i)*1000.)<<"."<<(int)((bounds.at(i+1))*1000.);
+		strs<<outfile_name<<"/"<<(int)(floor(bounds.at(i)*1000. + 0.5))<<"."<<(int)(floor(bounds.at(i+1)*1000. + 0.5));
 		mkdir(strs.str().c_str(), S_IRWXU | S_IRWXG);
-		strs<<"/"<<(int)(bounds.at(i)*1000.)<<"."<<(int)((bounds.at(i+1))*1000.)<<".root";
+		strs<<"/"<<(int)(floor(bounds.at(i)*1000. + 0.5))<<"."<<(int)(floor(bounds.at(i+1)*1000. + 0.5))<<".root";
 		tfiles.at(i) = TFile::Open(strs.str().c_str(), "NEW");
 		if(tfiles.at(i) == 0) {
 			std::cout<<"Error opening file for writing."<<std::endl;
