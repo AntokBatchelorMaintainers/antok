@@ -111,7 +111,7 @@ std::string antok::Data::getVariableInsertionErrorMsg(std::vector<std::string> q
 		}
 		msgStream<<quantityNames[quantityNames.size()-1]<<"]\" (double entry?)."<<std::endl;
 	} else {
-		getVariableInsertionErrorMsg(quantityNames[0]);
+		msgStream<<getVariableInsertionErrorMsg(quantityNames[0]);
 	}
 	return msgStream.str();
 };

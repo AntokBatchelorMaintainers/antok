@@ -473,6 +473,11 @@ bool antok::Initializer::initializeEvent() {
 				return false;
 			}
 			if(antokFunctionPtr == 0) {
+				std::cerr<<"Error initializing function with name \"" + functionName + "\" which should calculate [";
+				for(unsigned int i = 0; i < (quantityNames.size() - 1); ++i) {
+					std::cerr<<quantityNames[i]<<", ";
+				}
+				std::cerr<<quantityNames[quantityNames.size() - 1]<<"]."<<std::endl;
 				return false;
 			}
 			antok::Event& event = objectManager->getEvent();
