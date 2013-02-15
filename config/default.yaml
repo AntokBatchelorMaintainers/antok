@@ -114,6 +114,11 @@ CalculatedQuantities:
           dY: *grady
           XLorentzVec: *XLorentzVec
 
+    - Name: [ beamGradX, beamGradY ]
+      Function:
+          Name: getGradXGradY
+          Vector: *BeamLV
+
     - Name: &BeamE BeamE
       Function:
           Name: energy
@@ -270,6 +275,13 @@ Cuts:
               - *VertexZCut
               - *VertexRCut
 
+    - &NoCut
+      ShortName: NoCut
+      LongName: No Cut
+      Abbreviation: nCut
+      Cut:
+          Name: NoCut
+
 CutTrains:
 
     - &StdEvSel
@@ -310,6 +322,11 @@ CutTrains:
           - *TriggerMaskCut
       Pertinent: No
 
+    - Name: NoCutTrain
+      Cuts:
+          - *NoCut
+      Pertinent: No
+
 GlobalPlotOptions:
 
     PlotsForSequentialCuts: On
@@ -323,6 +340,7 @@ GlobalPlotOptions:
         - CutTrain: *StdEvSel
           WithCuts: [ *TPrimeCut, *KaonCut, [ *nRPDTracksCut, *RPDProtonMassCut ] ]
           WithoutCuts: [ *RPDPlanarityCut, [ *RPDProtonMassCut, *nRPDTracksCut ] ]
+    HistogramNameAppendix: "_hist"
 
 Plots:
 
