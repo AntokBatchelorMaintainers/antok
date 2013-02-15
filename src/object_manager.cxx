@@ -30,7 +30,8 @@ antok::ObjectManager::ObjectManager()
 	  _plotter(0),
 	  _inFile(0),
 	  _outFile(0),
-	  _inTree(0)
+	  _inTree(0),
+	  _histNameAppendix("")
 {
 
 }
@@ -124,6 +125,11 @@ bool antok::ObjectManager::registerHistogramToCopy(TH1* histogram,
 	return true;
 }
 
+bool antok::ObjectManager::registerHistogramNameAppendix(const std::string& appendix) {
+	_histNameAppendix = appendix;
+	return true;
+}
+
 bool antok::ObjectManager::finish() {
 
 	bool success = true;
@@ -154,7 +160,13 @@ bool antok::ObjectManager::finish() {
 		dir->cd();
 		for(unsigned int i = 0; i < histsToCopy.size(); ++i) {
 			histogramCopyInformation info = histsToCopy[i];
-			TH1* copiedHist = dynamic_cast<TH1*>(info.histogram->Clone(info.newName.c_str()));
+			std::string histName = info.newName;
+			if(_histNameAppendix != "") {
+					std::stringstream strStr;
+					strStr<<histName<<_histNameAppendix;
+					histName = strStr.str();
+			}
+			TH1* copiedHist = dynamic_cast<TH1*>(info.histogram->Clone(histName.c_str()));
 			assert(copiedHist != 0);
 			copiedHist->SetTitle(info.newTitle.c_str());
 			copiedHist->Write();

@@ -45,6 +45,7 @@ namespace antok {
 		                             std::string path,
 		                             std::string newName,
 		                             std::string newTitle);
+		bool registerHistogramNameAppendix(const std::string& appendix);
 
 		bool finish();
 
@@ -76,6 +77,7 @@ namespace antok {
 		TTree* _inTree;
 		std::map<TObject*, TDirectory*> _objectsToWrite;
 		std::map<std::string, std::vector<histogramCopyInformation> > _histogramsToCopy;
+		std::string _histNameAppendix;
 
 	};
 

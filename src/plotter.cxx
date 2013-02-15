@@ -197,6 +197,14 @@ antok::plotUtils::GlobalPlotOptions::GlobalPlotOptions(const YAML::Node& optionN
 		}
 	}
 
+	if(hasNodeKey(optionNode, "HistogramNameAppendix")) {
+		std::string histNameAppendix = antok::YAMLUtils::getString(optionNode["HistogramNameAppendix"]);
+		if(histNameAppendix == "") {
+			std::cerr<<"Warning: \"HistogramNameAppendix\" in \"GlobalPlotOptions\" is empty or not a valid string."<<std::endl;
+		}
+		antok::ObjectManager::instance()->registerHistogramNameAppendix(histNameAppendix);
+	}
+
 }
 
 bool antok::plotUtils::GlobalPlotOptions::handleOnOffOption(std::string optionName, const YAML::Node& option, std::string location) const {
