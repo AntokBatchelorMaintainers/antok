@@ -140,6 +140,7 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 	hists.push_back(new TH2D("5_pi_mass_ag_tp", "5 Pion Mass against t prime", 1000, 0., 8., 1000, 0., 1.1));
 
 	hists.push_back(new TH1D("2_kaon_mass", "2 Kaon (assumption) Subsystem", 1000, 0.9, 2));
+	hists.push_back(new TH1D("5_pi_mass_pwa_bins", "5 Pion Mass", 233, 0.01, 7.));
 
 	for(unsigned int i = 0; i < intree->GetEntries(); ++i) {
 
@@ -275,6 +276,7 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 		hists.at(13 + bounds.size())->Fill((k2+k4).M());
 		hists.at(13 + bounds.size())->Fill((k3+k4).M());
 
+		hists.at(14 + bounds.size())->Fill(pTot.M());
 
 	}
 
