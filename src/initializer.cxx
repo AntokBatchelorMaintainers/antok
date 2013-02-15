@@ -449,6 +449,8 @@ bool antok::Initializer::initializeEvent() {
 				antokFunctionPtr = antok::generators::generateEnergy(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getBeamLorentzVector") {
 				antokFunctionPtr = antok::generators::generateGetBeamLorentzVector(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "getGradXGradY") {
+				antokFunctionPtr = antok::generators::generateGetGradXGradY(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getLorentzVec") {
 				antokFunctionPtr = antok::generators::generateGetLorentzVec(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getRpdPhi") {

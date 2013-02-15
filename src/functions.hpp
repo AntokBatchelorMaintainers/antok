@@ -361,6 +361,34 @@ namespace antok {
 
 		};
 
+		class GetGradXGradY : public Function
+		{
+
+		  public:
+
+			GetGradXGradY(TLorentzVector* lorentzVecAddr, double* xGradAddr, double* yGradAddr)
+				: _lorentzVecAddr(lorentzVecAddr),
+				  _xGradAddr(xGradAddr),
+				  _yGradAddr(yGradAddr) { }
+
+			virtual ~GetGradXGradY() { }
+
+			bool operator() () {
+				TVector3 vect = _lorentzVecAddr->Vect();
+				double z = vect.Z();
+				(*_xGradAddr) = vect.X() / z;
+				(*_yGradAddr) = vect.Y() / z;
+				return true;
+			}
+
+		  private:
+
+			TLorentzVector* _lorentzVecAddr;
+			double* _xGradAddr;
+			double* _yGradAddr;
+
+		};
+
 	}
 
 }
