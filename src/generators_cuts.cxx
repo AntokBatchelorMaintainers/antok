@@ -315,6 +315,8 @@ namespace {
 			antokCut = __generateTriggerMaskCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "Group") {
 			antokCut = __generateGroupCut(cut, shortName, longName, abbreviation, result);
+		} else if (cutName == "NoCut") {
+			antokCut = new antok::cuts::NoCut(shortName, longName, abbreviation, result);
 		} else {
 			std::cerr<<"Cut \""<<cutName<<"\" not supported."<<std::endl;
 			delete result;

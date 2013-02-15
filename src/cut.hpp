@@ -217,6 +217,23 @@ namespace antok {
 
 		};
 
+		class NoCut : public Cut {
+
+		public:
+
+			NoCut(const std::string& shortname,
+			      const std::string& longname,
+			      const std::string& abbreviation,
+			      bool* outAddr)
+				: Cut(shortname, longname, abbreviation, outAddr) { }
+
+			bool operator () () {
+				(*_outAddr) = true;
+				return true;
+			}
+
+		};
+
 	}
 
 }
