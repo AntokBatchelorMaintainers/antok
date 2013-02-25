@@ -1,6 +1,7 @@
 
 #include<iostream>
 #include<string>
+#include<time.h>
 
 #include<TFile.h>
 #include<TH2D.h>
@@ -26,17 +27,6 @@ void fillFiveDimHist(std::string inFileName) {
 	TTree* inTree = (TTree*)inFile->Get("Standard Event Selection/USR55");
 	TFile* outFile = TFile::Open("bla.root", "RECREATE");
 	outFile->cd();
-
-	Int_t bins[5] = {50, 50, 400, 400, 50};
-	double_t xMin[5] = {-2, -2, -0.8, -0.8, 187};
-	double_t xMax[5] = {2, 2, 0.8, 0.8, 196};
-
-	THnSparseD* hist = new THnSparseD("beamHist", "beamHist", 5, bins, xMin, xMax);
-	TH1D* vtxX = new TH1D("vtxX", "vtxX", 10000, -2, 2);
-	TH1D* vtxY = new TH1D("vtxY", "vtxY", 10000, -2, 2);
-	TH1D* momX = new TH1D("momX", "momX", 50000, -0.8, 0.8);
-	TH1D* momY = new TH1D("momY", "momY", 50000, -0.8, 0.8);
-	TH1D* momZ = new TH1D("momZ", "momZ", 10000, 187, 196);
 
 	double px1, py1, pz1;
 	double px2, py2, pz2;
@@ -70,6 +60,14 @@ void fillFiveDimHist(std::string inFileName) {
 	particles.resize(6);
 	unsigned int entries = inTree->GetEntries();
 
+	double bx, by, bz;
+	TTree* outTree = new TTree("beamTree", "beamTree");
+	outTree->Branch("vertex_x_position", &primVx, "vertex_x_position/D");
+	outTree->Branch("vertex_y_position", &primVy, "vertex_y_position/D");
+	outTree->Branch("beam_momentum_x", &bx,"beam_momentum_x/D");
+	outTree->Branch("beam_momentum_y", &by,"beam_momentum_y/D");
+	outTree->Branch("beam_momentum_z", &bz,"beam_momentum_z/D");
+
 	for(unsigned int i = 0; i < entries; ++i) {
 
 		inTree->GetEntry(i);
@@ -86,40 +84,110 @@ void fillFiveDimHist(std::string inFileName) {
 		}
 		particles[0] = antok::get_beam_energy(TVector3(gradx, grady, 1.), pSum);
 		TVector3 beam = particles[0].Vect();
-		double bx = beam.X();
-		double by = beam.Y();
-		double bz = beam.Z();
+		bx = beam.X();
+		by = beam.Y();
+		bz = beam.Z();
 
-		double values[5] = {primVx, primVy, bx, by, bz};
-
-		vtxX->Fill(primVx);
-		vtxY->Fill(primVy);
-		momX->Fill(bx);
-		momY->Fill(by);
-		momZ->Fill(bz);
-
-		hist->Fill(values);
+		outTree->Fill();
 
 		if(i % 100000 == 0) {
-			std::cout<<"Entry "<<i<<" of "<<entries<<std::endl;
+			std::cout<<"Filling beamTree: Entry "<<i<<" of "<<entries<<std::endl;
 		}
 
 	}
 
-	hist->Projection(1, 0)->Write();
-	hist->Projection(3, 2)->Write();
-	hist->Projection(2, 1)->Write();
-	hist->Projection(2, 0)->Write();
-	hist->Projection(3, 1)->Write();
-	hist->Projection(3, 0)->Write();
-	hist->Projection(4, 0)->Write();
-	hist->Projection(4, 1)->Write();
-	hist->Projection(4, 2)->Write();
-	hist->Projection(4, 3)->Write();
+	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
+	TTree* sigmaTree = new TTree("sigmaTree", "sigmaTree");
+	outTree->Branch("vertex_x_position_sigma", &primVx_sigma, "vertex_x_position_sigma/D");
+	outTree->Branch("vertex_y_position_sigma", &primVy_sigma, "vertex_y_position_sigma/D");
+	outTree->Branch("beam_momentum_x_sigma", &bx_sigma,"beam_momentum_x_sigma/D");
+	outTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
+	outTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
 
-	std::cout<<"Histogram has "<<hist->GetNbins()<<" filled bins."<<std::endl;
+	for(unsigned int i = 0; i < entries; ++i) {
 
-	hist->Write();
+		outTree->GetEntry(i);
+		double refVX = primVx;
+		double refVY = primVy;
+		double refbx = bx;
+		double refby = by;
+		double refbz = bz;
+
+		time_t time_first = time(NULL);
+
+		const unsigned int NVALUES = 10;
+
+		std::vector<double> dists;
+		std::vector<int> closest_events;
+
+		for(unsigned int j = 0; j < entries; ++j) {
+
+			outTree->GetEntry(j);
+
+			double dist = std::sqrt( (primVx-refVX)*(primVx-refVX) +
+			                         (primVy-refVY)*(primVy-refVY) +
+			                         (bx-refbx)*(bx-refbx) +
+			                         (by-refby)*(by-refby) +
+			                         (bz-refbz)*(bz-refbz) );
+
+			if(dists.size() < NVALUES) {
+				dists.push_back(dist);
+				closest_events.push_back(j);
+			} else {
+				unsigned int max_k = 0;
+				double max = 0;
+				bool set = false;
+				for(unsigned int k = 0; k < NVALUES; ++k) {
+					if(not set && dist < dists[k]) {
+						set = true;
+						max = dists[k];
+						max_k = k;
+					}
+					if(set) {
+						if(dists[k] > max) {
+							max = dists[k];
+							max_k = k;
+						}
+					}
+				}
+				if(set) {
+					dists[max_k] = dist;
+					closest_events[max_k] = j;
+				}
+			}
+		}
+
+		primVx_sigma = 0;
+		primVy_sigma = 0;
+		bx_sigma = 0;
+		by_sigma = 0;
+		bz_sigma = 0;
+
+		for(unsigned int j = 0; j < NVALUES; ++j) {
+			int index = closest_events[j];
+			outTree->GetEntry(index);
+			primVx_sigma += std::fabs(primVx - refVX);
+			primVy_sigma += std::fabs(primVy - refVY);
+			bx_sigma += std::fabs(bx - refbx);
+			by_sigma += std::fabs(by - refby);
+			bz_sigma += std::fabs(bz - refbz);
+		}
+		primVx_sigma /= NVALUES;
+		primVy_sigma /= NVALUES;
+		bx_sigma /= NVALUES;
+		by_sigma /= NVALUES;
+		bz_sigma /= NVALUES;
+		sigmaTree->Fill();
+
+		time_t time_last = time(NULL);
+		double seconds = difftime(time_last, time_first);
+
+		std::cout<<"Filling sigmaTree: Entry "<<i<<" of "<<entries<<" (took "<<seconds<<" seconds)"<<std::endl;
+
+	}
+
+	outTree->AddFriend(sigmaTree);
+
 	outFile->Write();
 	outFile->Close();
 
