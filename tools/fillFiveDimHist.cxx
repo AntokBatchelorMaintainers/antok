@@ -28,8 +28,8 @@ void fillFiveDimHist(std::string inFileName) {
 	outFile->cd();
 
 	Int_t bins[5] = {50, 50, 400, 400, 50};
-	double_t xMin[5] = {-2, -2, -0.8, -0.8, 187};
-	double_t xMax[5] = {2, 2, 0.8, 0.8, 196};
+	Double_t xMin[5] = {-2, -2, -0.8, -0.8, 187};
+	Double_t xMax[5] = {2, 2, 0.8, 0.8, 196};
 
 	THnSparseD* hist = new THnSparseD("beamHist", "beamHist", 5, bins, xMin, xMax);
 	TH1D* vtxX = new TH1D("vtxX", "vtxX", 10000, -2, 2);
