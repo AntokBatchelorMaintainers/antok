@@ -27,11 +27,16 @@ void fillFiveDimHist(std::string inFileName) {
 	TFile* outFile = TFile::Open("bla.root", "RECREATE");
 	outFile->cd();
 
-	Int_t bins[5] = {5000, 5000, 5000, 5000, 5000};
+	Int_t bins[5] = {50, 50, 400, 400, 50};
 	double_t xMin[5] = {-2, -2, -0.8, -0.8, 187};
 	double_t xMax[5] = {2, 2, 0.8, 0.8, 196};
 
 	THnSparseD* hist = new THnSparseD("beamHist", "beamHist", 5, bins, xMin, xMax);
+	TH1D* vtxX = new TH1D("vtxX", "vtxX", 10000, -2, 2);
+	TH1D* vtxY = new TH1D("vtxY", "vtxY", 10000, -2, 2);
+	TH1D* momX = new TH1D("momX", "momX", 50000, -0.8, 0.8);
+	TH1D* momY = new TH1D("momY", "momY", 50000, -0.8, 0.8);
+	TH1D* momZ = new TH1D("momZ", "momZ", 10000, 187, 196);
 
 	double px1, py1, pz1;
 	double px2, py2, pz2;
@@ -87,22 +92,32 @@ void fillFiveDimHist(std::string inFileName) {
 
 		double values[5] = {primVx, primVy, bx, by, bz};
 
+		vtxX->Fill(primVx);
+		vtxY->Fill(primVy);
+		momX->Fill(bx);
+		momY->Fill(by);
+		momZ->Fill(bz);
+
 		hist->Fill(values);
 
 		if(i % 100000 == 0) {
 			std::cout<<"Entry "<<i<<" of "<<entries<<std::endl;
 		}
 
-//		if(i > 1000000) break;
-
 	}
 
 	hist->Projection(1, 0)->Write();
 	hist->Projection(3, 2)->Write();
+	hist->Projection(2, 1)->Write();
+	hist->Projection(2, 0)->Write();
+	hist->Projection(3, 1)->Write();
+	hist->Projection(3, 0)->Write();
 	hist->Projection(4, 0)->Write();
 	hist->Projection(4, 1)->Write();
 	hist->Projection(4, 2)->Write();
 	hist->Projection(4, 3)->Write();
+
+	std::cout<<"Histogram has "<<hist->GetNbins()<<" filled bins."<<std::endl;
 
 	hist->Write();
 	outFile->Write();
