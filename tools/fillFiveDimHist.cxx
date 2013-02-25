@@ -38,6 +38,8 @@ void fillFiveDimHist(std::string inFileName) {
 	TH1D* momY = new TH1D("momY", "momY", 50000, -0.8, 0.8);
 	TH1D* momZ = new TH1D("momZ", "momZ", 10000, 187, 196);
 
+	TH1D* edgeLength = new TH1D("edgeLength", "edgeLength", 501, -0.5, 500.5);
+
 	double px1, py1, pz1;
 	double px2, py2, pz2;
 	double px3, py3, pz3;
@@ -66,6 +68,14 @@ void fillFiveDimHist(std::string inFileName) {
 	inTree->SetBranchAddress("X_primV", &primVx);
 	inTree->SetBranchAddress("Y_primV", &primVy);
 
+	double bx, by, bz;
+	TTree* outTree = new TTree("beamTree", "beamTree");
+	outTree->Branch("vertex_x_position", &primVx, "vertex_x_position/D");
+	outTree->Branch("vertex_y_position", &primVy, "vertex_y_position/D");
+	outTree->Branch("beam_momentum_x", &bx,"beam_momentum_x/D");
+	outTree->Branch("beam_momentum_y", &by,"beam_momentum_y/D");
+	outTree->Branch("beam_momentum_z", &bz,"beam_momentum_z/D");
+
 	std::vector<TLorentzVector> particles;
 	particles.resize(6);
 	unsigned int entries = inTree->GetEntries();
@@ -86,9 +96,9 @@ void fillFiveDimHist(std::string inFileName) {
 		}
 		particles[0] = antok::get_beam_energy(TVector3(gradx, grady, 1.), pSum);
 		TVector3 beam = particles[0].Vect();
-		double bx = beam.X();
-		double by = beam.Y();
-		double bz = beam.Z();
+		bx = beam.X();
+		by = beam.Y();
+		bz = beam.Z();
 
 		double values[5] = {primVx, primVy, bx, by, bz};
 
@@ -99,10 +109,13 @@ void fillFiveDimHist(std::string inFileName) {
 		momZ->Fill(bz);
 
 		hist->Fill(values);
+		outTree->Fill();
 
 		if(i % 100000 == 0) {
 			std::cout<<"Entry "<<i<<" of "<<entries<<std::endl;
 		}
+
+//		if(i == 50000) break;
 
 	}
 
@@ -119,6 +132,91 @@ void fillFiveDimHist(std::string inFileName) {
 
 	std::cout<<"Histogram has "<<hist->GetNbins()<<" filled bins."<<std::endl;
 
+	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
+	TTree* sigmaTree = new TTree("sigmaTree", "sigmaTree");
+	outTree->Branch("vertex_x_position_sigma", &primVx_sigma, "vertex_x_position_sigma/D");
+	outTree->Branch("vertex_y_position_sigma", &primVy_sigma, "vertex_y_position_sigma/D");
+	outTree->Branch("beam_momentum_x_sigma", &bx_sigma,"beam_momentum_x_sigma/D");
+	outTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
+	outTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
+
+
+	const double MIN_ENTRIES = 10.;
+
+	for(unsigned int i = 0; i < entries; ++i) {
+
+		outTree->GetEntry(i);
+		double values[5] = {primVx, primVy, bx, by, bz};
+		int bin = hist->GetBin(values, false);
+		int location[5] = {0, 0, 0, 0, 0};
+		double binContent = hist->GetBinContent(bin, location);
+		int cubeSize = 1;
+		if(binContent < MIN_ENTRIES) {
+			std::pair<int, int> verXRange(location[0], location[0]);
+			std::pair<int, int> verYRange(location[1], location[1]);
+			std::pair<int, int> momXRange(location[2], location[2]);
+			std::pair<int, int> momYRange(location[3], location[3]);
+			std::pair<int, int> momZRange(location[4], location[4]);
+//int iter = 0;
+			while(binContent < MIN_ENTRIES) {
+//std::cout<<"iter: "<<iter++<<" (binContent="<<binContent<<")"<<std::endl;
+//				binContent = 0;
+				verXRange.first -= 1; verXRange.second += 1;
+				verYRange.first -= 1; verYRange.second += 1;
+				momXRange.first -= 1; momXRange.second += 1;
+				momYRange.first -= 1; momYRange.second += 1;
+				momZRange.first -= 1; momZRange.second += 1;
+				int step = verXRange.second - verXRange.first;
+				cubeSize = step + 1;
+//int numCubes = 0;
+//std::cout<<"momYRange = ["<<momYRange.first<<", "<<momYRange.second<<"]"<<std::endl;
+				for(int dim = 0; dim < 5; ++dim) {
+					for(int l = (dim > 0) ? verXRange.first + 1 : verXRange.first; l <= ((dim > 0) ? verXRange.second - 1 : verXRange.second); l += (dim == 0) ? step : 1) {
+						for(int m = (dim > 1) ? verYRange.first + 1 : verYRange.first; m <= ((dim > 1) ? verYRange.second - 1 : verYRange.second); m += (dim == 1) ? step : 1) {
+							for(int n = (dim > 2) ? momXRange.first + 1 : momXRange.first; n <= ((dim > 2) ? momXRange.second - 1 : momXRange.second); n += (dim == 2) ? step : 1) {
+								for(int o = (dim > 3) ? momYRange.first + 1 : momYRange.first; o <= ((dim > 3) ? momYRange.second - 1 : momYRange.second); o += (dim == 3) ? step : 1) {
+									for(int p = momZRange.first; p <= momZRange.second; p += (dim == 4) ? step : 1) {
+//std::cout<<"{"<<l<<", "<<m<<", "<<n<<", "<<o<<", "<<p<<"}"<<std::endl;
+//std::cout<<(o<=((dim > 3) ? momYRange.second - 1 : momYRange.second))<<std::endl;
+										int coord[5] = {l, m, n, o, p};
+										int binnumber = hist->GetBin(coord, false);
+										if(binnumber > 0) {
+											binContent += hist->GetBinContent(bin);
+										}
+//										numCubes++;
+									}
+								}
+							}
+						}
+					}
+				}
+/*			int cubSize = (2 * (iter - 1)) + 3;
+			int inCubSize = (2 * (iter - 2)) + 3;
+			std::cout<<cubSize<<std::endl;
+			std::cout<<inCubSize<<std::endl;
+std::cout<<"numCubes="<<numCubes<<std::endl;
+			assert(numCubes == (cubSize*cubSize*cubSize*cubSize*cubSize)-(inCubSize*inCubSize*inCubSize*inCubSize*inCubSize));
+*/			}
+			if(i > 10000) break;
+//			std::cout<<"finished with binContent = "<<binContent<<std::endl;
+		}
+		edgeLength->Fill(cubeSize);
+		primVx_sigma = (cubeSize * (hist->GetAxis(0)->GetBinWidth(location[0]))) / binContent;
+		primVy_sigma = (cubeSize * (hist->GetAxis(1)->GetBinWidth(location[1]))) / binContent;
+		bx_sigma = (cubeSize * (hist->GetAxis(2)->GetBinWidth(location[2]))) / binContent;
+		by_sigma = (cubeSize * (hist->GetAxis(3)->GetBinWidth(location[3]))) / binContent;
+		bz_sigma = (cubeSize * (hist->GetAxis(4)->GetBinWidth(location[4]))) / binContent;
+//std::cout<<"primVx_sigma = "<<primVx_sigma<<std::endl;
+//std::cout<<"primVy_sigma = "<<primVy_sigma<<std::endl;
+//std::cout<<"bx_sigma = "<<bx_sigma<<std::endl;
+//std::cout<<"by_sigma = "<<by_sigma<<std::endl;
+//std::cout<<"bz_sigma = "<<bz_sigma<<std::endl;
+		sigmaTree->Fill();
+//std::cout<<"cubeSize = "<<cubeSize<<std::endl;
+if(not (i % 100)) std::cout<<i<<std::endl;
+	}
+
+	outTree->AddFriend(sigmaTree);
 	hist->Write();
 	outFile->Write();
 	outFile->Close();
