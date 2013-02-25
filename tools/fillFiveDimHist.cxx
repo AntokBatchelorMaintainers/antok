@@ -115,8 +115,6 @@ void fillFiveDimHist(std::string inFileName) {
 			std::cout<<"Entry "<<i<<" of "<<entries<<std::endl;
 		}
 
-//		if(i == 50000) break;
-
 	}
 
 	hist->Projection(1, 0)->Write();
@@ -140,7 +138,6 @@ void fillFiveDimHist(std::string inFileName) {
 	outTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
 	outTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
 
-
 	const double MIN_ENTRIES = 10.;
 
 	for(unsigned int i = 0; i < entries; ++i) {
@@ -157,10 +154,9 @@ void fillFiveDimHist(std::string inFileName) {
 			std::pair<int, int> momXRange(location[2], location[2]);
 			std::pair<int, int> momYRange(location[3], location[3]);
 			std::pair<int, int> momZRange(location[4], location[4]);
-//int iter = 0;
+
 			while(binContent < MIN_ENTRIES) {
-//std::cout<<"iter: "<<iter++<<" (binContent="<<binContent<<")"<<std::endl;
-//				binContent = 0;
+
 				verXRange.first -= 1; verXRange.second += 1;
 				verYRange.first -= 1; verYRange.second += 1;
 				momXRange.first -= 1; momXRange.second += 1;
@@ -168,37 +164,25 @@ void fillFiveDimHist(std::string inFileName) {
 				momZRange.first -= 1; momZRange.second += 1;
 				int step = verXRange.second - verXRange.first;
 				cubeSize = step + 1;
-//int numCubes = 0;
-//std::cout<<"momYRange = ["<<momYRange.first<<", "<<momYRange.second<<"]"<<std::endl;
+
 				for(int dim = 0; dim < 5; ++dim) {
 					for(int l = (dim > 0) ? verXRange.first + 1 : verXRange.first; l <= ((dim > 0) ? verXRange.second - 1 : verXRange.second); l += (dim == 0) ? step : 1) {
 						for(int m = (dim > 1) ? verYRange.first + 1 : verYRange.first; m <= ((dim > 1) ? verYRange.second - 1 : verYRange.second); m += (dim == 1) ? step : 1) {
 							for(int n = (dim > 2) ? momXRange.first + 1 : momXRange.first; n <= ((dim > 2) ? momXRange.second - 1 : momXRange.second); n += (dim == 2) ? step : 1) {
 								for(int o = (dim > 3) ? momYRange.first + 1 : momYRange.first; o <= ((dim > 3) ? momYRange.second - 1 : momYRange.second); o += (dim == 3) ? step : 1) {
 									for(int p = momZRange.first; p <= momZRange.second; p += (dim == 4) ? step : 1) {
-//std::cout<<"{"<<l<<", "<<m<<", "<<n<<", "<<o<<", "<<p<<"}"<<std::endl;
-//std::cout<<(o<=((dim > 3) ? momYRange.second - 1 : momYRange.second))<<std::endl;
 										int coord[5] = {l, m, n, o, p};
 										int binnumber = hist->GetBin(coord, false);
 										if(binnumber > 0) {
 											binContent += hist->GetBinContent(bin);
 										}
-//										numCubes++;
 									}
 								}
 							}
 						}
 					}
 				}
-/*			int cubSize = (2 * (iter - 1)) + 3;
-			int inCubSize = (2 * (iter - 2)) + 3;
-			std::cout<<cubSize<<std::endl;
-			std::cout<<inCubSize<<std::endl;
-std::cout<<"numCubes="<<numCubes<<std::endl;
-			assert(numCubes == (cubSize*cubSize*cubSize*cubSize*cubSize)-(inCubSize*inCubSize*inCubSize*inCubSize*inCubSize));
-*/			}
-			if(i > 10000) break;
-//			std::cout<<"finished with binContent = "<<binContent<<std::endl;
+			}
 		}
 		edgeLength->Fill(cubeSize);
 		primVx_sigma = (cubeSize * (hist->GetAxis(0)->GetBinWidth(location[0]))) / binContent;
@@ -206,14 +190,12 @@ std::cout<<"numCubes="<<numCubes<<std::endl;
 		bx_sigma = (cubeSize * (hist->GetAxis(2)->GetBinWidth(location[2]))) / binContent;
 		by_sigma = (cubeSize * (hist->GetAxis(3)->GetBinWidth(location[3]))) / binContent;
 		bz_sigma = (cubeSize * (hist->GetAxis(4)->GetBinWidth(location[4]))) / binContent;
-//std::cout<<"primVx_sigma = "<<primVx_sigma<<std::endl;
-//std::cout<<"primVy_sigma = "<<primVy_sigma<<std::endl;
-//std::cout<<"bx_sigma = "<<bx_sigma<<std::endl;
-//std::cout<<"by_sigma = "<<by_sigma<<std::endl;
-//std::cout<<"bz_sigma = "<<bz_sigma<<std::endl;
 		sigmaTree->Fill();
-//std::cout<<"cubeSize = "<<cubeSize<<std::endl;
-if(not (i % 100)) std::cout<<i<<std::endl;
+
+		if(not (i % 100)) {
+			std::cout<<i<<std::endl;
+		}
+
 	}
 
 	outTree->AddFriend(sigmaTree);
