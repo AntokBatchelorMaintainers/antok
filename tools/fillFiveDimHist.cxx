@@ -131,12 +131,16 @@ void fillFiveDimHist(std::string inFileName) {
 	std::cout<<"Histogram has "<<hist->GetNbins()<<" filled bins."<<std::endl;
 
 	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
+	int cubeSize = 1;
+	double binContent = 0;
 	TTree* sigmaTree = new TTree("sigmaTree", "sigmaTree");
-	outTree->Branch("vertex_x_position_sigma", &primVx_sigma, "vertex_x_position_sigma/D");
-	outTree->Branch("vertex_y_position_sigma", &primVy_sigma, "vertex_y_position_sigma/D");
-	outTree->Branch("beam_momentum_x_sigma", &bx_sigma,"beam_momentum_x_sigma/D");
-	outTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
-	outTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
+	sigmaTree->Branch("vertex_x_position_sigma", &primVx_sigma, "vertex_x_position_sigma/D");
+	sigmaTree->Branch("vertex_y_position_sigma", &primVy_sigma, "vertex_y_position_sigma/D");
+	sigmaTree->Branch("beam_momentum_x_sigma", &bx_sigma,"beam_momentum_x_sigma/D");
+	sigmaTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
+	sigmaTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
+	sigmaTree->Branch("cube_edge_length", &cubeSize, "cube_edge_length/I");
+	sigmaTree->Branch("bin_content", &binContent, "bin_content/D");
 
 	const double MIN_ENTRIES = 10.;
 
@@ -146,8 +150,8 @@ void fillFiveDimHist(std::string inFileName) {
 		double values[5] = {primVx, primVy, bx, by, bz};
 		int bin = hist->GetBin(values, false);
 		int location[5] = {0, 0, 0, 0, 0};
-		double binContent = hist->GetBinContent(bin, location);
-		int cubeSize = 1;
+		binContent = hist->GetBinContent(bin, location);
+		cubeSize = 1;
 		if(binContent < MIN_ENTRIES) {
 			std::pair<int, int> verXRange(location[0], location[0]);
 			std::pair<int, int> verYRange(location[1], location[1]);
