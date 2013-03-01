@@ -224,18 +224,11 @@ void fillFiveDimHist(std::string inFileName) {
 	TFile* outFile = TFile::Open("bla.root", "RECREATE");
 	outFile->cd();
 
-//	Int_t bins[5] = {50, 50, 400, 400, 50};
-//	Double_t xMin[5] = {-2, -2, -0.8, -0.8, 187};
-//	Double_t xMax[5] = {2, 2, 0.8, 0.8, 196};
-
-//	THnSparseD* hist = new THnSparseD("beamHist", "beamHist", 5, bins, xMin, xMax);
 	TH1D* vtxX = new TH1D("vtxX", "vtxX", 10000, -2, 2);
 	TH1D* vtxY = new TH1D("vtxY", "vtxY", 10000, -2, 2);
 	TH1D* momX = new TH1D("momX", "momX", 50000, -0.8, 0.8);
 	TH1D* momY = new TH1D("momY", "momY", 50000, -0.8, 0.8);
 	TH1D* momZ = new TH1D("momZ", "momZ", 10000, 187, 196);
-
-//	TH1D* edgeLength = new TH1D("edgeLength", "edgeLength", 501, -0.5, 500.5);
 
 	double px1, py1, pz1;
 	double px2, py2, pz2;
@@ -298,15 +291,12 @@ void fillFiveDimHist(std::string inFileName) {
 		by = beam.Y();
 		bz = beam.Z();
 
-//		double values[5] = {primVx, primVy, bx, by, bz};
-
 		vtxX->Fill(primVx);
 		vtxY->Fill(primVy);
 		momX->Fill(bx);
 		momY->Fill(by);
 		momZ->Fill(bz);
 
-//		hist->Fill(values);
 		tempTree->Fill();
 
 		if(i % 100000 == 0) {
@@ -314,20 +304,6 @@ void fillFiveDimHist(std::string inFileName) {
 		}
 
 	}
-/*
-	hist->Projection(1, 0)->Write();
-	hist->Projection(3, 2)->Write();
-	hist->Projection(2, 1)->Write();
-	hist->Projection(2, 0)->Write();
-	hist->Projection(3, 1)->Write();
-	hist->Projection(3, 0)->Write();
-	hist->Projection(4, 0)->Write();
-	hist->Projection(4, 1)->Write();
-	hist->Projection(4, 2)->Write();
-	hist->Projection(4, 3)->Write();
-
-	std::cout<<"Histogram has "<<hist->GetNbins()<<" filled bins."<<std::endl;
-*/
 
 	std::vector<double> lowerCorner(5, 0);
 	std::vector<double> upperCorner(5, 0);
@@ -367,17 +343,7 @@ void fillFiveDimHist(std::string inFileName) {
 	getAdaptiveBins(adaptiveBins, bin, tempTree);
 	unsigned int nBins = adaptiveBins.size();
 	std::cout<<"Split phase space in "<<nBins<<" bins."<<std::endl;
-/*
-	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
-	int binContent = 0;
-	TTree* sigmaTree = new TTree("sigmaTree", "sigmaTree");
-	sigmaTree->Branch("vertex_x_position_sigma", &primVx_sigma, "vertex_x_position_sigma/D");
-	sigmaTree->Branch("vertex_y_position_sigma", &primVy_sigma, "vertex_y_position_sigma/D");
-	sigmaTree->Branch("beam_momentum_x_sigma", &bx_sigma,"beam_momentum_x_sigma/D");
-	sigmaTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
-	sigmaTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
-	sigmaTree->Branch("bin_content", &binContent, "bin_content/I");
-*/
+
 	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
 	int binContent = 0;
 	outTree->SetBranchAddress("vertex_x_position", &primVx);
@@ -417,113 +383,6 @@ void fillFiveDimHist(std::string inFileName) {
 	}
 	tempTree->Delete("all");
 
-/*	for(unsigned int i = 0; i < entries; ++i) {
-		tempTree->GetEntry(i);
-		std::vector<double> x(5, 0);
-		x[0] = primVx;
-		x[1] = primVx;
-		x[2] = bx;
-		x[3] = by;
-		x[4] = bz;
-		bool found = false;
-		for(std::map<fiveDimBin, TTree*>::const_iterator binIt = adaptiveBins.begin(); binIt != adaptiveBins.end(); ++binIt) {
-			fiveDimBin currentBin = binIt->first;
-			if(currentBin.inBin(x)) {
-				binContent = binIt->second->GetEntries();
-				primVx_sigma = (currentBin._b[0] - currentBin._a[0]) / entries;
-				primVy_sigma = (currentBin._b[1] - currentBin._a[1]) / entries;
-				bx_sigma = (currentBin._b[2] - currentBin._a[2]) / entries;
-				by_sigma = (currentBin._b[3] - currentBin._a[3]) / entries;
-				bz_sigma = (currentBin._b[4] - currentBin._a[4]) / entries;
-				sigmaTree->Fill();
-				found = true;
-				break;
-			}
-		}
-		assert(found);
-		if(i % 100000 == 0) {
-			std::cout<<"Entry "<<i<<" of "<<entries<<std::endl;
-		}
-		std::cout<<i<<std::endl;
-	}
-	tempTree->AddFriend(sigmaTree);
-*/
-/*
-	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
-	int cubeSize = 1;
-	double binContent = 0;
-	TTree* sigmaTree = new TTree("sigmaTree", "sigmaTree");
-	sigmaTree->Branch("vertex_x_position_sigma", &primVx_sigma, "vertex_x_position_sigma/D");
-	sigmaTree->Branch("vertex_y_position_sigma", &primVy_sigma, "vertex_y_position_sigma/D");
-	sigmaTree->Branch("beam_momentum_x_sigma", &bx_sigma,"beam_momentum_x_sigma/D");
-	sigmaTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
-	sigmaTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
-	sigmaTree->Branch("cube_edge_length", &cubeSize, "cube_edge_length/I");
-	sigmaTree->Branch("bin_content", &binContent, "bin_content/D");
-
-	const double MIN_ENTRIES = 10.;
-
-	for(unsigned int i = 0; i < entries; ++i) {
-
-		outTree->GetEntry(i);
-		double values[5] = {primVx, primVy, bx, by, bz};
-		int bin = hist->GetBin(values, false);
-		int location[5] = {0, 0, 0, 0, 0};
-		binContent = hist->GetBinContent(bin, location);
-		cubeSize = 1;
-		if(binContent < MIN_ENTRIES) {
-			std::pair<int, int> verXRange(location[0], location[0]);
-			std::pair<int, int> verYRange(location[1], location[1]);
-			std::pair<int, int> momXRange(location[2], location[2]);
-			std::pair<int, int> momYRange(location[3], location[3]);
-			std::pair<int, int> momZRange(location[4], location[4]);
-
-			while(binContent < MIN_ENTRIES) {
-
-				verXRange.first -= 1; verXRange.second += 1;
-				verYRange.first -= 1; verYRange.second += 1;
-				momXRange.first -= 1; momXRange.second += 1;
-				momYRange.first -= 1; momYRange.second += 1;
-				momZRange.first -= 1; momZRange.second += 1;
-				int step = verXRange.second - verXRange.first;
-				cubeSize = step + 1;
-
-				for(int dim = 0; dim < 5; ++dim) {
-					for(int l = (dim > 0) ? verXRange.first + 1 : verXRange.first; l <= ((dim > 0) ? verXRange.second - 1 : verXRange.second); l += (dim == 0) ? step : 1) {
-						for(int m = (dim > 1) ? verYRange.first + 1 : verYRange.first; m <= ((dim > 1) ? verYRange.second - 1 : verYRange.second); m += (dim == 1) ? step : 1) {
-							for(int n = (dim > 2) ? momXRange.first + 1 : momXRange.first; n <= ((dim > 2) ? momXRange.second - 1 : momXRange.second); n += (dim == 2) ? step : 1) {
-								for(int o = (dim > 3) ? momYRange.first + 1 : momYRange.first; o <= ((dim > 3) ? momYRange.second - 1 : momYRange.second); o += (dim == 3) ? step : 1) {
-									for(int p = momZRange.first; p <= momZRange.second; p += (dim == 4) ? step : 1) {
-										int coord[5] = {l, m, n, o, p};
-										int binnumber = hist->GetBin(coord, false);
-										if(binnumber > 0) {
-											binContent += hist->GetBinContent(bin);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		edgeLength->Fill(cubeSize);
-		primVx_sigma = (cubeSize * (hist->GetAxis(0)->GetBinWidth(location[0]))) / binContent;
-		primVy_sigma = (cubeSize * (hist->GetAxis(1)->GetBinWidth(location[1]))) / binContent;
-		bx_sigma = (cubeSize * (hist->GetAxis(2)->GetBinWidth(location[2]))) / binContent;
-		by_sigma = (cubeSize * (hist->GetAxis(3)->GetBinWidth(location[3]))) / binContent;
-		bz_sigma = (cubeSize * (hist->GetAxis(4)->GetBinWidth(location[4]))) / binContent;
-		sigmaTree->Fill();
-
-		if(not (i % 100)) {
-			std::cout<<i<<std::endl;
-		}
-
-	}
-
-	outTree->AddFriend(sigmaTree);
-*/
-//	hist->Write();
 	outFile->Write();
 	outFile->Close();
 
