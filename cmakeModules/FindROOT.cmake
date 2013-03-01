@@ -44,6 +44,7 @@
 #//      ROOT_LIBRARY_DIR       - ROOT library directory
 #//      ROOT_LIBRARIES         - linker flags for ROOT libraries
 #//      ROOT_AUX_LIBRARIES     - linker flags for auxiliary libraries
+#//      ROOT_EVE_LIBRARIES     - linker flags for auxiliary libraries
 #//      ROOTCINT_EXECUTABLE    - path to rootcint program
 #//      ROOT_MAJOR_VERSION     - ROOT major version
 #//      ROOT_MINOR_VERSION     - ROOT minor version
@@ -158,6 +159,11 @@ else()
     OUTPUT_VARIABLE ROOT_AUX_LIBRARIES
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+  execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --evelibs
+    OUTPUT_VARIABLE ROOT_EVE_LIBRARIES
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
   find_program(ROOTCINT_EXECUTABLE rootcint)
   if(NOT ROOTCINT_EXECUTABLE)
     set(ROOT_FOUND FALSE)
@@ -171,7 +177,7 @@ else()
     ROOT_MINOR_VERSION "${ROOT_VERSION}")
   string(REGEX REPLACE "^[0-9]+\\.[0-9][0-9]+\\/([0-9][0-9]+).*" "\\1"
     ROOT_PATCH_VERSION "${ROOT_VERSION}")
-	set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
+    set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
   # compare version
   if(ROOT_FIND_VERSION_EXACT)
     if(NOT ROOT_VERSION VERSION_EQUAL ROOT_FIND_VERSION)
@@ -244,12 +250,38 @@ if(ROOT_FOUND)
       string(REGEX REPLACE "^-.(.*)$" "\\1" _LIBNAME "${_LIBNAME}")
       # check whether libraries exist
       find_library(_AUX_LIB_${_LIBNAME}
-				NAMES ${_LIBNAME})
+                NAMES ${_LIBNAME}
+                HINTS ${ROOT_LIBRARY_DIR})
       if(NOT _AUX_LIB_${_LIBNAME})
-				set(ROOT_FOUND FALSE)
-				set(ROOT_ERROR_REASON "${ROOT_ERROR_REASON} Cannot find ROOT library '${_LIBNAME}'.")
+                set(ROOT_FOUND FALSE)
+                set(ROOT_ERROR_REASON "${ROOT_ERROR_REASON} Cannot find ROOT library '${_LIBNAME}'.")
       else()
-				list(APPEND ROOT_LIBS ${_AUX_LIB_${_LIBNAME}})
+                list(APPEND ROOT_LIBS ${_AUX_LIB_${_LIBNAME}})
+                list(APPEND ROOT_LIBRARIES -l${_LIBNAME})
+      endif()
+    endif()
+  endforeach()
+
+  # create list of external libraries from root-config output, for evelibs this time
+  separate_arguments(ROOT_EVE_LIBRARIES)
+  # remove first -L entry
+  list(REMOVE_AT ROOT_EVE_LIBRARIES 0)
+  # loop over -l entries
+  foreach(_LIBRARY ${ROOT_EVE_LIBRARIES})
+    # extract library name from compiler flag
+    string(REGEX MATCH "^-l...(.*)$" _LIBNAME "${_LIBRARY}")
+    if(_LIBNAME)
+      string(REGEX REPLACE "^-.(.*)$" "\\1" _LIBNAME "${_LIBNAME}")
+      # check whether libraries exist
+      find_library(_EVE_LIB_${_LIBNAME}
+                NAMES ${_LIBNAME}
+                HINTS ${ROOT_LIBRARY_DIR})
+      if(NOT _EVE_LIB_${_LIBNAME})
+                set(ROOT_FOUND FALSE)
+                set(ROOT_ERROR_REASON "${ROOT_ERROR_REASON} Cannot find ROOT library '${_LIBNAME}'.")
+      else()
+                list(APPEND ROOT_LIBS ${_EVE_LIB_${_LIBNAME}})
+                list(APPEND ROOT_LIBRARIES -l${_LIBNAME})
       endif()
     endif()
   endforeach()
@@ -264,7 +296,7 @@ mark_as_advanced(
   ROOT_LIBRARIES
   ROOT_LIBS
   ROOT_DEFINITIONS
-	)
+)
 
 
 # report result
@@ -290,7 +322,7 @@ function(root_generate_dictionary DICT_FILE INCLUDE_DIRS HEADER_FILES LINKDEF_FI
 
   if(NOT ROOT_FOUND)
     message(FATAL_ERROR "Impossible to generate dictionary '${DICT_FILE}', "
-			"because no ROOT installation was found.")
+            "because no ROOT installation was found.")
   endif()
 
   # prepare command line argument for compiler definitions (put -D in front)
@@ -322,6 +354,6 @@ function(root_generate_dictionary DICT_FILE INCLUDE_DIRS HEADER_FILES LINKDEF_FI
     COMMAND ${ROOTCINT_EXECUTABLE}
     ARGS -f ${DICT_FILE} -c -DHAVE_CONFIG_H ${_DEFINITIONS} ${_INCLUDES} ${_HEADERS} ${LINKDEF_FILE}
     DEPENDS ${HEADER_FILES} ${LINKDEF_FILE}
-		)
+  )
 
 endfunction(root_generate_dictionary)
