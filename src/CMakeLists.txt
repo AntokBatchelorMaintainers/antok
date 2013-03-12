@@ -8,6 +8,7 @@ include_directories(${INCLUDE_DIRECTORIES})
 
 set(SOURCES
 	basic_calcs.cxx
+	beamfileGeneratorHelpers.cxx
 	constants.cxx
 	cutter.cxx
 	data.cxx
