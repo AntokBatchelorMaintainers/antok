@@ -1,9 +1,8 @@
 #include<beamfileGeneratorHelpers.h>
 
+#include<algorithm>
+#include<assert.h>
 #include<cmath>
-
-#include<TTree.h>
-#include<TTreeIndex.h>
 
 antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
                                                  double a1,
@@ -78,75 +77,73 @@ std::ostream& antok::beamfileGenerator::fiveDimBin::print(std::ostream& out) con
 	return out;
 }
 
-void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<TTree*, antok::beamfileGenerator::fiveDimBin> >& bins,
+int antok::beamfileGenerator::fiveDimCoord::_orderDim = 0;
+
+antok::beamfileGenerator::fiveDimCoord::fiveDimCoord()
+{
+	_coords.resize(5, 0.);
+}
+
+antok::beamfileGenerator::fiveDimCoord::fiveDimCoord(double x0, double x1, double x2, double x3, double x4)
+{
+	_coords.resize(5, 0.);
+	_coords[0] = x0;
+	_coords[1] = x1;
+	_coords[2] = x2;
+	_coords[3] = x3;
+	_coords[4] = x4;
+}
+
+bool antok::beamfileGenerator::fiveDimCoord::operator<(const antok::beamfileGenerator::fiveDimCoord& rhs) const
+{
+	return _coords[_orderDim] < rhs._coords[_orderDim];
+}
+
+namespace {
+
+	struct __compareCoords {
+		bool operator ()(antok::beamfileGenerator::fiveDimCoord *lhs, antok::beamfileGenerator::fiveDimCoord *rhs)
+		{
+			return *lhs < *rhs;
+		}
+	};
+
+}
+
+void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
+                                                         antok::beamfileGenerator::fiveDimBin> >& bins,
                                                const antok::beamfileGenerator::fiveDimBin& bin,
-                                               TTree* inputTree,
-                                               unsigned int dim,
+                                               std::vector<antok::beamfileGenerator::fiveDimCoord*>* inputVector,
+                                               int dim,
                                                bool debug)
 {
-	static bool first = true;
-	static std::vector<std::string> BRANCH_NAMES;
-	if(first) {
-		BRANCH_NAMES.resize(5);
-		BRANCH_NAMES[0] = "vertex_x_position";
-		BRANCH_NAMES[1] = "vertex_y_position";
-		BRANCH_NAMES[2] = "beam_momentum_x";
-		BRANCH_NAMES[3] = "beam_momentum_y";
-		BRANCH_NAMES[4] = "beam_momentum_z";
-	}
-	long entries = inputTree->GetEntries();
+	long entries = inputVector->size();
 	if(debug) {
 		std::cout<<"------------------------------------------------------"<<std::endl;
 		std::cout<<"called with " << entries << " entries." << std::endl;
 		std::cout<<"input bin:"<<std::endl;
 		bin.print(std::cout);
 	}
-	if(entries < (2 * MIN_ENTRIES)) {
-		bins.push_back(std::pair<TTree*, antok::beamfileGenerator::fiveDimBin>(inputTree, bin));
+	if(entries < (2 * antok::beamfileGenerator::MIN_ENTRIES)) {
+		bins.push_back(std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
+				                 antok::beamfileGenerator::fiveDimBin>(inputVector, bin));
 	} else {
 		antok::beamfileGenerator::fiveDimBin newBin1;
 		antok::beamfileGenerator::fiveDimBin newBin2;
-		TTree* inputTree1 = 0;
-		TTree* inputTree2 = 0;
+		std::vector<antok::beamfileGenerator::fiveDimCoord*>* inputVector1 = 0;
+		std::vector<antok::beamfileGenerator::fiveDimCoord*>* inputVector2 = 0;
 		{
-			std::vector<double> x(5, 0);
-			for(unsigned int i = 0; i < 5; ++i) {
-				inputTree->SetBranchAddress(BRANCH_NAMES[i].c_str(), &x[i]);
-			}
-			TTreeIndex* index = 0;
-			switch(dim) {
-				case 0:
-					inputTree->BuildIndex("0", "vertex_x_position*1000000000000");
-					break;
-				case 1:
-					inputTree->BuildIndex("0", "vertex_y_position*1000000000000");
-					break;
-				case 2:
-					inputTree->BuildIndex("0", "beam_momentum_x*1000000000000");
-					break;
-				case 3:
-					inputTree->BuildIndex("0", "beam_momentum_y*1000000000000");
-					break;
-				case 4:
-					inputTree->BuildIndex("0", "beam_momentum_z*1000000000000");
-					break;
-				default:
-					assert(false);
-					break;
-			}
-			index = (TTreeIndex*)inputTree->GetTreeIndex();
+			antok::beamfileGenerator::fiveDimCoord::_orderDim = dim;
+			std::sort(inputVector->begin(), inputVector->end(), __compareCoords());
 			unsigned int half = (unsigned int)((entries / 2) + 0.5);
-			inputTree->GetEntry(index->GetIndex()[half]);
-			delete index;
-			double middle = x[dim];
+			const double& middle = (*inputVector)[half]->_coords[dim];
 			if(debug) {
 				std::cout<<"entries: " << entries << ", half: " << half << std::endl;
-				std::cout<<"middle coordinates: ["<<x[0];
+				std::cout<<"middle coordinates: ["<<(*inputVector)[half]->_coords[0];
 				for(unsigned int i = 1; i < 4; ++i) {
-					std::cout<<", "<<x[i];
+					std::cout<<", "<<(*inputVector)[half]->_coords[i];
 				}
 				std::cout<<"]"<<std::endl;
-				std::cout<<"half entry: " << index->GetIndex()[half] << std::endl;
 				std::cout<<"dim: " << dim << ", middle: " << middle << std::endl;
 			}
 			std::vector<double> upper1 = bin._b;
@@ -161,40 +158,46 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<TTree*, antok
 				std::cout<<"bin2: "<<std::endl;
 				newBin2.print(std::cout);
 			}
-			inputTree1 = new TTree();
-			inputTree2 = new TTree();
-			for(unsigned int i = 0; i < 5; ++i) {
-				inputTree1->Branch(BRANCH_NAMES[i].c_str(), &x[i]);
-				inputTree2->Branch(BRANCH_NAMES[i].c_str(), &x[i]);
-			}
+			inputVector1 = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
+			inputVector2 = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
 			for(unsigned int i = 0; i < entries; ++i) {
-				inputTree->GetEntry(i);
-				if(x[dim] < middle) {
-					inputTree1->Fill();
+				const double& x = (*inputVector)[i]->_coords[dim];
+				if(x < middle) {
+					inputVector1->push_back((*inputVector)[i]);
 				} else {
-					inputTree2->Fill();
+					inputVector2->push_back((*inputVector)[i]);
 				}
 			}
-			inputTree1->SetEstimate(-1);
-			inputTree2->SetEstimate(-1);
-			inputTree1->SetCacheSize(0);
-			inputTree2->SetCacheSize(0);
-			inputTree->SetBit(kCanDelete);
-			inputTree->SetBit(kMustCleanup);
-			delete inputTree;
-			if(dim == 4) {
-				dim = 0;
-			} else {
-				++dim;
-			}
 			if(debug) {
-				std::cout<<"inputTree1 has " << inputTree1->GetEntries() << " entries." << std::endl;
-				std::cout<<"inputTree2 has " << inputTree2->GetEntries() << " entries." << std::endl;
+				std::cout<<"inputTree1 has " << inputVector1->size() << " entries." << std::endl;
+				std::cout<<"inputTree2 has " << inputVector2->size() << " entries." << std::endl;
+				std::cout<<"Difference: " << std::abs((int)inputVector1->size() - (int)inputVector2->size()) << std::endl;
 			}
-			assert(std::abs((inputTree1->GetEntries() - inputTree2->GetEntries())) <= 1);
+			if(std::abs((int)inputVector1->size() - (int)inputVector2->size()) > 1) {
+				std::cout<<"------------------------------------------------------"<<std::endl;
+				std::cout<<"called with " << entries << " entries." << std::endl;
+				std::cout<<"input bin:"<<std::endl;
+				bin.print(std::cout);
+				std::cout<<"entries: " << entries << ", half: " << half << std::endl;
+				std::cout<<"middle coordinates: ["<<(*inputVector)[half]->_coords[0];
+				for(unsigned int i = 1; i < 4; ++i) {
+					std::cout<<", "<<(*inputVector)[half]->_coords[i];
+				}
+				std::cout<<"]"<<std::endl;
+				std::cout<<"dim: " << dim << ", middle: " << middle << std::endl;
+				std::cout<<"inputTree1 has " << inputVector1->size() << " entries." << std::endl;
+				std::cout<<"inputTree2 has " << inputVector2->size() << " entries." << std::endl;
+				std::cout<<"Difference: " << std::abs((int)inputVector1->size() - (int)inputVector2->size()) << std::endl;
+//				assert(false);
+			}
+			delete inputVector;
 		}
-		antok::beamfileGenerator::getAdaptiveBins(bins, newBin1, inputTree1, dim, debug);
-		antok::beamfileGenerator::getAdaptiveBins(bins, newBin2, inputTree2, dim, debug);
+		if(dim == 4) {
+			dim = 0;
+		} else {
+			++dim;
+		}
+		antok::beamfileGenerator::getAdaptiveBins(bins, newBin1, inputVector1, dim, debug);
+		antok::beamfileGenerator::getAdaptiveBins(bins, newBin2, inputVector2, dim, debug);
 	}
-	first = false;
 }

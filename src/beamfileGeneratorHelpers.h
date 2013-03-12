@@ -1,12 +1,9 @@
 #ifndef ANTOK_BEAMFILEGENERATORHELPERS_H
 #define ANTOK_BEAMFILEGENERATORHELPERS_H
 
-#include<assert.h>
 #include<iostream>
 #include<list>
 #include<vector>
-
-class TTree;
 
 namespace antok {
 
@@ -34,10 +31,27 @@ namespace antok {
 
 		};
 
-		void getAdaptiveBins(std::list<std::pair<TTree*, antok::beamfileGenerator::fiveDimBin> >& bins,
+		struct fiveDimCoord {
+
+			fiveDimCoord();
+
+			fiveDimCoord(std::vector<double> coords)
+				: _coords(coords) { }
+
+			fiveDimCoord(double x0, double x1, double x2, double x3, double x4);
+
+			bool operator<(const fiveDimCoord& rhs) const;
+
+			static int _orderDim;
+			std::vector<double> _coords;
+
+		};
+
+		void getAdaptiveBins(std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
+		                               antok::beamfileGenerator::fiveDimBin> >& bins,
 		                     const antok::beamfileGenerator::fiveDimBin& bin,
-		                     TTree* inputTree,
-		                     unsigned int dim = 0,
+		                     std::vector<antok::beamfileGenerator::fiveDimCoord*>* inputVector,
+		                     int dim = 0,
 		                     bool debug = false);
 
 	}

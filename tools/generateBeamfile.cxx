@@ -3,11 +3,9 @@
 #include<string>
 
 #include<TFile.h>
-#include<TH2D.h>
-#include<THnSparse.h>
+#include<TH1D.h>
 #include<TLorentzVector.h>
 #include<TTree.h>
-#include<TTreeIndex.h>
 
 #include<basic_calcs.h>
 #include<beamfileGeneratorHelpers.h>
@@ -65,17 +63,12 @@ void fillFiveDimHist(std::string inFileName) {
 	inTree->SetBranchAddress("Y_primV", &primVy);
 
 	double bx, by, bz;
-	TTree* tempTree = new TTree("beamTreeTemp", "beamTreeTemp");
-	tempTree->Branch("vertex_x_position", &primVx, "vertex_x_position/D");
-	tempTree->Branch("vertex_y_position", &primVy, "vertex_y_position/D");
-	tempTree->Branch("beam_momentum_x", &bx,"beam_momentum_x/D");
-	tempTree->Branch("beam_momentum_y", &by,"beam_momentum_y/D");
-	tempTree->Branch("beam_momentum_z", &bz,"beam_momentum_z/D");
-	TTree* outTree = (TTree*)tempTree->Clone("beamTree");
 
 	std::vector<TLorentzVector> particles;
 	particles.resize(6);
 	unsigned int entries = inTree->GetEntries();
+
+	std::vector<antok::beamfileGenerator::fiveDimCoord*>* tempTree = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
 
 	for(unsigned int i = 0; i < entries; ++i) {
 
@@ -103,23 +96,22 @@ void fillFiveDimHist(std::string inFileName) {
 		momY->Fill(by);
 		momZ->Fill(bz);
 
-		tempTree->Fill();
+		tempTree->push_back(new antok::beamfileGenerator::fiveDimCoord(primVx, primVy, bx, by, bz));
 
 		if(i % 100000 == 0) {
 			std::cout<<"Entry "<<i<<" of "<<entries<<std::endl;
 		}
-/*		if(i > 500000) {
-			entries = tempTree->GetEntries();
-			break;
-		}
-*/
 	}
 
 	std::vector<double> lowerCorner(5, 0);
 	std::vector<double> upperCorner(5, 0);
 	bool first = true;
 	for(unsigned int i = 0; i < entries; ++i) {
-		tempTree->GetEntry(i);
+		primVx = (*tempTree)[i]->_coords[0];
+		primVy = (*tempTree)[i]->_coords[1];
+		bx = (*tempTree)[i]->_coords[2];
+		by = (*tempTree)[i]->_coords[3];
+		bz = (*tempTree)[i]->_coords[4];
 		if(first) {
 			lowerCorner[0] = primVx;
 			lowerCorner[1] = primVy;
@@ -149,18 +141,20 @@ void fillFiveDimHist(std::string inFileName) {
 	std::cout<<"Got first bin: "<<std::endl;
 	bin.print(std::cout);
 
-	std::list<std::pair<TTree*, antok::beamfileGenerator::fiveDimBin> > adaptiveBins;
+	std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
+	          antok::beamfileGenerator::fiveDimBin> > adaptiveBins;
 	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, tempTree);
 	unsigned int nBins = adaptiveBins.size();
 	std::cout<<"Split phase space in "<<nBins<<" bins."<<std::endl;
 
 	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
 	int binContent = 0;
-	outTree->SetBranchAddress("vertex_x_position", &primVx);
-	outTree->SetBranchAddress("vertex_y_position", &primVy);
-	outTree->SetBranchAddress("beam_momentum_x", &bx);
-	outTree->SetBranchAddress("beam_momentum_y", &by);
-	outTree->SetBranchAddress("beam_momentum_z", &bz);
+	TTree* outTree = new TTree("beamTree", "beamTree");
+	outTree->Branch("vertex_x_position", &primVx, "vertex_x_position/D");
+	outTree->Branch("vertex_y_position", &primVy, "vertex_y_position/D");
+	outTree->Branch("beam_momentum_x", &bx,"beam_momentum_x/D");
+	outTree->Branch("beam_momentum_y", &by,"beam_momentum_y/D");
+	outTree->Branch("beam_momentum_z", &bz,"beam_momentum_z/D");
 	outTree->Branch("vertex_x_position_sigma", &primVx_sigma, "vertex_x_position_sigma/D");
 	outTree->Branch("vertex_y_position_sigma", &primVy_sigma, "vertex_y_position_sigma/D");
 	outTree->Branch("beam_momentum_x_sigma", &bx_sigma,"beam_momentum_x_sigma/D");
@@ -171,27 +165,32 @@ void fillFiveDimHist(std::string inFileName) {
 	std::cout << "Calculating and saving sigmas." << std:: endl;
 
 	unsigned binNumber = 0;
-	for(std::list<std::pair<TTree*, antok::beamfileGenerator::fiveDimBin> >::const_iterator binIt = adaptiveBins.begin(); binIt != adaptiveBins.end(); ++binIt) {
+	for(
+		std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
+		          antok::beamfileGenerator::fiveDimBin> >::const_iterator binIt = adaptiveBins.begin();
+		binIt != adaptiveBins.end();
+		++binIt
+	)
+	{
 		std::cout<<"Bin "<<++binNumber<<" of "<<nBins<<std::endl;
 		const antok::beamfileGenerator::fiveDimBin& currentBin = binIt->second;
-		TTree* currentTree = binIt->first;
-		currentTree->SetBranchAddress("vertex_x_position", &primVx);
-		currentTree->SetBranchAddress("vertex_y_position", &primVy);
-		currentTree->SetBranchAddress("beam_momentum_x", &bx);
-		currentTree->SetBranchAddress("beam_momentum_y", &by);
-		currentTree->SetBranchAddress("beam_momentum_z", &bz);
-		binContent = currentTree->GetEntries();
+		std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = binIt->first;
+		binContent = currentTree->size();
+
 		primVx_sigma = (currentBin._b[0] - currentBin._a[0]) / entries;
 		primVy_sigma = (currentBin._b[1] - currentBin._a[1]) / entries;
 		bx_sigma = (currentBin._b[2] - currentBin._a[2]) / entries;
 		by_sigma = (currentBin._b[3] - currentBin._a[3]) / entries;
 		bz_sigma = (currentBin._b[4] - currentBin._a[4]) / entries;
 		for(int i = 0; i < binContent; ++i) {
-			currentTree->GetEntry(i);
+			primVx = (*currentTree)[i]->_coords[0];
+			primVy = (*currentTree)[i]->_coords[1];
+			bx = (*currentTree)[i]->_coords[2];
+			by = (*currentTree)[i]->_coords[3];
+			bz = (*currentTree)[i]->_coords[4];
 			outTree->Fill();
 		}
 	}
-//	tempTree->Delete("all");
 
 	outFile->Write();
 	outFile->Close();
