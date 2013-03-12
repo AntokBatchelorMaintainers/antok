@@ -66,7 +66,17 @@ struct fiveDimBin {
 		}
 	}
 
-	bool inBin(const std::vector<double>& x) {
+	void set(const std::vector<double>& a, const std::vector<double>& b)
+	{
+		assert(a.size() == 5);
+		assert(b.size() == 5);
+		for(unsigned int i = 0; i < 5; ++i) {
+			_a[i] = a[i] < b[i] ? a[i] : b[i];
+			_b[i] = a[i] < b[i] ? b[i] : a[i];
+		}
+	}
+
+	bool inBin(const std::vector<double>& x) const {
 		assert(x.size() == 5);
 		for(unsigned int i = 0; i < 5; ++i) {
 			if(x[i] < _a[i] or x[i] >= _b[i]) {
@@ -79,7 +89,7 @@ struct fiveDimBin {
 	std::vector<double> _a;
 	std::vector<double> _b;
 
-	std::ostream& print(std::ostream& out) {
+	std::ostream& print(std::ostream& out) const {
 		out << "Five dimensional bin: " << std::endl;
 		out << "    lower Corner ....... [" << _a[0];
 		for(unsigned int i = 1; i < 5; ++i) {
@@ -101,7 +111,7 @@ struct fiveDimBin {
 };
 
 void getAdaptiveBins(std::list<std::pair<TTree*, fiveDimBin> >& bins,
-                     fiveDimBin bin,
+                     const fiveDimBin& bin,
                      TTree* inputTree,
                      unsigned int dim = 0,
                      bool debug = false)
@@ -126,83 +136,102 @@ void getAdaptiveBins(std::list<std::pair<TTree*, fiveDimBin> >& bins,
 	if(entries < (2 * MIN_ENTRIES)) {
 		bins.push_back(std::pair<TTree*, fiveDimBin>(inputTree, bin));
 	} else {
-		std::vector<double> x(5, 0);
-		for(unsigned int i = 0; i < 5; ++i) {
-			inputTree->SetBranchAddress(BRANCH_NAMES[i].c_str(), &x[i]);
-		}
-		TTreeIndex* index = 0;
-		switch(dim) {
-			case 0:
-				inputTree->BuildIndex("0", "vertex_x_position*1000000000000");
-				break;
-			case 1:
-				inputTree->BuildIndex("0", "vertex_y_position*1000000000000");
-				break;
-			case 2:
-				inputTree->BuildIndex("0", "beam_momentum_x*1000000000000");
-				break;
-			case 3:
-				inputTree->BuildIndex("0", "beam_momentum_y*1000000000000");
-				break;
-			case 4:
-				inputTree->BuildIndex("0", "beam_momentum_z*1000000000000");
-				break;
-			default:
-				assert(false);
-		}
-		index = (TTreeIndex*)inputTree->GetTreeIndex();
-		unsigned int half = (unsigned int)((entries / 2) + 0.5);
-		inputTree->GetEntry(index->GetIndex()[half]);
-		double middle = x[dim];
-		if(debug) {
-			std::cout<<"entries: " << entries << ", half: " << half << std::endl;
-			std::cout<<"middle coordinates: ["<<x[0];
-			for(unsigned int i = 1; i < 4; ++i) {
-				std::cout<<", "<<x[i];
+		fiveDimBin newBin1;
+		fiveDimBin newBin2;
+		TTree* inputTree1 = 0;
+		TTree* inputTree2 = 0;
+		{
+			std::vector<double> x(5, 0);
+			for(unsigned int i = 0; i < 5; ++i) {
+				inputTree->SetBranchAddress(BRANCH_NAMES[i].c_str(), &x[i]);
 			}
-			std::cout<<"]"<<std::endl;
-			std::cout<<"half entry: " << index->GetIndex()[half] << std::endl;
-			std::cout<<"dim: " << dim << ", middle: " << middle << std::endl;
-		}
-		std::vector<double> upper1 = bin._b;
-		std::vector<double> lower2 = bin._a;
-		upper1[dim] = middle;
-		lower2[dim] = middle;
-		fiveDimBin newBin1(bin._a, upper1);
-		fiveDimBin newBin2(lower2, bin._b);
-		if(debug) {
-			std::cout<<"bin1: "<<std::endl;
-			newBin1.print(std::cout);
-			std::cout<<"bin2: "<<std::endl;
-			newBin2.print(std::cout);
-		}
-		TTree* inputTree1 = new TTree();
-		TTree* inputTree2 = new TTree();
-		for(unsigned int i = 0; i < 5; ++i) {
-			inputTree1->Branch(BRANCH_NAMES[i].c_str(), &x[i]);
-			inputTree2->Branch(BRANCH_NAMES[i].c_str(), &x[i]);
-		}
-		for(unsigned int i = 0; i < entries; ++i) {
-			inputTree->GetEntry(i);
-			if(x[dim] < middle) {
-				inputTree1->Fill();
-			} else {
-				inputTree2->Fill();
+			TTreeIndex* index = 0;
+			switch(dim) {
+				case 0:
+					inputTree->BuildIndex("0", "vertex_x_position*1000000000000");
+					break;
+				case 1:
+					inputTree->BuildIndex("0", "vertex_y_position*1000000000000");
+					break;
+				case 2:
+					inputTree->BuildIndex("0", "beam_momentum_x*1000000000000");
+					break;
+				case 3:
+					inputTree->BuildIndex("0", "beam_momentum_y*1000000000000");
+					break;
+				case 4:
+					inputTree->BuildIndex("0", "beam_momentum_z*1000000000000");
+					break;
+				default:
+					assert(false);
 			}
-		}
-		if(not first) {
+			index = (TTreeIndex*)inputTree->GetTreeIndex();
+			unsigned int half = (unsigned int)((entries / 2) + 0.5);
+			inputTree->GetEntry(index->GetIndex()[half]);
+			delete index;
+			double middle = x[dim];
+			if(debug) {
+				std::cout<<"entries: " << entries << ", half: " << half << std::endl;
+				std::cout<<"middle coordinates: ["<<x[0];
+				for(unsigned int i = 1; i < 4; ++i) {
+					std::cout<<", "<<x[i];
+				}
+				std::cout<<"]"<<std::endl;
+				std::cout<<"half entry: " << index->GetIndex()[half] << std::endl;
+				std::cout<<"dim: " << dim << ", middle: " << middle << std::endl;
+			}
+			std::vector<double> upper1 = bin._b;
+			std::vector<double> lower2 = bin._a;
+			upper1[dim] = middle;
+			lower2[dim] = middle;
+			newBin1.set(bin._a, upper1);
+			newBin2.set(lower2, bin._b);
+			if(debug) {
+				std::cout<<"bin1: "<<std::endl;
+				newBin1.print(std::cout);
+				std::cout<<"bin2: "<<std::endl;
+				newBin2.print(std::cout);
+			}
+//static unsigned int nTrees = 0;
+//static unsigned int nEntries = entries;
+			inputTree1 = new TTree();
+			inputTree2 = new TTree();
+//nTrees += 2;
+			for(unsigned int i = 0; i < 5; ++i) {
+				inputTree1->Branch(BRANCH_NAMES[i].c_str(), &x[i]);
+				inputTree2->Branch(BRANCH_NAMES[i].c_str(), &x[i]);
+			}
+			for(unsigned int i = 0; i < entries; ++i) {
+				inputTree->GetEntry(i);
+				if(x[dim] < middle) {
+					inputTree1->Fill();
+				} else {
+					inputTree2->Fill();
+				}
+//nEntries += 1;
+			}
+			inputTree1->SetEstimate(-1);
+			inputTree2->SetEstimate(-1);
+			inputTree1->SetCacheSize(0);
+			inputTree2->SetCacheSize(0);
+//nTrees -= 1;
+//nEntries -= inputTree->GetEntries();
+			inputTree->SetBit(kCanDelete);
+			inputTree->SetBit(kMustCleanup);
 			delete inputTree;
+//std::cout<<"nTrees: "<<nTrees<<std::endl;
+//std::cout<<"nEntries: "<<nEntries<<std::endl;
+			if(dim == 4) {
+				dim = 0;
+			} else {
+				++dim;
+			}
+			if(debug) {
+				std::cout<<"inputTree1 has " << inputTree1->GetEntries() << " entries." << std::endl;
+				std::cout<<"inputTree2 has " << inputTree2->GetEntries() << " entries." << std::endl;
+			}
+			assert(std::abs((inputTree1->GetEntries() - inputTree2->GetEntries())) <= 1);
 		}
-		if(dim == 4) {
-			dim = 0;
-		} else {
-			++dim;
-		}
-		if(debug) {
-			std::cout<<"inputTree1 has " << inputTree1->GetEntries() << " entries." << std::endl;
-			std::cout<<"inputTree2 has " << inputTree2->GetEntries() << " entries." << std::endl;
-		}
-		assert(std::abs((inputTree1->GetEntries() - inputTree2->GetEntries())) <= 1);
 		getAdaptiveBins(bins, newBin1, inputTree1, dim, debug);
 		getAdaptiveBins(bins, newBin2, inputTree2, dim, debug);
 	}
@@ -302,7 +331,11 @@ void fillFiveDimHist(std::string inFileName) {
 		if(i % 100000 == 0) {
 			std::cout<<"Entry "<<i<<" of "<<entries<<std::endl;
 		}
-
+/*		if(i > 500000) {
+			entries = tempTree->GetEntries();
+			break;
+		}
+*/
 	}
 
 	std::vector<double> lowerCorner(5, 0);
@@ -381,7 +414,7 @@ void fillFiveDimHist(std::string inFileName) {
 			outTree->Fill();
 		}
 	}
-	tempTree->Delete("all");
+//	tempTree->Delete("all");
 
 	outFile->Write();
 	outFile->Close();
