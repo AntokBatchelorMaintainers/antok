@@ -19,10 +19,6 @@
 #//
 #///////////////////////////////////////////////////////////////////////////
 #//-------------------------------------------------------------------------
-#// File and Version Information:
-#// $Rev:: 804                         $: revision of last commit
-#// $Author:: bgrube                   $: author of last commit
-#// $Date:: 2011-11-04 21:34:04 +0100 #$: date of last commit
 #//
 #// Description:
 #//      cmake module for finding ROOT installation
@@ -37,7 +33,10 @@
 #//      ROOT_F77               - Fortran complier used building ROOT
 #//      ROOT_CC                - C complier used building ROOT
 #//      ROOT_CPP               - C++ complier used building ROOT
-#//      ROOT_VERSION           - ROOT version
+#//      ROOT_VERSION           - ROOT version e.g. 5.34.0
+#//      ROOT_MAJOR_VERSION     - ROOT major version e.g. 5
+#//      ROOT_MINOR_VERSION     - ROOT minor version e.g. 34
+#//      ROOT_PATCH_VERSION     - ROOT patch version e.g. 0
 #//      ROOT_SVN_REVISION      - ROOT subversion revision
 #//      ROOT_BIN_DIR           - ROOT executable directory
 #//      ROOT_INCLUDE_DIR       - ROOT header directory
@@ -46,9 +45,6 @@
 #//      ROOT_AUX_LIBRARIES     - linker flags for auxiliary libraries
 #//      ROOT_EVE_LIBRARIES     - linker flags for auxiliary libraries
 #//      ROOTCINT_EXECUTABLE    - path to rootcint program
-#//      ROOT_MAJOR_VERSION     - ROOT major version
-#//      ROOT_MINOR_VERSION     - ROOT minor version
-#//      ROOT_PATCH_VERSION     - ROOT patch level
 #//      ROOT_LIBS              - list of ROOT library files
 #//
 #//      Example usage:
@@ -82,7 +78,7 @@ set(ROOT_LIBS)
 
 find_program(ROOT_CONFIG_EXECUTABLE root-config)
 if(NOT ROOT_CONFIG_EXECUTABLE)
-  set(ROOT_ERROR_REASON "${ROOT_ERROR_REASON} Cannot find root-config executable. Make sure ROOT is setup correctly.")
+  set(ROOT_ERROR_REASON "${ROOT_ERROR_REASON} Cannot find root-config executable in path. Make sure ROOT is setup correctly.")
 else()
 
   set(ROOT_FOUND TRUE)
@@ -185,7 +181,7 @@ else()
       set(ROOT_ERROR_REASON "${ROOT_ERROR_REASON} ROOT version ${ROOT_VERSION} does not match requested version ${ROOT_FIND_VERSION}.")
     endif()
   else()
-    if(ROOT_VERSION LESS ROOT_FIND_VERSION)
+    if(ROOT_VERSION VERSION_LESS ROOT_FIND_VERSION)
       set(ROOT_FOUND FALSE)
       set(ROOT_ERROR_REASON "${ROOT_ERROR_REASON} ROOT version ${ROOT_VERSION} is lower than requested version ${ROOT_FIND_VERSION}.")
     endif()
@@ -214,6 +210,8 @@ if(ROOT_FOUND)
     else()
       list(APPEND _LIBRARY_NAMES ${_LIBNAME})
     endif()
+    unset(_LIBRARY)
+    unset(_LIBNAME)
   endforeach()
 
   # append components
@@ -234,7 +232,10 @@ if(ROOT_FOUND)
     else()
       list(APPEND ROOT_LIBS ${_ROOT_LIB_${_LIBNAME}})
     endif()
+    unset(_ROOT_LIB_${_LIBNAME})
   endforeach()
+  unset(_LIBNAME)
+  unset(_LIBRARY_NAMES)
 
   # create list of external libraries from root-config output
   separate_arguments(ROOT_AUX_LIBRARIES)
@@ -242,6 +243,7 @@ if(ROOT_FOUND)
   if(_EXTERNAL_ZLIB)
     list(APPEND ROOT_AUX_LIBRARIES ${_EXTERNAL_ZLIB})
   endif()
+  unset(_EXTERNAL_ZLIB)
   # loop over -l entries
   foreach(_LIBRARY ${ROOT_AUX_LIBRARIES})
     # extract library name from compiler flag
@@ -259,8 +261,11 @@ if(ROOT_FOUND)
                 list(APPEND ROOT_LIBS ${_AUX_LIB_${_LIBNAME}})
                 list(APPEND ROOT_LIBRARIES -l${_LIBNAME})
       endif()
+      unset(_AUX_LIB_${_LIBNAME})
     endif()
+    unset(_LIBNAME)
   endforeach()
+  unset(_LIBRARY)
 
   # create list of external libraries from root-config output, for evelibs this time
   separate_arguments(ROOT_EVE_LIBRARIES)
@@ -283,7 +288,9 @@ if(ROOT_FOUND)
                 list(APPEND ROOT_LIBS ${_EVE_LIB_${_LIBNAME}})
                 list(APPEND ROOT_LIBRARIES -l${_LIBNAME})
       endif()
+      unset(_EVE_LIB_${_LIBNAME})
     endif()
+    unset(_LIBNAME)
   endforeach()
 
 endif()
@@ -302,16 +309,16 @@ mark_as_advanced(
 # report result
 if(ROOT_FOUND)
   message(STATUS "Found ROOT version ${ROOT_VERSION} r${ROOT_SVN_REVISION} in '${ROOTSYS}'.")
-  message(STATUS "Using ROOT include dir '${ROOT_INCLUDE_DIR}'.")
-  message(STATUS "Using ROOT library dir '${ROOT_LIBRARY_DIR}'.")
-  message(STATUS "Using ROOT libraries: ${ROOT_LIBRARIES}.")
-  message(STATUS "Using ROOT additional components: ${ROOT_FIND_COMPONENTS}.")
+  message(STATUS "Using ROOT include directory '${ROOT_INCLUDE_DIR}'.")
+  message(STATUS "Using ROOT library directory '${ROOT_LIBRARY_DIR}'.")
+  message(STATUS "Using ROOT libraries ${ROOT_LIBRARIES}.")
+  message(STATUS "Using ROOT additional components '${ROOT_FIND_COMPONENTS}'.")
 else()
   if(ROOT_FIND_REQUIRED)
     message(FATAL_ERROR "Unable to find requested ROOT installation:${ROOT_ERROR_REASON}")
   else()
     if(NOT ROOT_FIND_QUIETLY)
-      message(STATUS "ROOT was not found.")
+      message(STATUS "ROOT version ${ROOT_FIND_VERSION}+ was not found:${ROOT_ERROR_REASON}")
     endif()
   endif()
 endif()
@@ -319,6 +326,14 @@ endif()
 
 # function that generates ROOT dictionary
 function(root_generate_dictionary DICT_FILE INCLUDE_DIRS HEADER_FILES LINKDEF_FILE)
+
+  if(DEBUG_OUTPUT)
+    message(STATUS "root_generate_dictionary was called with the following arguments:
+    DICT_FILE    = '${DICT_FILE}'
+    INCLUDE_DIRS = '${INCLUDE_DIRS}'
+    HEADER_FILES = '${HEADER_FILES}'
+    LINKDEF_FILE = '${LINKDEF_FILE}'")
+  endif()
 
   if(NOT ROOT_FOUND)
     message(FATAL_ERROR "Impossible to generate dictionary '${DICT_FILE}', "
@@ -331,6 +346,7 @@ function(root_generate_dictionary DICT_FILE INCLUDE_DIRS HEADER_FILES LINKDEF_FI
   foreach(_DEF ${_DEFS})
     set(_DEFINITIONS "${_DEFINITIONS} -D${_DEF}")
   endforeach()
+  unset(_DEF)
   separate_arguments(_DEFINITIONS)
 
   # prepare command line argument for include directories (put -I in front)
@@ -338,6 +354,7 @@ function(root_generate_dictionary DICT_FILE INCLUDE_DIRS HEADER_FILES LINKDEF_FI
   foreach(_FILE ${INCLUDE_DIRS})
     set(_INCLUDES ${_INCLUDES} -I${_FILE})
   endforeach()
+  unset(_FILE)
 
   # strip paths from header file names
   set(_HEADERS)
@@ -345,15 +362,26 @@ function(root_generate_dictionary DICT_FILE INCLUDE_DIRS HEADER_FILES LINKDEF_FI
     get_filename_component(_NAME ${_FILE} NAME)
     set(_HEADERS ${_HEADERS} ${_NAME})
   endforeach()
+  unset(_FILE)
 
   # add dictionary header file to output files
   string(REGEX REPLACE "^(.*)\\.(.*)$" "\\1.h" _DICT_HEADER "${DICT_FILE}")
   set(OUTPUT_FILES ${DICT_FILE} ${_DICT_HEADER})
+  if(DEBUG_OUTPUT)
+    message(STATUS "root_generate_dictionary will create output files '${OUTPUT_FILES}'")
+  endif()
 
   add_custom_command(OUTPUT ${OUTPUT_FILES}
     COMMAND ${ROOTCINT_EXECUTABLE}
     ARGS -f ${DICT_FILE} -c -DHAVE_CONFIG_H ${_DEFINITIONS} ${_INCLUDES} ${_HEADERS} ${LINKDEF_FILE}
     DEPENDS ${HEADER_FILES} ${LINKDEF_FILE}
   )
+  if(DEBUG_OUTPUT)
+    message(STATUS "root_generate_dictionary will execute
+            '${ROOTCINT_EXECUTABLE} -f ${DICT_FILE} -c -DHAVE_CONFIG_H ${_DEFINITIONS} ${_INCLUDES}     ${_HEADERS} ${LINKDEF_FILE}'")
+  endif()
+  unset(_DEFINITIONS)
+  unset(_INCLUDES)
+  unset(_HEADERS)
 
 endfunction(root_generate_dictionary)
