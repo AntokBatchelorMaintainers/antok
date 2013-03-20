@@ -49,11 +49,11 @@ include_directories(${INCLUDE_DIRECTORIES})
 
 # source files that are compiled into library
 set(SOURCES
-	basic_calcs_py.cc
-	constants_py.cc
-	initializer_py.cc
-	pytok.cc
-	rootConverters_py.cc
+	basic_calcs_py.cxx
+	constants_py.cxx
+	initializer_py.cxx
+	pytok.cxx
+	rootConverters_py.cxx
 )
 
 # library
