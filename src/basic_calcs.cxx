@@ -6,10 +6,10 @@
 
 #include<constants.h>
 
-TLorentzVector antok::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX) {
+TLorentzVector antok::getBeamEnergy(TVector3 p3_beam, const TLorentzVector& pX) {
 
-	const double& PION_MASS = antok::Constants::charged_pion_mass();
-	const double& PROTON_MASS = antok::Constants::proton_mass();
+	const double& PION_MASS = antok::Constants::chargedPionMass();
+	const double& PROTON_MASS = antok::Constants::protonMass();
 
 	TVector3 p3_Tot(pX.Vect());
 	double theta = p3_Tot.Angle(p3_beam);
@@ -27,7 +27,7 @@ TLorentzVector antok::get_beam_energy(TVector3 p3_beam, const TLorentzVector& pX
 
 };
 
-void antok::get_RPD_delta_phi_res_projection(const TLorentzVector& pBeam,
+void antok::getRPDDeltaPhiResProjection(const TLorentzVector& pBeam,
                                              const TLorentzVector& pProton,
                                              const TLorentzVector& pX,
                                              double& delta_phi, double& res)
@@ -60,7 +60,7 @@ void antok::get_RPD_delta_phi_res_projection(const TLorentzVector& pBeam,
 
 };
 
-void antok::get_RPD_delta_phi_res_rotation(const TLorentzVector& pBeam,
+void antok::getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
                                            const TLorentzVector& pProton,
                                            const TLorentzVector& pX,
                                            double& delta_phi, double& res)

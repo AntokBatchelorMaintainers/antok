@@ -281,7 +281,7 @@ bool antok::Initializer::initializeData() {
 			}
 		}
 	}
-	const unsigned int& N_PARTICLES = antok::Constants::n_particles();
+	const unsigned int& N_PARTICLES = antok::Constants::nParticles();
 	for(YAML::const_iterator typeIt = perParticleTreeBranches.begin(); typeIt != perParticleTreeBranches.end(); ++typeIt) {
 		for(YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
 			std::string type = antok::YAMLUtils::getString(typeIt->first);

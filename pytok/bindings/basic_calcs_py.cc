@@ -9,13 +9,13 @@ namespace bp = boost::python;
 
 namespace {
 
-	PyObject* __get_beam_energy(PyObject* pyBeam, PyObject* pyLV_X) {
+	PyObject* __getBeamEnergy(PyObject* pyBeam, PyObject* pyLV_X) {
 		TVector3* beam = antok::py::convertFromPy<TVector3*>(pyBeam);
 		TLorentzVector* LV_X = antok::py::convertFromPy<TLorentzVector*>(pyLV_X);
-		return antok::py::convertToPy<TLorentzVector>(antok::get_beam_energy(*beam, *LV_X));
+		return antok::py::convertToPy<TLorentzVector>(antok::getBeamEnergy(*beam, *LV_X));
 	}
 
-	bp::tuple __get_RPD_delta_phi_res_projection(PyObject* pyBeam,
+	bp::tuple __getRPDDeltaPhiResProjection(PyObject* pyBeam,
 	                                             PyObject* pyProton,
 	                                             PyObject* pyX)
 	{
@@ -23,11 +23,11 @@ namespace {
 		const TLorentzVector* proton = antok::py::convertFromPy<TLorentzVector*>(pyProton);
 		const TLorentzVector* X = antok::py::convertFromPy<TLorentzVector*>(pyX);
 		double deltaPhi, res;
-		antok::get_RPD_delta_phi_res_projection(*beam, *proton, *X, deltaPhi, res);
+		antok::getRPDDeltaPhiResProjection(*beam, *proton, *X, deltaPhi, res);
 		return bp::make_tuple(deltaPhi, res);
 	}
 
-	bp::tuple __get_RPD_delta_phi_res_rotation(PyObject* pyBeam,
+	bp::tuple __getRPDDeltaPhiResRotation(PyObject* pyBeam,
 	                                           PyObject* pyProton,
 	                                           PyObject* pyX)
 	{
@@ -35,7 +35,7 @@ namespace {
 		const TLorentzVector* proton = antok::py::convertFromPy<TLorentzVector*>(pyProton);
 		const TLorentzVector* X = antok::py::convertFromPy<TLorentzVector*>(pyX);
 		double deltaPhi, res;
-		antok::get_RPD_delta_phi_res_rotation(*beam, *proton, *X, deltaPhi, res);
+		antok::getRPDDeltaPhiResRotation(*beam, *proton, *X, deltaPhi, res);
 		return bp::make_tuple(deltaPhi, res);
 	}
 
@@ -44,8 +44,8 @@ namespace {
 
 void antok::py::exportBasicCalcs() {
 
-	bp::def("get_beam_energy", &__get_beam_energy);
-	bp::def("get_RPD_delta_phi_res_projection", &__get_RPD_delta_phi_res_projection);
-	bp::def("get_RPD_delta_phi_res_rotation", &__get_RPD_delta_phi_res_rotation);
+	bp::def("getBeamEnergy", &__getBeamEnergy);
+	bp::def("getRPDDeltaPhiResProjection", &__getRPDDeltaPhiResProjection);
+	bp::def("getRPDDeltaPhiResRotation", &__getRPDDeltaPhiResRotation);
 
 }

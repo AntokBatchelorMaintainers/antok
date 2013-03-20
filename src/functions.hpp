@@ -128,7 +128,7 @@ namespace antok {
 
 			bool operator() () {
 				TVector3 p3Beam((*_gradxAddr), (*_gradyAddr), 1.);
-				(*_outAddr) = antok::get_beam_energy(p3Beam, (*_xLorentzVec));
+				(*_outAddr) = antok::getBeamEnergy(p3Beam, (*_xLorentzVec));
 				return true;
 			}
 
@@ -224,10 +224,10 @@ namespace antok {
 				switch(_method)
 				{
 					case 0:
-						antok::get_RPD_delta_phi_res_projection((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+						antok::getRPDDeltaPhiResProjection((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
 						return true;
 					case 1:
-						antok::get_RPD_delta_phi_res_rotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+						antok::getRPDDeltaPhiResRotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
 						return true;
 				}
 				return false;

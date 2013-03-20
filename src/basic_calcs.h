@@ -6,14 +6,14 @@ class TVector3;
 
 namespace antok {
 
-	TLorentzVector get_beam_energy(TVector3 p3_beam, const TLorentzVector& LV_X);
+	TLorentzVector getBeamEnergy(TVector3 p3_beam, const TLorentzVector& LV_X);
 
-	void get_RPD_delta_phi_res_projection(const TLorentzVector& pBeam,
+	void getRPDDeltaPhiResProjection(const TLorentzVector& pBeam,
 	                                      const TLorentzVector& pProton,
 	                                      const TLorentzVector& pX,
 	                                      double& delta_phi, double& res);
 
-	void get_RPD_delta_phi_res_rotation(const TLorentzVector& pBeam,
+	void getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
 	                                    const TLorentzVector& pProton,
 	                                    const TLorentzVector& pX,
 	                                    double& delta_phi, double& res);

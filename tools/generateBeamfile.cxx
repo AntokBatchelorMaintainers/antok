@@ -21,7 +21,7 @@ void fillFiveDimHist(std::string inFileName) {
 		std::cerr<<"Could not open config file. Aborting..."<<std::endl;
 		exit(1);
 	}
-	const double& PION_MASS = antok::Constants::charged_pion_mass();
+	const double& PION_MASS = antok::Constants::chargedPionMass();
 
 	TFile* inFile = TFile::Open(inFileName.c_str(), "READ");
 	TTree* inTree = (TTree*)inFile->Get("Standard Event Selection/USR55");
@@ -84,7 +84,7 @@ void fillFiveDimHist(std::string inFileName) {
 		for(unsigned int j = 1; j < 6; ++j) {
 			pSum += particles.at(j);
 		}
-		particles[0] = antok::get_beam_energy(TVector3(gradx, grady, 1.), pSum);
+		particles[0] = antok::getBeamEnergy(TVector3(gradx, grady, 1.), pSum);
 		TVector3 beam = particles[0].Vect();
 		bx = beam.X();
 		by = beam.Y();

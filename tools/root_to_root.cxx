@@ -24,7 +24,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 		exit(1);
 	}
 
-	const double& PION_MASS = antok::Constants::charged_pion_mass();
+	const double& PION_MASS = antok::Constants::chargedPionMass();
 
 	double bin_width = 0.03;		//GeV
 	double mass_range_lb = 1.3;		//GeV
@@ -139,7 +139,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 		for(unsigned int i = 1; i < 6; ++i) {
 			pSum += particles.at(i);
 		}
-		particles.at(0) = antok::get_beam_energy(TVector3(gradx, grady, 1.), pSum);
+		particles.at(0) = antok::getBeamEnergy(TVector3(gradx, grady, 1.), pSum);
 		double mass = pSum.M();
 
 		// If out of bounds, go to next event
