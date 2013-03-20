@@ -34,7 +34,12 @@ if __name__ == "__main__":
 		logger.fatal("Arguments file contained " + str(len(arguments)) + " lines instead of at least 6.")
 		pytok.exit(5, logger)
 
-	workingDirectory = os.environ['TMPDIR']
+	try:
+		workingDirectory = os.environ['TMPDIR']
+	except KeyError:
+		logger.fatal("$TMPDIR variable not set. Aborting...")
+		pytok.exit(5, logger)
+
 	initScript = arguments[0]
 	phastCommand = arguments[1]
 	phastOptions = arguments[2]

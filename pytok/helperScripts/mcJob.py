@@ -32,7 +32,7 @@ if __name__ == "__main__":
 	try:
 		config.wDir = os.environ['TMPDIR']
 	except KeyError:
-		logger.fatal("Could not find $TMPDIR. Aborting...")
+		logger.fatal("$TMPDIR variable not set. Aborting...")
 		pytok.exit(5, logger)
 
 	try:
