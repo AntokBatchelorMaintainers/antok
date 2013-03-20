@@ -2,7 +2,7 @@
 import datetime
 import sys
 
-import mcBatchLib
+import pytok
 
 class Logger(object):
 
@@ -92,7 +92,7 @@ class Logger(object):
 	def warningPrompt(self, msg):
 		self.warning(msg)
 		self._printingBookkeeping[2] -= 1
-		if not mcBatchLib.promptYesOrNo("Continue?"):
+		if not pytok.promptYesOrNo("Continue?"):
 			self.fatal("Aborting because of user decision...")
 			self.printSummary()
 			sys.exit(100)

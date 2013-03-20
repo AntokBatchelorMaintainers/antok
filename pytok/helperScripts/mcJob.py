@@ -5,9 +5,8 @@ import datetime
 import os
 import sys
 
-import mcBatchLib
-import mcBatchLib.configuration
-import mcBatchLib.logger
+import pytok
+import pytok.mc
 
 
 if __name__ == "__main__":
@@ -24,9 +23,9 @@ if __name__ == "__main__":
 		if configFile.has_option("Logging", "Level"):
 			level = configFile.get("Logging", "Level")
 
-	logger = mcBatchLib.logger.Logger(level)
+	logger = pytok.Logger(level)
 
-	config = mcBatchLib.configuration.Configuration(logger)
+	config = pytok.mc.Configuration(logger)
 	if not config.read(configFile):
 		logger.fatal("Could not read config file. Aborting...")
 
@@ -34,7 +33,7 @@ if __name__ == "__main__":
 		config.wDir = os.environ['TMPDIR']
 	except KeyError:
 		logger.fatal("Could not find $TMPDIR. Aborting...")
-		mcBatchLib.exit(5, logger)
+		pytok.exit(5, logger)
 
 	try:
 		config.taskID = int(os.environ['SGE_TASK_ID'])
@@ -46,11 +45,11 @@ if __name__ == "__main__":
 		config.compassFiles = os.environ['COMPASS_FILES']
 	except KeyError:
 		logger.fatal("Could not find $COMPASS_FILES.")
-		mcBatchLib.exit(10, logger)
+		pytok.exit(10, logger)
 
 	if not config.check():
 		logger.fatal("Config file contains errors.")
-		mcBatchLib.exit(10, logger)
+		pytok.exit(10, logger)
 
 	startingTime = datetime.datetime.now()
 
@@ -71,7 +70,7 @@ if __name__ == "__main__":
 		commandString += config.generatorOutputFileSwitch + " " + config.eventsDir + "/" + str(config.taskID) + ".gen "
 		commandString += config.generatorEventNumberSwitch + " " + str(config.nEvents) + " "
 		commandString += config.generatorSeedSwitch + " " + str(config.randomSeed)
-		mcBatchLib.runCommand("Generating events", commandString, logger)
+		pytok.runCommand("Generating events", commandString, logger)
 
 	# Prepare comgeant directory
 	logger.info("Building comgeant preparation command string...")
@@ -93,7 +92,7 @@ if __name__ == "__main__":
 		logger.info("Option 'comgeant_specific++_geom_file' not present or empty, not linking 'fort.24'.")
 	commandString += "ln -vs " + config.eventsDir + "/" + str(config.taskID) + ".fort.26 fort.26\n"
 	commandString += "cp -v " + config.comgeantOptions + " fort.15\n"
-	mcBatchLib.runCommand("Comgeant preparation", commandString, logger)
+	pytok.runCommand("Comgeant preparation", commandString, logger)
 
 	if config.detectorsDat == "":
 		# Produce detectors.dat
@@ -108,11 +107,11 @@ if __name__ == "__main__":
 		commandString += "rm -v fort.32\n"
 		commandString += "rm -v fort.26\n"
 		commandString += "ln -vs " + config.eventsDir + "/" + str(config.taskID) + ".fort.26 fort.26\n"
-		mcBatchLib.runCommand("Producing detectors.dat", commandString, logger)
+		pytok.runCommand("Producing detectors.dat", commandString, logger)
 	else:
 		# Link detectors.dat
 		commandString = "ln -vs " + config.detectorsDat + " " + config.wDir + "/coral/detectors.dat\n"
-		mcBatchLib.runCommand("Linking detectors.dat '" + config.detectorsDat + "'", commandString, logger)
+		pytok.runCommand("Linking detectors.dat '" + config.detectorsDat + "'", commandString, logger)
 
 	# Prepare coral
 	with open(config.wDir + "/comgeant/fort.15", 'a') as fort15:
@@ -124,7 +123,7 @@ if __name__ == "__main__":
 	commandString += "ln -vs " + config.coral + "/coral.exe coral.exe\n"
 	commandString += "mkfifo eventPipe.fz\n"
 	commandString += "ln -vs " + config.wDir + "/coral/eventPipe.fz " + config.wDir + "/comgeant/fort.32\n"
-	mcBatchLib.runCommand("Preparing coral", commandString, logger)
+	pytok.runCommand("Preparing coral", commandString, logger)
 	with open(config.wDir + "/coral/coralOptions.opt", 'a') as coralOptions:
 		coralOptions.write("Monte Carlo file           " + config.wDir + "/coral/eventPipe.fz\n")
 		coralOptions.write("detector table             " + config.wDir + "/coral/detectors.dat\n")
@@ -145,14 +144,14 @@ if __name__ == "__main__":
 	commandString += "cat coral.out\n"
 	commandString += "cd " + config.wDir + "\n"
 	commandString += "rfcp " + str(config.taskID) + config.mDSTFilenameSuffix + " " + config.outputDir + "\n"
-	mcBatchLib.runCommand("Run Monte Carlo", commandString, logger)
+	pytok.runCommand("Run Monte Carlo", commandString, logger)
 
 	commandString = "du -hs " + config.wDir
-	mcBatchLib.runCommand("Getting local disk usage", commandString, logger)
+	pytok.runCommand("Getting local disk usage", commandString, logger)
 
 	endingTime = datetime.datetime.now()
 
 	logger.info("Job ended.")
 	logger.info("Job running time: " + str(endingTime - startingTime))
 
-	mcBatchLib.exit(0, logger)
+	pytok.exit(0, logger)

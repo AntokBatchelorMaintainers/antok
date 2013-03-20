@@ -2,7 +2,7 @@
 import datetime
 import sqlite3
 
-import mcBatchLib
+import pytok.mc
 
 
 class Database(object):
@@ -74,7 +74,7 @@ class Database(object):
 		return ranges[-1][1] + 1
 
 	def insertConfigFiles(self, config):
-		currentConfigs = mcBatchLib.compressConfigFiles(config)
+		currentConfigs = pytok.mc.compressConfigFiles(config)
 		nConfigs = int(self._dbCursor.execute('''SELECT COUNT(*) FROM configFiles WHERE
 		                                          scriptConf=:scriptConf AND
 		                                          detectorsDat=:detectorsDat AND
@@ -136,7 +136,7 @@ class Database(object):
 		         "comgeantGeom24": configFiles[7],
 		         "coralOpts": configFiles[8]
 		        }
-		return mcBatchLib.decompressConfigFiles(files)
+		return pytok.mc.decompressConfigFiles(files)
 
 	def getJobInfo(self, jobID):
 		data = self._dbCursor.execute("SELECT * FROM mcJobs WHERE rangeLow<=(?) AND rangeHigh>=(?)", (jobID, jobID)).fetchone()
@@ -159,7 +159,7 @@ class Database(object):
 			return None
 		configFile = self._dbCursor.execute("SELECT scriptConf FROM configFiles WHERE id=(?)", (configID[0],)).fetchone()
 		configFile = {"scriptConf": configFile[0]}
-		return mcBatchLib.decompressConfigFiles(configFile)["scriptConf"]
+		return pytok.mc.decompressConfigFiles(configFile)["scriptConf"]
 
 	def mDSTPathAlreadyRegistered(self, path):
 		mDST = self._dbCursor.execute("SELECT * FROM mDSTs WHERE path=(?)", [path]).fetchone()

@@ -4,14 +4,13 @@ import datetime
 import os
 import sys
 
-import mcBatchLib
-import mcBatchLib.logger
+import pytok
 
 
 if __name__ == "__main__":
 
 	level = "Debug"
-	logger = mcBatchLib.logger.Logger(level)
+	logger = pytok.Logger(level)
 
 	startingTime = datetime.datetime.now()
 
@@ -19,13 +18,13 @@ if __name__ == "__main__":
 
 	if len(sys.argv) != 2:
 		logger.fatal("Got " + str(len(sys.argv)) + " arguments instead of 2. Aborting...")
-		mcBatchLib.exit(5, logger)
+		pytok.exit(5, logger)
 
 	argumentsFileName = sys.argv[1]
 
 	if not os.path.isfile(argumentsFileName):
 		logger.fatal("Could not find arguments file '" + argumentsFileName + "'. Aborting...")
-		mcBatchLib.exit(5, logger)
+		pytok.exit(5, logger)
 
 	logger.info("Reading arguments file '" + argumentsFileName + "'.")
 	with open(argumentsFileName, 'r') as argumentsFile:
@@ -33,7 +32,7 @@ if __name__ == "__main__":
 
 	if len(arguments) < 6:
 		logger.fatal("Arguments file contained " + str(len(arguments)) + " lines instead of at least 6.")
-		mcBatchLib.exit(5, logger)
+		pytok.exit(5, logger)
 
 	workingDirectory = os.environ['TMPDIR']
 	initScript = arguments[0]
@@ -77,14 +76,14 @@ if __name__ == "__main__":
 		(phastOutDir, phastOutName) = phastOut.rsplit('/', 1)
 		command += "rfcp " + phastOutName + " " + phastOutDir + "\n"
 
-	mcBatchLib.runCommand("Running phast", command, logger)
+	pytok.runCommand("Running phast", command, logger)
 
 	command = "du -hs " + workingDirectory
-	mcBatchLib.runCommand("Getting local disk usage", command, logger)
+	pytok.runCommand("Getting local disk usage", command, logger)
 
 	endingTime = datetime.datetime.now()
 
 	logger.info("Job ended.")
 	logger.info("Job running time: " + str(endingTime - startingTime))
 
-	mcBatchLib.exit(0, logger)
+	pytok.exit(0, logger)
