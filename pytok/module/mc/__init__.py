@@ -2,8 +2,8 @@
 import bz2 as _bz2
 import StringIO as _StringIO
 
-from configuration import Configuration
-from database import Database
+from _configuration import Configuration
+from _database import Database
 
 def compressConfigFiles(config):
 	files = {}
