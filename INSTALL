@@ -27,8 +27,14 @@ Prerequisites
 * Boost
 
   While antok itself does not use the Boost libraries, the YAML prerequisite
-  (see below) needs it. Boost is available at http://www.boost.org. As Boost is
-  a header only library, nothing has to be compiled.
+  (see below) needs it. Boost is available at http://www.boost.org.
+
+  To use the python parts of antok as well as the bindings for some of antok's
+  functions, the boost::python library has to be compiled. This can be done
+  with the compileBoostPython.sh script in the antok directory. To use the
+  pytok module in python, add <repository root>/antok/build/pyLib to your
+  $PYTHONPATH environmental variable. It can then be imported in python in the
+  usual way, i.e. "import pytok".
 
 * YAML
 
