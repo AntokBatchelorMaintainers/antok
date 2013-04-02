@@ -98,8 +98,8 @@ else()
 		file(MAKE_DIRECTORY ${PYTHON_LIBRARY_OUTPUT_PATH}/pytok)
 		message(STATUS "Using python bindings output path '${PYTHON_LIBRARY_OUTPUT_PATH}'.")
 	else()
-		disable_feature(Python)
-		message(STATUS "Found Python installation, but Boost.Python is not built correctly (consult INSTALL). "
+		message("")
+		message(WARNING "Found Python installation, but Boost.Python is not built correctly (consult INSTALL). "
 			"No Python bindings will be generated.")
 	endif()
 endif()
