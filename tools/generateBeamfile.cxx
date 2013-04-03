@@ -13,11 +13,10 @@
 #include<initializer.h>
 
 
-void fillFiveDimHist(std::string inFileName) {
+void fillFiveDimHist(std::string inFileName, std::string outFileName, std::string configFileName) {
 
-	std::string configfilename = "../../antok/config/monte_carlo_run2.yaml";
 	antok::Initializer* initializer = antok::Initializer::instance();
-	if(not initializer->readConfigFile(configfilename)) {
+	if(not initializer->readConfigFile(configFileName)) {
 		std::cerr<<"Could not open config file. Aborting..."<<std::endl;
 		exit(1);
 	}
@@ -25,7 +24,7 @@ void fillFiveDimHist(std::string inFileName) {
 
 	TFile* inFile = TFile::Open(inFileName.c_str(), "READ");
 	TTree* inTree = (TTree*)inFile->Get("Standard Event Selection/USR56");
-	TFile* outFile = TFile::Open("bla.root", "RECREATE");
+	TFile* outFile = TFile::Open(outFileName.c_str(), "RECREATE");
 	outFile->cd();
 
 	TH1D* vtxX = new TH1D("vtxX", "vtxX", 10000, -2, 2);
@@ -199,9 +198,9 @@ void fillFiveDimHist(std::string inFileName) {
 }
 
 int main(int argc, char* argv[]) {
-	if(argc == 2) {
-		fillFiveDimHist(argv[1]);
+	if(argc == 4) {
+		fillFiveDimHist(argv[1], argv[2], argv[3]);
 	} else {
-		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be 1."<<std::endl;
+		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be 3."<<std::endl;
 	}
 }
