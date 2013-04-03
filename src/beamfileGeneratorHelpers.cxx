@@ -160,7 +160,7 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<std::vector<a
 			}
 			inputVector1 = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
 			inputVector2 = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
-			for(unsigned int i = 0; i < entries; ++i) {
+			for(long i = 0; i < entries; ++i) {
 				const double& x = (*inputVector)[i]->_coords[dim];
 				if(x < middle) {
 					inputVector1->push_back((*inputVector)[i]);
