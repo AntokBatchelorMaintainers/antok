@@ -227,14 +227,15 @@ bool antok::Initializer::initializeData() {
 		std::cerr<<"Data seems to be initialized already."<<std::endl;
 		return false;
 	}
-	objectManager->_data = new antok::Data();
-	antok::Data& data = objectManager->getData();
 
 	if(_config == 0) {
 		std::cerr<<"Cannot create data object without reading a config file first."<<std::endl;
 		return false;
 	};
 	YAML::Node& config = *_config;
+
+	objectManager->_data = new antok::Data();
+	antok::Data& data = objectManager->getData();
 
 	if(not hasNodeKey(config, "TreeBranches")) {
 		std::cerr<<"TreeBranches not found in configuration file."<<std::endl;
@@ -280,7 +281,7 @@ bool antok::Initializer::initializeData() {
 			}
 		}
 	}
-	const unsigned int& N_PARTICLES = antok::Constants::n_particles();
+	const unsigned int& N_PARTICLES = antok::Constants::nParticles();
 	for(YAML::const_iterator typeIt = perParticleTreeBranches.begin(); typeIt != perParticleTreeBranches.end(); ++typeIt) {
 		for(YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
 			std::string type = antok::YAMLUtils::getString(typeIt->first);
@@ -507,7 +508,6 @@ bool antok::Initializer::initializePlotter() {
 		std::cerr<<"Event seems to be initialized already."<<std::endl;
 		return false;
 	}
-
 	objectManager->_plotter = antok::Plotter::instance();
 
 	antok::Plotter& plotter = antok::ObjectManager::instance()->getPlotter();

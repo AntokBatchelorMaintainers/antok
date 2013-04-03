@@ -79,13 +79,3 @@ mkdir build && cd build
 cmake ..")
   endif()
 endmacro(enforce_out_of_source_build)
-
-
-# removes item from property list of enabled features and adds it to the list of disabled ones
-function(disable_feature FEATURE_NAME)
-	set(${FEATURE_NAME}_FOUND FALSE)
-	get_property(_FEATURES GLOBAL PROPERTY ENABLED_FEATURES)
-	list(REMOVE_ITEM _FEATURES ${FEATURE_NAME})
-	set_property(GLOBAL PROPERTY ENABLED_FEATURES ${_FEATURES})
-	set_property(GLOBAL APPEND PROPERTY DISABLED_FEATURES ${FEATURE_NAME})
-endfunction(disable_feature)

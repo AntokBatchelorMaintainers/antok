@@ -23,8 +23,8 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 		exit(1);
 	}
 
-	const double& CHARGED_KAON_MASS = antok::Constants::charged_kaon_mass();
-	const double& PION_MASS = antok::Constants::charged_pion_mass();
+	const double& CHARGED_KAON_MASS = antok::Constants::chargedKaonMass();
+	const double& PION_MASS = antok::Constants::chargedPionMass();
 
 	new TApplication("app", 0, 0);
 
@@ -162,7 +162,7 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 
 		TVector3 p3Beam;
 		p3Beam.SetXYZ(gradx, grady, 1.);
-		TLorentzVector pBeam = antok::get_beam_energy(p3Beam, pTot);
+		TLorentzVector pBeam = antok::getBeamEnergy(p3Beam, pTot);
 		p3Beam = pBeam.Vect();
 
 		double t = std::fabs((pBeam - pTot).Mag2());

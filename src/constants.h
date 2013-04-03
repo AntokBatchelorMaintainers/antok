@@ -13,11 +13,11 @@ namespace antok {
 
 	  public:
 
-		static const double& charged_kaon_mass() { assert(initialized()); return _charged_kaon_mass; };
-		static const double& charged_pion_mass() { assert(initialized()); return _charged_pion_mass; };
-		static const double& proton_mass() { assert(initialized()); return _proton_mass; };
+		static const double& chargedKaonMass() { assert(initialized()); return _charged_kaon_mass; };
+		static const double& chargedPionMass() { assert(initialized()); return _charged_pion_mass; };
+		static const double& protonMass() { assert(initialized()); return _proton_mass; };
 
-		static const unsigned int& n_particles() { assert(initialized()); return _n_particles; };
+		static const unsigned int& nParticles() { assert(initialized()); return _n_particles; };
 
 		static const bool& initialized() { return _initialized; };
 
