@@ -85,6 +85,10 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 			pSum += particles.at(j);
 		}
 		particles[0] = antok::getBeamEnergy(TVector3(gradx, grady, 1.), pSum);
+		double beamEnergy = particles[0].E();
+		if((beamEnergy > 210) or (beamEnergy < 175)) {
+			continue;
+		}
 		TVector3 beam = particles[0].Vect();
 		bx = beam.X();
 		by = beam.Y();
@@ -106,7 +110,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 	std::vector<double> lowerCorner(5, 0);
 	std::vector<double> upperCorner(5, 0);
 	bool first = true;
-	for(unsigned int i = 0; i < entries; ++i) {
+	for(unsigned int i = 0; i < tempTree->size(); ++i) {
 		primVx = (*tempTree)[i]->_coords[0];
 		primVy = (*tempTree)[i]->_coords[1];
 		bx = (*tempTree)[i]->_coords[2];
@@ -176,12 +180,13 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 		const antok::beamfileGenerator::fiveDimBin& currentBin = binIt->second;
 		std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = binIt->first;
 		binContent = currentTree->size();
+		const double binContentAsDouble = (double)binContent;
 
-		primVx_sigma = (currentBin._b[0] - currentBin._a[0]) / entries;
-		primVy_sigma = (currentBin._b[1] - currentBin._a[1]) / entries;
-		bx_sigma = (currentBin._b[2] - currentBin._a[2]) / entries;
-		by_sigma = (currentBin._b[3] - currentBin._a[3]) / entries;
-		bz_sigma = (currentBin._b[4] - currentBin._a[4]) / entries;
+		primVx_sigma = (currentBin._b[0] - currentBin._a[0]) / binContentAsDouble;
+		primVy_sigma = (currentBin._b[1] - currentBin._a[1]) / binContentAsDouble;
+		bx_sigma = (currentBin._b[2] - currentBin._a[2]) / binContentAsDouble;
+		by_sigma = (currentBin._b[3] - currentBin._a[3]) / binContentAsDouble;
+		bz_sigma = (currentBin._b[4] - currentBin._a[4]) / binContentAsDouble;
 		for(int i = 0; i < binContent; ++i) {
 			primVx = (*currentTree)[i]->_coords[0];
 			primVy = (*currentTree)[i]->_coords[1];
