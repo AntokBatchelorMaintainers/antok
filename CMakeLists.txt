@@ -64,6 +64,8 @@ else()
 endif()
 
 # setup ROOT includes and libraries
+message(STATUS "")
+message(STATUS ">>> Setting up ROOT.")
 find_package(ROOT 5.34.04 REQUIRED)
 
 # setup Python
@@ -105,6 +107,8 @@ else()
 endif()
 
 # find yaml
+message(STATUS "")
+message(STATUS ">>> Setting up YAML.")
 find_package(YamlCpp 0.3.0 REQUIRED)
 
 set(ANTOK_LIB "antok")
