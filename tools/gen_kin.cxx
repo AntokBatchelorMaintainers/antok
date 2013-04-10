@@ -66,6 +66,8 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 	double px5, py5, pz5;
 	TLorentzVector p5;
 
+	double beamx, beamy, beamz;
+
 	TLorentzVector k1;
 	TLorentzVector k2;
 	TLorentzVector k3;
@@ -74,28 +76,48 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 
 	TLorentzVector pTot;
 
-	int cedarID_bayes;
-
 	double gradx, grady;
 
-	intree->SetBranchAddress("Mom_x1", &px1);
-	intree->SetBranchAddress("Mom_y1", &py1);
-	intree->SetBranchAddress("Mom_z1", &pz1);
-	intree->SetBranchAddress("Mom_x2", &px2);
-	intree->SetBranchAddress("Mom_y2", &py2);
-	intree->SetBranchAddress("Mom_z2", &pz2);
-	intree->SetBranchAddress("Mom_x3", &px3);
-	intree->SetBranchAddress("Mom_y3", &py3);
-	intree->SetBranchAddress("Mom_z3", &pz3);
-	intree->SetBranchAddress("Mom_x4", &px4);
-	intree->SetBranchAddress("Mom_y4", &py4);
-	intree->SetBranchAddress("Mom_z4", &pz4);
-	intree->SetBranchAddress("Mom_x5", &px5);
-	intree->SetBranchAddress("Mom_y5", &py5);
-	intree->SetBranchAddress("Mom_z5", &pz5);
-	intree->SetBranchAddress("cedarID_bayes", &cedarID_bayes);
-	intree->SetBranchAddress("gradx", &gradx);
-	intree->SetBranchAddress("grady", &grady);
+	const bool GENERATED_MONTECARLO = false;
+
+	if(not GENERATED_MONTECARLO) {
+		intree->SetBranchAddress("Mom_x1", &px1);
+		intree->SetBranchAddress("Mom_y1", &py1);
+		intree->SetBranchAddress("Mom_z1", &pz1);
+		intree->SetBranchAddress("Mom_x2", &px2);
+		intree->SetBranchAddress("Mom_y2", &py2);
+		intree->SetBranchAddress("Mom_z2", &pz2);
+		intree->SetBranchAddress("Mom_x3", &px3);
+		intree->SetBranchAddress("Mom_y3", &py3);
+		intree->SetBranchAddress("Mom_z3", &pz3);
+		intree->SetBranchAddress("Mom_x4", &px4);
+		intree->SetBranchAddress("Mom_y4", &py4);
+		intree->SetBranchAddress("Mom_z4", &pz4);
+		intree->SetBranchAddress("Mom_x5", &px5);
+		intree->SetBranchAddress("Mom_y5", &py5);
+		intree->SetBranchAddress("Mom_z5", &pz5);
+		intree->SetBranchAddress("gradx", &gradx);
+		intree->SetBranchAddress("grady", &grady);
+	} else {
+		intree->SetBranchAddress("Mom_MCTruth_x1", &px1);
+		intree->SetBranchAddress("Mom_MCTruth_y1", &py1);
+		intree->SetBranchAddress("Mom_MCTruth_z1", &pz1);
+		intree->SetBranchAddress("Mom_MCTruth_x2", &px2);
+		intree->SetBranchAddress("Mom_MCTruth_y2", &py2);
+		intree->SetBranchAddress("Mom_MCTruth_z2", &pz2);
+		intree->SetBranchAddress("Mom_MCTruth_x3", &px3);
+		intree->SetBranchAddress("Mom_MCTruth_y3", &py3);
+		intree->SetBranchAddress("Mom_MCTruth_z3", &pz3);
+		intree->SetBranchAddress("Mom_MCTruth_x4", &px4);
+		intree->SetBranchAddress("Mom_MCTruth_y4", &py4);
+		intree->SetBranchAddress("Mom_MCTruth_z4", &pz4);
+		intree->SetBranchAddress("Mom_MCTruth_x5", &px5);
+		intree->SetBranchAddress("Mom_MCTruth_y5", &py5);
+		intree->SetBranchAddress("Mom_MCTruth_z5", &pz5);
+		intree->SetBranchAddress("Mom_x0_MCTruth", &beamx);
+		intree->SetBranchAddress("Mom_y0_MCTruth", &beamy);
+		intree->SetBranchAddress("Mom_z0_MCTruth", &beamz);
+	}
 
 	std::vector<TH1*> hists;
 	hists.push_back(new TH1D("5_pi_mass", "5 Pion Mass", 1000, 0., 7.));
@@ -161,9 +183,15 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 		pTot = p1+p2+p3+p4+p5;
 
 		TVector3 p3Beam;
-		p3Beam.SetXYZ(gradx, grady, 1.);
-		TLorentzVector pBeam = antok::getBeamEnergy(p3Beam, pTot);
-		p3Beam = pBeam.Vect();
+		TLorentzVector pBeam;
+		if(not GENERATED_MONTECARLO) {
+			p3Beam.SetXYZ(gradx, grady, 1.);
+			pBeam = antok::getBeamEnergy(p3Beam, pTot);
+			p3Beam = pBeam.Vect();
+		} else {
+			p3Beam.SetXYZ(beamx, beamy, beamz);
+			pBeam.SetXYZM(p3Beam.X(), p3Beam.Y(), p3Beam.Z(), PION_MASS);
+		}
 
 		double t = std::fabs((pBeam - pTot).Mag2());
 		double tMin = std::fabs((std::pow(pTot.M2() - pBeam.M2(), 2)) / (4. * p3Beam.Mag2()));
