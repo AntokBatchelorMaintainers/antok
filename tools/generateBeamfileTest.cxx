@@ -8,7 +8,7 @@
 #include<TTree.h>
 
 #include<basic_calcs.h>
-#include<beamfileGeneratorHelpers.h>
+#include<beamfile_generator_helpers.h>
 #include<constants.h>
 #include<initializer.h>
 

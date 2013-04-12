@@ -1,4 +1,4 @@
-#include<beamfileGeneratorHelpers.h>
+#include<beamfile_generator_helpers.h>
 
 #include<algorithm>
 #include<assert.h>
