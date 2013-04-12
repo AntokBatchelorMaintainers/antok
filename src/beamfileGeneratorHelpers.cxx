@@ -140,7 +140,7 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<std::vector<a
 			if(debug) {
 				std::cout<<"entries: " << entries << ", half: " << half << std::endl;
 				std::cout<<"middle coordinates: ["<<(*inputVector)[half]->_coords[0];
-				for(unsigned int i = 1; i < 4; ++i) {
+				for(unsigned int i = 1; i < 5; ++i) {
 					std::cout<<", "<<(*inputVector)[half]->_coords[i];
 				}
 				std::cout<<"]"<<std::endl;
@@ -180,7 +180,7 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<std::vector<a
 				bin.print(std::cout);
 				std::cout<<"entries: " << entries << ", half: " << half << std::endl;
 				std::cout<<"middle coordinates: ["<<(*inputVector)[half]->_coords[0];
-				for(unsigned int i = 1; i < 4; ++i) {
+				for(unsigned int i = 1; i < 5; ++i) {
 					std::cout<<", "<<(*inputVector)[half]->_coords[i];
 				}
 				std::cout<<"]"<<std::endl;
