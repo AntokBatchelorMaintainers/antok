@@ -97,6 +97,15 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	antok::beamfileGenerator::fiveDimBin bin(lowerCorner, upperCorner);
 	std::cout<<"Got first bin: "<<std::endl;
 	bin.print(std::cout);
+	std::vector<double> scalingFactors(5, 0.);
+	for(unsigned int i = 0; i < scalingFactors.size(); ++i) {
+		scalingFactors[i] = bin._b[i] - bin._a[i];
+	}
+	std::cout<<"Scaling factors: ["<<scalingFactors[0];
+	for(unsigned int i = 1; i < scalingFactors.size(); ++i) {
+		std::cout<<", "<<scalingFactors[i];
+	}
+	std::cout<<"]"<<std::endl;
 
 	std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
 	          antok::beamfileGenerator::fiveDimBin> > adaptiveBins;
@@ -119,6 +128,20 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	outTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
 	outTree->Branch("bin_content", &binContent, "bin_content/I");
 
+	std::vector<double*> coords(5);
+	std::vector<double*> sigmas(5);
+	coords[0] = &primVx;
+	coords[1] = &primVy;
+	coords[2] = &bx;
+	coords[3] = &by;
+	coords[4] = &bz;
+	sigmas[0] = &primVx_sigma;
+	sigmas[1] = &primVy_sigma;
+	sigmas[2] = &bx_sigma;
+	sigmas[3] = &by_sigma;
+	sigmas[4] = &bz_sigma;
+
+
 	std::cout << "Calculating and saving sigmas." << std:: endl;
 
 	unsigned binNumber = 0;
@@ -135,17 +158,20 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 		binContent = currentTree->size();
 		const double binContentAsDouble = (double)binContent;
 
-		primVx_sigma = (currentBin._b[0] - currentBin._a[0]) / binContentAsDouble;
-		primVy_sigma = (currentBin._b[1] - currentBin._a[1]) / binContentAsDouble;
-		bx_sigma = (currentBin._b[2] - currentBin._a[2]) / binContentAsDouble;
-		by_sigma = (currentBin._b[3] - currentBin._a[3]) / binContentAsDouble;
-		bz_sigma = (currentBin._b[4] - currentBin._a[4]) / binContentAsDouble;
+		double meanVolume = 1.;
+		for(unsigned int i = 0; i < 5; ++i) {
+			meanVolume *= (currentBin._b[i] - currentBin._a[i]) / scalingFactors[i];
+		}
+		meanVolume /= binContentAsDouble;
+		const double meanVolumeEdgeLength = pow(meanVolume, 0.2);
+
+		for(unsigned int i = 0; i < 5; ++i) {
+			*(sigmas[i]) = meanVolumeEdgeLength * scalingFactors[i];
+		}
 		for(int i = 0; i < binContent; ++i) {
-			primVx = (*currentTree)[i]->_coords[0];
-			primVy = (*currentTree)[i]->_coords[1];
-			bx = (*currentTree)[i]->_coords[2];
-			by = (*currentTree)[i]->_coords[3];
-			bz = (*currentTree)[i]->_coords[4];
+			for(unsigned int j = 0; j < 5; ++j) {
+				*(coords[j]) = (*currentTree)[i]->_coords[j];
+			}
 			outTree->Fill();
 		}
 	}
