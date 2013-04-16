@@ -15,6 +15,8 @@
 
 void fillFiveDimHist(std::string inFileName, std::string outFileName, std::string configFileName) {
 
+	const unsigned int N_PARTICLES = 5;
+
 	antok::Initializer* initializer = antok::Initializer::instance();
 	if(not initializer->readConfigFile(configFileName)) {
 		std::cerr<<"Could not open config file. Aborting..."<<std::endl;
@@ -33,30 +35,27 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 	TH1D* momY = new TH1D("momY", "momY", 50000, -0.8, 0.8);
 	TH1D* momZ = new TH1D("momZ", "momZ", 10000, 187, 196);
 
-	double px1, py1, pz1;
-	double px2, py2, pz2;
-	double px3, py3, pz3;
-/*	double px4, py4, pz4;
-	double px5, py5, pz5;
-*/	double gradx, grady;
+	std::vector<double> px;
+	std::vector<double> py;
+	std::vector<double> pz;
+	px.resize(N_PARTICLES, 0.);
+	py.resize(N_PARTICLES, 0.);
+	pz.resize(N_PARTICLES, 0.);
+	double gradx, grady;
 	double primVx, primVy;
 
-	inTree->SetBranchAddress("Mom_x1", &px1);
-	inTree->SetBranchAddress("Mom_y1", &py1);
-	inTree->SetBranchAddress("Mom_z1", &pz1);
-	inTree->SetBranchAddress("Mom_x2", &px2);
-	inTree->SetBranchAddress("Mom_y2", &py2);
-	inTree->SetBranchAddress("Mom_z2", &pz2);
-	inTree->SetBranchAddress("Mom_x3", &px3);
-	inTree->SetBranchAddress("Mom_y3", &py3);
-	inTree->SetBranchAddress("Mom_z3", &pz3);
-/*	inTree->SetBranchAddress("Mom_x4", &px4);
-	inTree->SetBranchAddress("Mom_y4", &py4);
-	inTree->SetBranchAddress("Mom_z4", &pz4);
-	inTree->SetBranchAddress("Mom_x5", &px5);
-	inTree->SetBranchAddress("Mom_y5", &py5);
-	inTree->SetBranchAddress("Mom_z5", &pz5);
-*/	inTree->SetBranchAddress("gradx", &gradx);
+	for(unsigned int i = 0; i < N_PARTICLES; ++i) {
+		std::stringstream strStr;
+		strStr<<"Mom_x"<<(i+1);
+		inTree->SetBranchAddress(strStr.str().c_str(), &(px[i]));
+		strStr.str("");
+		strStr<<"Mom_y"<<(i+1);
+		inTree->SetBranchAddress(strStr.str().c_str(), &(py[i]));
+		strStr.str("");
+		strStr<<"Mom_z"<<(i+1);
+		inTree->SetBranchAddress(strStr.str().c_str(), &(pz[i]));
+	}
+	inTree->SetBranchAddress("gradx", &gradx);
 	inTree->SetBranchAddress("grady", &grady);
 	inTree->SetBranchAddress("X_primV", &primVx);
 	inTree->SetBranchAddress("Y_primV", &primVy);
@@ -64,8 +63,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 	double bx, by, bz;
 
 	std::vector<TLorentzVector> particles;
-//	particles.resize(6);
-	particles.resize(4);
+	particles.resize(N_PARTICLES + 1);
 	unsigned int entries = inTree->GetEntries();
 
 	std::vector<antok::beamfileGenerator::fiveDimCoord*>* tempTree = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
@@ -74,16 +72,12 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 
 		inTree->GetEntry(i);
 
-		particles[1].SetXYZM(px1, py1, pz1, PION_MASS);
-		particles[2].SetXYZM(px2, py2, pz2, PION_MASS);
-		particles[3].SetXYZM(px3, py3, pz3, PION_MASS);
-/*		particles[4].SetXYZM(px4, py4, pz4, PION_MASS);
-		particles[5].SetXYZM(px5, py5, pz5, PION_MASS);
-*/
 		TLorentzVector pSum;
-		for(unsigned int j = 1; j < 4; ++j) {
-			pSum += particles.at(j);
+		for(unsigned int j = 0; j < N_PARTICLES; ++j) {
+			particles[j+1].SetXYZM(px[j], py[j], pz[j], PION_MASS);
+			pSum += particles[j+1];
 		}
+
 		particles[0] = antok::getBeamEnergy(TVector3(gradx, grady, 1.), pSum);
 		double beamEnergy = particles[0].E();
 		if((beamEnergy > 210) or (beamEnergy < 175)) {
@@ -144,15 +138,6 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 	antok::beamfileGenerator::fiveDimBin bin(lowerCorner, upperCorner);
 	std::cout<<"Got first bin: "<<std::endl;
 	bin.print(std::cout);
-	std::vector<double> scalingFactors(5, 0.);
-	for(unsigned int i = 0; i < scalingFactors.size(); ++i) {
-		scalingFactors[i] = bin._b[i] - bin._a[i];
-	}
-	std::cout<<"Scaling factors: ["<<scalingFactors[0];
-	for(unsigned int i = 1; i < scalingFactors.size(); ++i) {
-		std::cout<<", "<<scalingFactors[i];
-	}
-	std::cout<<"]"<<std::endl;
 
 	std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
 	          antok::beamfileGenerator::fiveDimBin> > adaptiveBins;
@@ -205,15 +190,8 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 		binContent = currentTree->size();
 		const double binContentAsDouble = (double)binContent;
 
-		double meanVolume = 1.;
 		for(unsigned int i = 0; i < 5; ++i) {
-			meanVolume *= (currentBin._b[i] - currentBin._a[i]) / scalingFactors[i];
-		}
-		meanVolume /= binContentAsDouble;
-		const double meanVolumeEdgeLength = pow(meanVolume, 0.2);
-
-		for(unsigned int i = 0; i < 5; ++i) {
-			*(sigmas[i]) = meanVolumeEdgeLength * scalingFactors[i];
+			*(sigmas[i]) = (currentBin._b[i] - currentBin._a[i]) / binContentAsDouble;
 		}
 		for(int i = 0; i < binContent; ++i) {
 			for(unsigned int j = 0; j < 5; ++j) {

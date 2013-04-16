@@ -124,9 +124,10 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<std::vector<a
 		std::cout<<"input bin:"<<std::endl;
 		bin.print(std::cout);
 	}
-	if(entries < (2 * antok::beamfileGenerator::MIN_ENTRIES)) {
+	if(dim == 0 and entries < (32 * antok::beamfileGenerator::MIN_ENTRIES)) {
 		bins.push_back(std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
-				                 antok::beamfileGenerator::fiveDimBin>(inputVector, bin));
+		                         antok::beamfileGenerator::fiveDimBin>(inputVector, bin));
+
 	} else {
 		antok::beamfileGenerator::fiveDimBin newBin1;
 		antok::beamfileGenerator::fiveDimBin newBin2;
