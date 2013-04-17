@@ -1,6 +1,9 @@
 
+#include<iomanip>
 #include<iostream>
 #include<string>
+
+#include<boost/shared_ptr.hpp>
 
 #include<TFile.h>
 #include<TH1D.h>
@@ -9,6 +12,7 @@
 
 #include<basic_calcs.h>
 #include<beamfile_generator_helpers.h>
+#include<beamfile_generator_5dBin.h>
 #include<constants.h>
 #include<initializer.h>
 
@@ -94,12 +98,14 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 			if(bz > upperCorner[4]) upperCorner[4] = bz;
 		}
 	}
-	antok::beamfileGenerator::fiveDimBin bin(lowerCorner, upperCorner);
+	boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> bin(new antok::beamfileGenerator::fiveDimBin (lowerCorner, upperCorner));
+	bin->setOnLowerEdge(std::vector<bool>(5, true));
+	bin->setOnUpperEdge(std::vector<bool>(5, true));
 	std::cout<<"Got first bin: "<<std::endl;
-	bin.print(std::cout);
+	bin->print(std::cout);
 	std::vector<double> scalingFactors(5, 0.);
 	for(unsigned int i = 0; i < scalingFactors.size(); ++i) {
-		scalingFactors[i] = bin._b[i] - bin._a[i];
+		scalingFactors[i] = bin->getUpperCorner()[i] - bin->getLowerCorner()[i];
 	}
 	std::cout<<"Scaling factors: ["<<scalingFactors[0];
 	for(unsigned int i = 1; i < scalingFactors.size(); ++i) {
@@ -108,10 +114,12 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	std::cout<<"]"<<std::endl;
 
 	std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
-	          antok::beamfileGenerator::fiveDimBin> > adaptiveBins;
-	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, tempTree, 4, true);
+	          boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > > adaptiveBins;
+	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, tempTree, 0, true);
 	unsigned int nBins = adaptiveBins.size();
 	std::cout<<"Split phase space in "<<nBins<<" bins."<<std::endl;
+	std::cout<<"(self-reporting of the bin class gives "
+	         <<antok::beamfileGenerator::fiveDimBin::getNExistingBins()<<" bins)" <<std::endl;
 
 	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
 	int binContent = 0;
@@ -144,29 +152,27 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 
 	std::cout << "Calculating and saving sigmas." << std:: endl;
 
-	unsigned binNumber = 0;
+	unsigned int binNumber = 0;
+	unsigned int roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nBins / 100.) + 0.5)) + 0.5);
 	for(
 		std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
-		          antok::beamfileGenerator::fiveDimBin> >::const_iterator binIt = adaptiveBins.begin();
+		                    boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > >::const_iterator binIt = adaptiveBins.begin();
 		binIt != adaptiveBins.end();
 		++binIt
 	)
 	{
-		std::cout<<"Bin "<<++binNumber<<" of "<<nBins<<std::endl;
-		const antok::beamfileGenerator::fiveDimBin& currentBin = binIt->second;
+		if(not (binNumber % roundingNumber)) {
+			std::cout<<"Bin "<<binNumber<<" of "<<nBins<<" ("<<std::setprecision(2)
+			         <<(binNumber/(double)nBins*100)<<"%)"<<std::endl;
+		}
+		++binNumber;
+		const antok::beamfileGenerator::fiveDimBin& currentBin = *(binIt->second);
 		std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = binIt->first;
 		binContent = currentTree->size();
 		const double binContentAsDouble = (double)binContent;
 
-		double meanVolume = 1.;
 		for(unsigned int i = 0; i < 5; ++i) {
-			meanVolume *= (currentBin._b[i] - currentBin._a[i]) / scalingFactors[i];
-		}
-		meanVolume /= binContentAsDouble;
-		const double meanVolumeEdgeLength = pow(meanVolume, 0.2);
-
-		for(unsigned int i = 0; i < 5; ++i) {
-			*(sigmas[i]) = meanVolumeEdgeLength * scalingFactors[i];
+			*(sigmas[i]) = (currentBin.getUpperCorner()[i] - currentBin.getLowerCorner()[i]) / binContentAsDouble;
 		}
 		for(int i = 0; i < binContent; ++i) {
 			for(unsigned int j = 0; j < 5; ++j) {

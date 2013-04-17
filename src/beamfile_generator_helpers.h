@@ -1,35 +1,18 @@
-#ifndef ANTOK_BEAMFILEGENERATORHELPERS_H
-#define ANTOK_BEAMFILEGENERATORHELPERS_H
+#ifndef ANTOK_BEAMFILE_GENERATOR_HELPERS_H
+#define ANTOK_BEAMFILE_GENERATOR_HELPERS_H
 
-#include<iostream>
 #include<list>
 #include<vector>
+
+#include<boost/shared_ptr.hpp>
 
 namespace antok {
 
 	namespace beamfileGenerator {
 
+		class fiveDimBin;
+
 		const double MIN_ENTRIES = 10.;
-
-		struct fiveDimBin {
-
-			fiveDimBin() : _a(5,0), _b(5,0) { }
-
-			fiveDimBin(double a0, double a1, double a2, double a3, double a4,
-					   double b0, double b1, double b2, double b3, double b4);
-
-			fiveDimBin(const std::vector<double>& a, const std::vector<double>& b);
-
-			void set(const std::vector<double>& a, const std::vector<double>& b);
-
-			bool inBin(const std::vector<double>& x) const;
-
-			std::vector<double> _a;
-			std::vector<double> _b;
-
-			std::ostream& print(std::ostream& out) const;
-
-		};
 
 		struct fiveDimCoord {
 
@@ -48,11 +31,12 @@ namespace antok {
 		};
 
 		void getAdaptiveBins(std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
-		                               antok::beamfileGenerator::fiveDimBin> >& bins,
-		                     const antok::beamfileGenerator::fiveDimBin& bin,
+		                                         boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > >& bins,
+		                     boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> bin,
 		                     std::vector<antok::beamfileGenerator::fiveDimCoord*>* inputVector,
 		                     int dim = 0,
-		                     bool debug = false);
+		                     bool debug = false,
+		                     unsigned int depth = 0);
 
 	}
 
