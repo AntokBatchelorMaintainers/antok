@@ -103,15 +103,6 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	bin->setOnUpperEdge(std::vector<bool>(5, true));
 	std::cout<<"Got first bin: "<<std::endl;
 	bin->print(std::cout);
-	std::vector<double> scalingFactors(5, 0.);
-	for(unsigned int i = 0; i < scalingFactors.size(); ++i) {
-		scalingFactors[i] = bin->getUpperCorner()[i] - bin->getLowerCorner()[i];
-	}
-	std::cout<<"Scaling factors: ["<<scalingFactors[0];
-	for(unsigned int i = 1; i < scalingFactors.size(); ++i) {
-		std::cout<<", "<<scalingFactors[i];
-	}
-	std::cout<<"]"<<std::endl;
 
 	std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
 	          boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > > adaptiveBins;
@@ -169,10 +160,10 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 		const antok::beamfileGenerator::fiveDimBin& currentBin = *(binIt->second);
 		std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = binIt->first;
 		binContent = currentTree->size();
-		const double binContentAsDouble = (double)binContent;
 
+		const std::vector<double>& sigmasFromBin = currentBin.getSigmas(binContent);
 		for(unsigned int i = 0; i < 5; ++i) {
-			*(sigmas[i]) = (currentBin.getUpperCorner()[i] - currentBin.getLowerCorner()[i]) / binContentAsDouble;
+			*(sigmas[i]) = sigmasFromBin[i];
 		}
 		for(int i = 0; i < binContent; ++i) {
 			for(unsigned int j = 0; j < 5; ++j) {

@@ -201,10 +201,10 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 		const antok::beamfileGenerator::fiveDimBin& currentBin = *(binIt->second);
 		std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = binIt->first;
 		binContent = currentTree->size();
-		const double binContentAsDouble = (double)binContent;
 
+		const std::vector<double>& sigmasFromBin = currentBin.getSigmas(binContent);
 		for(unsigned int i = 0; i < 5; ++i) {
-			*(sigmas[i]) = (currentBin.getUpperCorner()[i] - currentBin.getLowerCorner()[i]) / binContentAsDouble;
+			*(sigmas[i]) = sigmasFromBin[i];
 		}
 		for(int i = 0; i < binContent; ++i) {
 			for(unsigned int j = 0; j < 5; ++j) {

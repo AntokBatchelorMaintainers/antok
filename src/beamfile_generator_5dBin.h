@@ -23,7 +23,7 @@ namespace antok {
 				  _neighbors(),
 				  _onLowerEdge(5, false),
 				  _onUpperEdge(5, false),
-				  _sigmaCache(0) { nExistingBins += 1; }
+				  _sigmaCache(0) { _nExistingBins += 1; }
 
 			fiveDimBin(double a0, double a1, double a2, double a3, double a4,
 					   double b0, double b1, double b2, double b3, double b4);
@@ -58,7 +58,9 @@ namespace antok {
 
 			std::ostream& print(std::ostream& out) const;
 
-			static const long& getNExistingBins() { return nExistingBins; }
+			static const long& getNExistingBins() { return _nExistingBins; }
+
+			static void setDebug(bool debug = true) { _debug = debug; }
 
 		  private:
 
@@ -74,7 +76,9 @@ namespace antok {
 			static const double EPSILON;
 			static bool doubleEqual(const double& lhs, const double& rhs);
 
-			static long nExistingBins;
+			static long _nExistingBins;
+
+			static bool _debug;
 
 		};
 

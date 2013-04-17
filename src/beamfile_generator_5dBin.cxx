@@ -7,7 +7,8 @@
 
 
 const double antok::beamfileGenerator::fiveDimBin::EPSILON = 5. * std::numeric_limits<double>::epsilon();
-long antok::beamfileGenerator::fiveDimBin::nExistingBins = 0;
+long antok::beamfileGenerator::fiveDimBin::_nExistingBins = 0;
+bool antok::beamfileGenerator::fiveDimBin::_debug = false;
 
 antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
                                                  double a1,
@@ -36,7 +37,7 @@ antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
 	_b[2] = a2 < b2 ? b2 : a2;
 	_b[3] = a3 < b3 ? b3 : a3;
 	_b[4] = a4 < b4 ? b4 : a4;
-	nExistingBins += 1;
+	_nExistingBins += 1;
 }
 
 antok::beamfileGenerator::fiveDimBin::fiveDimBin(const std::vector<double>& a, const std::vector<double>& b)
@@ -53,13 +54,13 @@ antok::beamfileGenerator::fiveDimBin::fiveDimBin(const std::vector<double>& a, c
 		_a[i] = a[i] < b[i] ? a[i] : b[i];
 		_b[i] = a[i] < b[i] ? b[i] : a[i];
 	}
-	nExistingBins += 1;
+	_nExistingBins += 1;
 }
 
 antok::beamfileGenerator::fiveDimBin::~fiveDimBin()
 {
 	_neighbors.clear();
-	nExistingBins -= 1;
+	_nExistingBins -= 1;
 	delete _sigmaCache;
 }
 
@@ -161,16 +162,50 @@ const std::vector<double>& antok::beamfileGenerator::fiveDimBin::getSigmas(unsig
                                                                            bool forceCalculation) const
 {
 
-	if(not _sigmas) {
-		_sigmas = new std::vector<double>(5, 0.);
+	if(not _sigmaCache) {
+		_sigmaCache = new std::vector<double>(5, 0.);
 		forceCalculation = true;
 	}
 	if(forceCalculation) {
+		std::vector<double> scalingFactors(4, 0.);
+		double scalingFactorProduct = 1.;
+		double scalingNorm = (getUpperCorner()[0] - getLowerCorner()[0]);
+		double binVolume = 1.;
+		if(_debug) {
+			std::cout<<std::endl;
+			this->print(std::cout);
+			std::cout<<"binContent: "<<binContent<<std::endl;
+		}
 		for(unsigned int i = 0; i < 5; ++i) {
-			*(_sigmas[i]) = (getUpperCorner()[i] - getLowerCorner()[i]) / (double)binContent;
+			binVolume *= getUpperCorner()[i] - getLowerCorner()[i];
+			if(_debug) {
+				std::cout<<"edge "<<i<<" length: "<< getUpperCorner()[i] - getLowerCorner()[i]<<std::endl;
+			}
+			if(i > 0) {
+				scalingFactors[i-1] = (getUpperCorner()[i] - getLowerCorner()[i]) / scalingNorm;
+				if(_debug) {
+					std::cout<<"scaling factor "<<i<<": "<< scalingFactors[i-1]<<std::endl;
+				}
+				scalingFactorProduct *= scalingFactors[i-1];
+			}
+		}
+		(*_sigmaCache)[0] = std::pow(binVolume / (((double)binContent) * scalingFactorProduct), 0.2);
+		if(_debug) {
+			std::cout<<"scaling factor product: "<< scalingFactorProduct<<std::endl;
+			std::cout<<"binVolume: "<<binVolume<<std::endl;
+			std::cout<<"sigma "<<0<<": "<<(*_sigmaCache)[0]<<std::endl;
+		}
+		for(unsigned int i = 0; i < 4; ++i) {
+			(*_sigmaCache)[i+1] = scalingFactors[i] * (*_sigmaCache)[0];
+			if(_debug) {
+				std::cout<<"sigma "<<i+1<<": "<<(*_sigmaCache)[i+1]<<std::endl;
+			}
+		}
+		if(_debug) {
+			std::cout<<std::endl;
 		}
 	}
-	return *_sigmas;
+	return *_sigmaCache;
 
 }
 
