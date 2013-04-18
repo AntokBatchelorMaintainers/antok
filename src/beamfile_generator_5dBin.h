@@ -13,6 +13,8 @@ namespace antok {
 
 	namespace beamfileGenerator {
 
+		class fiveDimCoord;
+
 		class fiveDimBin : public boost::enable_shared_from_this<fiveDimBin> {
 
 		  public:
@@ -20,15 +22,21 @@ namespace antok {
 			fiveDimBin()
 				: _a(5,0.),
 				  _b(5,0.),
+				  _entries(0),
 				  _neighbors(),
 				  _onLowerEdge(5, false),
 				  _onUpperEdge(5, false),
 				  _sigmaCache(0) { _nExistingBins += 1; }
 
+			// this takes ownership of entries!
 			fiveDimBin(double a0, double a1, double a2, double a3, double a4,
-					   double b0, double b1, double b2, double b3, double b4);
+					   double b0, double b1, double b2, double b3, double b4,
+					   std::vector<antok::beamfileGenerator::fiveDimCoord*>* entries);
 
-			fiveDimBin(const std::vector<double>& a, const std::vector<double>& b);
+			// this takes ownership of entries!
+			fiveDimBin(const std::vector<double>& a,
+			           const std::vector<double>& b,
+			           std::vector<antok::beamfileGenerator::fiveDimCoord*>* entries);
 
 			virtual ~fiveDimBin();
 
@@ -40,7 +48,9 @@ namespace antok {
 			bool inBin(const std::vector<double>& x) const;
 
 			std::pair<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin>,
-			          boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> > divide(const int& dim, const double& splitPoint) const;
+			          boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> > divide(const int& dim,
+			                                                                           std::stringstream* outPtr = 0,
+			                                                                           unsigned int depth = 0) const;
 
 			bool areWeNeighbors(boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> bin) const;
 			void addNeighbor(boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> bin) { _neighbors.insert(bin); }
@@ -55,6 +65,9 @@ namespace antok {
 			std::vector<bool>& getOnUpperEdge() { return _onUpperEdge; }
 
 			double getVolume() const;
+			const std::vector<antok::beamfileGenerator::fiveDimCoord*>* getEvents() const { return _entries; }
+			unsigned int getEntries() const { return _entries->size(); }
+			unsigned int getEdgeity() const;
 
 			const std::vector<double>& getSigmas(unsigned int binContent, bool forceCalculation = false) const;
 
@@ -64,11 +77,14 @@ namespace antok {
 
 			static void setDebug(bool debug = true) { _debug = debug; }
 			static void setPrintNeighbors(bool printNeighbors = true) { _printNeighbors = printNeighbors; }
+			static void setDifferentSigmaCalculationForEdges(bool setDiffSigmaCalc = true) { _differentSigmaCalculationForEdges = setDiffSigmaCalc; }
 
 		  private:
 
 			std::vector<double> _a; // lower corner
 			std::vector<double> _b; // upper corner
+
+			std::vector<antok::beamfileGenerator::fiveDimCoord*>* _entries;
 
 			std::set<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> > _neighbors;
 			std::vector<bool> _onLowerEdge;
@@ -83,6 +99,7 @@ namespace antok {
 
 			static bool _debug;
 			static bool _printNeighbors;
+			static bool _differentSigmaCalculationForEdges;
 
 		};
 

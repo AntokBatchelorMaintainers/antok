@@ -4,14 +4,28 @@
 #include<assert.h>
 #include<cmath>
 #include<limits>
+#include<sstream>
 
 #include<beamfile_generator_helpers.h>
+
+
+namespace {
+
+	struct __compareCoords {
+		bool operator ()(antok::beamfileGenerator::fiveDimCoord *lhs, antok::beamfileGenerator::fiveDimCoord *rhs)
+		{
+			return *lhs < *rhs;
+		}
+	};
+
+}
 
 
 const double antok::beamfileGenerator::fiveDimBin::EPSILON = 5. * std::numeric_limits<double>::epsilon();
 long antok::beamfileGenerator::fiveDimBin::_nExistingBins = 0;
 bool antok::beamfileGenerator::fiveDimBin::_debug = false;
 bool antok::beamfileGenerator::fiveDimBin::_printNeighbors = false;
+bool antok::beamfileGenerator::fiveDimBin::_differentSigmaCalculationForEdges = false;
 
 antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
                                                  double a1,
@@ -22,9 +36,11 @@ antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
                                                  double b1,
                                                  double b2,
                                                  double b3,
-                                                 double b4)
+                                                 double b4,
+                                                 std::vector<antok::beamfileGenerator::fiveDimCoord*>* entries)
 	: _a(5, 0.),
 	  _b(5, 0.),
+	  _entries(entries),
 	  _neighbors(),
 	  _onLowerEdge(5, false),
 	  _onUpperEdge(5, false),
@@ -43,9 +59,12 @@ antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
 	_nExistingBins += 1;
 }
 
-antok::beamfileGenerator::fiveDimBin::fiveDimBin(const std::vector<double>& a, const std::vector<double>& b)
+antok::beamfileGenerator::fiveDimBin::fiveDimBin(const std::vector<double>& a,
+                                                 const std::vector<double>& b,
+                                                 std::vector<antok::beamfileGenerator::fiveDimCoord*>* entries)
 	: _a(5, 0.),
 	  _b(5, 0.),
+	  _entries(entries),
 	  _neighbors(),
 	  _onLowerEdge(5, false),
 	  _onUpperEdge(5, false),
@@ -65,6 +84,7 @@ antok::beamfileGenerator::fiveDimBin::~fiveDimBin()
 	_neighbors.clear();
 	_nExistingBins -= 1;
 	delete _sigmaCache;
+	delete _entries;
 }
 
 void antok::beamfileGenerator::fiveDimBin::set(const std::vector<double>& a, const std::vector<double>& b)
@@ -105,15 +125,41 @@ void antok::beamfileGenerator::fiveDimBin::removeNeighbor(boost::shared_ptr<cons
 
 std::pair<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin>,
           boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> > antok::beamfileGenerator::fiveDimBin::divide(const int& dim,
-                                                                                                                 const double& splitPoint) const
+                                                                                                                 std::stringstream* outPtr,
+                                                                                                                 unsigned int depth) const
 {
+	antok::beamfileGenerator::fiveDimCoord::_orderDim = dim;
+	std::sort(_entries->begin(), _entries->end(), __compareCoords());
+	const unsigned int half = (unsigned int)((_entries->size() / 2) + 0.5);
+	const double splitPoint = (*_entries)[half]->_coords[dim];
+	if(outPtr) {
+		std::stringstream& out = *outPtr;
+		const unsigned int indent = depth * antok::beamfileGenerator::INDENT;
+		out << std::string(indent, ' ') << "entries: " << _entries->size() << ", half: " << half << std::endl;
+		out << std::string(indent, ' ') << "middle coordinates: [" << (*_entries)[half]->_coords[0];
+		for(unsigned int i = 1; i < 5; ++i) {
+			out << ", " << (*_entries)[half]->_coords[i];
+		}
+		out << "]" << std::endl;
+		out << std::string(indent, ' ') << "dim: " << dim << ", middle: " << splitPoint << std::endl;
+	}
 
 	std::vector<double> upper1 = _b;
 	std::vector<double> lower2 = _a;
 	upper1[dim] = splitPoint;
 	lower2[dim] = splitPoint;
-	boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> newBin1(new antok::beamfileGenerator::fiveDimBin(_a, upper1));
-	boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> newBin2(new antok::beamfileGenerator::fiveDimBin(lower2, _b));
+	std::vector<antok::beamfileGenerator::fiveDimCoord*>* entries1 = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
+	std::vector<antok::beamfileGenerator::fiveDimCoord*>* entries2 = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
+	for(unsigned int i = 0; i < _entries->size(); ++i) {
+		const double& x = (*_entries)[i]->_coords[dim];
+		if(x < splitPoint) {
+			entries1->push_back((*_entries)[i]);
+		} else {
+			entries2->push_back((*_entries)[i]);
+		}
+	}
+	boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> newBin1(new antok::beamfileGenerator::fiveDimBin(_a, upper1, entries1));
+	boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> newBin2(new antok::beamfileGenerator::fiveDimBin(lower2, _b, entries2));
 	newBin1->addNeighbor(newBin2);
 	newBin2->addNeighbor(newBin1);
 	for(std::set<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> >::iterator it = _neighbors.begin();
@@ -140,10 +186,6 @@ std::pair<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin>,
 	if(_onUpperEdge[dim]) {
 		newBin1->getOnUpperEdge()[dim] = false;
 	}
-
-	for(unsigned int i = 0; i < 5; ++i) {
-
-	}
 	return std::pair<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin>,
 	                 boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> >(newBin1, newBin2);
 
@@ -158,6 +200,16 @@ double antok::beamfileGenerator::fiveDimBin::getVolume() const
 	return binVolume;
 }
 
+unsigned int antok::beamfileGenerator::fiveDimBin::getEdgeity() const {
+
+	unsigned int edgeity = 0;
+	for(unsigned int i = 0; i < 5; ++i) {
+		edgeity += _onLowerEdge[i] + _onUpperEdge[i];
+	}
+	return edgeity;
+
+}
+
 const std::vector<double>& antok::beamfileGenerator::fiveDimBin::getSigmas(unsigned int binContent,
                                                                            bool forceCalculation) const
 {
@@ -167,41 +219,45 @@ const std::vector<double>& antok::beamfileGenerator::fiveDimBin::getSigmas(unsig
 		forceCalculation = true;
 	}
 	if(forceCalculation) {
-		std::vector<double> scalingFactors(4, 0.);
-		double scalingFactorProduct = 1.;
-		double scalingNorm = (getUpperCorner()[0] - getLowerCorner()[0]);
-		double binVolume = getVolume();
-		if(_debug) {
-			std::cout<<std::endl;
-			this->print(std::cout);
-			std::cout<<"binContent: "<<binContent<<std::endl;
-		}
-		for(unsigned int i = 0; i < 5; ++i) {
+		if(_differentSigmaCalculationForEdges and getEdgeity() > 0) {
+
+		} else {
+			std::vector<double> scalingFactors(4, 0.);
+			double scalingFactorProduct = 1.;
+			double scalingNorm = (getUpperCorner()[0] - getLowerCorner()[0]);
+			double binVolume = getVolume();
 			if(_debug) {
-				std::cout<<"edge "<<i<<" length: "<< getUpperCorner()[i] - getLowerCorner()[i]<<std::endl;
+				std::cout<<std::endl;
+				this->print(std::cout);
+				std::cout<<"binContent: "<<binContent<<std::endl;
 			}
-			if(i > 0) {
-				scalingFactors[i-1] = (getUpperCorner()[i] - getLowerCorner()[i]) / scalingNorm;
+			for(unsigned int i = 0; i < 5; ++i) {
 				if(_debug) {
-					std::cout<<"scaling factor "<<i<<": "<< scalingFactors[i-1]<<std::endl;
+					std::cout<<"edge "<<i<<" length: "<< getUpperCorner()[i] - getLowerCorner()[i]<<std::endl;
 				}
-				scalingFactorProduct *= scalingFactors[i-1];
+				if(i > 0) {
+					scalingFactors[i-1] = (getUpperCorner()[i] - getLowerCorner()[i]) / scalingNorm;
+					if(_debug) {
+						std::cout<<"scaling factor "<<i<<": "<< scalingFactors[i-1]<<std::endl;
+					}
+					scalingFactorProduct *= scalingFactors[i-1];
+				}
 			}
-		}
-		(*_sigmaCache)[0] = std::pow(binVolume / (((double)binContent) * scalingFactorProduct), 0.2);
-		if(_debug) {
-			std::cout<<"scaling factor product: "<< scalingFactorProduct<<std::endl;
-			std::cout<<"binVolume: "<<binVolume<<std::endl;
-			std::cout<<"sigma "<<0<<": "<<(*_sigmaCache)[0]<<std::endl;
-		}
-		for(unsigned int i = 0; i < 4; ++i) {
-			(*_sigmaCache)[i+1] = scalingFactors[i] * (*_sigmaCache)[0];
+			(*_sigmaCache)[0] = std::pow(binVolume / (((double)binContent) * scalingFactorProduct), 0.2);
 			if(_debug) {
-				std::cout<<"sigma "<<i+1<<": "<<(*_sigmaCache)[i+1]<<std::endl;
+				std::cout<<"scaling factor product: "<< scalingFactorProduct<<std::endl;
+				std::cout<<"binVolume: "<<binVolume<<std::endl;
+				std::cout<<"sigma "<<0<<": "<<(*_sigmaCache)[0]<<std::endl;
 			}
-		}
-		if(_debug) {
-			std::cout<<std::endl;
+			for(unsigned int i = 0; i < 4; ++i) {
+				(*_sigmaCache)[i+1] = scalingFactors[i] * (*_sigmaCache)[0];
+				if(_debug) {
+					std::cout<<"sigma "<<i+1<<": "<<(*_sigmaCache)[i+1]<<std::endl;
+				}
+			}
+			if(_debug) {
+				std::cout<<std::endl;
+			}
 		}
 	}
 	return *_sigmaCache;

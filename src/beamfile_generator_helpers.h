@@ -31,10 +31,8 @@ namespace antok {
 
 		};
 
-		void getAdaptiveBins(std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
-		                                         boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > >& bins,
+		void getAdaptiveBins(std::list<boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> >& bins,
 		                     boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> bin,
-		                     std::vector<antok::beamfileGenerator::fiveDimCoord*>* inputVector,
 		                     int dim = 0,
 		                     bool debug = false,
 		                     unsigned int depth = 0);

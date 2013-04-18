@@ -97,15 +97,16 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 			if(bz > upperCorner[4]) upperCorner[4] = bz;
 		}
 	}
-	boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> bin(new antok::beamfileGenerator::fiveDimBin (lowerCorner, upperCorner));
+	boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> bin(new antok::beamfileGenerator::fiveDimBin (lowerCorner,
+	                                                                                                      upperCorner,
+	                                                                                                      tempTree));
 	bin->setOnLowerEdge(std::vector<bool>(5, true));
 	bin->setOnUpperEdge(std::vector<bool>(5, true));
 	std::cout<<"Got first bin: "<<std::endl;
 	bin->print(std::cout);
 
-	std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
-	          boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > > adaptiveBins;
-	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, tempTree, 0, true);
+	std::list<boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > adaptiveBins;
+	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, 0, true);
 	unsigned int nBins = adaptiveBins.size();
 	std::cout<<"Split phase space in "<<nBins<<" bins."<<std::endl;
 	std::cout<<"(self-reporting of the bin class gives "
@@ -149,8 +150,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	unsigned int binNumber = 0;
 	unsigned int roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nBins / 100.) + 0.5)) + 0.5);
 	for(
-		std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
-		                    boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > >::const_iterator binIt = adaptiveBins.begin();
+		std::list<boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> >::const_iterator binIt = adaptiveBins.begin();
 		binIt != adaptiveBins.end();
 		++binIt
 	)
@@ -160,17 +160,12 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 			         <<(binNumber/(double)nBins*100)<<"%)"<<std::endl;
 		}
 		++binNumber;
-		const antok::beamfileGenerator::fiveDimBin& currentBin = *(binIt->second);
-		std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = binIt->first;
+		const antok::beamfileGenerator::fiveDimBin& currentBin = *(*binIt);
+		const std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = currentBin.getEvents();
 		binContent = currentTree->size();
 		binVolume = currentBin.getVolume();
 		nNeighbors = currentBin.getNeighbors().size();
-		edgeity = 0;
-		const std::vector<bool>& onLowerEdge = currentBin.getOnLowerEdge();
-		const std::vector<bool>& onUpperEdge = currentBin.getOnUpperEdge();
-		for(unsigned int i = 0; i < onLowerEdge.size(); ++i) {
-			edgeity += onLowerEdge[i] + onUpperEdge[i];
-		}
+		edgeity = currentBin.getEdgeity();
 
 		bool printing = true;
 		const std::vector<double>& lC = currentBin.getLowerCorner();
