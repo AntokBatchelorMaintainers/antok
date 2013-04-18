@@ -30,7 +30,6 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	TH1D* momY = new TH1D("momY", "momY", 50000, -0.8, 0.8);
 	TH1D* momZ = new TH1D("momZ", "momZ", 10000, 187, 196);
 
-
 	double primVx, primVy;
 	double bx, by, bz;
 
@@ -113,7 +112,8 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	         <<antok::beamfileGenerator::fiveDimBin::getNExistingBins()<<" bins)" <<std::endl;
 
 	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
-	int binContent = 0;
+	int binContent, nNeighbors, edgeity;
+	double binVolume;
 	TTree* outTree = new TTree("beamTree", "beamTree");
 	outTree->Branch("vertex_x_position", &primVx, "vertex_x_position/D");
 	outTree->Branch("vertex_y_position", &primVy, "vertex_y_position/D");
@@ -126,6 +126,9 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	outTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
 	outTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
 	outTree->Branch("bin_content", &binContent, "bin_content/I");
+	outTree->Branch("number_of_neighbors", &nNeighbors, "number_of_neighbors/I");
+	outTree->Branch("edgeity", &edgeity, "edgeity/I");
+	outTree->Branch("bin_volume", &binVolume,"bin_volume/D");
 
 	std::vector<double*> coords(5);
 	std::vector<double*> sigmas(5);
@@ -160,6 +163,28 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 		const antok::beamfileGenerator::fiveDimBin& currentBin = *(binIt->second);
 		std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = binIt->first;
 		binContent = currentTree->size();
+		binVolume = currentBin.getVolume();
+		nNeighbors = currentBin.getNeighbors().size();
+		edgeity = 0;
+		const std::vector<bool>& onLowerEdge = currentBin.getOnLowerEdge();
+		const std::vector<bool>& onUpperEdge = currentBin.getOnUpperEdge();
+		for(unsigned int i = 0; i < onLowerEdge.size(); ++i) {
+			edgeity += onLowerEdge[i] + onUpperEdge[i];
+		}
+
+		bool printing = true;
+		const std::vector<double>& lC = currentBin.getLowerCorner();
+		const std::vector<double>& uC = currentBin.getUpperCorner();
+		for(unsigned int i = 0; i < 5; ++i) {
+			if(std::fabs(lC[i]) > 0.01 or std::fabs(uC[i]-0.25) > 0.05) {
+				printing = false;
+				break;
+			}
+		}
+		if(printing) {
+			antok::beamfileGenerator::fiveDimBin::setDebug(true);
+			antok::beamfileGenerator::fiveDimBin::setPrintNeighbors(true);
+		}
 
 		const std::vector<double>& sigmasFromBin = currentBin.getSigmas(binContent);
 		for(unsigned int i = 0; i < 5; ++i) {
@@ -170,6 +195,11 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 				*(coords[j]) = (*currentTree)[i]->_coords[j];
 			}
 			outTree->Fill();
+		}
+
+		if(printing) {
+			antok::beamfileGenerator::fiveDimBin::setDebug(false);
+			antok::beamfileGenerator::fiveDimBin::setPrintNeighbors(false);
 		}
 	}
 

@@ -50,11 +50,12 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<std::vector<a
 {
 
 	long entries = inputVector->size();
+	const unsigned int indent = depth * antok::beamfileGenerator::INDENT;
 	if(debug) {
-		std::cout<<"------------------------------------------------------"<<std::endl;
-		std::cout<<"called with " << entries << " entries at depth " << depth << "." << std::endl;
-		std::cout<<"input bin:"<<std::endl;
-		bin->print(std::cout);
+		std::cout<<std::string(indent, ' ')<<"------------------------------------------------------"<<std::endl;
+		std::cout<<std::string(indent, ' ')<<"called with " << entries << " entries at depth " << depth << "." << std::endl;
+		std::cout<<std::string(indent, ' ')<<"input bin:"<<std::endl;
+		bin->print(std::cout, depth);
 	}
 	if(dim == 0 and entries < (32 * antok::beamfileGenerator::MIN_ENTRIES)) {
 		bins.push_back(std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
@@ -71,20 +72,20 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<std::vector<a
 			unsigned int half = (unsigned int)((entries / 2) + 0.5);
 			const double& middle = (*inputVector)[half]->_coords[dim];
 			if(debug) {
-				std::cout<<"entries: " << entries << ", half: " << half << std::endl;
-				std::cout<<"middle coordinates: ["<<(*inputVector)[half]->_coords[0];
+				std::cout<<std::string(indent, ' ')<<"entries: " << entries << ", half: " << half << std::endl;
+				std::cout<<std::string(indent, ' ')<<"middle coordinates: ["<<(*inputVector)[half]->_coords[0];
 				for(unsigned int i = 1; i < 5; ++i) {
 					std::cout<<", "<<(*inputVector)[half]->_coords[i];
 				}
 				std::cout<<"]"<<std::endl;
-				std::cout<<"dim: " << dim << ", middle: " << middle << std::endl;
+				std::cout<<std::string(indent, ' ')<<"dim: " << dim << ", middle: " << middle << std::endl;
 			}
 			newBins = bin->divide(dim, middle);
 			if(debug) {
-				std::cout<<"bin1: "<<std::endl;
-				newBins.first->print(std::cout);
-				std::cout<<"bin2: "<<std::endl;
-				newBins.second->print(std::cout);
+				std::cout<<std::string(indent, ' ')<<"bin1: "<<std::endl;
+				newBins.first->print(std::cout, depth);
+				std::cout<<std::string(indent, ' ')<<"bin2: "<<std::endl;
+				newBins.second->print(std::cout, depth);
 			}
 			inputVector1 = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
 			inputVector2 = new std::vector<antok::beamfileGenerator::fiveDimCoord*>();
@@ -97,9 +98,9 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<std::pair<std::vector<a
 				}
 			}
 			if(debug) {
-				std::cout<<"inputTree1 has " << inputVector1->size() << " entries." << std::endl;
-				std::cout<<"inputTree2 has " << inputVector2->size() << " entries." << std::endl;
-				std::cout<<"Difference: " << std::abs((int)inputVector1->size() - (int)inputVector2->size()) << std::endl;
+				std::cout<<std::string(indent, ' ')<<"inputTree1 has " << inputVector1->size() << " entries." << std::endl;
+				std::cout<<std::string(indent, ' ')<<"inputTree2 has " << inputVector2->size() << " entries." << std::endl;
+				std::cout<<std::string(indent, ' ')<<"Difference: " << std::abs((int)inputVector1->size() - (int)inputVector2->size()) << std::endl;
 			}
 			if(std::abs((int)inputVector1->size() - (int)inputVector2->size()) > 1) {
 				std::cout<<"------------------------------------------------------"<<std::endl;

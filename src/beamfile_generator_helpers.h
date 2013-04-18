@@ -13,6 +13,7 @@ namespace antok {
 		class fiveDimBin;
 
 		const double MIN_ENTRIES = 10.;
+		const unsigned int INDENT = 4;
 
 		struct fiveDimCoord {
 

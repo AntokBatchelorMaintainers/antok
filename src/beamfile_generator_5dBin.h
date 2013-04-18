@@ -45,7 +45,7 @@ namespace antok {
 			bool areWeNeighbors(boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> bin) const;
 			void addNeighbor(boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> bin) { _neighbors.insert(bin); }
 			void removeNeighbor(boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> bin);
-			const std::set<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> >& getNeighbors() { return _neighbors; }
+			const std::set<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> >& getNeighbors() const { return _neighbors; }
 
 			void setOnLowerEdge(const std::vector<bool>& onLowerEdge) { _onLowerEdge = onLowerEdge; }
 			void setOnUpperEdge(const std::vector<bool>& onUpperEdge) { _onUpperEdge = onUpperEdge; }
@@ -54,18 +54,21 @@ namespace antok {
 			std::vector<bool>& getOnLowerEdge() { return _onLowerEdge; }
 			std::vector<bool>& getOnUpperEdge() { return _onUpperEdge; }
 
+			double getVolume() const;
+
 			const std::vector<double>& getSigmas(unsigned int binContent, bool forceCalculation = false) const;
 
-			std::ostream& print(std::ostream& out) const;
+			std::ostream& print(std::ostream& out, unsigned int indent = 0) const;
 
 			static const long& getNExistingBins() { return _nExistingBins; }
 
 			static void setDebug(bool debug = true) { _debug = debug; }
+			static void setPrintNeighbors(bool printNeighbors = true) { _printNeighbors = printNeighbors; }
 
 		  private:
 
-			std::vector<double> _a;
-			std::vector<double> _b;
+			std::vector<double> _a; // lower corner
+			std::vector<double> _b; // upper corner
 
 			std::set<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> > _neighbors;
 			std::vector<bool> _onLowerEdge;
@@ -79,6 +82,7 @@ namespace antok {
 			static long _nExistingBins;
 
 			static bool _debug;
+			static bool _printNeighbors;
 
 		};
 

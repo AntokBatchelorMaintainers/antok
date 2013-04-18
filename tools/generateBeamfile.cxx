@@ -147,14 +147,15 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 
 	std::list<std::pair<std::vector<antok::beamfileGenerator::fiveDimCoord*>*,
 	          boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > > adaptiveBins;
-	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, tempTree, 0, true);
+	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, tempTree);
 	unsigned int nBins = adaptiveBins.size();
 	std::cout<<"Split phase space in "<<nBins<<" bins."<<std::endl;
 	std::cout<<"(self-reporting of the bin class gives "
 	         <<antok::beamfileGenerator::fiveDimBin::getNExistingBins()<<" bins)" <<std::endl;
 
 	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
-	int binContent = 0;
+	int binContent, nNeighbors, edgeity;
+	double binVolume;
 	TTree* outTree = new TTree("beamTree", "beamTree");
 	outTree->Branch("vertex_x_position", &primVx, "vertex_x_position/D");
 	outTree->Branch("vertex_y_position", &primVy, "vertex_y_position/D");
@@ -167,6 +168,9 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 	outTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
 	outTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
 	outTree->Branch("bin_content", &binContent, "bin_content/I");
+	outTree->Branch("number_of_neighbors", &nNeighbors, "number_of_neighbors/I");
+	outTree->Branch("edgeity", &edgeity, "edgeity/I");
+	outTree->Branch("bin_volume", &binVolume,"bin_volume/D");
 
 	std::vector<double*> coords(5);
 	std::vector<double*> sigmas(5);
@@ -201,6 +205,14 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 		const antok::beamfileGenerator::fiveDimBin& currentBin = *(binIt->second);
 		std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = binIt->first;
 		binContent = currentTree->size();
+		binVolume = currentBin.getVolume();
+		nNeighbors = currentBin.getNeighbors().size();
+		edgeity = 0;
+		const std::vector<bool>& onLowerEdge = currentBin.getOnLowerEdge();
+		const std::vector<bool>& onUpperEdge = currentBin.getOnUpperEdge();
+		for(unsigned int i = 0; i < onLowerEdge.size(); ++i) {
+			edgeity += onLowerEdge[i] + onUpperEdge[i];
+		}
 
 		const std::vector<double>& sigmasFromBin = currentBin.getSigmas(binContent);
 		for(unsigned int i = 0; i < 5; ++i) {

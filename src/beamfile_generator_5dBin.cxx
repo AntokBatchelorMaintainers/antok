@@ -5,10 +5,13 @@
 #include<cmath>
 #include<limits>
 
+#include<beamfile_generator_helpers.h>
+
 
 const double antok::beamfileGenerator::fiveDimBin::EPSILON = 5. * std::numeric_limits<double>::epsilon();
 long antok::beamfileGenerator::fiveDimBin::_nExistingBins = 0;
 bool antok::beamfileGenerator::fiveDimBin::_debug = false;
+bool antok::beamfileGenerator::fiveDimBin::_printNeighbors = false;
 
 antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
                                                  double a1,
@@ -88,23 +91,11 @@ bool antok::beamfileGenerator::fiveDimBin::inBin(const std::vector<double>& x) c
 bool antok::beamfileGenerator::fiveDimBin::areWeNeighbors(boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> bin) const
 {
 	for(unsigned int i = 0; i < 5; ++i) {
-		bool neighbors = true;
-		if(doubleEqual(bin->getLowerCorner()[i], _b[i]) or doubleEqual(bin->getUpperCorner()[i], _a[i])) {
-			for(unsigned int j = 0; j < 5; ++j) {
-				if(i == j) {
-					continue;
-				}
-				if(bin->getLowerCorner()[j] > _b[j] or bin->getUpperCorner()[j] < _a[j]) {
-					neighbors = false;
-					break;
-				}
-			}
-			if(neighbors) {
-				return true;
-			}
+		if(bin->getLowerCorner()[i] > _b[i] or bin->getUpperCorner()[i] < _a[i]) {
+			return false;
 		}
 	}
-	return false;
+	return true;
 
 }
 
@@ -158,6 +149,15 @@ std::pair<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin>,
 
 }
 
+double antok::beamfileGenerator::fiveDimBin::getVolume() const
+{
+	double binVolume = 1.;
+	for(unsigned int i = 0; i < 5; ++i) {
+		binVolume *= getUpperCorner()[i] - getLowerCorner()[i];
+	}
+	return binVolume;
+}
+
 const std::vector<double>& antok::beamfileGenerator::fiveDimBin::getSigmas(unsigned int binContent,
                                                                            bool forceCalculation) const
 {
@@ -170,14 +170,13 @@ const std::vector<double>& antok::beamfileGenerator::fiveDimBin::getSigmas(unsig
 		std::vector<double> scalingFactors(4, 0.);
 		double scalingFactorProduct = 1.;
 		double scalingNorm = (getUpperCorner()[0] - getLowerCorner()[0]);
-		double binVolume = 1.;
+		double binVolume = getVolume();
 		if(_debug) {
 			std::cout<<std::endl;
 			this->print(std::cout);
 			std::cout<<"binContent: "<<binContent<<std::endl;
 		}
 		for(unsigned int i = 0; i < 5; ++i) {
-			binVolume *= getUpperCorner()[i] - getLowerCorner()[i];
 			if(_debug) {
 				std::cout<<"edge "<<i<<" length: "<< getUpperCorner()[i] - getLowerCorner()[i]<<std::endl;
 			}
@@ -209,29 +208,42 @@ const std::vector<double>& antok::beamfileGenerator::fiveDimBin::getSigmas(unsig
 
 }
 
-std::ostream& antok::beamfileGenerator::fiveDimBin::print(std::ostream& out) const {
-	out << "Five dimensional bin: " << std::endl;
-	out << "    lower Corner ....... [" << _a[0];
+std::ostream& antok::beamfileGenerator::fiveDimBin::print(std::ostream& out, unsigned int indent) const
+{
+	indent *= antok::beamfileGenerator::INDENT;
+	out << std::string(indent, ' ') << "Five dimensional bin: " << std::endl;
+	out << std::string(indent, ' ') << "    lower Corner ....... [" << _a[0];
 	for(unsigned int i = 1; i < 5; ++i) {
 		out << ", " << _a[i];
 	}
 	out << "]" << std::endl;
-	out << "    upper Corner ....... [" << _b[0];
+	out << std::string(indent, ' ') << "    upper Corner ....... [" << _b[0];
 	for(unsigned int i = 1; i < 5; ++i) {
 		out << ", " << _b[i];
 	}
 	out << "]" << std::endl;
-	out << "    #neighbors ......... " << _neighbors.size() << std::endl;
-	out << "    on lower edge ...... [" << _onLowerEdge[0];
+	out << std::string(indent, ' ') << "    on lower edge ...... [" << _onLowerEdge[0];
 	for(unsigned int i = 1; i < 5; ++i) {
 		out << ", " << _onLowerEdge[i];
 	}
 	out << "]" << std::endl;
-	out << "    on upper edge ...... [" << _onUpperEdge[0];
+	out << std::string(indent, ' ') << "    on upper edge ...... [" << _onUpperEdge[0];
 	for(unsigned int i = 1; i < 5; ++i) {
 		out << ", " << _onUpperEdge[i];
 	}
 	out << "]" << std::endl;
+	out << std::string(indent, ' ') << "    #neighbors ......... " << _neighbors.size() << std::endl;
+	if(_printNeighbors) {
+		int neighborIndent = (indent / antok::beamfileGenerator::INDENT) + 1.5;
+		_printNeighbors = false;
+		for(std::set<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> >::const_iterator it = _neighbors.begin();
+		    it != _neighbors.end();
+		    ++it)
+		{
+			(*it)->print(out, neighborIndent);
+		}
+		_printNeighbors = true;
+	}
 	return out;
 }
 
