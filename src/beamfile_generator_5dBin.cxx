@@ -356,10 +356,7 @@ const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::g
 					// and now get the first sigma
 					(*_sigmaCache)[i][0] = std::pow(volume / (((double)entriesInShiftedSphere) * scalingFactorProduct), 0.2);
 
-/*					double radius = (*_entries)[i]->distance(*(allEvents[ENTRIES_IN_SPHERE]));
-					double volume = 5.263789013914324 * pow(radius, 5);
-					(*_sigmaCache)[i][0] = std::pow(volume / (((double)ENTRIES_IN_SPHERE) * scalingFactorProduct), 0.2);
-*/					for(unsigned int j = 0; j < 4; ++j) {
+					for(unsigned int j = 0; j < 4; ++j) {
 						(*_sigmaCache)[i][j+1] = scalingFactors[j] * (*_sigmaCache)[i][0];
 					}
 					if(_debug) {
@@ -372,7 +369,6 @@ const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::g
 						std::cout<<"ref"<<std::endl;
 						(*_entries)[i]->print(std::cout);
 						std::cout<<"---------"<<std::endl;
-//						for(unsigned int j = 0; j < ENTRIES_IN_SPHERE; ++j) {
 						for(unsigned int j = 0; j < entriesInShiftedSphere; ++j) {
 							allEvents[j]->print(std::cout);
 							std::cout<<"dist: "<<(*_entries)[i]->distance(*(allEvents[j]))<<std::endl;
