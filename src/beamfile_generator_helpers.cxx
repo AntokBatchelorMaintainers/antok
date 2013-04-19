@@ -30,6 +30,70 @@ bool antok::beamfileGenerator::fiveDimCoord::operator<(const antok::beamfileGene
 	return _coords[_orderDim] < rhs._coords[_orderDim];
 }
 
+antok::beamfileGenerator::fiveDimCoord& antok::beamfileGenerator::fiveDimCoord::operator+=(const antok::beamfileGenerator::fiveDimCoord& rhs)
+{
+	for(unsigned int i = 0; i < 5; ++i) {
+		_coords[i] += rhs._coords[i];
+	}
+	return *this;
+}
+
+antok::beamfileGenerator::fiveDimCoord& antok::beamfileGenerator::fiveDimCoord::operator-=(const antok::beamfileGenerator::fiveDimCoord& rhs)
+{
+	for(unsigned int i = 0; i < 5; ++i) {
+		_coords[i] -= rhs._coords[i];
+	}
+	return *this;
+}
+
+antok::beamfileGenerator::fiveDimCoord& antok::beamfileGenerator::fiveDimCoord::operator*=(const double& factor)
+{
+	for(unsigned int i = 0; i < 5; ++i) {
+		_coords[i] *= factor;
+	}
+	return *this;
+}
+
+antok::beamfileGenerator::fiveDimCoord& antok::beamfileGenerator::fiveDimCoord::operator/=(const double& factor)
+{
+	for(unsigned int i = 0; i < 5; ++i) {
+		_coords[i] /= factor;
+	}
+	return *this;
+}
+
+const antok::beamfileGenerator::fiveDimCoord antok::beamfileGenerator::fiveDimCoord::operator+(const antok::beamfileGenerator::fiveDimCoord& rhs) {
+
+	return antok::beamfileGenerator::fiveDimCoord(*this) += rhs;
+
+}
+
+const antok::beamfileGenerator::fiveDimCoord antok::beamfileGenerator::fiveDimCoord::operator-(const antok::beamfileGenerator::fiveDimCoord& rhs) {
+
+	return antok::beamfileGenerator::fiveDimCoord(*this) -= rhs;
+
+}
+
+double antok::beamfileGenerator::fiveDimCoord::distance(const fiveDimCoord& point) const
+{
+	double dist = 0.;
+	for(unsigned int i = 0; i < 5; ++i) {
+		dist += (point._coords[i] - _coords[i])*(point._coords[i] - _coords[i]);
+	}
+	return std::sqrt(dist);
+}
+
+
+std::ostream& antok::beamfileGenerator::fiveDimCoord::print(std::ostream& out) const
+{
+	out << "five Dim Coord: [" << _coords[0];
+	for(unsigned int i = 1; i < 5; ++i) {
+		out << ", " << _coords[i];
+	}
+	out << "]" << std::endl;
+	return out;
+}
+
 void antok::beamfileGenerator::getAdaptiveBins(std::list<boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> >& bins,
                                                boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> bin,
                                                int dim,

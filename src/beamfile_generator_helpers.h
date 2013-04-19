@@ -25,6 +25,16 @@ namespace antok {
 			fiveDimCoord(double x0, double x1, double x2, double x3, double x4);
 
 			bool operator<(const fiveDimCoord& rhs) const;
+			antok::beamfileGenerator::fiveDimCoord& operator+=(const antok::beamfileGenerator::fiveDimCoord& rhs);
+			antok::beamfileGenerator::fiveDimCoord& operator-=(const antok::beamfileGenerator::fiveDimCoord& rhs);
+			antok::beamfileGenerator::fiveDimCoord& operator*=(const double& factor);
+			antok::beamfileGenerator::fiveDimCoord& operator/=(const double& factor);
+			const antok::beamfileGenerator::fiveDimCoord operator+(const antok::beamfileGenerator::fiveDimCoord& rhs);
+			const antok::beamfileGenerator::fiveDimCoord operator-(const antok::beamfileGenerator::fiveDimCoord& rhs);
+
+			double distance(const fiveDimCoord& point) const;
+
+			std::ostream& print(std::ostream& out) const;
 
 			static int _orderDim;
 			std::vector<double> _coords;

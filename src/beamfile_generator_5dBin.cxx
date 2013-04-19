@@ -12,10 +12,20 @@
 namespace {
 
 	struct __compareCoords {
-		bool operator ()(antok::beamfileGenerator::fiveDimCoord *lhs, antok::beamfileGenerator::fiveDimCoord *rhs)
+		bool operator ()(antok::beamfileGenerator::fiveDimCoord* lhs, antok::beamfileGenerator::fiveDimCoord* rhs)
 		{
 			return *lhs < *rhs;
 		}
+	};
+
+	struct __compareCoordsDistance {
+
+		__compareCoordsDistance(const antok::beamfileGenerator::fiveDimCoord& ref) : _ref(ref) { }
+		bool operator()(antok::beamfileGenerator::fiveDimCoord* lhs, antok::beamfileGenerator::fiveDimCoord* rhs)
+		{
+			return lhs->distance(_ref) < rhs->distance(_ref);
+		}
+		const antok::beamfileGenerator::fiveDimCoord& _ref;
 	};
 
 }
@@ -25,7 +35,7 @@ const double antok::beamfileGenerator::fiveDimBin::EPSILON = 5. * std::numeric_l
 long antok::beamfileGenerator::fiveDimBin::_nExistingBins = 0;
 bool antok::beamfileGenerator::fiveDimBin::_debug = false;
 bool antok::beamfileGenerator::fiveDimBin::_printNeighbors = false;
-bool antok::beamfileGenerator::fiveDimBin::_differentSigmaCalculationForEdges = false;
+bool antok::beamfileGenerator::fiveDimBin::_differentSigmaCalculationForEdges = true;
 
 antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
                                                  double a1,
@@ -210,54 +220,200 @@ unsigned int antok::beamfileGenerator::fiveDimBin::getEdgeity() const {
 
 }
 
-const std::vector<double>& antok::beamfileGenerator::fiveDimBin::getSigmas(unsigned int binContent,
-                                                                           bool forceCalculation) const
+const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::getSigmas(int& method, bool forceCalculation) const
 {
 
 	if(not _sigmaCache) {
-		_sigmaCache = new std::vector<double>(5, 0.);
+		_sigmaCache = new std::vector<std::vector<double> >(_entries->size(), std::vector<double>(5, 0.));
 		forceCalculation = true;
 	}
 	if(forceCalculation) {
-		if(_differentSigmaCalculationForEdges and getEdgeity() > 0) {
 
+		// get the scaling factors
+		std::vector<double> scalingFactors(4, 0.);
+		double scalingFactorProduct = 1.;
+		double scalingNorm = (getUpperCorner()[0] - getLowerCorner()[0]);
+		if(_debug) {
+			std::cout<<std::endl<<"calculating sigmas for bin:"<<std::endl;
+			print(std::cout);
+		}
+		for(unsigned int i = 0; i < 5; ++i) {
+			if(_debug) {
+				std::cout<<"edge "<<i<<" length: "<< getUpperCorner()[i] - getLowerCorner()[i]<<std::endl;
+			}
+			if(i > 0) {
+				scalingFactors[i-1] = (getUpperCorner()[i] - getLowerCorner()[i]) / scalingNorm;
+				if(_debug) {
+					std::cout<<"scaling factor "<<i<<": "<< scalingFactors[i-1]<<std::endl;
+				}
+				scalingFactorProduct *= scalingFactors[i-1];
+			}
+		}
+
+		// we are at the edge, have to be careful
+		if(_differentSigmaCalculationForEdges and getEdgeity() > 0) {
+			if(_debug) {
+				std::cout<<"on an edge bin"<<std::endl;
+			}
+			std::vector<antok::beamfileGenerator::fiveDimCoord*> allEvents(*_entries);
+			std::vector<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> > relevantNeighbors;
+			for(std::set<boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> >::iterator it = _neighbors.begin();
+			    it != _neighbors.end();
+			    ++it)
+			{
+				const std::vector<antok::beamfileGenerator::fiveDimCoord*>* eventsFromBin = (*it)->getEvents();
+				for(unsigned int i = 0; i < eventsFromBin->size(); ++i) {
+					allEvents.push_back((*eventsFromBin)[i]);
+				}
+				if((*it)->getEdgeity() == 0) {
+					relevantNeighbors.push_back(*it);
+				}
+			}
+			// ok, we got all the info from the neighboring bins
+			if(_debug) {
+			}
+
+			if(relevantNeighbors.size() > 0) {
+			// we have a bin which is not on the edge, take the sigmas from there
+				method = 1;
+				if(_debug) {
+					std::cout<<"found "<<relevantNeighbors.size()<<" neighbors which are"
+					         <<" not on the edge (out of "<<_neighbors.size()<<")"<<std::endl;
+				}
+				std::vector<double> averagedSigmas(5, 0.);
+				for(unsigned int i = 0; i < relevantNeighbors.size(); ++i) {
+					bool debugCache = false;
+					if(_debug) {
+						debugCache = true;
+						antok::beamfileGenerator::fiveDimBin::setDebug(false);
+					}
+					int dump;
+					const std::vector<double>& sigmas = relevantNeighbors[i]->getSigmas(dump)[0];
+					if(debugCache) {
+						antok::beamfileGenerator::fiveDimBin::setDebug(true);
+					}
+					if(_debug) {
+						std::cout<<"neighbor "<<i<<" sigmas: ["<<sigmas[0];
+					}
+					for(unsigned int j = 0; j < 5; ++j) {
+						averagedSigmas[j] += sigmas[j];
+						if(_debug) {
+							std::cout<<", "<<sigmas[j];
+						}
+					}
+					if(_debug) {
+						std::cout<<"]"<<std::endl;
+					}
+				}
+				if(_debug) {
+					std::cout<<"final sigmas for this bin: ["<<averagedSigmas[0] / relevantNeighbors.size();
+				}
+				for(unsigned int j = 0; j < 5; ++j) {
+					averagedSigmas[j] /= relevantNeighbors.size();
+					if(_debug) {
+						std::cout<<", "<<averagedSigmas[j];
+					}
+				}
+				if(_debug) {
+					std::cout<<"]"<<std::endl;
+				}
+				for(unsigned int i = 0; i < _entries->size(); ++i) {
+								(*_sigmaCache)[i] = averagedSigmas;;
+				}
+			} else {
+			// damn, no luck, we have to calculate the sigmas the hard way
+				method = 2;
+				static const unsigned int ENTRIES_IN_SPHERE = 15;
+				for(unsigned int i = 0; i < _entries->size(); ++i) {
+					// sort all events in ascending distance to the current event
+					std::sort(allEvents.begin(), allEvents.end(), __compareCoordsDistance(*((*_entries)[i])));
+
+					// get the center of gravity of the closest points
+					antok::beamfileGenerator::fiveDimCoord centerOfGravity(*((*_entries)[i]));
+					for(unsigned int j = 1; j <= ENTRIES_IN_SPHERE; ++j) {
+						centerOfGravity += *(allEvents[j]);
+					}
+					centerOfGravity /= ENTRIES_IN_SPHERE + 1;
+
+					// get radius
+					double radius = 0.;
+					for(unsigned int j = 0; j <= ENTRIES_IN_SPHERE; ++j) {
+						if(centerOfGravity.distance(*(allEvents[j])) > radius) {
+							radius = centerOfGravity.distance(*(allEvents[j]));
+						}
+					}
+					double volume = 5.263789013914324 * pow(radius, 5);
+
+					// now sort everything in ascending distance to the center of gravity
+					std::sort(allEvents.begin(), allEvents.end(), __compareCoordsDistance(centerOfGravity));
+
+					// and see how many entries we have in this new sphere
+					unsigned int entriesInShiftedSphere = 0;
+					while(allEvents[entriesInShiftedSphere]->distance(centerOfGravity) < radius) {
+						++entriesInShiftedSphere;
+					}
+
+					// and now get the first sigma
+					(*_sigmaCache)[i][0] = std::pow(volume / (((double)entriesInShiftedSphere) * scalingFactorProduct), 0.2);
+
+/*					double radius = (*_entries)[i]->distance(*(allEvents[ENTRIES_IN_SPHERE]));
+					double volume = 5.263789013914324 * pow(radius, 5);
+					(*_sigmaCache)[i][0] = std::pow(volume / (((double)ENTRIES_IN_SPHERE) * scalingFactorProduct), 0.2);
+*/					for(unsigned int j = 0; j < 4; ++j) {
+						(*_sigmaCache)[i][j+1] = scalingFactors[j] * (*_sigmaCache)[i][0];
+					}
+					if(_debug) {
+						std::cout<<"sigmas = ["<<(*_sigmaCache)[i][0];
+						for(unsigned int j = 1; j < 5; ++j) {
+							std::cout<<", "<<(*_sigmaCache)[i][j];
+						}
+						std::cout<<"]"<<std::endl;
+						std::cout<<"calculated with "<<entriesInShiftedSphere<<" events."<<std::endl;
+						std::cout<<"ref"<<std::endl;
+						(*_entries)[i]->print(std::cout);
+						std::cout<<"---------"<<std::endl;
+//						for(unsigned int j = 0; j < ENTRIES_IN_SPHERE; ++j) {
+						for(unsigned int j = 0; j < entriesInShiftedSphere; ++j) {
+							allEvents[j]->print(std::cout);
+							std::cout<<"dist: "<<(*_entries)[i]->distance(*(allEvents[j]))<<std::endl;
+						}
+						std::cout<<"---------"<<std::endl<<std::endl;
+					}
+				}
+			}
+
+		// we are not at the edge, life is easy
 		} else {
-			std::vector<double> scalingFactors(4, 0.);
-			double scalingFactorProduct = 1.;
-			double scalingNorm = (getUpperCorner()[0] - getLowerCorner()[0]);
+			method = 0;
 			double binVolume = getVolume();
 			if(_debug) {
+				std::cout<<"on an inner bin"<<std::endl;
 				std::cout<<std::endl;
 				this->print(std::cout);
-				std::cout<<"binContent: "<<binContent<<std::endl;
+				std::cout<<"binContent: "<<getEntries()<<std::endl;
 			}
-			for(unsigned int i = 0; i < 5; ++i) {
-				if(_debug) {
-					std::cout<<"edge "<<i<<" length: "<< getUpperCorner()[i] - getLowerCorner()[i]<<std::endl;
-				}
-				if(i > 0) {
-					scalingFactors[i-1] = (getUpperCorner()[i] - getLowerCorner()[i]) / scalingNorm;
-					if(_debug) {
-						std::cout<<"scaling factor "<<i<<": "<< scalingFactors[i-1]<<std::endl;
-					}
-					scalingFactorProduct *= scalingFactors[i-1];
-				}
-			}
-			(*_sigmaCache)[0] = std::pow(binVolume / (((double)binContent) * scalingFactorProduct), 0.2);
+			std::vector<double> sigmas(5, 0.);
+			sigmas[0] = std::pow(binVolume / (((double)getEntries()) * scalingFactorProduct), 0.2);
 			if(_debug) {
 				std::cout<<"scaling factor product: "<< scalingFactorProduct<<std::endl;
 				std::cout<<"binVolume: "<<binVolume<<std::endl;
-				std::cout<<"sigma "<<0<<": "<<(*_sigmaCache)[0]<<std::endl;
+				std::cout<<"sigma "<<0<<": "<<sigmas[0]<<std::endl;
 			}
 			for(unsigned int i = 0; i < 4; ++i) {
-				(*_sigmaCache)[i+1] = scalingFactors[i] * (*_sigmaCache)[0];
+				sigmas[i+1] = scalingFactors[i] * sigmas[0];
 				if(_debug) {
-					std::cout<<"sigma "<<i+1<<": "<<(*_sigmaCache)[i+1]<<std::endl;
+					std::cout<<"sigma "<<i+1<<": "<<sigmas[i+1]<<std::endl;
 				}
 			}
 			if(_debug) {
 				std::cout<<std::endl;
 			}
+			for(unsigned int i = 0; i < _entries->size(); ++i) {
+				(*_sigmaCache)[i] = sigmas;
+			}
+		}
+		if(_debug) {
+			std::cout<<std::endl;
 		}
 	}
 	return *_sigmaCache;
