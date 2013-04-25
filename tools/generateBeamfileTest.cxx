@@ -13,6 +13,7 @@
 #include<basic_calcs.h>
 #include<beamfile_generator_helpers.h>
 #include<beamfile_generator_5dBin.h>
+#include<beamfile_generator_5dCoord.h>
 #include<constants.h>
 #include<initializer.h>
 

@@ -11,6 +11,7 @@ set(SOURCES
 	basic_calcs.cxx
 	beamfile_generator_helpers.cxx
 	beamfile_generator_5dBin.cxx
+	beamfile_generator_5dCoord.cxx
 	constants.cxx
 	cutter.cxx
 	data.cxx

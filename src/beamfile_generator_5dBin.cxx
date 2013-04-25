@@ -7,6 +7,7 @@
 #include<sstream>
 
 #include<beamfile_generator_helpers.h>
+#include<beamfile_generator_5dCoord.h>
 
 
 namespace {
