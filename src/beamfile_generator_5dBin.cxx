@@ -222,16 +222,61 @@ unsigned int antok::beamfileGenerator::fiveDimBin::getEdgeity() const {
 
 }
 
-const std::vector<std::pair<std::vector<double>,
-                            std::vector<double> > >& antok::beamfileGenerator::fiveDimBin::getSigmas(int& method,
-                                                                                                     bool forceCalculation) const
+std::vector<std::pair<std::vector<double>,
+                      std::vector<double> > > antok::beamfileGenerator::fiveDimBin::getSigmas(int& method) const
 {
 
+	const std::vector<std::vector<double> >& rawSigmas = getRawSigmas(method);
+	std::vector<std::pair<std::vector<double>,
+	                      std::vector<double> > > sigmas(_entries->size(), std::pair<std::vector<double>,
+	                                                                                 std::vector<double> >(std::vector<double>(5, 0.),
+                                                                                                           std::vector<double>(5, 0.)));
+	// check if the sigmas are to big to fit in the bin and cap them if needed
+	for(unsigned int i = 0; i < _sigmaCache->size(); ++i) {
+		std::pair<std::vector<double>, std::vector<double> >& pair = sigmas[i];
+		std::vector<double>& lowerSigmas = pair.first;
+		std::vector<double>& upperSigmas = pair.second;
+		if(_debug) {
+			std::cout<<"checking if sigmas in bin for event"<<std::endl;
+			(*_entries)[i]->print(std::cout);
+			std::cout<<"bin"<<std::endl;
+			print(std::cout);
+			std::cout<<"native sigmas: ["<<rawSigmas[i][0];
+			for(unsigned int k = 1; k < 4; ++k) {
+				std::cout<<", "<<rawSigmas[i][k];
+			}
+			std::cout<<"]"<<std::endl;
+		}
+		for(unsigned int j = 0; j < 5; ++j) {
+			const double sigma = rawSigmas[i][j];
+			const double distanceToLowerEdge = (*_entries)[i]->_coords[j] - _a[j];
+			const double distanceToUpperEdge = _b[j] - (*_entries)[i]->_coords[j];
+			assert(distanceToLowerEdge >= 0. and distanceToUpperEdge >= 0.);
+			lowerSigmas[j] = std::min(sigma, distanceToLowerEdge);
+			upperSigmas[j] = std::min(sigma, distanceToUpperEdge);
+		}
+		if(_debug) {
+			std::cout<<"lower sigmas: ["<<lowerSigmas[0];
+			for(unsigned int k = 1; k < 4; ++k) {
+				std::cout<<", "<<lowerSigmas[k];
+			}
+			std::cout<<"]"<<std::endl;
+			std::cout<<"upper sigmas: ["<<upperSigmas[0];
+			for(unsigned int k = 1; k < 4; ++k) {
+				std::cout<<", "<<upperSigmas[k];
+			}
+			std::cout<<"]"<<std::endl;
+		}
+	}
+	return sigmas;
+
+}
+
+const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::getRawSigmas(int& method,
+                                                                                            bool forceCalculation) const
+{
 	if(not _sigmaCache) {
-		_sigmaCache = new std::vector<std::pair<std::vector<double>,
-		                                        std::vector<double> > >(_entries->size(), std::pair<std::vector<double>,
-		                                                                                            std::vector<double> >(std::vector<double>(5, 0.),
-		                                                                                                                  std::vector<double>(5, 0.)));
+		_sigmaCache = new std::vector<std::vector<double> >(_entries->size(), std::vector<double>(5, 0.));
 		forceCalculation = true;
 	}
 	if(forceCalculation) {
@@ -288,7 +333,7 @@ const std::vector<std::pair<std::vector<double>,
 						antok::beamfileGenerator::fiveDimBin::setDebug(false);
 					}
 					int dump;
-					const std::vector<double>& sigmas = relevantNeighbors[i]->getSigmas(dump)[0].first;
+					const std::vector<double>& sigmas = relevantNeighbors[i]->getRawSigmas(dump)[0];
 					if(debugCache) {
 						antok::beamfileGenerator::fiveDimBin::setDebug(true);
 					}
@@ -318,7 +363,7 @@ const std::vector<std::pair<std::vector<double>,
 					std::cout<<"]"<<std::endl;
 				}
 				for(unsigned int i = 0; i < _entries->size(); ++i) {
-								(*_sigmaCache)[i].first = averagedSigmas;
+								(*_sigmaCache)[i] = averagedSigmas;
 				}
 			} else {
 			// damn, no luck, we have to calculate the sigmas the hard way
@@ -381,15 +426,15 @@ const std::vector<std::pair<std::vector<double>,
 					}
 
 					// and now get the first sigma
-					(*_sigmaCache)[i].first[0] = std::pow(volume / ((double)entriesInShiftedSphere), 0.2);
+					(*_sigmaCache)[i][0] = std::pow(volume / ((double)entriesInShiftedSphere), 0.2);
 
 					for(unsigned int j = 0; j < 4; ++j) {
-						(*_sigmaCache)[i].first[j+1] = scalingFactors[j] * (*_sigmaCache)[i].first[0];
+						(*_sigmaCache)[i][j+1] = scalingFactors[j] * (*_sigmaCache)[i][0];
 					}
 					if(_debug) {
-						std::cout<<"sigmas = ["<<(*_sigmaCache)[i].first[0];
+						std::cout<<"sigmas = ["<<(*_sigmaCache)[i][0];
 						for(unsigned int j = 1; j < 5; ++j) {
-							std::cout<<", "<<(*_sigmaCache)[i].first[j];
+							std::cout<<", "<<(*_sigmaCache)[i][j];
 						}
 						std::cout<<"]"<<std::endl;
 						std::cout<<"calculated with "<<entriesInShiftedSphere<<" events."<<std::endl;
@@ -436,53 +481,14 @@ const std::vector<std::pair<std::vector<double>,
 				std::cout<<std::endl;
 			}
 			for(unsigned int i = 0; i < _entries->size(); ++i) {
-				(*_sigmaCache)[i].first = sigmas;
+				(*_sigmaCache)[i] = sigmas;
 			}
 		}
 		if(_debug) {
 			std::cout<<std::endl;
 		}
 	}
-
-	// check if the sigmas are to big to fit in the bin and cap them if needed
-	for(unsigned int i = 0; i < _sigmaCache->size(); ++i) {
-		std::pair<std::vector<double>, std::vector<double> >& pair = (*_sigmaCache)[i];
-		std::vector<double>& lowerSigmas = pair.first;
-		std::vector<double>& upperSigmas = pair.second;
-		if(_debug) {
-			std::cout<<"checking if sigmas in bin for event"<<std::endl;
-			(*_entries)[i]->print(std::cout);
-			std::cout<<"bin"<<std::endl;
-			print(std::cout);
-			std::cout<<"native sigmas: ["<<lowerSigmas[0];
-			for(unsigned int k = 1; k < 4; ++k) {
-				std::cout<<", "<<lowerSigmas[k];
-			}
-			std::cout<<"]"<<std::endl;
-		}
-		for(unsigned int j = 0; j < 5; ++j) {
-			const double sigma = lowerSigmas[j];
-			const double distanceToLowerEdge = (*_entries)[i]->_coords[j] - _a[j];
-			const double distanceToUpperEdge = _b[j] - (*_entries)[i]->_coords[j];
-			assert(distanceToLowerEdge >= 0. and distanceToUpperEdge >= 0.);
-			lowerSigmas[j] = std::min(sigma, distanceToLowerEdge);
-			upperSigmas[j] = std::min(sigma, distanceToUpperEdge);
-		}
-		if(_debug) {
-			std::cout<<"lower sigmas: ["<<lowerSigmas[0];
-			for(unsigned int k = 1; k < 4; ++k) {
-				std::cout<<", "<<lowerSigmas[k];
-			}
-			std::cout<<"]"<<std::endl;
-			std::cout<<"upper sigmas: ["<<upperSigmas[0];
-			for(unsigned int k = 1; k < 4; ++k) {
-				std::cout<<", "<<upperSigmas[k];
-			}
-			std::cout<<"]"<<std::endl;
-		}
-	}
 	return *_sigmaCache;
-
 }
 
 std::ostream& antok::beamfileGenerator::fiveDimBin::print(std::ostream& out, unsigned int indent) const
