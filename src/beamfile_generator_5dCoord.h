@@ -26,6 +26,7 @@ namespace antok {
 			const antok::beamfileGenerator::fiveDimCoord operator-(const antok::beamfileGenerator::fiveDimCoord& rhs);
 
 			double distance(const fiveDimCoord& point) const;
+			double distance2(const fiveDimCoord& point) const;
 
 			std::ostream& print(std::ostream& out) const;
 

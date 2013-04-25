@@ -78,6 +78,14 @@ double antok::beamfileGenerator::fiveDimCoord::distance(const fiveDimCoord& poin
 	return std::sqrt(dist);
 }
 
+double antok::beamfileGenerator::fiveDimCoord::distance2(const fiveDimCoord& point) const
+{
+	double dist = 0.;
+	for(unsigned int i = 0; i < 5; ++i) {
+		dist += (point._coords[i] - _coords[i])*(point._coords[i] - _coords[i]);
+	}
+	return dist;
+}
 
 std::ostream& antok::beamfileGenerator::fiveDimCoord::print(std::ostream& out) const
 {
