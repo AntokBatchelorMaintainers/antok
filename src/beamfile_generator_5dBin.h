@@ -69,7 +69,9 @@ namespace antok {
 			unsigned int getEntries() const { return _entries->size(); }
 			unsigned int getEdgeity() const;
 
-			const std::vector<std::vector<double> >& getSigmas(int& method, bool forceCalculation = false) const;
+			const std::vector<std::pair<std::vector<double>,
+			                            std::vector<double> > >& getSigmas(int& method,
+			                                                               bool forceCalculation = false) const;
 			void clearSigmaCache() const { delete _sigmaCache; _sigmaCache = 0; }
 
 			std::ostream& print(std::ostream& out, unsigned int indent = 0) const;
@@ -91,7 +93,7 @@ namespace antok {
 			std::vector<bool> _onLowerEdge;
 			std::vector<bool> _onUpperEdge;
 
-			mutable std::vector<std::vector<double> >* _sigmaCache;
+			mutable std::vector<std::pair<std::vector<double>, std::vector<double> > >* _sigmaCache;
 
 			static const double EPSILON;
 			static bool doubleEqual(const double& lhs, const double& rhs);

@@ -107,13 +107,14 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	bin->print(std::cout);
 
 	std::list<boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > adaptiveBins;
-	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, 0, true);
-	unsigned int nBins = adaptiveBins.size();
+	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, 0, false);
+	const unsigned int nBins = adaptiveBins.size();
 	std::cout<<"Split phase space in "<<nBins<<" bins."<<std::endl;
 	std::cout<<"(self-reporting of the bin class gives "
 	         <<antok::beamfileGenerator::fiveDimBin::getNExistingBins()<<" bins)" <<std::endl;
 
-	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
+	double primVx_sigma_lower, primVy_sigma_lower, bx_sigma_lower, by_sigma_lower, bz_sigma_lower;
+	double primVx_sigma_upper, primVy_sigma_upper, bx_sigma_upper, by_sigma_upper, bz_sigma_upper;
 	int binContent, nNeighbors, edgeity, sigmaCalculationMethod;
 	double binVolume;
 	TTree* outTree = new TTree("beamTree", "beamTree");
@@ -122,11 +123,16 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	outTree->Branch("beam_momentum_x", &bx,"beam_momentum_x/D");
 	outTree->Branch("beam_momentum_y", &by,"beam_momentum_y/D");
 	outTree->Branch("beam_momentum_z", &bz,"beam_momentum_z/D");
-	outTree->Branch("vertex_x_position_sigma", &primVx_sigma, "vertex_x_position_sigma/D");
-	outTree->Branch("vertex_y_position_sigma", &primVy_sigma, "vertex_y_position_sigma/D");
-	outTree->Branch("beam_momentum_x_sigma", &bx_sigma,"beam_momentum_x_sigma/D");
-	outTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
-	outTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
+	outTree->Branch("vertex_x_position_sigma_lower", &primVx_sigma_lower, "vertex_x_position_sigma_lower/D");
+	outTree->Branch("vertex_y_position_sigma_lower", &primVy_sigma_lower, "vertex_y_position_sigma_lower/D");
+	outTree->Branch("beam_momentum_x_sigma_lower", &bx_sigma_lower,"beam_momentum_x_sigma_lower/D");
+	outTree->Branch("beam_momentum_y_sigma_lower", &by_sigma_lower,"beam_momentum_y_sigma_lower/D");
+	outTree->Branch("beam_momentum_z_sigma_lower", &bz_sigma_lower,"beam_momentum_z_sigma_lower/D");
+	outTree->Branch("vertex_x_position_sigma_upper", &primVx_sigma_upper, "vertex_x_position_sigma_upper/D");
+	outTree->Branch("vertex_y_position_sigma_upper", &primVy_sigma_upper, "vertex_y_position_sigma_upper/D");
+	outTree->Branch("beam_momentum_x_sigma_upper", &bx_sigma_upper,"beam_momentum_x_sigma_upper/D");
+	outTree->Branch("beam_momentum_y_sigma_upper", &by_sigma_upper,"beam_momentum_y_sigma_upper/D");
+	outTree->Branch("beam_momentum_z_sigma_upper", &bz_sigma_upper,"beam_momentum_z_sigma_upper/D");
 	outTree->Branch("bin_content", &binContent, "bin_content/I");
 	outTree->Branch("number_of_neighbors", &nNeighbors, "number_of_neighbors/I");
 	outTree->Branch("edgeity", &edgeity, "edgeity/I");
@@ -134,23 +140,28 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	outTree->Branch("sigma_calculation_method", &sigmaCalculationMethod, "sigma_calculation_method/I");
 
 	std::vector<double*> coords(5);
-	std::vector<double*> sigmas(5);
+	std::vector<double*> sigmas_lower(5);
+	std::vector<double*> sigmas_upper(5);
 	coords[0] = &primVx;
 	coords[1] = &primVy;
 	coords[2] = &bx;
 	coords[3] = &by;
 	coords[4] = &bz;
-	sigmas[0] = &primVx_sigma;
-	sigmas[1] = &primVy_sigma;
-	sigmas[2] = &bx_sigma;
-	sigmas[3] = &by_sigma;
-	sigmas[4] = &bz_sigma;
-
+	sigmas_lower[0] = &primVx_sigma_lower;
+	sigmas_lower[1] = &primVy_sigma_lower;
+	sigmas_lower[2] = &bx_sigma_lower;
+	sigmas_lower[3] = &by_sigma_lower;
+	sigmas_lower[4] = &bz_sigma_lower;
+	sigmas_upper[0] = &primVx_sigma_upper;
+	sigmas_upper[1] = &primVy_sigma_upper;
+	sigmas_upper[2] = &bx_sigma_upper;
+	sigmas_upper[3] = &by_sigma_upper;
+	sigmas_upper[4] = &bz_sigma_upper;
 
 	std::cout << "Calculating and saving sigmas." << std:: endl;
 
 	unsigned int binNumber = 0;
-	unsigned int roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nBins / 100.) + 0.5)) + 0.5);
+	const unsigned int roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nBins / 100.) + 0.5)) + 0.5);
 
 	antok::beamfileGenerator::fiveDimBin::setDebug(false);
 	antok::beamfileGenerator::fiveDimBin::setPrintNeighbors(false);
@@ -174,10 +185,12 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 		nNeighbors = currentBin.getNeighbors().size();
 		edgeity = currentBin.getEdgeity();
 
-		const std::vector<std::vector<double> >& sigmasFromBin = currentBin.getSigmas(sigmaCalculationMethod);
+		const std::vector<std::pair<std::vector<double>,
+		                            std::vector<double> > >& sigmasFromBin = currentBin.getSigmas(sigmaCalculationMethod);
 		for(int i = 0; i < binContent; ++i) {
 			for(unsigned int j = 0; j < 5; ++j) {
-				*(sigmas[j]) = sigmasFromBin[i][j];
+				*(sigmas_lower[j]) = sigmasFromBin[i].first[j];
+				*(sigmas_upper[j]) = sigmasFromBin[i].second[j];
 				*(coords[j]) = (*currentTree)[i]->_coords[j];
 			}
 			outTree->Fill();
