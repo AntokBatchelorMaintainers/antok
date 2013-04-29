@@ -123,6 +123,17 @@ if(PYTHONINTERP_FOUND)
 			NO_DEFAULT_PATH)
 	endif()
 	if(NOT PYTHON_LIBRARIES)
+		# try yet again, this time using info from LIBPL variable; needed on some systems
+		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LIBPL'))"
+			OUTPUT_VARIABLE _PYTHON_LIBRARY_DIR
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+		find_library(PYTHON_LIBRARIES
+			NAMES ${_PYTHON_LIBRARY_FILE_NAME}
+			PATHS ${_PYTHON_LIBRARY_DIR}
+			NO_DEFAULT_PATH)
+	endif()
+
+	if(NOT PYTHON_LIBRARIES)
 		set(PYTHON_ERROR_REASON "${PYTHON_ERROR_REASON} Cannot find Python shared library '${_PYTHON_LIBRARY_FILE_NAME}' in '${_PYTHON_LIBRARY_DIR}'. Make sure Python is setup correctly.")
 	else()
 		set(PYTHONLIBS_FOUND TRUE)
