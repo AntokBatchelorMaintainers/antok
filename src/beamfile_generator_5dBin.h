@@ -69,8 +69,7 @@ namespace antok {
 			unsigned int getEntries() const { return _entries->size(); }
 			unsigned int getEdgeity() const;
 
-			std::vector<std::pair<std::vector<double>,
-			                      std::vector<double> > > getSigmas(int& method) const;
+			std::vector<std::vector<double> > getSigmas(int& method) const;
 			void clearSigmaCache() const { delete _sigmaCache; _sigmaCache = 0; }
 
 			std::ostream& print(std::ostream& out, unsigned int indent = 0) const;
@@ -80,6 +79,7 @@ namespace antok {
 			static void setDebug(bool debug = true) { _debug = debug; }
 			static void setPrintNeighbors(bool printNeighbors = true) { _printNeighbors = printNeighbors; }
 			static void setDifferentSigmaCalculationForEdges(bool setDiffSigmaCalc = true) { _differentSigmaCalculationForEdges = setDiffSigmaCalc; }
+			static void setConfineSigmasInBin(bool confineSigmasInBin = true) { _confineSigmasInBin = confineSigmasInBin; }
 
 		  private:
 
@@ -104,6 +104,7 @@ namespace antok {
 			static bool _debug;
 			static bool _printNeighbors;
 			static bool _differentSigmaCalculationForEdges;
+			static bool _confineSigmasInBin;
 
 		};
 

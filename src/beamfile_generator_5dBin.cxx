@@ -38,6 +38,7 @@ long antok::beamfileGenerator::fiveDimBin::_nExistingBins = 0;
 bool antok::beamfileGenerator::fiveDimBin::_debug = false;
 bool antok::beamfileGenerator::fiveDimBin::_printNeighbors = false;
 bool antok::beamfileGenerator::fiveDimBin::_differentSigmaCalculationForEdges = true;
+bool antok::beamfileGenerator::fiveDimBin::_confineSigmasInBin = false;
 
 antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
                                                  double a1,
@@ -222,20 +223,17 @@ unsigned int antok::beamfileGenerator::fiveDimBin::getEdgeity() const {
 
 }
 
-std::vector<std::pair<std::vector<double>,
-                      std::vector<double> > > antok::beamfileGenerator::fiveDimBin::getSigmas(int& method) const
+std::vector<std::vector<double> > antok::beamfileGenerator::fiveDimBin::getSigmas(int& method) const
 {
 
 	const std::vector<std::vector<double> >& rawSigmas = getRawSigmas(method);
-	std::vector<std::pair<std::vector<double>,
-	                      std::vector<double> > > sigmas(_entries->size(), std::pair<std::vector<double>,
-	                                                                                 std::vector<double> >(std::vector<double>(5, 0.),
-                                                                                                           std::vector<double>(5, 0.)));
+	std::vector<std::vector<double> > sigmas(_entries->size(), std::vector<double>(5, 0.));
+	if(not _confineSigmasInBin) {
+		return rawSigmas;
+	}
 	// check if the sigmas are to big to fit in the bin and cap them if needed
 	for(unsigned int i = 0; i < _sigmaCache->size(); ++i) {
-		std::pair<std::vector<double>, std::vector<double> >& pair = sigmas[i];
-		std::vector<double>& lowerSigmas = pair.first;
-		std::vector<double>& upperSigmas = pair.second;
+		std::vector<double>& currentSigmas = sigmas[i];
 		if(_debug) {
 			std::cout<<"checking if sigmas in bin for event"<<std::endl;
 			(*_entries)[i]->print(std::cout);
@@ -252,18 +250,12 @@ std::vector<std::pair<std::vector<double>,
 			const double distanceToLowerEdge = (*_entries)[i]->_coords[j] - _a[j];
 			const double distanceToUpperEdge = _b[j] - (*_entries)[i]->_coords[j];
 			assert(distanceToLowerEdge >= 0. and distanceToUpperEdge >= 0.);
-			lowerSigmas[j] = std::min(sigma, distanceToLowerEdge);
-			upperSigmas[j] = std::min(sigma, distanceToUpperEdge);
+			currentSigmas[j] = std::min(std::min(sigma, distanceToLowerEdge), distanceToUpperEdge);
 		}
 		if(_debug) {
-			std::cout<<"lower sigmas: ["<<lowerSigmas[0];
+			std::cout<<"sigmas: ["<<currentSigmas[0];
 			for(unsigned int k = 1; k < 4; ++k) {
-				std::cout<<", "<<lowerSigmas[k];
-			}
-			std::cout<<"]"<<std::endl;
-			std::cout<<"upper sigmas: ["<<upperSigmas[0];
-			for(unsigned int k = 1; k < 4; ++k) {
-				std::cout<<", "<<upperSigmas[k];
+				std::cout<<", "<<currentSigmas[k];
 			}
 			std::cout<<"]"<<std::endl;
 		}
