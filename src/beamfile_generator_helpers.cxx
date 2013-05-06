@@ -15,7 +15,7 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<boost::shared_ptr<const
                                                bool debug,
                                                unsigned int depth)
 {
-
+	const static int startDim = dim;
 	long entries = bin->getEntries();
 	const unsigned int indent = depth * antok::beamfileGenerator::INDENT;
 	if(debug) {
@@ -24,7 +24,7 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<boost::shared_ptr<const
 		std::cout<<std::string(indent, ' ')<<"input bin:"<<std::endl;
 		bin->print(std::cout, depth);
 	}
-	if(dim == 0 and entries < (32 * antok::beamfileGenerator::MIN_ENTRIES)) {
+	if(dim == startDim and entries < (32 * antok::beamfileGenerator::MIN_ENTRIES)) {
 		bins.push_back(bin);
 
 	} else {

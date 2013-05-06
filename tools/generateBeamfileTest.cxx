@@ -18,7 +18,12 @@
 #include<initializer.h>
 
 
-void fillFiveDimHist(std::string inFileName, std::string outFileName) {
+void fillFiveDimHist(std::string inFileName, std::string outFileName, int startCoord = 0) {
+
+	if(startCoord < 0 or startCoord > 4) {
+		std::cout<<"Invalid starting coordinate: "<<startCoord<<". Aborting..."<<std::endl;
+		exit(1);
+	}
 
 	TFile* inFile = TFile::Open(inFileName.c_str(), "READ");
 	TTree* inTree = (TTree*)inFile->Get("testBeamTree");
@@ -107,7 +112,8 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 	bin->print(std::cout);
 
 	std::list<boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > adaptiveBins;
-	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, 0, false);
+	std::cout<<"starting binning with coordinate "<<startCoord<<"."<<std::endl;
+	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, startCoord, false);
 	const unsigned int nBins = adaptiveBins.size();
 	std::cout<<"Split phase space in "<<nBins<<" bins."<<std::endl;
 	std::cout<<"(self-reporting of the bin class gives "
@@ -192,7 +198,9 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName) {
 int main(int argc, char* argv[]) {
 	if(argc == 3) {
 		fillFiveDimHist(argv[1], argv[2]);
+	} else if (argc == 4) {
+		fillFiveDimHist(argv[1], argv[2], std::atoi(argv[3]));
 	} else {
-		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be 3."<<std::endl;
+		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be 2 or 3."<<std::endl;
 	}
 }
