@@ -6,6 +6,9 @@
 
 #include<boost/shared_ptr.hpp>
 
+#include<beamfile_generator_5dBin.h>
+#include<beamfile_generator_5dCoord.h>
+
 namespace antok {
 
 	namespace beamfileGenerator {
@@ -20,6 +23,34 @@ namespace antok {
 		                     int dim = 0,
 		                     bool debug = false,
 		                     unsigned int depth = 0);
+
+		struct eventBookkeeper {
+
+			eventBookkeeper()
+			  : binVolume(-1.),
+				binContent(-1),
+				nNeighbors(-1),
+				edgeity(-1),
+				sigmaCalculationMethod(-1),
+				sigmas(0),
+				coords(0) { }
+	
+			double binVolume;
+			int binContent;
+			int nNeighbors;
+			int edgeity;
+			int sigmaCalculationMethod;
+			const std::vector<double>* sigmas;
+			const antok::beamfileGenerator::fiveDimCoord* coords;
+	
+		};
+
+		struct compareEventBookkeepers {
+			bool operator ()(const eventBookkeeper& lhs, const eventBookkeeper& rhs)
+			{
+				return lhs.coords->_eventNumber < rhs.coords->_eventNumber;
+			}
+		};
 
 	}
 

@@ -12,10 +12,11 @@ namespace antok {
 
 			fiveDimCoord();
 
-			fiveDimCoord(std::vector<double> coords)
-				: _coords(coords) { }
+			fiveDimCoord(std::vector<double> coords, long eventNumber = -1)
+				: _coords(coords),
+				  _eventNumber(eventNumber) { }
 
-			fiveDimCoord(double x0, double x1, double x2, double x3, double x4);
+			fiveDimCoord(double x0, double x1, double x2, double x3, double x4, long eventNumber = -1);
 
 			bool operator<(const fiveDimCoord& rhs) const;
 			antok::beamfileGenerator::fiveDimCoord& operator+=(const antok::beamfileGenerator::fiveDimCoord& rhs);
@@ -32,6 +33,7 @@ namespace antok {
 
 			static int _orderDim;
 			std::vector<double> _coords;
+			long _eventNumber;
 
 		};
 

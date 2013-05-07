@@ -62,7 +62,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 		momY->Fill(by);
 		momZ->Fill(bz);
 
-		tempTree->push_back(new antok::beamfileGenerator::fiveDimCoord(primVx, primVy, bx, by, bz));
+		tempTree->push_back(new antok::beamfileGenerator::fiveDimCoord(primVx, primVy, bx, by, bz, i));
 
 		if(i % 100000 == 0) {
 			std::cout<<"Entry "<<i<<" of "<<entries<<std::endl;
@@ -103,17 +103,19 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 			if(bz > upperCorner[4]) upperCorner[4] = bz;
 		}
 	}
-	boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> bin(new antok::beamfileGenerator::fiveDimBin (lowerCorner,
-	                                                                                                      upperCorner,
-	                                                                                                      tempTree));
-	bin->setOnLowerEdge(std::vector<bool>(5, true));
-	bin->setOnUpperEdge(std::vector<bool>(5, true));
-	std::cout<<"Got first bin: "<<std::endl;
-	bin->print(std::cout);
-
 	std::list<boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> > adaptiveBins;
-	std::cout<<"starting binning with coordinate "<<startCoord<<"."<<std::endl;
-	antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, startCoord, false);
+	{
+		boost::shared_ptr<antok::beamfileGenerator::fiveDimBin> bin(new antok::beamfileGenerator::fiveDimBin (lowerCorner,
+		                                                                                                      upperCorner,
+		                                                                                                      tempTree));
+		bin->setOnLowerEdge(std::vector<bool>(5, true));
+		bin->setOnUpperEdge(std::vector<bool>(5, true));
+		std::cout<<"Got first bin: "<<std::endl;
+		bin->print(std::cout);
+
+		std::cout<<"starting binning with coordinate "<<startCoord<<"."<<std::endl;
+		antok::beamfileGenerator::getAdaptiveBins(adaptiveBins, bin, startCoord, false);
+	}
 	const unsigned int nBins = adaptiveBins.size();
 	std::cout<<"Split phase space in "<<nBins<<" bins."<<std::endl;
 	std::cout<<"(self-reporting of the bin class gives "
@@ -121,6 +123,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 
 	double primVx_sigma, primVy_sigma, bx_sigma, by_sigma, bz_sigma;
 	int binContent, nNeighbors, edgeity, sigmaCalculationMethod;
+	long eventNumber;
 	double binVolume;
 	TTree* outTree = new TTree("beamTree", "beamTree");
 	outTree->Branch("vertex_x_position", &primVx, "vertex_x_position/D");
@@ -130,9 +133,10 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 	outTree->Branch("beam_momentum_z", &bz,"beam_momentum_z/D");
 	outTree->Branch("vertex_x_position_sigma", &primVx_sigma, "vertex_x_position_sigma/D");
 	outTree->Branch("vertex_y_position_sigma", &primVy_sigma, "vertex_y_position_sigma/D");
-	outTree->Branch("beam_momentum_x_sigma", &bx_sigma,"beam_momentum_x_sigma/D");
-	outTree->Branch("beam_momentum_y_sigma", &by_sigma,"beam_momentum_y_sigma/D");
-	outTree->Branch("beam_momentum_z_sigma", &bz_sigma,"beam_momentum_z_sigma/D");
+	outTree->Branch("beam_momentum_x_sigma", &bx_sigma, "beam_momentum_x_sigma/D");
+	outTree->Branch("beam_momentum_y_sigma", &by_sigma, "beam_momentum_y_sigma/D");
+	outTree->Branch("beam_momentum_z_sigma", &bz_sigma, "beam_momentum_z_sigma/D");
+	outTree->Branch("event_number", &eventNumber, "event_number/L");
 	outTree->Branch("bin_content", &binContent, "bin_content/I");
 	outTree->Branch("number_of_neighbors", &nNeighbors, "number_of_neighbors/I");
 	outTree->Branch("edgeity", &edgeity, "edgeity/I");
@@ -152,7 +156,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 	sigmas[3] = &by_sigma;
 	sigmas[4] = &bz_sigma;
 
-	std::cout << "Calculating and saving sigmas." << std:: endl;
+	std::cout << "Calculating sigmas." << std:: endl;
 
 	unsigned int binNumber = 0;
 	const unsigned int roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nBins / 100.) + 0.5)) + 0.5);
@@ -161,6 +165,8 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 	antok::beamfileGenerator::fiveDimBin::setPrintNeighbors(false);
 	antok::beamfileGenerator::fiveDimBin::setDifferentSigmaCalculationForEdges(true);
 	antok::beamfileGenerator::fiveDimBin::setConfineSigmasInBin(false);
+
+	std::vector<antok::beamfileGenerator::eventBookkeeper> eventsToSave;
 
 	for(
 		std::list<boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> >::const_iterator binIt = adaptiveBins.begin();
@@ -175,19 +181,53 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 		++binNumber;
 		const antok::beamfileGenerator::fiveDimBin& currentBin = *(*binIt);
 		const std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = currentBin.getEvents();
-		binContent = currentTree->size();
-		binVolume = currentBin.getVolume();
-		nNeighbors = currentBin.getNeighbors().size();
-		edgeity = currentBin.getEdgeity();
 
 		const std::vector<std::vector<double> >& sigmasFromBin = currentBin.getSigmas(sigmaCalculationMethod);
-		for(int i = 0; i < binContent; ++i) {
-			for(unsigned int j = 0; j < 5; ++j) {
-				*(sigmas[j]) = sigmasFromBin[i][j];
-				*(coords[j]) = (*currentTree)[i]->_coords[j];
-			}
-			outTree->Fill();
+		for(unsigned int i = 0; i < currentTree->size(); ++i) {
+			assert((*currentTree)[i]->_eventNumber >= 0);
+			antok::beamfileGenerator::eventBookkeeper currentEvent;
+			currentEvent.binContent = currentTree->size();
+			currentEvent.binVolume = currentBin.getVolume();
+			currentEvent.nNeighbors = currentBin.getNeighbors().size();
+			currentEvent.edgeity = currentBin.getEdgeity();
+			currentEvent.sigmaCalculationMethod = sigmaCalculationMethod;
+			currentEvent.sigmas = new std::vector<double>(sigmasFromBin[i]);
+			currentEvent.coords = (*currentTree)[i];
+			eventsToSave.push_back(currentEvent);
 		}
+	}
+
+	for(
+		std::list<boost::shared_ptr<const antok::beamfileGenerator::fiveDimBin> >::const_iterator binIt = adaptiveBins.begin();
+		binIt != adaptiveBins.end();
+		++binIt
+	)
+	{
+		(*binIt)->clearSigmaCache();
+	}
+
+	std::cout << "Sorting events." << std::endl;
+	std::sort(eventsToSave.begin(), eventsToSave.end(), antok::beamfileGenerator::compareEventBookkeepers());
+
+	std::cout << "Saving events." << std:: endl;
+	const unsigned int eventRoundingNumber = int(std::pow(10., (unsigned int)(log10((double)eventsToSave.size() / 100.) + 0.5)) + 0.5);
+	for(unsigned int i = 0; i < eventsToSave.size(); ++i) {
+		if(not (i % eventRoundingNumber)) {
+			std::cout<<"Bin "<<i<<" of "<<eventsToSave.size()<<" ("<<std::setprecision(2)
+			         <<(i/(double)eventsToSave.size()*100)<<"%)"<<std::endl;
+		}
+		const antok::beamfileGenerator::eventBookkeeper& currentEvent = eventsToSave[i];
+		binContent = currentEvent.binContent;
+		binVolume = currentEvent.binVolume;
+		nNeighbors = currentEvent.nNeighbors;
+		edgeity = currentEvent.edgeity;
+		sigmaCalculationMethod = currentEvent.sigmaCalculationMethod;
+		for(unsigned int j = 0; j < 5; ++j) {
+			*(sigmas[j]) = (*currentEvent.sigmas)[j];
+			*(coords[j]) = currentEvent.coords->_coords[j];
+		}
+		eventNumber = currentEvent.coords->_eventNumber;
+		outTree->Fill();
 	}
 
 	outFile->Write();

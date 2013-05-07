@@ -8,9 +8,10 @@ int antok::beamfileGenerator::fiveDimCoord::_orderDim = 0;
 antok::beamfileGenerator::fiveDimCoord::fiveDimCoord()
 {
 	_coords.resize(5, 0.);
+	_eventNumber = -1;
 }
 
-antok::beamfileGenerator::fiveDimCoord::fiveDimCoord(double x0, double x1, double x2, double x3, double x4)
+antok::beamfileGenerator::fiveDimCoord::fiveDimCoord(double x0, double x1, double x2, double x3, double x4, long eventNumber)
 {
 	_coords.resize(5, 0.);
 	_coords[0] = x0;
@@ -18,6 +19,7 @@ antok::beamfileGenerator::fiveDimCoord::fiveDimCoord(double x0, double x1, doubl
 	_coords[2] = x2;
 	_coords[3] = x3;
 	_coords[4] = x4;
+	_eventNumber = eventNumber;
 }
 
 bool antok::beamfileGenerator::fiveDimCoord::operator<(const antok::beamfileGenerator::fiveDimCoord& rhs) const
@@ -93,6 +95,6 @@ std::ostream& antok::beamfileGenerator::fiveDimCoord::print(std::ostream& out) c
 	for(unsigned int i = 1; i < 5; ++i) {
 		out << ", " << _coords[i];
 	}
-	out << "]" << std::endl;
+	out << "] (event number " << _eventNumber << ")" << std::endl;
 	return out;
 }
