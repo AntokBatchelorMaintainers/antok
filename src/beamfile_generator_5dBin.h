@@ -26,7 +26,8 @@ namespace antok {
 				  _neighbors(),
 				  _onLowerEdge(5, false),
 				  _onUpperEdge(5, false),
-				  _sigmaCache(0) { _nExistingBins += 1; }
+				  _sigmaCache(0),
+				  _sigmaCalculationMethodCache(-1) { _nExistingBins += 1; }
 
 			// this takes ownership of entries!
 			fiveDimBin(double a0, double a1, double a2, double a3, double a4,
@@ -69,8 +70,9 @@ namespace antok {
 			unsigned int getEntries() const { return _entries->size(); }
 			unsigned int getEdgeity() const;
 
-			std::vector<std::vector<double> > getSigmas(int& method) const;
-			void clearSigmaCache() const { delete _sigmaCache; _sigmaCache = 0; }
+			std::vector<std::vector<double> > getSigmas() const;
+			const int& getSigmaCalculationMethod() const { return _sigmaCalculationMethodCache; };
+			void clearSigmaCache() const { delete _sigmaCache; _sigmaCache = 0; _sigmaCalculationMethodCache = -1; }
 
 			std::ostream& print(std::ostream& out, unsigned int indent = 0) const;
 
@@ -83,7 +85,7 @@ namespace antok {
 
 		  private:
 
-			const std::vector<std::vector<double> >& getRawSigmas(int& method, bool forceCalculation = false) const;
+			const std::vector<std::vector<double> >& getRawSigmas(bool forceCalculation = false) const;
 
 			std::vector<double> _a; // lower corner
 			std::vector<double> _b; // upper corner
@@ -95,6 +97,7 @@ namespace antok {
 			std::vector<bool> _onUpperEdge;
 
 			mutable std::vector<std::vector<double> >* _sigmaCache;
+			mutable int _sigmaCalculationMethodCache;
 
 			static const double EPSILON;
 			static bool doubleEqual(const double& lhs, const double& rhs);

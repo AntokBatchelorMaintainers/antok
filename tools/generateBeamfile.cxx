@@ -222,7 +222,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 		const antok::beamfileGenerator::fiveDimBin& currentBin = *(*binIt);
 		const std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = currentBin.getEvents();
 
-		const std::vector<std::vector<double> >& sigmasFromBin = currentBin.getSigmas(sigmaCalculationMethod);
+		const std::vector<std::vector<double> >& sigmasFromBin = currentBin.getSigmas();
 		for(unsigned int i = 0; i < currentTree->size(); ++i) {
 			assert((*currentTree)[i]->_eventNumber >= 0);
 			antok::beamfileGenerator::eventBookkeeper currentEvent;
@@ -230,7 +230,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 			currentEvent.binVolume = currentBin.getVolume();
 			currentEvent.nNeighbors = currentBin.getNeighbors().size();
 			currentEvent.edgeity = currentBin.getEdgeity();
-			currentEvent.sigmaCalculationMethod = sigmaCalculationMethod;
+			currentEvent.sigmaCalculationMethod = currentBin.getSigmaCalculationMethod();
 			currentEvent.sigmas = new std::vector<double>(sigmasFromBin[i]);
 			currentEvent.coords = (*currentTree)[i];
 			eventsToSave.push_back(currentEvent);

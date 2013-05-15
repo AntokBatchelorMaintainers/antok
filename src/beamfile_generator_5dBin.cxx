@@ -57,7 +57,8 @@ antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
 	  _neighbors(),
 	  _onLowerEdge(5, false),
 	  _onUpperEdge(5, false),
-	  _sigmaCache(0)
+	  _sigmaCache(0),
+	  _sigmaCalculationMethodCache(-1)
 {
 	_a[0] = a0 < b0 ? a0 : b0;
 	_a[1] = a1 < b1 ? a1 : b1;
@@ -81,7 +82,8 @@ antok::beamfileGenerator::fiveDimBin::fiveDimBin(const std::vector<double>& a,
 	  _neighbors(),
 	  _onLowerEdge(5, false),
 	  _onUpperEdge(5, false),
-	  _sigmaCache(0)
+	  _sigmaCache(0),
+	  _sigmaCalculationMethodCache(-1)
 {
 	assert(a.size() == 5);
 	assert(b.size() == 5);
@@ -223,10 +225,10 @@ unsigned int antok::beamfileGenerator::fiveDimBin::getEdgeity() const {
 
 }
 
-std::vector<std::vector<double> > antok::beamfileGenerator::fiveDimBin::getSigmas(int& method) const
+std::vector<std::vector<double> > antok::beamfileGenerator::fiveDimBin::getSigmas() const
 {
 
-	const std::vector<std::vector<double> >& rawSigmas = getRawSigmas(method);
+	const std::vector<std::vector<double> >& rawSigmas = getRawSigmas();
 	std::vector<std::vector<double> > sigmas(_entries->size(), std::vector<double>(5, 0.));
 	if(not _confineSigmasInBin) {
 		return rawSigmas;
@@ -264,8 +266,7 @@ std::vector<std::vector<double> > antok::beamfileGenerator::fiveDimBin::getSigma
 
 }
 
-const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::getRawSigmas(int& method,
-                                                                                            bool forceCalculation) const
+const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::getRawSigmas(bool forceCalculation) const
 {
 	if(not _sigmaCache) {
 		_sigmaCache = new std::vector<std::vector<double> >(_entries->size(), std::vector<double>(5, 0.));
@@ -312,7 +313,7 @@ const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::g
 
 			if(relevantNeighbors.size() > 0) {
 			// we have a bin which is not on the edge, take the sigmas from there
-				method = 1;
+				_sigmaCalculationMethodCache = 1;
 				if(_debug) {
 					std::cout<<"found "<<relevantNeighbors.size()<<" neighbors which are"
 					         <<" not on the edge (out of "<<_neighbors.size()<<")"<<std::endl;
@@ -324,8 +325,7 @@ const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::g
 						debugCache = true;
 						antok::beamfileGenerator::fiveDimBin::setDebug(false);
 					}
-					int dump;
-					const std::vector<double>& sigmas = relevantNeighbors[i]->getRawSigmas(dump)[0];
+					const std::vector<double>& sigmas = relevantNeighbors[i]->getRawSigmas()[0];
 					if(debugCache) {
 						antok::beamfileGenerator::fiveDimBin::setDebug(true);
 					}
@@ -359,7 +359,7 @@ const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::g
 				}
 			} else {
 			// damn, no luck, we have to calculate the sigmas the hard way
-				method = 2;
+				_sigmaCalculationMethodCache = 2;
 				std::vector<antok::beamfileGenerator::fiveDimCoord> allEvents;
 				for(unsigned int i = 0; i < _entries->size(); ++i) {
 					allEvents.push_back(*(*_entries)[i]);
@@ -448,7 +448,7 @@ const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::g
 
 		// we are not at the edge, life is easy
 		} else {
-			method = 0;
+			_sigmaCalculationMethodCache = 0;
 			double binVolume = getVolume();
 			if(_debug) {
 				std::cout<<"on an inner bin"<<std::endl;
