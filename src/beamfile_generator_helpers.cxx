@@ -33,7 +33,7 @@ void antok::beamfileGenerator::getAdaptiveBins(std::list<boost::shared_ptr<const
 		{
 			std::stringstream out;
 			newBins = bin->divide(dim, debug ? &out : 0, depth);
-			int entryDifference = std::abs((int)newBins.first->getEntries() - newBins.second->getEntries());
+			int entryDifference = std::abs((int)newBins.first->getEntries() - (int)newBins.second->getEntries());
 			if(debug) {
 				std::cout<<out.str();
 				std::cout<<std::string(indent, ' ')<<"bin1: "<<std::endl;
