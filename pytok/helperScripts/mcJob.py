@@ -2,7 +2,10 @@
 
 import ConfigParser
 import datetime
+import glob
 import os
+import random
+import re
 import sys
 
 import pytok
@@ -64,12 +67,26 @@ if __name__ == "__main__":
 
 	# Generate events if necessary
 	if config.generateInputYourself:
+		# Make the beamfile available if necessary
+		beamfile = ""
+		if config.genpwBeamfileDir != "":
+			beamfileList = glob.glob(config.genpwBeamfileDir + "/*.root")
+			beamfile = random.choice(beamfileList)
+			while re.search('^.*/[0-9]*.root$', beamfile) is None:
+				beamfile = random.choice(beamfileList)
+			logger.info("Using beamfile '" + beamfile + "'.")
+			commandString = "cp " + beamfile + " " + config.wDir
+			pytok.runCommand("Copying beamfile to working directory", commandString, logger)
+
 		logger.info("Generating event file...")
 		commandString = config.generatorCommand + " "
 		commandString += config.generatorOptions + " "
 		commandString += config.generatorOutputFileSwitch + " " + config.eventsDir + "/" + str(config.taskID) + ".gen "
 		commandString += config.generatorEventNumberSwitch + " " + str(config.nEvents) + " "
 		commandString += config.generatorSeedSwitch + " " + str(config.randomSeed)
+		if beamfile != "":
+			commandString += " --beamfile " + config.wDir + "/" + beamfile[beamfile.rfind('/')+1:]
+			commandString += " --noRandomBeam"
 		pytok.runCommand("Generating events", commandString, logger)
 
 	# Prepare comgeant directory

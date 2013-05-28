@@ -53,6 +53,7 @@ class Configuration(object):
 	generateInputYourself = False
 	generatorCommand = ""
 	generatorOptions = ""
+	genpwBeamfileDir = ""
 	generatorOutputFileSwitch = ""
 	generatorEventNumberSwitch = ""
 	generatorSeedSwitch = ""
@@ -146,6 +147,7 @@ class Configuration(object):
 
 			self.generatorCommand = self._getOption("Generator", "generator_command", True)
 			self.generatorOptions = self._getOption("Generator", "generator_options", True).replace('\n', ' ')
+			self.genpwBeamfileDir = self._getOption("Generator", "genpw_beamfile_dir", True)
 			if self.generatorCommand != "":
 				self.generatorOutputFileSwitch = self._getOption("Generator", "output_file_switch")
 				self.generatorEventNumberSwitch = self._getOption("Generator", "event_number_switch")
@@ -224,6 +226,12 @@ class Configuration(object):
 			if os.system("rfdir " + self.outputDir):
 				self._logger.error("Output directory '" + self.outputDir + "' not found.")
 				error = True
+		if self.generatorCommand != "" and not os.path.isfile(self.generatorCommand):
+			self._logger.error("Generator executable '" + self.generatorCommand + "' not found.")
+			error = True
+		if self.genpwBeamfileDir != "" and not os.path.isdir(self.genpwBeamfileDir):
+			self._logger.error("genpw's beamfile directory '" + self.genpwBeamfileDir + "' not found.")
+			error=True
 		if self._generatorFilesToWatchString != "":
 			self.generatorFilesToWatch = self._generatorFilesToWatchString.replace('\n', ' ').replace(',', ' ').split()
 			for watchFile in self.generatorFilesToWatch:
@@ -239,11 +247,7 @@ class Configuration(object):
 					self._logger.error("Input file '" + self.eventsDir + "/" + str(self._taskID) + ".fort.26' not found and no generator specified.")
 					error = True
 				else:
-					if not os.path.isfile(self.generatorCommand):
-						self._logger.error("Generator executable '" + self.generatorCommand + "' not found.")
-						error = True
-					else:
-						self.generateInputYourself = True
+					self.generateInputYourself = True
 			if os.path.isfile(self.outputDir + "/" + str(self._taskID) + ".mDST"):
 				self._logger.error("Output file '" + self.outputDir + "/" + str(self._taskID) + ".mDST' already exists.")
 				error = True
@@ -335,6 +339,7 @@ class Configuration(object):
 		retval += "Phast submitter loop interval      : " + str(self.phastSubmitterIntervall) + "\n"
 		retval += "Generator command                  : " + self.generatorCommand + "\n"
 		retval += "Generator options                  : " + repr(self.generatorOptions) + "\n"
+		retval += "genpw beamfile directory           : " + self.genpwBeamfileDir + "\n"
 		retval += "Generator event number switch      : " + self.generatorEventNumberSwitch + "\n"
 		retval += "Generator seed switch              : " + self.generatorSeedSwitch + "\n"
 		retval += "Generator files to watch           : "
