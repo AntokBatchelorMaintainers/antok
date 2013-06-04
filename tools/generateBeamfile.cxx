@@ -52,7 +52,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 	py.resize(N_PARTICLES, 0.);
 	pz.resize(N_PARTICLES, 0.);
 	double gradx, grady;
-	double primVx, primVy;
+	double primVx, primVy, primVz;
 
 	for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 		std::stringstream strStr;
@@ -69,6 +69,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 	inTree->SetBranchAddress("grady", &grady);
 	inTree->SetBranchAddress("X_primV", &primVx);
 	inTree->SetBranchAddress("Y_primV", &primVy);
+	inTree->SetBranchAddress("Z_primV", &primVz);
 
 	double bx, by, bz;
 
@@ -97,6 +98,11 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, std::strin
 		bx = beam.X();
 		by = beam.Y();
 		bz = beam.Z();
+
+		double dx = bx / bz;
+		double dy = by / bz;
+		primVx -= dx * primVz;
+		primVy -= dy * primVz;
 
 		vtxX->Fill(primVx);
 		vtxY->Fill(primVy);
