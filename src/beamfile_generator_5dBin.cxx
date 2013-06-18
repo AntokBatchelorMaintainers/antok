@@ -38,7 +38,6 @@ long antok::beamfileGenerator::fiveDimBin::_nExistingBins = 0;
 bool antok::beamfileGenerator::fiveDimBin::_debug = false;
 bool antok::beamfileGenerator::fiveDimBin::_printNeighbors = false;
 bool antok::beamfileGenerator::fiveDimBin::_differentSigmaCalculationForEdges = true;
-bool antok::beamfileGenerator::fiveDimBin::_confineSigmasInBin = false;
 
 antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
                                                  double a1,
@@ -57,7 +56,7 @@ antok::beamfileGenerator::fiveDimBin::fiveDimBin(double a0,
 	  _neighbors(),
 	  _onLowerEdge(5, false),
 	  _onUpperEdge(5, false),
-	  _sigmaCache(0),
+	  _sigmaCache(),
 	  _sigmaCalculationMethodCache(-1)
 {
 	_a[0] = a0 < b0 ? a0 : b0;
@@ -82,7 +81,7 @@ antok::beamfileGenerator::fiveDimBin::fiveDimBin(const std::vector<double>& a,
 	  _neighbors(),
 	  _onLowerEdge(5, false),
 	  _onUpperEdge(5, false),
-	  _sigmaCache(0),
+	  _sigmaCache(),
 	  _sigmaCalculationMethodCache(-1)
 {
 	assert(a.size() == 5);
@@ -98,7 +97,6 @@ antok::beamfileGenerator::fiveDimBin::~fiveDimBin()
 {
 	_neighbors.clear();
 	_nExistingBins -= 1;
-	delete _sigmaCache;
 	delete _entries;
 }
 
@@ -225,51 +223,11 @@ unsigned int antok::beamfileGenerator::fiveDimBin::getEdgeity() const {
 
 }
 
-std::vector<std::vector<double> > antok::beamfileGenerator::fiveDimBin::getSigmas() const
-{
-
-	const std::vector<std::vector<double> >& rawSigmas = getRawSigmas();
-	std::vector<std::vector<double> > sigmas(_entries->size(), std::vector<double>(5, 0.));
-	if(not _confineSigmasInBin) {
-		return rawSigmas;
-	}
-	// check if the sigmas are to big to fit in the bin and cap them if needed
-	for(unsigned int i = 0; i < _sigmaCache->size(); ++i) {
-		std::vector<double>& currentSigmas = sigmas[i];
-		if(_debug) {
-			std::cout<<"checking if sigmas in bin for event"<<std::endl;
-			(*_entries)[i]->print(std::cout);
-			std::cout<<"bin"<<std::endl;
-			print(std::cout);
-			std::cout<<"native sigmas: ["<<rawSigmas[i][0];
-			for(unsigned int k = 1; k < 4; ++k) {
-				std::cout<<", "<<rawSigmas[i][k];
-			}
-			std::cout<<"]"<<std::endl;
-		}
-		for(unsigned int j = 0; j < 5; ++j) {
-			const double sigma = rawSigmas[i][j];
-			const double distanceToLowerEdge = (*_entries)[i]->_coords[j] - _a[j];
-			const double distanceToUpperEdge = _b[j] - (*_entries)[i]->_coords[j];
-			assert(distanceToLowerEdge >= 0. and distanceToUpperEdge >= 0.);
-			currentSigmas[j] = std::min(std::min(sigma, distanceToLowerEdge), distanceToUpperEdge);
-		}
-		if(_debug) {
-			std::cout<<"sigmas: ["<<currentSigmas[0];
-			for(unsigned int k = 1; k < 4; ++k) {
-				std::cout<<", "<<currentSigmas[k];
-			}
-			std::cout<<"]"<<std::endl;
-		}
-	}
-	return sigmas;
-
-}
-
-const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::getRawSigmas(bool forceCalculation) const
+const boost::shared_ptr<const std::vector<std::vector<double> > > antok::beamfileGenerator::fiveDimBin::getSigmas(bool forceCalculation) const
 {
 	if(not _sigmaCache) {
-		_sigmaCache = new std::vector<std::vector<double> >(_entries->size(), std::vector<double>(5, 0.));
+		_sigmaCache = boost::shared_ptr<std::vector<std::vector<double> > >
+		                             (new std::vector<std::vector<double> >(_entries->size(), std::vector<double>(5, 0.)));
 		forceCalculation = true;
 	}
 	if(forceCalculation) {
@@ -325,7 +283,7 @@ const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::g
 						debugCache = true;
 						antok::beamfileGenerator::fiveDimBin::setDebug(false);
 					}
-					const std::vector<double>& sigmas = relevantNeighbors[i]->getRawSigmas()[0];
+					const std::vector<double>& sigmas = (*relevantNeighbors[i]->getSigmas())[0];
 					if(debugCache) {
 						antok::beamfileGenerator::fiveDimBin::setDebug(true);
 					}
@@ -480,7 +438,7 @@ const std::vector<std::vector<double> >& antok::beamfileGenerator::fiveDimBin::g
 			std::cout<<std::endl;
 		}
 	}
-	return *_sigmaCache;
+	return _sigmaCache;
 }
 
 std::ostream& antok::beamfileGenerator::fiveDimBin::print(std::ostream& out, unsigned int indent) const

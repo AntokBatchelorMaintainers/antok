@@ -26,7 +26,7 @@ namespace antok {
 				  _neighbors(),
 				  _onLowerEdge(5, false),
 				  _onUpperEdge(5, false),
-				  _sigmaCache(0),
+				  _sigmaCache(),
 				  _sigmaCalculationMethodCache(-1) { _nExistingBins += 1; }
 
 			// this takes ownership of entries!
@@ -70,9 +70,9 @@ namespace antok {
 			unsigned int getEntries() const { return _entries->size(); }
 			unsigned int getEdgeity() const;
 
-			std::vector<std::vector<double> > getSigmas() const;
+			const boost::shared_ptr<const std::vector<std::vector<double> > > getSigmas(bool forceCalculation = false) const;
 			const int& getSigmaCalculationMethod() const { return _sigmaCalculationMethodCache; };
-			void clearSigmaCache() const { delete _sigmaCache; _sigmaCache = 0; _sigmaCalculationMethodCache = -1; }
+			void clearSigmaCache() const { _sigmaCache.reset(); }
 
 			std::ostream& print(std::ostream& out, unsigned int indent = 0) const;
 
@@ -81,11 +81,8 @@ namespace antok {
 			static void setDebug(bool debug = true) { _debug = debug; }
 			static void setPrintNeighbors(bool printNeighbors = true) { _printNeighbors = printNeighbors; }
 			static void setDifferentSigmaCalculationForEdges(bool setDiffSigmaCalc = true) { _differentSigmaCalculationForEdges = setDiffSigmaCalc; }
-			static void setConfineSigmasInBin(bool confineSigmasInBin = true) { _confineSigmasInBin = confineSigmasInBin; }
 
 		  private:
-
-			const std::vector<std::vector<double> >& getRawSigmas(bool forceCalculation = false) const;
 
 			std::vector<double> _a; // lower corner
 			std::vector<double> _b; // upper corner
@@ -96,7 +93,7 @@ namespace antok {
 			std::vector<bool> _onLowerEdge;
 			std::vector<bool> _onUpperEdge;
 
-			mutable std::vector<std::vector<double> >* _sigmaCache;
+			mutable boost::shared_ptr<std::vector<std::vector<double> > > _sigmaCache;
 			mutable int _sigmaCalculationMethodCache;
 
 			static const double EPSILON;
@@ -107,7 +104,6 @@ namespace antok {
 			static bool _debug;
 			static bool _printNeighbors;
 			static bool _differentSigmaCalculationForEdges;
-			static bool _confineSigmasInBin;
 
 		};
 

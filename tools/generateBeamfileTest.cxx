@@ -164,7 +164,6 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 	antok::beamfileGenerator::fiveDimBin::setDebug(false);
 	antok::beamfileGenerator::fiveDimBin::setPrintNeighbors(false);
 	antok::beamfileGenerator::fiveDimBin::setDifferentSigmaCalculationForEdges(true);
-	antok::beamfileGenerator::fiveDimBin::setConfineSigmasInBin(false);
 
 	std::vector<antok::beamfileGenerator::eventBookkeeper> eventsToSave;
 
@@ -182,7 +181,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 		const antok::beamfileGenerator::fiveDimBin& currentBin = *(*binIt);
 		const std::vector<antok::beamfileGenerator::fiveDimCoord*>* currentTree = currentBin.getEvents();
 
-		const std::vector<std::vector<double> >& sigmasFromBin = currentBin.getSigmas();
+		const boost::shared_ptr<const std::vector<std::vector<double> > > sigmasFromBin = currentBin.getSigmas();
 		for(unsigned int i = 0; i < currentTree->size(); ++i) {
 			assert((*currentTree)[i]->_eventNumber >= 0);
 			antok::beamfileGenerator::eventBookkeeper currentEvent;
@@ -191,7 +190,8 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 			currentEvent.nNeighbors = currentBin.getNeighbors().size();
 			currentEvent.edgeity = currentBin.getEdgeity();
 			currentEvent.sigmaCalculationMethod = currentBin.getSigmaCalculationMethod();
-			currentEvent.sigmas = new std::vector<double>(sigmasFromBin[i]);
+			currentEvent.sigmas = sigmasFromBin;
+			currentEvent.sigmaIndex = i;
 			currentEvent.coords = (*currentTree)[i];
 			eventsToSave.push_back(currentEvent);
 		}
@@ -222,7 +222,7 @@ void fillFiveDimHist(std::string inFileName, std::string outFileName, int startC
 		edgeity = currentEvent.edgeity;
 		sigmaCalculationMethod = currentEvent.sigmaCalculationMethod;
 		for(unsigned int j = 0; j < 5; ++j) {
-			*(sigmas[j]) = (*currentEvent.sigmas)[j];
+			*(sigmas[j]) = (*currentEvent.sigmas)[currentEvent.sigmaIndex][j];
 			*(coords[j]) = currentEvent.coords->_coords[j];
 		}
 		eventNumber = currentEvent.coords->_eventNumber;

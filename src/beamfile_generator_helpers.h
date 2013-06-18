@@ -32,7 +32,8 @@ namespace antok {
 				nNeighbors(-1),
 				edgeity(-1),
 				sigmaCalculationMethod(-1),
-				sigmas(0),
+				sigmas(),
+				sigmaIndex(0),
 				coords(0) { }
 	
 			double binVolume;
@@ -40,7 +41,8 @@ namespace antok {
 			int nNeighbors;
 			int edgeity;
 			int sigmaCalculationMethod;
-			const std::vector<double>* sigmas;
+			boost::shared_ptr<const std::vector<std::vector<double> > > sigmas;
+			unsigned int sigmaIndex;
 			const antok::beamfileGenerator::fiveDimCoord* coords;
 	
 		};
