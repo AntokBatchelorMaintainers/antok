@@ -9,14 +9,18 @@ namespace antok {
 	TLorentzVector getBeamEnergy(TVector3 p3_beam, const TLorentzVector& LV_X);
 
 	void getRPDDeltaPhiResProjection(const TLorentzVector& pBeam,
-	                                      const TLorentzVector& pProton,
-	                                      const TLorentzVector& pX,
-	                                      double& delta_phi, double& res);
+	                                 const TLorentzVector& pProton,
+	                                 const TLorentzVector& pX,
+	                                 double& delta_phi, double& res);
 
 	void getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
-	                                    const TLorentzVector& pProton,
-	                                    const TLorentzVector& pX,
-	                                    double& delta_phi, double& res);
+	                               const TLorentzVector& pProton,
+	                               const TLorentzVector& pX,
+	                               double& delta_phi, double& res);
+
+	void getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
+	                                  double& centerOfMassEnergy,
+	                                  TVector3& boostVector);
 
 }
 

@@ -65,6 +65,12 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 	TLorentzVector p4;
 	double px5, py5, pz5;
 	TLorentzVector p5;
+	std::vector<TLorentzVector*> allMomenta;
+	allMomenta.push_back(&p1);
+	allMomenta.push_back(&p2);
+	allMomenta.push_back(&p3);
+	allMomenta.push_back(&p4);
+	allMomenta.push_back(&p5);
 
 	double beamx, beamy, beamz;
 
@@ -163,6 +169,13 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 
 	hists.push_back(new TH1D("2_kaon_mass", "2 Kaon (assumption) Subsystem", 1000, 0.9, 2));
 	hists.push_back(new TH1D("5_pi_mass_pwa_bins", "5 Pion Mass", 233, 0.01, 7.));
+
+	hists.push_back(new TH1D("pi_minus_momentum", "Momentum of negative Pions", 1000, 0, 210));
+	hists.push_back(new TH1D("pi_plus_momentum", "Momentum of positive Pions", 1000, 0, 210));
+
+	hists.push_back(new TH2D("xF_fast_pion_ag_rapidity_gap", "x_F of fast Pion against Rapidity Gap", 1000, -10, 10, 1000, 0, 1));
+
+	hists.push_back(new TH1D("fast_pi-_momentum", "Momentum of fastest negative Pion", 1000, 0, 210));
 
 	for(unsigned int i = 0; i < intree->GetEntries(); ++i) {
 
@@ -275,12 +288,23 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 		hists.at(6 + bounds.size())->Fill(p3.Rapidity());
 
 		TLorentzVector* p_max_rap = &p1;
+		unsigned int p_max_rap_index = 1;
 		if(p_max_rap->Rapidity() < p2.Rapidity()) {
 			p_max_rap = &p2;
+			p_max_rap_index = 2;
 		}
 		if(p_max_rap->Rapidity() < p3.Rapidity()) {
 			p_max_rap = &p3;
+			p_max_rap_index = 3;
 		}
+		TLorentzVector p_4pi_central(0., 0., 0., 0.);
+		for(unsigned int j = 1; j <= 5; ++j) {
+			if(j == p_max_rap_index) {
+				continue;
+			}
+			p_4pi_central += *(allMomenta[j-1]);
+		}
+
 		hists.at(7 + bounds.size())->Fill(p_max_rap->Rapidity());
 		hists.at(8 + bounds.size())->Fill((p1+p2+p3+p4).M());
 		hists.at(8 + bounds.size())->Fill((p1+p2+p3+p5).M());
@@ -305,6 +329,25 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 		hists.at(13 + bounds.size())->Fill((k3+k4).M());
 
 		hists.at(14 + bounds.size())->Fill(pTot.M());
+
+		hists.at(15 + bounds.size())->Fill(p1.Vect().Mag());
+		hists.at(15 + bounds.size())->Fill(p2.Vect().Mag());
+		hists.at(15 + bounds.size())->Fill(p3.Vect().Mag());
+
+		hists.at(16 + bounds.size())->Fill(p4.Vect().Mag());
+		hists.at(16 + bounds.size())->Fill(p5.Vect().Mag());
+
+		double centerOfMassEnergy;
+		TVector3 boostToCenterOfMassSystem;
+		antok::getBoostToCenterOfMassSystem(pBeam, centerOfMassEnergy, boostToCenterOfMassSystem);
+		{
+			TLorentzVector p_max_rap_CM = *p_max_rap;
+			p_max_rap_CM.Boost(-boostToCenterOfMassSystem);
+			double xF_maxRap = (2 * p_max_rap_CM.Pz()) / centerOfMassEnergy;
+			hists.at(17 + bounds.size())->Fill(p_max_rap->Rapidity() - p_4pi_central.Rapidity(), xF_maxRap);
+		}
+
+		hists.at(18 + bounds.size())->Fill(p_max_rap->Vect().Mag());
 
 	}
 

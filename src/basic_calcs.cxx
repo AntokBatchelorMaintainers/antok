@@ -88,9 +88,22 @@ void antok::getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
 	proton_lab.Transform(Tr);
 	pX_lab.Transform(Tr);
 
-
 	delta_phi = std::fabs(pX_lab.Phi() - proton_lab.Phi()) - TMath::Pi();
 	res = std::sqrt(res*res + 0.067260*0.067260);
 
 };
 
+void antok::getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
+                                         double& centerOfMassEnergy,
+                                         TVector3& boostVector)
+{
+
+	const double& PROTON_MASS = antok::Constants::protonMass();
+
+	double beamEnergy = pBeam.E();
+	centerOfMassEnergy = std::sqrt(pBeam.M2() + PROTON_MASS*PROTON_MASS + 2*beamEnergy*PROTON_MASS);
+	TLorentzVector lorentzBoost = pBeam;
+	lorentzBoost.SetE(beamEnergy + PROTON_MASS);
+	boostVector = lorentzBoost.BoostVector();
+
+}
