@@ -72,7 +72,7 @@ if __name__ == "__main__":
 		beamfile = ""
 		if config.genpwBeamfileDir != "":
 			beamfileList = glob.glob(config.genpwBeamfileDir + "/*.root")
-			random.seed(hashlib.sha512.hexdigest(str(config.randomSeed)))
+			random.seed(hashlib.sha512(str(config.randomSeed)).hexdigest())
 			beamfile = random.choice(beamfileList)
 			while re.search('^.*/[0-9]*.root$', beamfile) is None:
 				beamfile = random.choice(beamfileList)
