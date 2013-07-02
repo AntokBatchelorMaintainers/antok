@@ -177,6 +177,9 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 
 	hists.push_back(new TH1D("fast_pi-_momentum", "Momentum of fastest negative Pion", 1000, 0, 210));
 
+	hists.push_back(new TH2D("xF_fast2Pi_ag_rapidity_gap", "x_F of fast 2-Pi_0 against Rapidity Gap of 3-Pi", 1000, -10, 10, 1000, 0, 1));
+	hists.push_back(new TH2D("xF_fast3Pi_ag_rapidity_gap", "x_F of fast 3-Pi_0 against Rapidity Gap of 2-Pi", 1000, -10, 10, 1000, 0, 1));
+
 	for(unsigned int i = 0; i < intree->GetEntries(); ++i) {
 
 		intree->GetEntry(i);
@@ -348,6 +351,54 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 		}
 
 		hists.at(18 + bounds.size())->Fill(p_max_rap->Vect().Mag());
+
+		{
+			TLorentzVector fastestNeutralPair = p1 + p4;
+			TLorentzVector slowestNeutralPair = p1 + p4;
+			std::pair<unsigned int, unsigned int> fastestNeutralPairIndices(0, 3);
+			std::pair<unsigned int, unsigned int> slowestNeutralPairIndices(0, 3);
+
+			for(unsigned int j = 1; j < 3; ++j) {
+				for(unsigned int k = 3; k < 5; ++k) {
+					TLorentzVector currentPair = *allMomenta[j] + *allMomenta[k];
+					if(fastestNeutralPair.Rapidity() < currentPair.Rapidity()) {
+						fastestNeutralPair = currentPair;
+						fastestNeutralPairIndices.first = j;
+						fastestNeutralPairIndices.second = k;
+					}
+					if(slowestNeutralPair.Rapidity() > currentPair.Rapidity()) {
+						slowestNeutralPair = currentPair;
+						slowestNeutralPairIndices.first = j;
+						slowestNeutralPairIndices.second = k;
+					}
+				}
+			}
+			TLorentzVector slowCharged3PiSystem(0., 0., 0., 0.);
+			TLorentzVector fastCharged3PiSystem(0., 0., 0., 0.);
+			for(unsigned int j = 0; j < 5; ++j) {
+				if(j == fastestNeutralPairIndices.first or j == fastestNeutralPairIndices.second) {
+					continue;
+				}
+				slowCharged3PiSystem += *allMomenta[j];
+			}
+			for(unsigned int j = 0; j < 5; ++j) {
+				if(j == slowestNeutralPairIndices.first or j == slowestNeutralPairIndices.second) {
+					continue;
+				}
+				fastCharged3PiSystem += *allMomenta[j];
+			}
+			TLorentzVector fastestNeutralPair_CM = fastestNeutralPair;
+			TLorentzVector fastCharged3PiSystem_CM = fastCharged3PiSystem;
+			fastestNeutralPair_CM.Boost(-boostToCenterOfMassSystem);
+			fastCharged3PiSystem_CM.Boost(-boostToCenterOfMassSystem);
+			double xF_2piMaxRap = (2 * fastestNeutralPair_CM.Pz()) / centerOfMassEnergy;
+			double xF_3piMaxRap = (2 * fastCharged3PiSystem_CM.Pz()) / centerOfMassEnergy;
+			hists.at(19 + bounds.size())->Fill(fastestNeutralPair.Rapidity() - slowCharged3PiSystem.Rapidity(), xF_2piMaxRap);
+			hists.at(20 + bounds.size())->Fill(fastCharged3PiSystem.Rapidity() - slowestNeutralPair.Rapidity(), xF_3piMaxRap);
+		}
+
+		{
+		}
 
 	}
 
