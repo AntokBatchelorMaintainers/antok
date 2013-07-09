@@ -127,11 +127,11 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 
 	std::vector<TH1*> hists;
 	hists.push_back(new TH1D("5_pi_mass", "5 Pion Mass", 1000, 0., 7.));
-	hists.push_back(new TH1D("4_pi_mass", "4 Pion Subsystem", 500, 0.5, 3.5));
-	hists.push_back(new TH1D("3_pi_mass", "3 Pion Subsystem", 1500, 0.5, 2.5));
+	hists.push_back(new TH1D("4_pi_mass", "4 Pion Subsystem", 750, 0.5, 3.5));
+	hists.push_back(new TH1D("3_pi_mass", "3 Pion Subsystem", 1000, 0.4, 2.5));
 	hists.push_back(new TH2D("3_dalitz", "3 Pion Subsystem", 1000, 0., 2.5, 1000, 0., 2.5));
 	hists.push_back(new TH2D("3_dalitz_a2", "3 Pion Subsystem in a2 region", 700, 0., 2.5, 700, 0., 2.5));
-	hists.push_back(new TH1D("2_pi_mass", "2 Pion Subsystem", 1000, 0.2, 2));
+	hists.push_back(new TH1D("2_pi_mass", "2 Pion Subsystem", 900, 0.2, 2));
 	hists.push_back(new TH2D("2_pi_4_pi_dalitz", "4 Pion Subsystem", 600, 0.5, 3., 600, 0.2, 1.));
 
 	std::vector<double> bounds;
@@ -164,8 +164,8 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 	hists.push_back(new TH2D("4_pi_mass_ag_rapidity", "4 Pion Mass against Rapidity", 250, 0.5, 3.5, 1000, 0., 10.));
 	hists.push_back(new TH2D("5_pi_mass_ag_rapidity", "5 Pion Mass against Rapidity", 250, 0.5, 3.5, 1000, 0., 10.));
 
-	hists.push_back(new TH2D("4_pi_mass_ag_tp", "4 Pion Mass against t prime", 250, 0.5, 3.5, 1000, 0.1, 1.));
-	hists.push_back(new TH2D("5_pi_mass_ag_tp", "5 Pion Mass against t prime", 1000, 0., 8., 1000, 0., 1.1));
+	hists.push_back(new TH2D("4_pi_mass_ag_tp", "4 Pion Mass against t prime", 800, 0.5, 3.5, 800, 0.1, 1.));
+	hists.push_back(new TH2D("5_pi_mass_ag_tp", "5 Pion Mass against t prime", 800, 0., 8., 800, 0.1, 1.));
 
 	hists.push_back(new TH1D("2_kaon_mass", "2 Kaon (assumption) Subsystem", 1000, 0.9, 2));
 	hists.push_back(new TH1D("5_pi_mass_pwa_bins", "5 Pion Mass", 233, 0.01, 7.));
@@ -179,6 +179,20 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 
 	hists.push_back(new TH2D("xF_fast2Pi_ag_rapidity_gap", "x_F of fast 2-Pi_0 against Rapidity Gap of 3-Pi", 1000, -10, 10, 1000, 0, 1));
 	hists.push_back(new TH2D("xF_fast3Pi_ag_rapidity_gap", "x_F of fast 3-Pi_0 against Rapidity Gap of 2-Pi", 1000, -10, 10, 1000, 0, 1));
+
+	hists.push_back(new TH1D("tPrime", "tPrime", 1000, 0, 5));
+
+	hists.push_back(new TH1D("5_pi_mass_low_tPrime", "5 Pion mass, 0.1 < tPrime < 0.2", 1000, 0, 7));
+	hists.push_back(new TH1D("5_pi_mass_high_tPrime", "5 Pion mass, 0.95 < tPrime < 1.05", 350, 0, 7));
+
+	hists.push_back(new TH1D("4_pi_mass_low_tPrime", "4 Pion Subsystem, 0.1 < tPrime < 0.2", 750, 0.5, 3.5));
+	hists.push_back(new TH1D("4_pi_mass_high_tPrime", "4 Pion Subsystem, 0.95 < tPrime < 1.05", 300, 0.5, 3.5));
+
+	hists.push_back(new TH1D("beam_energy_low_tPrime", "Beam Energy, 0.1 < tPrime < 0.2", 500, 0, 250));
+	hists.push_back(new TH1D("beam_energy_high_tPrime", "Beam Energy, 0.95 < tPrime < 1.05", 500, 0, 250));
+
+	hists.push_back(new TH1D("tPrime_X=1.6", "tPrime, 1.55 < XMass < 1.65", 1000, 0, 5));
+	hists.push_back(new TH1D("tPrime_X=3.0", "tPrime, 2.95 < XMass < 3.05", 1000, 0, 5));
 
 	for(unsigned int i = 0; i < intree->GetEntries(); ++i) {
 
@@ -397,8 +411,29 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 			hists.at(20 + bounds.size())->Fill(fastCharged3PiSystem.Rapidity() - slowestNeutralPair.Rapidity(), xF_3piMaxRap);
 		}
 
-		{
+		hists.at(21 + bounds.size())->Fill(tPrime);
+
+		if(tPrime > 0.1 and tPrime < 0.2) {
+			hists.at(22 + bounds.size())->Fill(pTot.M());
+			hists.at(24 + bounds.size())->Fill((p1+p2+p4+p5).M());
+			hists.at(24 + bounds.size())->Fill((p1+p3+p4+p5).M());
+			hists.at(24 + bounds.size())->Fill((p2+p3+p4+p5).M());
+			hists.at(26 + bounds.size())->Fill(pBeam.E());
 		}
+		if(tPrime > 0.95 and tPrime < 1.05) {
+			hists.at(23 + bounds.size())->Fill(pTot.M());
+			hists.at(25 + bounds.size())->Fill((p1+p2+p4+p5).M());
+			hists.at(25 + bounds.size())->Fill((p1+p3+p4+p5).M());
+			hists.at(25 + bounds.size())->Fill((p2+p3+p4+p5).M());
+			hists.at(27 + bounds.size())->Fill(pBeam.E());
+		}
+		if(pTot.M() > 1.55 and pTot.M() < 1.65) {
+			hists.at(28 + bounds.size())->Fill(tPrime);
+		}
+		if(pTot.M() > 2.95 and pTot.M() < 3.05) {
+			hists.at(29 + bounds.size())->Fill(tPrime);
+		}
+
 
 	}
 
