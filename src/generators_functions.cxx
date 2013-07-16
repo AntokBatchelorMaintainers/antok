@@ -354,6 +354,44 @@ antok::Function* antok::generators::generateGetGradXGradY(const YAML::Node& func
 
 };
 
+antok::Function* antok::generators::generateGetLorentzVectorAttributes(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 5) {
+		std::cerr<<"Need 5 names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
+
+	if(not __functionArgumentHandler(args, function, index)) {
+		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	TLorentzVector* lorentzVectorAddr = data.getAddr<TLorentzVector>(args[0].first);
+
+	std::vector<double*> quantityAddrs;
+	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
+		if(not data.insert<double>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+			return 0;
+		}
+		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
+	}
+
+	return (new antok::functions::GetLorentzVectorAttributes(lorentzVectorAddr,
+	                                                         quantityAddrs[0],
+	                                                         quantityAddrs[1],
+	                                                         quantityAddrs[2],
+	                                                         quantityAddrs[3],
+	                                                         quantityAddrs[4]));
+
+};
+
 antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 

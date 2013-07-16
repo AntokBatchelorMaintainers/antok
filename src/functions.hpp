@@ -389,6 +389,45 @@ namespace antok {
 
 		};
 
+		class GetLorentzVectorAttributes : public Function
+		{
+
+		  public:
+
+			GetLorentzVectorAttributes(TLorentzVector* lorentzVecAddr, double* xAddr,
+			                                                           double* yAddr,
+			                                                           double* zAddr,
+			                                                           double* phiAddr,
+			                                                           double* thetaAddr)
+				: _lorentzVecAddr(lorentzVecAddr),
+				  _xAddr(xAddr),
+				  _yAddr(yAddr),
+				  _zAddr(zAddr),
+				  _phiAddr(phiAddr),
+				  _thetaAddr(thetaAddr) { }
+
+			virtual ~GetLorentzVectorAttributes() { }
+
+			bool operator() () {
+				(*_xAddr) = _lorentzVecAddr->X();
+				(*_yAddr) = _lorentzVecAddr->Y();
+				(*_zAddr) = _lorentzVecAddr->Z();
+				(*_phiAddr) = _lorentzVecAddr->Phi();
+				(*_thetaAddr) = _lorentzVecAddr->Theta();
+				return true;
+			}
+
+		  private:
+
+			TLorentzVector* _lorentzVecAddr;
+			double* _xAddr;
+			double* _yAddr;
+			double* _zAddr;
+			double* _phiAddr;
+			double* _thetaAddr;
+
+		};
+
 	}
 
 }

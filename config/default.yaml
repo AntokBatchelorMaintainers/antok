@@ -2,7 +2,7 @@
 NumberOfParticles: 5
 AllParticles: &allParticles [1, 2, 3, 4, 5]
 
-TreeName: kbicker/USR55
+TreeName: kbicker_5pic/USR55
 
 TreeBranches:
     onePerEvent:
@@ -118,6 +118,11 @@ CalculatedQuantities:
       Function:
           Name: getGradXGradY
           Vector: *BeamLV
+
+    - Name: [ x_X, x_Y, x_Z, x_Phi, x_Theta ]
+      Function:
+          Name: getLorentzVectorAttributes
+          Vector: *XLorentzVec
 
     - Name: &BeamE BeamE
       Function:
@@ -334,7 +339,7 @@ GlobalPlotOptions:
     PlotsWithSingleCutsOff: On
     StatisticsHistogram:
         State: On
-        InputName: kbicker/statistic
+        InputName: kbicker_5pic/statistic
         OutputName: waterfallPlot
     GlobalCuts:
         - CutTrain: *StdEvSel
