@@ -84,6 +84,8 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 
 	double gradx, grady;
 
+	double vertexZ;
+
 	const bool GENERATED_MONTECARLO = false;
 
 	if(not GENERATED_MONTECARLO) {
@@ -104,6 +106,7 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 		intree->SetBranchAddress("Mom_z5", &pz5);
 		intree->SetBranchAddress("gradx", &gradx);
 		intree->SetBranchAddress("grady", &grady);
+		intree->SetBranchAddress("Z_primV", &vertexZ);
 	} else {
 		intree->SetBranchAddress("Mom_MCTruth_x1", &px1);
 		intree->SetBranchAddress("Mom_MCTruth_y1", &py1);
@@ -193,6 +196,10 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 
 	hists.push_back(new TH1D("tPrime_X=1.6", "tPrime, 1.55 < XMass < 1.65", 1000, 0, 5));
 	hists.push_back(new TH1D("tPrime_X=3.0", "tPrime, 2.95 < XMass < 3.05", 1000, 0, 5));
+
+	hists.push_back(new TH1D("x_phi", "X system phi angle", 1000, -3.5, 3.5));
+	hists.push_back(new TH2D("x_phi_ag_vertex_z", "X system phi angle against vertex Z", 700, -75, -20, 700, -3.5, 3.5));
+	hists.push_back(new TH1D("single_track_phi", "Phi angle of every pion (5 entries / event)", 1000, -3.5, 3.5));
 
 	for(unsigned int i = 0; i < intree->GetEntries(); ++i) {
 
@@ -434,6 +441,13 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 			hists.at(29 + bounds.size())->Fill(tPrime);
 		}
 
+		hists.at(30 + bounds.size())->Fill(pTot.Vect().Phi());
+		hists.at(31 + bounds.size())->Fill(vertexZ, pTot.Vect().Phi());
+		hists.at(32 + bounds.size())->Fill(p1.Vect().Phi());
+		hists.at(32 + bounds.size())->Fill(p2.Vect().Phi());
+		hists.at(32 + bounds.size())->Fill(p3.Vect().Phi());
+		hists.at(32 + bounds.size())->Fill(p4.Vect().Phi());
+		hists.at(32 + bounds.size())->Fill(p5.Vect().Phi());
 
 	}
 
