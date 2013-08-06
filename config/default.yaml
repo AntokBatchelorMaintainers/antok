@@ -180,6 +180,17 @@ CalculatedQuantities:
           Y: Y_primV
           Z: Z_primV
 
+    - Name: [ rpdPhiAngleInRPDSystem, rpdZRingAInRPDSystem, rpdZRingBInRPDSystem ]
+      Function:
+          Name: getRpdExpectedHitsParameters
+          BeamLorentzVec: *BeamLV
+          XLorentzVec: *XLorentzVec
+          Vertex: *VertexVec
+          XOffset: 0
+          YOffset: 0
+          XAngle: 0
+          YAngle: 0
+
 Cuts:
 #ShortName is the UID
 

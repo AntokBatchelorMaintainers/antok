@@ -459,6 +459,71 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 
 };
 
+antok::Function* antok::generators::generateGetRpdExpectedHitsParameters(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+
+	using antok::YAMLUtils::hasNodeKey;
+
+	if(quantityNames.size() != 3) {
+		std::cerr<<"Need 3 names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("XLorentzVec", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Vertex", "TVector3"));
+
+	if(not __functionArgumentHandler(args, function, index)) {
+		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	TLorentzVector* beamLorentzVecAddr = data.getAddr<TLorentzVector>(args[0].first);
+	TLorentzVector* XLorentzVecAddr = data.getAddr<TLorentzVector>(args[1].first);
+	TVector3* vertexAddr = data.getAddr<TVector3>(args[2].first);
+
+	std::vector<std::string> possiblyConstArgs;
+	possiblyConstArgs.push_back("XOffset");
+	possiblyConstArgs.push_back("YOffset");
+	possiblyConstArgs.push_back("XAngle");
+	possiblyConstArgs.push_back("YAngle");
+
+	for(unsigned int i = 0; i < possiblyConstArgs.size(); ++i) {
+		if(not hasNodeKey(function, possiblyConstArgs[i])) {
+			std::cerr<<"Argument \""<<possiblyConstArgs[i]<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return 0;
+		}
+	}
+
+	double* xOffsetAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[0]]);
+	double* yOffsetAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[1]]);
+	double* xAngleAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[2]]);
+	double* yAngleAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[3]]);
+
+	std::vector<double*> quantityAddrs;
+	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
+		if(not data.insert<double>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+			return 0;
+		}
+		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
+	}
+
+	return (new antok::functions::GetRPDExpectedHitsParameters(beamLorentzVecAddr,
+	                                                           XLorentzVecAddr,
+	                                                           vertexAddr,
+	                                                           xOffsetAddr,
+	                                                           yOffsetAddr,
+	                                                           xAngleAddr,
+	                                                           yAngleAddr,
+	                                                           quantityAddrs[0],
+	                                                           quantityAddrs[1],
+	                                                           quantityAddrs[2]));
+
+}
+
 antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 

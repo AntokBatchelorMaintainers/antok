@@ -428,6 +428,63 @@ namespace antok {
 
 		};
 
+		class GetRPDExpectedHitsParameters : public Function
+		{
+
+		  public:
+
+			GetRPDExpectedHitsParameters(TLorentzVector* pBeamAddr,
+			                             TLorentzVector* pXAddr,
+			                             TVector3* vertexAddr,
+			                             double* xOffsetAddr,
+			                             double* yOffsetAddr,
+			                             double* xAngleAddr,
+			                             double* yAngleAddr,
+			                             double* rpdPhiAddr,
+			                             double* rpdZRingAAddr,
+			                             double* rpdZRingBAddr)
+				: _pBeamAddr(pBeamAddr),
+				  _pXAddr(pXAddr),
+				  _vertexAddr(vertexAddr),
+				  _xOffsetAddr(xOffsetAddr),
+				  _yOffsetAddr(yOffsetAddr),
+				  _xAngleAddr(xAngleAddr),
+				  _yAngleAddr(yAngleAddr),
+				  _rpdPhiAddr(rpdPhiAddr),
+				  _rpdZRingAAddr(rpdZRingAAddr),
+				  _rpdZRingBAddr(rpdZRingBAddr) { }
+
+			virtual ~GetRPDExpectedHitsParameters() { }
+
+			bool operator() () {
+				antok::getRPDExpectedHitsParameters(*_pBeamAddr,
+				                                    *_pXAddr,
+				                                    *_vertexAddr,
+				                                    *_xOffsetAddr,
+				                                    *_yOffsetAddr,
+				                                    *_xAngleAddr,
+				                                    *_yAngleAddr,
+				                                    *_rpdPhiAddr,
+				                                    *_rpdZRingAAddr,
+				                                    *_rpdZRingBAddr);
+				return true;
+			}
+
+		  private:
+
+			TLorentzVector* _pBeamAddr;
+			TLorentzVector* _pXAddr;
+			TVector3* _vertexAddr;
+			double* _xOffsetAddr;
+			double* _yOffsetAddr;
+			double* _xAngleAddr;
+			double* _yAngleAddr;
+			double* _rpdPhiAddr;
+			double* _rpdZRingAAddr;
+			double* _rpdZRingBAddr;
+
+		};
+
 		class GetTVector3: public Function
 		{
 

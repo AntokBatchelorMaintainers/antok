@@ -456,6 +456,8 @@ bool antok::Initializer::initializeEvent() {
 				antokFunctionPtr = antok::generators::generateGetLorentzVectorAttributes(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getLorentzVec") {
 				antokFunctionPtr = antok::generators::generateGetLorentzVec(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "getRpdExpectedHitsParameters") {
+				antokFunctionPtr = antok::generators::generateGetRpdExpectedHitsParameters(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getRpdPhi") {
 				antokFunctionPtr = antok::generators::generateGetRpdPhi(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getTs") {

@@ -1,5 +1,7 @@
 #include<basic_calcs.h>
 
+#include<iostream>
+
 #include<TLorentzVector.h>
 #include<TLorentzRotation.h>
 #include<TVector3.h>
@@ -105,5 +107,41 @@ void antok::getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
 	TLorentzVector lorentzBoost = pBeam;
 	lorentzBoost.SetE(beamEnergy + PROTON_MASS);
 	boostVector = lorentzBoost.BoostVector();
+
+}
+
+void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
+                                         const TLorentzVector& pX,
+                                         const TVector3& vertex,
+                                         const double& xOffset,
+                                         const double& yOffset,
+                                         const double& xAngle,
+                                         const double& yAngle,
+                                         double& rpdPhi,
+                                         double& rpdZRingA,
+                                         double& rpdZRingB)
+{
+
+	static const double INNER_RING_DIAMETER = 12.0; // cm, from 2008 spectro paper
+	static const double OUTER_RING_DIAMETER = 75.0; // cm, from 2008 spectro paper
+
+	const TVector3& beamVector = pBeam.Vect();
+	const TVector3& XVector = pX.Vect();
+
+	const TVector3 proton = beamVector - XVector;
+
+	// TRANSFORM `proton` AND `vertex` HERE
+	//--------------------------------------
+	if(xOffset != 0. or yOffset != 0. or xAngle != 0. or yAngle != 0.) {
+		std::cerr<<"No transformations implemented in getRPDExpectedHitsParameters! Aborting..."<<std::endl;
+		throw;
+	}
+	// REMOVE `#include<iostream>` AFTER REMOVING THIS BLOCK!
+	//--------------------------------------
+
+	rpdPhi = proton.Phi();
+	const double tanTheta = TMath::Tan(proton.Theta());
+	rpdZRingA = vertex.Z() + INNER_RING_DIAMETER / tanTheta;
+	rpdZRingB = vertex.Z() + OUTER_RING_DIAMETER / tanTheta;
 
 }

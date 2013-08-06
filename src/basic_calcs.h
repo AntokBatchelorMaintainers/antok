@@ -22,6 +22,17 @@ namespace antok {
 	                                  double& centerOfMassEnergy,
 	                                  TVector3& boostVector);
 
+	void getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
+	                                  const TLorentzVector& pX,
+	                                  const TVector3& vertex,
+	                                  const double& xOffset,
+	                                  const double& yOffset,
+	                                  const double& xAngle,
+	                                  const double& yAngle,
+	                                  double& rpdPhi,
+	                                  double& rpdZRingA,
+	                                  double& rpdZRingB);
+
 }
 
 #endif
