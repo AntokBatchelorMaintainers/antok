@@ -60,6 +60,16 @@ namespace antok {
 	}
 
 	template<>
+	bool antok::Data::insert<TVector3>(std::string name) {
+		if(lorentzVectors.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "TVector3";
+		vectors[name] = *(new TVector3);
+		return true;
+	}
+
+	template<>
 	double* antok::Data::getAddr<double>(std::string name) {
 		if(doubles.count(name) < 1) {
 			return 0;
@@ -89,6 +99,14 @@ namespace antok {
 			return 0;
 		}
 		return &lorentzVectors[name];
+	}
+
+	template<>
+	TVector3* antok::Data::getAddr<TVector3>(std::string name) {
+		if(vectors.count(name) < 1) {
+			return 0;
+		}
+		return &vectors[name];
 	}
 
 }

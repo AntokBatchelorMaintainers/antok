@@ -428,6 +428,33 @@ namespace antok {
 
 		};
 
+		class GetTVector3: public Function
+		{
+
+		  public:
+
+			GetTVector3(double* xAddr, double* yAddr, double* zAddr, TVector3* outAddr)
+				: _xAddr(xAddr),
+				  _yAddr(yAddr),
+				  _zAddr(zAddr),
+				  _outAddr(outAddr) { }
+
+			virtual ~GetTVector3() { }
+
+			bool operator() () {
+				_outAddr->SetXYZ(*_xAddr, *_yAddr, *_zAddr);
+				return true;
+			}
+
+		  private:
+
+			double* _xAddr;
+			double* _yAddr;
+			double* _zAddr;
+			TVector3* _outAddr;
+
+		};
+
 	}
 
 }

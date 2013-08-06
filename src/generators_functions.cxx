@@ -552,6 +552,39 @@ antok::Function* antok::generators::generateGetTs(const YAML::Node& function, st
 
 };
 
+antok::Function* antok::generators::generateGetVector3(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	const std::string& quantityName = quantityNames[0];
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("X", "double"));
+	args.push_back(std::pair<std::string, std::string>("Y", "double"));
+	args.push_back(std::pair<std::string, std::string>("Z", "double"));
+
+	if(not __functionArgumentHandler(args, function, index)) {
+		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	double* xAddr = data.getAddr<double>(args[0].first);
+	double* yAddr = data.getAddr<double>(args[1].first);
+	double* zAddr = data.getAddr<double>(args[2].first);
+
+	if(not data.insert<TVector3>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::functions::GetTVector3(xAddr, yAddr, zAddr, data.getAddr<TVector3>(quantityName)));
+
+}
+
 antok::Function* antok::generators::generateMass(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 

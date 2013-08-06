@@ -8,6 +8,7 @@
 #include<Rtypes.h>
 
 class TLorentzVector;
+class TVector3;
 
 namespace antok {
 
@@ -39,6 +40,7 @@ namespace antok {
 		std::map<std::string, Long64_t> long64_ts;
 
 		std::map<std::string, TLorentzVector> lorentzVectors;
+		std::map<std::string, TVector3> vectors;
 
 
 	};

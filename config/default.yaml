@@ -173,6 +173,13 @@ CalculatedQuantities:
           Int: *PID_RICH
       Indices: *allParticles
 
+    - Name: &VertexVec VertexVec
+      Function:
+          Name: getVector3
+          X: X_primV
+          Y: Y_primV
+          Z: Z_primV
+
 Cuts:
 #ShortName is the UID
 
