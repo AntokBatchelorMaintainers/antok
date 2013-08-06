@@ -23,12 +23,12 @@ namespace {
 			if(not argStringsAlreadyValues) {
 				if(not hasNodeKey(function, argName)) {
 					std::cerr<<"Argument \""<<argName<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
-					return 0;
+					return false;
 				}
 				argName = antok::YAMLUtils::getString(function[argName]);
 				if(argName == "") {
 					std::cerr<<"Could not convert one of the arguments to std::string in function \""<<function["Name"]<<"\"."<<std::endl;
-					return 0;
+					return false;
 				}
 			}
 			if(index > 0) {
@@ -39,11 +39,11 @@ namespace {
 			std::string type = data.getType(argName);
 			if(type == "") {
 				std::cerr<<"Argument \""<<argName<<"\" not found in Data's global map."<<std::endl;
-				return 0;
+				return false;
 			}
 			if(type != args[i].second) {
 				std::cerr<<"Argument \""<<argName<<"\" has type \""<<type<<"\", expected \""<<args[i].second<<"\"."<<std::endl;
-				return 0;
+				return false;
 			}
 		}
 
