@@ -148,63 +148,30 @@ void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
 
 	TVector3 proton = beamVector - XVector;
 
-	// TRANSFORM `proton` AND `vertex` HERE
-	//--------------------------------------
-
-
-
 	TRotation rotation;
 	rotation.SetToIdentity();
 	rotation.RotateX(yAngle);
 	rotation.RotateY(xAngle);
 	rotation.Invert();
-/*	std::cout << "| " << rotation.XX() << "\t" << rotation.XY() << "\t" << rotation.XZ() << " |" << std::endl;
-	std::cout << "| " << rotation.YX() << "\t" << rotation.YY() << "\t" << rotation.YZ() << " |" << std::endl;
-	std::cout << "| " << rotation.ZX() << "\t" << rotation.ZY() << "\t" << rotation.ZZ() << " |" << std::endl;
-*/
+
 	TVector3 transformedVertex(vertex);
-//	transformedVertex.Print();
 	const TVector3 translation(xOffset, yOffset, RPD_CENTER_Z_POSITION);
 	transformedVertex -= translation;
-//	transformedVertex.Print();
 	transformedVertex.Transform(rotation);
-//	transformedVertex.Print();
 
 	proton.Transform(rotation);
 
-/*
-	TVector3 bla(1., 0, 0.);
-	bla.Transform(rotation);
-	bla.Print();
-*/
-
-/*
-	if(xOffset != 0. or yOffset != 0. or xAngle != 0. or yAngle != 0.) {
-		std::cerr<<"No transformations implemented in getRPDExpectedHitsParameters! Aborting..."<<std::endl;
-		throw;
-	}
-	// REMOVE `#include<iostream>` AFTER REMOVING THIS BLOCK!
-	//--------------------------------------
-*/
-/*	std::cout<<"start calculation -----------------------------"<<std::endl;
-*/	const double a = proton.X()*proton.X() + proton.Y()*proton.Y();
+	const double a = proton.X()*proton.X() + proton.Y()*proton.Y();
 	const double b = 2 * (proton.X()*transformedVertex.X() + proton.Y()*transformedVertex.Y());
 	double c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - INNER_RING_DIAMETER*INNER_RING_DIAMETER;
 	double n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
-/*	transformedVertex.Print();
-	proton.Print();
-	std::cout<<"n inner: "<<n<<std::endl;
-	(transformedVertex + n*proton).Print();
-*/	TVector3 coordinatesRingA = transformedVertex + n*proton;
+	TVector3 coordinatesRingA = transformedVertex + n*proton;
 	rpdZRingA = coordinatesRingA.Z();
 	rpdPhiRingA = coordinatesRingA.Phi();
 	c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - OUTER_RING_DIAMETER*OUTER_RING_DIAMETER;
 	n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
-/*	std::cout<<"n outer: "<<n<<std::endl;
-	(transformedVertex + n*proton).Print();
-*/	TVector3 coordinatesRingB = transformedVertex + n*proton;
+	TVector3 coordinatesRingB = transformedVertex + n*proton;
 	rpdZRingB = coordinatesRingB.Z();
 	rpdPhiRingB = coordinatesRingB.Phi();
-//	std::cout<<"end calculation -----------------------------"<<std::endl;
 
 }
