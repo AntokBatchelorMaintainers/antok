@@ -118,8 +118,7 @@ namespace {
 			result = (-b - std::sqrt(b*b - 4*a*c)) / (2*a);
 		}
 		if(result < 0) {
-			std::cerr<<"Could not find intersection point of proton with inner RPD ring. Aborting..."<<std::endl;
-			throw;
+			throw 42;
 		}
 		return result;
 	}
@@ -161,17 +160,46 @@ void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
 
 	proton.Transform(rotation);
 
+	bool error = false;
 	const double a = proton.X()*proton.X() + proton.Y()*proton.Y();
 	const double b = 2 * (proton.X()*transformedVertex.X() + proton.Y()*transformedVertex.Y());
 	double c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - INNER_RING_DIAMETER*INNER_RING_DIAMETER;
-	double n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
+	double n;
+	try {
+		n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
+	} catch (const int& number) {
+		if(number != 42) {
+			std::cerr<<"In antok::getRPDExpectedHitsParameters: Something went very "
+			         <<"wrong when calculating the RPD hit coordinates for ring A. Aborting..."<<std::endl;
+			throw;
+		}
+		error = true;
+	}
 	TVector3 coordinatesRingA = transformedVertex + n*proton;
 	rpdZRingA = coordinatesRingA.Z();
 	rpdPhiRingA = coordinatesRingA.Phi();
+	if(error) {
+		rpdZRingA = 0.;
+		rpdPhiRingA = -10.;
+		error = false;
+	}
 	c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - OUTER_RING_DIAMETER*OUTER_RING_DIAMETER;
-	n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
+	try {
+		n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
+	} catch (const int& number) {
+		if(number != 42) {
+			std::cerr<<"In antok::getRPDExpectedHitsParameters: Something went very "
+			         <<"wrong when calculating the RPD hit coordinates for ring B. Aborting..."<<std::endl;
+			throw;
+		}
+		error = true;
+	}
 	TVector3 coordinatesRingB = transformedVertex + n*proton;
 	rpdZRingB = coordinatesRingB.Z();
 	rpdPhiRingB = coordinatesRingB.Phi();
+	if(error) {
+		rpdZRingB = 0.;
+		rpdPhiRingB = -10.;
+	}
 
 }
