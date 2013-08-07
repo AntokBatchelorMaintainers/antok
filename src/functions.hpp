@@ -440,7 +440,8 @@ namespace antok {
 			                             double* yOffsetAddr,
 			                             double* xAngleAddr,
 			                             double* yAngleAddr,
-			                             double* rpdPhiAddr,
+			                             double* rpdPhiRingAAddr,
+			                             double* rpdPhiRingBAddr,
 			                             double* rpdZRingAAddr,
 			                             double* rpdZRingBAddr)
 				: _pBeamAddr(pBeamAddr),
@@ -450,7 +451,8 @@ namespace antok {
 				  _yOffsetAddr(yOffsetAddr),
 				  _xAngleAddr(xAngleAddr),
 				  _yAngleAddr(yAngleAddr),
-				  _rpdPhiAddr(rpdPhiAddr),
+				  _rpdPhiRingAAddr(rpdPhiRingAAddr),
+				  _rpdPhiRingBAddr(rpdPhiRingBAddr),
 				  _rpdZRingAAddr(rpdZRingAAddr),
 				  _rpdZRingBAddr(rpdZRingBAddr) { }
 
@@ -464,7 +466,8 @@ namespace antok {
 				                                    *_yOffsetAddr,
 				                                    *_xAngleAddr,
 				                                    *_yAngleAddr,
-				                                    *_rpdPhiAddr,
+				                                    *_rpdPhiRingAAddr,
+				                                    *_rpdPhiRingBAddr,
 				                                    *_rpdZRingAAddr,
 				                                    *_rpdZRingBAddr);
 				return true;
@@ -479,7 +482,8 @@ namespace antok {
 			double* _yOffsetAddr;
 			double* _xAngleAddr;
 			double* _yAngleAddr;
-			double* _rpdPhiAddr;
+			double* _rpdPhiRingAAddr;
+			double* _rpdPhiRingBAddr;
 			double* _rpdZRingAAddr;
 			double* _rpdZRingBAddr;
 

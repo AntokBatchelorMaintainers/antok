@@ -29,7 +29,8 @@ namespace antok {
 	                                  const double& yOffset,
 	                                  const double& xAngle,
 	                                  const double& yAngle,
-	                                  double& rpdPhi,
+	                                  double& rpdPhiRingA,
+	                                  double& rpdPhiRingB,
 	                                  double& rpdZRingA,
 	                                  double& rpdZRingB);
 

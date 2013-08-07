@@ -180,7 +180,7 @@ CalculatedQuantities:
           Y: Y_primV
           Z: Z_primV
 
-    - Name: [ rpdPhiAngleInRPDSystem, rpdZRingAInRPDSystem, rpdZRingBInRPDSystem ]
+    - Name: [ rpdHitPhiRingA, rpdHitPhiRingB, rpdHitZRingA, rpdHitZRingB ]
       Function:
           Name: getRpdExpectedHitsParameters
           BeamLorentzVec: *BeamLV

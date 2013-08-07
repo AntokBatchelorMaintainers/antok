@@ -110,6 +110,22 @@ void antok::getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
 
 }
 
+namespace {
+
+	double __getPositiveSolutionOfQuadraticEquation(const double& a, const double& b, const double& c) {
+		double result = (-b + std::sqrt(b*b - 4*a*c)) / (2*a);
+		if(result < 0) {
+			result = (-b - std::sqrt(b*b - 4*a*c)) / (2*a);
+		}
+		if(result < 0) {
+			std::cerr<<"Could not find intersection point of proton with inner RPD ring. Aborting..."<<std::endl;
+			throw;
+		}
+		return result;
+	}
+
+}
+
 void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
                                          const TLorentzVector& pX,
                                          const TVector3& vertex,
@@ -117,31 +133,78 @@ void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
                                          const double& yOffset,
                                          const double& xAngle,
                                          const double& yAngle,
-                                         double& rpdPhi,
+                                         double& rpdPhiRingA,
+                                         double& rpdPhiRingB,
                                          double& rpdZRingA,
                                          double& rpdZRingB)
 {
 
 	static const double INNER_RING_DIAMETER = 12.0; // cm, from 2008 spectro paper
 	static const double OUTER_RING_DIAMETER = 75.0; // cm, from 2008 spectro paper
+	static const double RPD_CENTER_Z_POSITION = -36.2; // cm, from COMGEANT's geom_hadron_2008.ffr
 
 	const TVector3& beamVector = pBeam.Vect();
 	const TVector3& XVector = pX.Vect();
 
-	const TVector3 proton = beamVector - XVector;
+	TVector3 proton = beamVector - XVector;
 
 	// TRANSFORM `proton` AND `vertex` HERE
 	//--------------------------------------
+
+
+
+	TRotation rotation;
+	rotation.SetToIdentity();
+	rotation.RotateX(yAngle);
+	rotation.RotateY(xAngle);
+	rotation.Invert();
+/*	std::cout << "| " << rotation.XX() << "\t" << rotation.XY() << "\t" << rotation.XZ() << " |" << std::endl;
+	std::cout << "| " << rotation.YX() << "\t" << rotation.YY() << "\t" << rotation.YZ() << " |" << std::endl;
+	std::cout << "| " << rotation.ZX() << "\t" << rotation.ZY() << "\t" << rotation.ZZ() << " |" << std::endl;
+*/
+	TVector3 transformedVertex(vertex);
+//	transformedVertex.Print();
+	const TVector3 translation(xOffset, yOffset, RPD_CENTER_Z_POSITION);
+	transformedVertex -= translation;
+//	transformedVertex.Print();
+	transformedVertex.Transform(rotation);
+//	transformedVertex.Print();
+
+	proton.Transform(rotation);
+
+/*
+	TVector3 bla(1., 0, 0.);
+	bla.Transform(rotation);
+	bla.Print();
+*/
+
+/*
 	if(xOffset != 0. or yOffset != 0. or xAngle != 0. or yAngle != 0.) {
 		std::cerr<<"No transformations implemented in getRPDExpectedHitsParameters! Aborting..."<<std::endl;
 		throw;
 	}
 	// REMOVE `#include<iostream>` AFTER REMOVING THIS BLOCK!
 	//--------------------------------------
-
-	rpdPhi = proton.Phi();
-	const double tanTheta = TMath::Tan(proton.Theta());
-	rpdZRingA = vertex.Z() + INNER_RING_DIAMETER / tanTheta;
-	rpdZRingB = vertex.Z() + OUTER_RING_DIAMETER / tanTheta;
+*/
+/*	std::cout<<"start calculation -----------------------------"<<std::endl;
+*/	const double a = proton.X()*proton.X() + proton.Y()*proton.Y();
+	const double b = 2 * (proton.X()*transformedVertex.X() + proton.Y()*transformedVertex.Y());
+	double c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - INNER_RING_DIAMETER*INNER_RING_DIAMETER;
+	double n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
+/*	transformedVertex.Print();
+	proton.Print();
+	std::cout<<"n inner: "<<n<<std::endl;
+	(transformedVertex + n*proton).Print();
+*/	TVector3 coordinatesRingA = transformedVertex + n*proton;
+	rpdZRingA = coordinatesRingA.Z();
+	rpdPhiRingA = coordinatesRingA.Phi();
+	c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - OUTER_RING_DIAMETER*OUTER_RING_DIAMETER;
+	n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
+/*	std::cout<<"n outer: "<<n<<std::endl;
+	(transformedVertex + n*proton).Print();
+*/	TVector3 coordinatesRingB = transformedVertex + n*proton;
+	rpdZRingB = coordinatesRingB.Z();
+	rpdPhiRingB = coordinatesRingB.Phi();
+//	std::cout<<"end calculation -----------------------------"<<std::endl;
 
 }

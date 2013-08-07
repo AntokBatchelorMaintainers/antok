@@ -463,8 +463,8 @@ antok::Function* antok::generators::generateGetRpdExpectedHitsParameters(const Y
 
 	using antok::YAMLUtils::hasNodeKey;
 
-	if(quantityNames.size() != 3) {
-		std::cerr<<"Need 3 names for function \""<<function["Name"]<<"\"."<<std::endl;
+	if(quantityNames.size() != 4) {
+		std::cerr<<"Need 4 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return 0;
 	}
 
@@ -520,7 +520,8 @@ antok::Function* antok::generators::generateGetRpdExpectedHitsParameters(const Y
 	                                                           yAngleAddr,
 	                                                           quantityAddrs[0],
 	                                                           quantityAddrs[1],
-	                                                           quantityAddrs[2]));
+	                                                           quantityAddrs[2],
+	                                                           quantityAddrs[3]));
 
 }
 
