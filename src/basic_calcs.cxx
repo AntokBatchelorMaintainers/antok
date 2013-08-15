@@ -108,9 +108,44 @@ void antok::getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
 	getRPDDeltaPhiResRotation(pBeam, pProton, pX, delta_phi, res, phiProton, phiX);
 }
 
+void antok::getRPDDeltaPhiResPrediction(const TLorentzVector& pBeam,
+                                        const TLorentzVector& pProton,
+                                        const TLorentzVector& pX,
+                                        double& delta_phi, double& res,
+                                        double& phiProton, double& phiX)
+{
+
+	double rpd_Phi = pProton.Phi();
+	rpd_Phi /= TMath::TwoPi();
+
+	if(rpd_Phi < 0.) rpd_Phi += 1.;
+	int hit_slat = (int)((rpd_Phi*24.) + 0.5);
+	if(hit_slat >= 24) hit_slat -= 24;
+	if(hit_slat % 2) res = 3.75;
+	else res = 7.5;
+	res = (res/180.)*TMath::Pi();
+
+	const TVector3& beamVector = pBeam.Vect();
+	const TVector3& XVector = pX.Vect();
+
+	TVector3 proton = beamVector - XVector;
+
+	phiX = proton.Phi();
+	phiProton = pProton.Phi();
+
+	delta_phi = phiX - phiProton;
 	res = std::sqrt(res*res + 0.067260*0.067260);
 
 };
+
+void antok::getRPDDeltaPhiResPrediction(const TLorentzVector& pBeam,
+                                      const TLorentzVector& pProton,
+                                      const TLorentzVector& pX,
+                                      double& delta_phi, double& res)
+{
+	double phiProton, phiX;
+	getRPDDeltaPhiResPrediction(pBeam, pProton, pX, delta_phi, res, phiProton, phiX);
+}
 
 void antok::getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
                                          double& centerOfMassEnergy,

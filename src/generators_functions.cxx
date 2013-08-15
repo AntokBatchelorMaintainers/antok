@@ -564,6 +564,8 @@ antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function
 		methodSwitch = 0;
 	} else if (method == "Rotation") {
 		methodSwitch = 1;
+	} else if (method == "Prediction") {
+		methodSwitch = 2;
 	} else {
 		if(method == "") {
 			std::cerr<<"Could not convert \"Method\" to std::string in function \"getRpdPhi\" when calculating variables \"["<<std::endl;
