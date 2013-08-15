@@ -16,6 +16,12 @@ namespace antok {
 	void getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
 	                               const TLorentzVector& pProton,
 	                               const TLorentzVector& pX,
+	                               double& delta_phi, double& res,
+	                               double& phiProton, double& phiX);
+
+	void getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
+	                               const TLorentzVector& pProton,
+	                               const TLorentzVector& pX,
 	                               double& delta_phi, double& res);
 
 	void getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
@@ -37,4 +43,3 @@ namespace antok {
 }
 
 #endif
-

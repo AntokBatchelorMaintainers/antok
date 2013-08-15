@@ -209,13 +209,17 @@ namespace antok {
 			          TLorentzVector* xLorentzVecAddr,
 			          double* rpdDeltaPhiAddr,
 			          double* rpdDeltaPhiResAddr,
-			          int method
+			          int method,
+			          double* protonPhiAddr = 0,
+			          double* xPhiAddr = 0
 			)
 				: _beamLorentzVecAddr(beamLorentzVecAddr),
 				  _rpdProtonLorentzVecAddr(rpdProtonLorentzVecAddr),
 				  _xLorentzVecAddr(xLorentzVecAddr),
 				  _rpdDeltaPhiAddr(rpdDeltaPhiAddr),
 				  _rpdDeltaPhiResAddr(rpdDeltaPhiResAddr),
+				  _protonPhiAddr(protonPhiAddr),
+				  _xPhiAddr(xPhiAddr),
 				  _method(method) { }
 
 			virtual ~GetRpdPhi() { }
@@ -227,7 +231,11 @@ namespace antok {
 						antok::getRPDDeltaPhiResProjection((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
 						return true;
 					case 1:
-						antok::getRPDDeltaPhiResRotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+						if(_protonPhiAddr == 0 and _xPhiAddr == 0) {
+							antok::getRPDDeltaPhiResRotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+						} else {
+							antok::getRPDDeltaPhiResRotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr), (*_protonPhiAddr), (*_xPhiAddr));
+						}
 						return true;
 				}
 				return false;
@@ -240,6 +248,8 @@ namespace antok {
 			TLorentzVector* _xLorentzVecAddr;
 			double* _rpdDeltaPhiAddr;
 			double* _rpdDeltaPhiResAddr;
+			double* _protonPhiAddr;
+			double* _xPhiAddr;
 			int _method;
 
 		};

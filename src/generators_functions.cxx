@@ -528,7 +528,7 @@ antok::Function* antok::generators::generateGetRpdExpectedHitsParameters(const Y
 antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
-	if(quantityNames.size() != 2) {
+	if(not (quantityNames.size() == 2 or quantityNames.size() == 4)) {
 		std::cerr<<"Need 2 names for function \"getRpdPhi\""<<std::endl;
 		return 0;
 	}
@@ -552,10 +552,18 @@ antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function
 
 	int methodSwitch = -1;
 	if(method == "Projection") {
+		if(quantityNames.size() != 2) {
+			std::cerr<<"\"getRpdPhi\" with method \"Projection\" only works with 2 arguments, found "
+			         <<quantityNames.size()<<" when calculating variables \"["<<std::endl;
+			for(unsigned int i = 0; i < quantityNames.size()-1; ++i) {
+				std::cerr<<quantityNames[i]<<", ";
+			}
+			std::cerr<<quantityNames[quantityNames.size()-1]<<"]\"."<<std::endl;
+			return 0;
+		}
 		methodSwitch = 0;
 	} else if (method == "Rotation") {
 		methodSwitch = 1;
-	} else if (method == "") {
 	} else {
 		if(method == "") {
 			std::cerr<<"Could not convert \"Method\" to std::string in function \"getRpdPhi\" when calculating variables \"["<<std::endl;
@@ -578,7 +586,11 @@ antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function
 		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
 	}
 
-	return (new antok::functions::GetRpdPhi(beamLVAddr, RPDprotLVAddr, xLVAddr, quantityAddrs[0], quantityAddrs[1], methodSwitch));
+	if(quantityNames.size() == 2) {
+		return (new antok::functions::GetRpdPhi(beamLVAddr, RPDprotLVAddr, xLVAddr, quantityAddrs[0], quantityAddrs[1], methodSwitch));
+	} else {
+		return (new antok::functions::GetRpdPhi(beamLVAddr, RPDprotLVAddr, xLVAddr, quantityAddrs[0], quantityAddrs[1], methodSwitch, quantityAddrs[2], quantityAddrs[3]));
+	}
 
 };
 

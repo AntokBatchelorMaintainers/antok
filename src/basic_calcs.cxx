@@ -65,7 +65,8 @@ void antok::getRPDDeltaPhiResProjection(const TLorentzVector& pBeam,
 void antok::getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
                                       const TLorentzVector& pProton,
                                       const TLorentzVector& pX,
-                                      double& delta_phi, double& res)
+                                      double& delta_phi, double& res,
+                                      double& phiProton, double& phiX)
 {
 
 	double rpd_Phi = pProton.Phi();
@@ -90,7 +91,23 @@ void antok::getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
 	proton_lab.Transform(Tr);
 	pX_lab.Transform(Tr);
 
-	delta_phi = std::fabs(pX_lab.Phi() - proton_lab.Phi()) - TMath::Pi();
+	phiProton = proton_lab.Phi();
+	phiX = pX_lab.Phi();
+
+	delta_phi = std::fabs(phiX - phiProton) - TMath::Pi();
+	res = std::sqrt(res*res + 0.067260*0.067260);
+
+};
+
+void antok::getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
+                                      const TLorentzVector& pProton,
+                                      const TLorentzVector& pX,
+                                      double& delta_phi, double& res)
+{
+	double phiProton, phiX;
+	getRPDDeltaPhiResRotation(pBeam, pProton, pX, delta_phi, res, phiProton, phiX);
+}
+
 	res = std::sqrt(res*res + 0.067260*0.067260);
 
 };
