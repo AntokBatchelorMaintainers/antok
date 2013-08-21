@@ -3,16 +3,22 @@
 #include<iostream>
 #include<string>
 #include<sstream>
+#include<cmath>
 
 #include<TApplication.h>
+#include<TF1.h>
 #include<TFile.h>
-#include<TTree.h>
-#include<TLorentzVector.h>
+#include<TFitResult.h>
 #include<TH1D.h>
+#include<TLorentzVector.h>
+#include<TTree.h>
+#include<TFitter.h>
 
 #include<basic_calcs.h>
 #include<initializer.h>
 #include<constants.h>
+
+static bool useTransform = true;
 
 class bin0r {
 
@@ -32,44 +38,66 @@ class bin0r {
 				_phiLimits[i].push_back(((2*TMath::Pi()/limit)*j)+adjustifier);
 			}
 		}
-		RPD_SLAB_PHI_ANGLES.push_back(-3.140);
-		RPD_SLAB_PHI_ANGLES.push_back(-2.945);
-		RPD_SLAB_PHI_ANGLES.push_back(-2.817);
-		RPD_SLAB_PHI_ANGLES.push_back(-2.619);
-		RPD_SLAB_PHI_ANGLES.push_back(-2.422);
-		RPD_SLAB_PHI_ANGLES.push_back(-2.290);
-		RPD_SLAB_PHI_ANGLES.push_back(-2.098);
-		RPD_SLAB_PHI_ANGLES.push_back(-1.900);
-		RPD_SLAB_PHI_ANGLES.push_back(-1.768);
-		RPD_SLAB_PHI_ANGLES.push_back(-1.570);
-		RPD_SLAB_PHI_ANGLES.push_back(-1.378);
-		RPD_SLAB_PHI_ANGLES.push_back(-1.246);
-		RPD_SLAB_PHI_ANGLES.push_back(-1.048);
-		RPD_SLAB_PHI_ANGLES.push_back(-0.850);
-		RPD_SLAB_PHI_ANGLES.push_back(-0.718);
-		RPD_SLAB_PHI_ANGLES.push_back(-0.526);
-		RPD_SLAB_PHI_ANGLES.push_back(-0.329);
-		RPD_SLAB_PHI_ANGLES.push_back(-0.196);
-		RPD_SLAB_PHI_ANGLES.push_back(0.002);
-		RPD_SLAB_PHI_ANGLES.push_back(0.194);
-		RPD_SLAB_PHI_ANGLES.push_back(0.326);
-		RPD_SLAB_PHI_ANGLES.push_back(0.524);
-		RPD_SLAB_PHI_ANGLES.push_back(0.722);
-		RPD_SLAB_PHI_ANGLES.push_back(0.848);
-		RPD_SLAB_PHI_ANGLES.push_back(1.046);
-		RPD_SLAB_PHI_ANGLES.push_back(1.244);
-		RPD_SLAB_PHI_ANGLES.push_back(1.376);
-		RPD_SLAB_PHI_ANGLES.push_back(1.568);
-		RPD_SLAB_PHI_ANGLES.push_back(1.766);
-		RPD_SLAB_PHI_ANGLES.push_back(1.898);
-		RPD_SLAB_PHI_ANGLES.push_back(2.096);
-		RPD_SLAB_PHI_ANGLES.push_back(2.288);
-		RPD_SLAB_PHI_ANGLES.push_back(2.420);
-		RPD_SLAB_PHI_ANGLES.push_back(2.618);
-		RPD_SLAB_PHI_ANGLES.push_back(2.816);
-		RPD_SLAB_PHI_ANGLES.push_back(2.943);
-		if(RPD_SLAB_PHI_ANGLES.size() != 36) {
-			throw;
+
+		unsigned int binNo = 0;
+		for(unsigned int i = 0; i < _radiusLimits.size()-1; ++i) {
+			for(unsigned int j = 0; j < _phiLimits[i].size()-1; ++j) {
+				std::stringstream sstr;
+				sstr<<"Bin_"<<binNo<<"_r"<<_radiusLimits[i+1]<<"_phi"<<_phiLimits[i][j+1];
+				_binNames.push_back(sstr.str());
+				std::cout<<"Bin: "<<binNo++<<": r["<<_radiusLimits[i]
+				         <<", "<<_radiusLimits[i+1]<<"], phi["<<_phiLimits[i][j]
+				         <<", "<<_phiLimits[i][j+1]<<"]"<<std::endl;
+			}
+		}
+
+		if(useTransform) {
+			RPD_SLAB_PHI_ANGLES.push_back(-0.196);
+			RPD_SLAB_PHI_ANGLES.push_back(0.002);
+			RPD_SLAB_PHI_ANGLES.push_back(0.194);
+			if(RPD_SLAB_PHI_ANGLES.size() != 3) {
+				throw;
+			}
+		} else {
+			RPD_SLAB_PHI_ANGLES.push_back(-3.140);
+			RPD_SLAB_PHI_ANGLES.push_back(-2.945);
+			RPD_SLAB_PHI_ANGLES.push_back(-2.817);
+			RPD_SLAB_PHI_ANGLES.push_back(-2.619);
+			RPD_SLAB_PHI_ANGLES.push_back(-2.422);
+			RPD_SLAB_PHI_ANGLES.push_back(-2.290);
+			RPD_SLAB_PHI_ANGLES.push_back(-2.098);
+			RPD_SLAB_PHI_ANGLES.push_back(-1.900);
+			RPD_SLAB_PHI_ANGLES.push_back(-1.768);
+			RPD_SLAB_PHI_ANGLES.push_back(-1.570);
+			RPD_SLAB_PHI_ANGLES.push_back(-1.378);
+			RPD_SLAB_PHI_ANGLES.push_back(-1.246);
+			RPD_SLAB_PHI_ANGLES.push_back(-1.048);
+			RPD_SLAB_PHI_ANGLES.push_back(-0.850);
+			RPD_SLAB_PHI_ANGLES.push_back(-0.718);
+			RPD_SLAB_PHI_ANGLES.push_back(-0.526);
+			RPD_SLAB_PHI_ANGLES.push_back(-0.329);
+			RPD_SLAB_PHI_ANGLES.push_back(-0.196);
+			RPD_SLAB_PHI_ANGLES.push_back(0.002);
+			RPD_SLAB_PHI_ANGLES.push_back(0.194);
+			RPD_SLAB_PHI_ANGLES.push_back(0.326);
+			RPD_SLAB_PHI_ANGLES.push_back(0.524);
+			RPD_SLAB_PHI_ANGLES.push_back(0.722);
+			RPD_SLAB_PHI_ANGLES.push_back(0.848);
+			RPD_SLAB_PHI_ANGLES.push_back(1.046);
+			RPD_SLAB_PHI_ANGLES.push_back(1.244);
+			RPD_SLAB_PHI_ANGLES.push_back(1.376);
+			RPD_SLAB_PHI_ANGLES.push_back(1.568);
+			RPD_SLAB_PHI_ANGLES.push_back(1.766);
+			RPD_SLAB_PHI_ANGLES.push_back(1.898);
+			RPD_SLAB_PHI_ANGLES.push_back(2.096);
+			RPD_SLAB_PHI_ANGLES.push_back(2.288);
+			RPD_SLAB_PHI_ANGLES.push_back(2.420);
+			RPD_SLAB_PHI_ANGLES.push_back(2.618);
+			RPD_SLAB_PHI_ANGLES.push_back(2.816);
+			RPD_SLAB_PHI_ANGLES.push_back(2.943);
+			if(RPD_SLAB_PHI_ANGLES.size() != 36) {
+				throw;
+			}
 		}
 	}
 
@@ -110,18 +138,26 @@ class bin0r {
 		return _histMap[binNo][histIndex];
 	}
 
+	std::vector<TH1D*> getHistsInBin(const int& binNo) {
+		return _histMap[binNo];
+	}
+
+	unsigned int getNHistsInBin() const {
+		std::map<unsigned int, std::vector<TH1D*> >::const_iterator it = _histMap.find(0);
+		return it->second.size();
+	}
+
 	unsigned int getNBins() const {
 		const unsigned int& n = _radiusLimits.size() - 1;
 		return ((2*n*n*n + 3*n*n + n)/6);
 	}
 
 	void prepareOutFile(TDirectory* dir) {
+		assert(_binNames.size() == getNBins());
 		for(unsigned int i = 0; i < getNBins(); ++i) {
-			std::stringstream sstr;
-			sstr<<"Bin_"<<i;
 			dir->cd();
-			dir->mkdir(sstr.str().c_str());
-			dir->cd(sstr.str().c_str());
+			dir->mkdir(_binNames[i].c_str());
+			dir->cd(_binNames[i].c_str());
 			for(unsigned int j = 0; j < RPD_SLAB_PHI_ANGLES.size(); ++j) {
 				std::stringstream sstr;
 				sstr<<"hist_bin"<<i<<"_phi"<<RPD_SLAB_PHI_ANGLES[j];
@@ -141,6 +177,8 @@ class bin0r {
 	std::vector<std::vector<double> > _phiLimits;
 	std::map<unsigned int, std::vector<TH1D*> > _histMap;
 	std::vector<double> RPD_SLAB_PHI_ANGLES;
+
+	std::vector<std::string> _binNames;
 
 };
 
@@ -218,16 +256,14 @@ void fitErrorFunctionForRPD(std::string inFileName, std::string outFileName, std
 
 	long nBins = inTree->GetEntries();
 
-	const unsigned int roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nBins / 100.) + 0.5)) + 0.5);
+	unsigned int roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nBins / 100.) + 0.5)) + 0.5);
+
+	const double rpdPeriod = TMath::Pi() / 6.;
 
 	for(long i = 0; i < nBins; ++i) {
 
-		if(i > ((double)nBins/2.)) {
-			break;
-		}
-
 		if(not (i % roundingNumber)) {
-			std::cout<<"Bin "<<i<<" of "<<nBins<<" ("<<std::setprecision(2)
+			std::cout<<"Event "<<i<<" of "<<nBins<<" ("<<std::setprecision(2)
 			         <<(i/(double)nBins*100)<<"%)"<<std::endl;
 		}
 
@@ -261,6 +297,48 @@ void fitErrorFunctionForRPD(std::string inFileName, std::string outFileName, std
 		antok::getRPDDeltaPhiResPrediction(pBeam, rpdProton, xVector, deltaPhi, res, protonPhi, xPhi);
 
 		TVector3 planarVertex(vertexX, vertexY, 0.);
+
+		double correctedVertexPhi = planarVertex.Phi();
+		double correctedProtonPhi = protonPhi;
+		double correctedDeltaPhi = deltaPhi;
+		if(useTransform) {
+			while(correctedProtonPhi > 0.25) {
+				correctedProtonPhi -= rpdPeriod;
+				correctedVertexPhi -= rpdPeriod;
+
+			}
+			while(correctedProtonPhi < -0.25) {
+				correctedProtonPhi += rpdPeriod;
+				correctedVertexPhi += rpdPeriod;
+			}
+			if(correctedVertexPhi < -TMath::Pi()) {
+				correctedVertexPhi += TMath::TwoPi();
+			}
+			if(correctedVertexPhi > TMath::Pi()) {
+				correctedVertexPhi -= TMath::TwoPi();
+			}
+			if(correctedDeltaPhi < -TMath::Pi()) {
+				correctedDeltaPhi += TMath::TwoPi();
+			}
+			if(correctedDeltaPhi > TMath::Pi()) {
+				correctedDeltaPhi -= TMath::TwoPi();
+			}
+
+			/*
+			while(correctedVertexPhi < -TMath::Pi()) {
+				correctedVertexPhi = TMath::Pi() - correctedVertexPhi;
+			}
+			while(correctedVertexPhi > TMath::Pi()) {
+				correctedVertexPhi = correctedVertexPhi - TMath::Pi();
+			}
+			while(correctedDeltaPhi < -TMath::Pi()) {
+				correctedDeltaPhi = TMath::Pi() - correctedDeltaPhi;
+			}
+			while(correctedDeltaPhi > TMath::Pi()) {
+				correctedDeltaPhi = correctedDeltaPhi - TMath::Pi();
+			}
+			*/
+		}
 /*
 		std::cout<<"gradx="<<gradx<<" grady="<<grady<<std::endl;
 		pBeam.Print();
@@ -271,14 +349,65 @@ void fitErrorFunctionForRPD(std::string inFileName, std::string outFileName, std
 		std::cout<<"phi(v)="<<planarVertex.Phi()<<std::endl;
 		std::cout<<"phi(p+)="<<protonPhi<<std::endl;
 		std::cout<<"deltaPhi="<<deltaPhi<<std::endl;
+		std::cout<<"deltaPhi'="<<correctedDeltaPhi<<std::endl;
+		std::cout<<"phi'(v)="<<correctedVertexPhi<<std::endl;
+		std::cout<<"phi'(p+)="<<correctedProtonPhi<<std::endl;
 		std::cout<<"########"<<std::endl;
 */
-		TH1D* hist = bins.getHist(planarVertex.Mag(), planarVertex.Phi(), protonPhi);
+
+		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi);
 		if(not hist) {
 			continue;
 		}
-		bins.getHist(planarVertex.Mag(), planarVertex.Phi(), protonPhi)->Fill(deltaPhi);
+		hist->Fill(correctedDeltaPhi);
 
+	}
+
+	std::cout<<std::endl;
+	std::cout<<"#---------------------#"<<std::endl;
+	std::cout<<"| Starting fitting... |"<<std::endl;
+	std::cout<<"#---------------------#"<<std::endl;
+	std::cout<<std::endl;
+
+	const unsigned int nFits = bins.getNBins() * bins.getNHistsInBin();
+	unsigned int currentFit = 0;
+
+	roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nFits / 100.) + 0.5)) + 0.5);
+
+	for(unsigned int i = 0; i < bins.getNBins(); ++i) {
+		std::vector<TH1D*> histsInBin = bins.getHistsInBin(i);
+		for(unsigned int j = 0; j < histsInBin.size(); ++j) {
+
+			if(not (currentFit % roundingNumber)) {
+				std::cout<<"Fit "<<currentFit<<" of "<<nFits<<" ("<<std::setprecision(2)
+				         <<(currentFit/(double)nFits*100)<<"%)"<<std::endl;
+			}
+
+			TH1D* fitHist = histsInBin[j];
+			TF1* fitFunction = new TF1("fitFunction", "(-[0])*(TMath::Erf((x-[1])/[3])-TMath::Erf((x+[2])/[4])+[5]*(TMath::Erf((x-[2])/[6])-TMath::Erf((x+[4])/[7])))", -0.3, 0.3);
+			fitFunction->SetParameter(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 2.);        // overall strength
+			TFitter::SetMaxIterations(20000);
+			fitFunction->SetParLimits(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 20., 10000);
+			fitFunction->SetParameter(1, 0.130899694); // position both erf pairs right
+			fitFunction->SetParLimits(1, 0, 0.5);
+			fitFunction->SetParameter(2, 0.130899694); // position both erf pairs left
+			fitFunction->SetParLimits(2, 0, 0.5);
+			fitFunction->SetParameter(3, 0.025);       // sigma 1st erf pair right
+			fitFunction->SetParLimits(3, 0, 5);
+			fitFunction->SetParameter(4, 0.025);       // sigma 1st erf pair left
+			fitFunction->SetParLimits(4, 0, 5);
+			fitFunction->SetParameter(5, 0.02);        // relative strength 2nd erf pair
+			fitFunction->SetParLimits(5, 0., 0.5);
+			fitFunction->SetParameter(6, 0.1);         // sigma 2nd erf pair left
+			fitFunction->SetParLimits(6, 0, 10);
+			fitFunction->SetParameter(7, 0.1);        // sigma 2nd erf pair left
+			fitFunction->SetParLimits(7, 0, 10);
+
+			TFitResultPtr result = fitHist->Fit(fitFunction, "RSEMI");
+			int status = result->Status();
+			std::cout<<status<<std::endl;
+			currentFit++;
+		}
 	}
 
 	outFile->Write();
