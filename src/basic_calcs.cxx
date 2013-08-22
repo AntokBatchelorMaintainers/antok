@@ -134,6 +134,14 @@ void antok::getRPDDeltaPhiResPrediction(const TLorentzVector& pBeam,
 	phiProton = pProton.Phi();
 
 	delta_phi = phiX - phiProton;
+
+	if(delta_phi < -TMath::Pi()) {
+		delta_phi += TMath::TwoPi();
+	}
+	if(delta_phi > TMath::Pi()) {
+		delta_phi -= TMath::TwoPi();
+	}
+
 	res = std::sqrt(res*res + 0.067260*0.067260);
 
 };
