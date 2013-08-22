@@ -1,4 +1,5 @@
 
+#include<fstream>
 #include<iomanip>
 #include<iostream>
 #include<string>
@@ -9,10 +10,13 @@
 #include<TF1.h>
 #include<TFile.h>
 #include<TFitResult.h>
+#include<TFitter.h>
+#include<TGraph2D.h>
 #include<TH1D.h>
 #include<TLorentzVector.h>
 #include<TTree.h>
-#include<TFitter.h>
+#include<TVector2.h>
+#include<TVector3.h>
 
 #include<basic_calcs.h>
 #include<initializer.h>
@@ -45,6 +49,7 @@ class bin0r {
 				std::stringstream sstr;
 				sstr<<"Bin_"<<binNo<<"_r"<<_radiusLimits[i+1]<<"_phi"<<_phiLimits[i][j+1];
 				_binNames.push_back(sstr.str());
+				_binNoToIndexMap[binNo] = std::pair<unsigned int, unsigned int>(i, j);
 				std::cout<<"Bin: "<<binNo++<<": r["<<_radiusLimits[i]
 				         <<", "<<_radiusLimits[i+1]<<"], phi["<<_phiLimits[i][j]
 				         <<", "<<_phiLimits[i][j+1]<<"]"<<std::endl;
@@ -138,7 +143,7 @@ class bin0r {
 		return _histMap[binNo][histIndex];
 	}
 
-	std::vector<TH1D*> getHistsInBin(const int& binNo) {
+	std::vector<TH1D*> getHistsInBin(const unsigned int& binNo) {
 		return _histMap[binNo];
 	}
 
@@ -150,6 +155,177 @@ class bin0r {
 	unsigned int getNBins() const {
 		const unsigned int& n = _radiusLimits.size() - 1;
 		return ((2*n*n*n + 3*n*n + n)/6);
+	}
+
+	TVector2 getBinCenter(const unsigned int& binNo) {
+		TVector2 retval;
+		std::pair<unsigned int, unsigned int> indices = _binNoToIndexMap[binNo];
+		double r = 0;
+		double phi = 0;
+		if(binNo != 0) {
+			r = (_radiusLimits[indices.first] + _radiusLimits[indices.first+1]) / 2.;
+			phi = (_phiLimits[indices.first][indices.second] + _phiLimits[indices.first][indices.second+1]) / 2.;
+		}
+		retval.SetMagPhi(r, phi);
+		return retval;
+	}
+
+	void writeFitResultsToRoot(TDirectory* dir, std::vector<TFitResultPtr> fitResults) {
+		unsigned int fitResultIndex = 0;
+		for(unsigned int i = 0; i < getNBins(); ++i) {
+			dir->cd(_binNames[i].c_str());
+			for(unsigned int j = 0; j < RPD_SLAB_PHI_ANGLES.size(); ++j) {
+				std::stringstream sstr;
+				sstr<<"fitResult_"<<i<<"_phi"<<RPD_SLAB_PHI_ANGLES[j];
+				fitResults[fitResultIndex++]->Write(sstr.str().c_str());
+			}
+		}
+	}
+
+	void writeFitResultsAsGraphs(TDirectory* dir, const std::vector<TFitResultPtr>& fitResults) {
+		unsigned int fitResultIndex = 0;
+		unsigned int nEntries = getNBins();
+		double x[nEntries];
+		double y[nEntries];
+		double z_ll[nEntries];
+		double z_lu[nEntries];
+		double z_ml[nEntries];
+		double z_mu[nEntries];
+		double z_rl[nEntries];
+		double z_ru[nEntries];
+
+		double z_lp[nEntries];
+		double z_lw[nEntries];
+		double z_mp[nEntries];
+		double z_mw[nEntries];
+		double z_rp[nEntries];
+		double z_rw[nEntries];
+		for(unsigned int i = 0; i < getNBins(); ++i) {
+			TVector2 binCenter = getBinCenter(i);
+			x[i] = binCenter.X();
+			y[i] = binCenter.Y();
+			for(unsigned int j = 0; j < RPD_SLAB_PHI_ANGLES.size(); ++j) {
+				const TFitResultPtr fitResult = fitResults[fitResultIndex];
+				double lowerBound = -fitResult->Parameter(2);
+				double upperBound = fitResult->Parameter(1);
+				double width = upperBound - lowerBound;
+				double position = (upperBound + lowerBound) / 2.;
+				if(j == 0) {
+					z_ll[i] = lowerBound;
+					z_lu[i] = upperBound;
+					z_lp[i] = position;
+					z_lw[i] = width;
+				} else if(j == 1) {
+					z_ml[i] = lowerBound;
+					z_mu[i] = upperBound;
+					z_mp[i] = position;
+					z_mw[i] = width;
+				} else if(j == 2) {
+					z_rl[i] = lowerBound;
+					z_ru[i] = upperBound;
+					z_rp[i] = position;
+					z_rw[i] = width;
+				}
+				fitResultIndex++;
+			}
+		}
+/*		for(unsigned int i = 0; i < getNBins(); ++i) {
+			std::cout<<"z_ll["<<i<<
+		}
+*/		std::vector<TGraph2D*> graphs;
+		dir->cd();
+		graphs.push_back(new TGraph2D("left_slab_lower_bound", "left_slab_lower_bound", nEntries, x, y, z_ll));
+		graphs.push_back(new TGraph2D("left_slab_upper_bound", "left_slab_upper_bound", nEntries, x, y, z_lu));
+		graphs.push_back(new TGraph2D("middle_slab_lower_bound", "middle_slab_lower_bound", nEntries, x, y, z_ml));
+		graphs.push_back(new TGraph2D("middle_slab_upper_bound", "middle_slab_upper_bound", nEntries, x, y, z_mu));
+		graphs.push_back(new TGraph2D("right_slab_lower_bound", "right_slab_lower_bound", nEntries, x, y, z_rl));
+		graphs.push_back(new TGraph2D("right_slab_upper_bound", "right_slab_upper_bound", nEntries, x, y, z_ru));
+		graphs.push_back(new TGraph2D("left_slab_position", "left_slab_position", nEntries, x, y, z_lp));
+		graphs.push_back(new TGraph2D("left_slab_width", "left_slab_width", nEntries, x, y, z_lw));
+		graphs.push_back(new TGraph2D("middle_slab_position", "middle_slab_position", nEntries, x, y, z_mp));
+		graphs.push_back(new TGraph2D("middle_slab_width", "middle_slab_width", nEntries, x, y, z_mw));
+		graphs.push_back(new TGraph2D("right_slab_position", "right_slab_position", nEntries, x, y, z_rp));
+		graphs.push_back(new TGraph2D("right_slab_width", "right_slab_width", nEntries, x, y, z_rw));
+	}
+
+	void writeFitResultsToAscii(std::string fileNamePrefix, const std::vector<TFitResultPtr>& fitResults) {
+		unsigned int fitResultIndex = 0;
+		std::string fileName_ll = fileNamePrefix + "left_lower";
+		std::string fileName_lu = fileNamePrefix + "left_upper";
+		std::string fileName_ml = fileNamePrefix + "middle_lower";
+		std::string fileName_mu = fileNamePrefix + "middle_upper";
+		std::string fileName_rl = fileNamePrefix + "right_lower";
+		std::string fileName_ru = fileNamePrefix + "right_upper";
+		std::string fileName_lp = fileNamePrefix + "left_position";
+		std::string fileName_lw = fileNamePrefix + "left_width";
+		std::string fileName_mp = fileNamePrefix + "middle_position";
+		std::string fileName_mw = fileNamePrefix + "middle_width";
+		std::string fileName_rp = fileNamePrefix + "right_position";
+		std::string fileName_rw = fileNamePrefix + "right_width";
+		ofstream file_ll;
+		ofstream file_lu;
+		ofstream file_ml;
+		ofstream file_mu;
+		ofstream file_rl;
+		ofstream file_ru;
+		ofstream file_lp;
+		ofstream file_lw;
+		ofstream file_mp;
+		ofstream file_mw;
+		ofstream file_rp;
+		ofstream file_rw;
+		file_ll.open(fileName_ll.c_str());
+		file_lu.open(fileName_lu.c_str());
+		file_ml.open(fileName_ml.c_str());
+		file_mu.open(fileName_mu.c_str());
+		file_rl.open(fileName_rl.c_str());
+		file_ru.open(fileName_ru.c_str());
+		file_lp.open(fileName_lp.c_str());
+		file_lw.open(fileName_lw.c_str());
+		file_mp.open(fileName_mp.c_str());
+		file_mw.open(fileName_mw.c_str());
+		file_rp.open(fileName_rp.c_str());
+		file_rw.open(fileName_rw.c_str());
+		for(unsigned int i = 0; i < getNBins(); ++i) {
+			TVector2 binCenter = getBinCenter(i);
+			double x = binCenter.X();
+			double y = binCenter.Y();
+			for(unsigned int j = 0; j < RPD_SLAB_PHI_ANGLES.size(); ++j) {
+				const TFitResultPtr fitResult = fitResults[fitResultIndex++];
+				double lowerBound = -fitResult->Parameter(2);
+				double upperBound = fitResult->Parameter(1);
+				double width = upperBound - lowerBound;
+				double position = (upperBound + lowerBound) / 2.;
+				if(j == 0) {
+					file_ll<<x<<" "<<y<<" "<<lowerBound<<"\n";
+					file_lu<<x<<" "<<y<<" "<<upperBound<<"\n";
+					file_lp<<x<<" "<<y<<" "<<position<<"\n";
+					file_lw<<x<<" "<<y<<" "<<width<<"\n";
+				} else if(j == 1) {
+					file_ml<<x<<" "<<y<<" "<<lowerBound<<"\n";
+					file_mu<<x<<" "<<y<<" "<<upperBound<<"\n";
+					file_mp<<x<<" "<<y<<" "<<position<<"\n";
+					file_mw<<x<<" "<<y<<" "<<width<<"\n";
+				} else if(j == 2) {
+					file_rl<<x<<" "<<y<<" "<<lowerBound<<"\n";
+					file_ru<<x<<" "<<y<<" "<<upperBound<<"\n";
+					file_rp<<x<<" "<<y<<" "<<position<<"\n";
+					file_rw<<x<<" "<<y<<" "<<width<<"\n";
+				}
+			}
+		}
+		file_ll.close();
+		file_lu.close();
+		file_ml.close();
+		file_mu.close();
+		file_rl.close();
+		file_ru.close();
+		file_lp.close();
+		file_lw.close();
+		file_mp.close();
+		file_mw.close();
+		file_rp.close();
+		file_rw.close();
 	}
 
 	void prepareOutFile(TDirectory* dir) {
@@ -178,11 +354,17 @@ class bin0r {
 	std::map<unsigned int, std::vector<TH1D*> > _histMap;
 	std::vector<double> RPD_SLAB_PHI_ANGLES;
 
+	std::map<unsigned int, std::pair<unsigned int, unsigned int> > _binNoToIndexMap;
+
 	std::vector<std::string> _binNames;
 
 };
 
-void fitErrorFunctionForRPD(std::string inFileName, std::string outFileName, std::string configFileName) {
+void fitErrorFunctionForRPD(std::string inFileName,
+                            std::string outFileName,
+                            std::string configFileName,
+                            std::string graphDataFileNamePrefix)
+{
 
 	antok::Initializer* initializer = antok::Initializer::instance();
 	if(not initializer->readConfigFile(configFileName)) {
@@ -374,6 +556,8 @@ void fitErrorFunctionForRPD(std::string inFileName, std::string outFileName, std
 
 	roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nFits / 100.) + 0.5)) + 0.5);
 
+	std::vector<TFitResultPtr> fitResults;
+
 	for(unsigned int i = 0; i < bins.getNBins(); ++i) {
 		std::vector<TH1D*> histsInBin = bins.getHistsInBin(i);
 		for(unsigned int j = 0; j < histsInBin.size(); ++j) {
@@ -389,9 +573,9 @@ void fitErrorFunctionForRPD(std::string inFileName, std::string outFileName, std
 			TFitter::SetMaxIterations(20000);
 			fitFunction->SetParLimits(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 20., 10000);
 			fitFunction->SetParameter(1, 0.130899694); // position both erf pairs right
-			fitFunction->SetParLimits(1, 0, 0.5);
+			fitFunction->SetParLimits(1, -0.1, 0.5);
 			fitFunction->SetParameter(2, 0.130899694); // position both erf pairs left
-			fitFunction->SetParLimits(2, 0, 0.5);
+			fitFunction->SetParLimits(2, -0.1, 0.5);
 			fitFunction->SetParameter(3, 0.025);       // sigma 1st erf pair right
 			fitFunction->SetParLimits(3, 0, 5);
 			fitFunction->SetParameter(4, 0.025);       // sigma 1st erf pair left
@@ -404,11 +588,16 @@ void fitErrorFunctionForRPD(std::string inFileName, std::string outFileName, std
 			fitFunction->SetParLimits(7, 0, 10);
 
 			TFitResultPtr result = fitHist->Fit(fitFunction, "RSEMI");
+			fitResults.push_back(result);
 			int status = result->Status();
 			std::cout<<status<<std::endl;
 			currentFit++;
 		}
 	}
+
+	bins.writeFitResultsAsGraphs(outFile, fitResults);
+	bins.writeFitResultsToAscii(graphDataFileNamePrefix, fitResults);
+	bins.writeFitResultsToRoot(outFile, fitResults);
 
 	outFile->Write();
 	outFile->Close();
@@ -417,6 +606,6 @@ void fitErrorFunctionForRPD(std::string inFileName, std::string outFileName, std
 
 int main(int argc, char** argv) {
 
-	fitErrorFunctionForRPD(argv[1], argv[2], argv[3]);
+	fitErrorFunctionForRPD(argv[1], argv[2], argv[3], argv[4]);
 
 }
