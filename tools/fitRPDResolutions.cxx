@@ -359,6 +359,75 @@ class bin0r {
 
 };
 
+class uberBin0r {
+
+  public:
+
+	uberBin0r() { };
+
+	TH1D* getHist(const double& r,
+	              const double& phi,
+	              const double& rpdPhi,
+	              const double& mX,
+	              const double& protonMag,
+	              const double& l)
+	{
+		throw;
+		return 0;
+	}
+
+	static double getL(const TVector3& vertex, const TVector3& proton) {
+		const double TARGET_RADIUS = antok::Constants::TargetRadius();
+
+		const double a = proton.X()*proton.X() + proton.Y()*proton.Y();
+		const double b = 2 * (proton.X()*vertex.X() + proton.Y()*vertex.Y());
+		double c = vertex.X()*vertex.X() + vertex.Y()*vertex.Y() - TARGET_RADIUS*TARGET_RADIUS;
+		double n = antok::utils::getPositiveSolutionOfQuadraticEquation(a, b, c);
+
+		TVector3 protonInTarget = n * proton;
+		TVector3 exitPoint = vertex + protonInTarget;
+
+		const double TARGET_ENLARGEMENT = 0.;
+		const double TARGET_DOWNSTREAM_EDGE = antok::Constants::TargetDownstreamEdge() + TARGET_ENLARGEMENT;
+		const double TARGET_UPSTREAM_EDGE = antok::Constants::TargetUpstreamEdge() - TARGET_ENLARGEMENT;
+		double multiplier = 1.;
+		if(exitPoint.Z() > TARGET_DOWNSTREAM_EDGE) {
+			multiplier = (TARGET_DOWNSTREAM_EDGE - vertex.Z()) / protonInTarget.Z();
+		}
+		if(exitPoint.Z() < TARGET_UPSTREAM_EDGE) {
+			multiplier = (vertex.Z() - TARGET_UPSTREAM_EDGE) / protonInTarget.Z();
+		}
+
+		if(multiplier < 0.) {
+			multiplier = 0;
+		}
+
+		if(multiplier != 1. and multiplier != 0.) {
+//		if(true) {
+			if(std::fabs(vertex.X()+0.682) < 0.001) {
+			std::cout<<"####################"<<std::endl;
+			std::cout<<"$$$$$$$$$$$$$$$$$ multiplier = "<<multiplier<<" $$$$$$$$$$$$$$$$$"<<std::endl;
+			exitPoint.Print();
+			vertex.Print();
+			proton.Print();
+			std::cout<<"TARGET_UPSTREAM_EDGE="<<TARGET_UPSTREAM_EDGE<<" | TARGET_DOWNSTREAM_EDGE="<<TARGET_DOWNSTREAM_EDGE<<std::endl;
+			std::cout<<"l="<<multiplier * protonInTarget.Mag()<<std::endl;
+			std::cout<<"####################"<<std::endl;}
+		}
+
+		return multiplier * protonInTarget.Mag();
+	}
+
+	void prepareOutFile(TDirectory* dir) {
+		throw;
+	}
+
+  private:
+
+	char* dummy;
+
+};
+
 void fitErrorFunctionForRPD(std::string inFileName,
                             std::string outFileName,
                             std::string configFileName,
@@ -475,6 +544,21 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		if(proton.Mag() < 0.425) {
 			continue;
 		}
+
+		TVector3 vertex(vertexX, vertexY, vertexZ);
+		double l = 0.;
+		try {
+			l = uberBin0r::getL(vertex, proton);
+		} catch(const int& e) {
+			std::cerr<<"Length in target could not be calculated."<<std::endl;
+			if(e != 42) {
+				std::cerr<<"In fitErrorFunctionForRPD: Something went very wrong when "
+				         <<"calculating the proton exit point. Aborting..."<<std::endl;
+				throw;
+			}
+			continue;
+		}
+		l += 1;
 
 		TLorentzVector rpdProton(rpdProtonX, rpdProtonY, rpdProtonZ, rpdProtonE);
 
