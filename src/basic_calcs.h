@@ -51,6 +51,14 @@ namespace antok {
 	                                  double& rpdZRingA,
 	                                  double& rpdZRingB);
 
+	namespace utils {
+
+		double getPositiveSolutionOfQuadraticEquation(const double& a,
+		                                              const double& b,
+		                                              const double& c);
+
+	}
+
 }
 
 #endif

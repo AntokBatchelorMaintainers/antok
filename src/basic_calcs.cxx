@@ -170,21 +170,6 @@ void antok::getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
 
 }
 
-namespace {
-
-	double __getPositiveSolutionOfQuadraticEquation(const double& a, const double& b, const double& c) {
-		double result = (-b + std::sqrt(b*b - 4*a*c)) / (2*a);
-		if(result < 0) {
-			result = (-b - std::sqrt(b*b - 4*a*c)) / (2*a);
-		}
-		if(result < 0) {
-			throw 42;
-		}
-		return result;
-	}
-
-}
-
 void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
                                          const TLorentzVector& pX,
                                          const TVector3& vertex,
@@ -198,8 +183,8 @@ void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
                                          double& rpdZRingB)
 {
 
-	static const double INNER_RING_DIAMETER = antok::Constants::RPDRingADiameter();
-	static const double OUTER_RING_DIAMETER = antok::Constants::RPDRingBDiameter();
+	static const double INNER_RING_RADIUS = antok::Constants::RPDRingARadius();
+	static const double OUTER_RING_RADIUS = antok::Constants::RPDRingBRadius();
 	static const double RPD_CENTER_Z_POSITION = -36.2; // cm, from COMGEANT's geom_hadron_2008.ffr
 
 	const TVector3& beamVector = pBeam.Vect();
@@ -223,10 +208,10 @@ void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
 	bool error = false;
 	const double a = proton.X()*proton.X() + proton.Y()*proton.Y();
 	const double b = 2 * (proton.X()*transformedVertex.X() + proton.Y()*transformedVertex.Y());
-	double c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - INNER_RING_DIAMETER*INNER_RING_DIAMETER;
+	double c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - INNER_RING_RADIUS*INNER_RING_RADIUS;
 	double n;
 	try {
-		n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
+		n = antok::utils::getPositiveSolutionOfQuadraticEquation(a, b, c);
 	} catch (const int& number) {
 		if(number != 42) {
 			std::cerr<<"In antok::getRPDExpectedHitsParameters: Something went very "
@@ -243,9 +228,9 @@ void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
 		rpdPhiRingA = -10.;
 		error = false;
 	}
-	c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - OUTER_RING_DIAMETER*OUTER_RING_DIAMETER;
+	c = transformedVertex.X()*transformedVertex.X() + transformedVertex.Y()*transformedVertex.Y() - OUTER_RING_RADIUS*OUTER_RING_RADIUS;
 	try {
-		n = __getPositiveSolutionOfQuadraticEquation(a, b, c);
+		n = antok::utils::getPositiveSolutionOfQuadraticEquation(a, b, c);
 	} catch (const int& number) {
 		if(number != 42) {
 			std::cerr<<"In antok::getRPDExpectedHitsParameters: Something went very "
@@ -262,4 +247,18 @@ void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
 		rpdPhiRingB = -10.;
 	}
 
+}
+
+double antok::utils::getPositiveSolutionOfQuadraticEquation(const double& a,
+                                                            const double& b,
+                                                            const double& c)
+{
+	double result = (-b + std::sqrt(b*b - 4*a*c)) / (2*a);
+	if(result < 0) {
+		result = (-b - std::sqrt(b*b - 4*a*c)) / (2*a);
+	}
+	if(result < 0) {
+		throw 42;
+	}
+	return result;
 }
