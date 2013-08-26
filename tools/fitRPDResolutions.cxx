@@ -387,7 +387,7 @@ class uberBin0r {
 		TVector3 protonInTarget = n * proton;
 		TVector3 exitPoint = vertex + protonInTarget;
 
-		const double TARGET_ENLARGEMENT = 0.;
+		const double TARGET_ENLARGEMENT = 3.;
 		const double TARGET_DOWNSTREAM_EDGE = antok::Constants::TargetDownstreamEdge() + TARGET_ENLARGEMENT;
 		const double TARGET_UPSTREAM_EDGE = antok::Constants::TargetUpstreamEdge() - TARGET_ENLARGEMENT;
 		double multiplier = 1.;
@@ -399,22 +399,8 @@ class uberBin0r {
 		}
 
 		if(multiplier < 0.) {
-			multiplier = 0;
+			return 0.;
 		}
-
-		if(multiplier != 1. and multiplier != 0.) {
-//		if(true) {
-			if(std::fabs(vertex.X()+0.682) < 0.001) {
-			std::cout<<"####################"<<std::endl;
-			std::cout<<"$$$$$$$$$$$$$$$$$ multiplier = "<<multiplier<<" $$$$$$$$$$$$$$$$$"<<std::endl;
-			exitPoint.Print();
-			vertex.Print();
-			proton.Print();
-			std::cout<<"TARGET_UPSTREAM_EDGE="<<TARGET_UPSTREAM_EDGE<<" | TARGET_DOWNSTREAM_EDGE="<<TARGET_DOWNSTREAM_EDGE<<std::endl;
-			std::cout<<"l="<<multiplier * protonInTarget.Mag()<<std::endl;
-			std::cout<<"####################"<<std::endl;}
-		}
-
 		return multiplier * protonInTarget.Mag();
 	}
 
@@ -520,6 +506,8 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			         <<(i/(double)nBins*100)<<"%)"<<std::endl;
 		}
 
+		if(i > (double)nBins/4.) break;
+
 		inTree->GetEntry(i);
 
 		p1.SetXYZM(px1, py1, pz1, PION_MASS);
@@ -558,7 +546,6 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			}
 			continue;
 		}
-		l += 1;
 
 		TLorentzVector rpdProton(rpdProtonX, rpdProtonY, rpdProtonZ, rpdProtonE);
 
