@@ -22,6 +22,7 @@ set(SOURCES
 	initializer.cxx
 	object_manager.cxx
 	plotter.cxx
+	rpd_helper_helper.cxx
    )
 
 make_shared_library("antok" "${SOURCES}" "${ROOT_LIBS}" "${YAMLCPP_LIBRARY}")
