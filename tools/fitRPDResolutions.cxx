@@ -19,8 +19,9 @@
 #include<TVector3.h>
 
 #include<basic_calcs.h>
-#include<initializer.h>
 #include<constants.h>
+#include<initializer.h>
+#include<rpd_helper_helper.h>
 
 static bool useTransform = true;
 
@@ -436,11 +437,14 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 	bins.prepareOutFile(outFile);
 
+	outFile->cd();
+	TH1D* predictedProtonMag = new TH1D("predictedProtonMag", "predictedProtonMag", 1000, 0, 50);
+
 	long nBins = inTree->GetEntries();
 
 	unsigned int roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nBins / 100.) + 0.5)) + 0.5);
 
-	const double rpdPeriod = TMath::Pi() / 6.;
+	const double rpdPeriod = antok::Constants::RPDPeriod();
 
 	for(long i = 0; i < nBins; ++i) {
 
@@ -467,6 +471,12 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		p3Beam.SetXYZ(gradx, grady, 1.);
 		pBeam = antok::getBeamEnergy(p3Beam, xVector);
 		p3Beam = pBeam.Vect();
+
+		TVector3 proton = p3Beam - xVector.Vect();
+		predictedProtonMag->Fill(proton.Mag());
+		if(proton.Mag() < 0.425) {
+			continue;
+		}
 
 /*		double t = std::fabs((pBeam - xVector).Mag2());
 		double tMin = std::fabs((std::pow(xVector.M2() - pBeam.M2(), 2)) / (4. * p3Beam.Mag2()));
@@ -558,6 +568,8 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 	std::vector<TFitResultPtr> fitResults;
 
+	std::vector<std::pair<unsigned int, unsigned int> > failedFitBins;
+
 	for(unsigned int i = 0; i < bins.getNBins(); ++i) {
 		std::vector<TH1D*> histsInBin = bins.getHistsInBin(i);
 		for(unsigned int j = 0; j < histsInBin.size(); ++j) {
@@ -572,10 +584,44 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			fitFunction->SetParameter(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 2.);        // overall strength
 			TFitter::SetMaxIterations(20000);
 			fitFunction->SetParLimits(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 20., 10000);
-			fitFunction->SetParameter(1, 0.130899694); // position both erf pairs right
+/*			fitFunction->SetParameter(1, 0.130899694); // position both erf pairs right
 			fitFunction->SetParLimits(1, -0.1, 0.5);
 			fitFunction->SetParameter(2, 0.130899694); // position both erf pairs left
 			fitFunction->SetParLimits(2, -0.1, 0.5);
+*/
+			antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
+			TVector2 vertexXY = bins.getBinCenter(i);
+			double rpdPhi = 0.;
+			switch(j) {
+				case(0):
+						std::cout<<"left"<<std::endl;
+						rpdPhi = -0.196;
+						break;
+				case(1):
+						std::cout<<"middle"<<std::endl;
+						rpdPhi = 0.002;
+						break;
+				case(2):
+						std::cout<<"right"<<std::endl;
+						rpdPhi = 0.194;
+						break;
+
+			}
+			std::pair<double, double> limits = rpdHelperHelper->getLimits(rpdPhi, vertexXY);
+			std::cout<<"limits = "<<limits.first<<", "<<limits.second<<std::endl;
+			const double& LIMIT_WINDOW = 0.01;
+			std::cout<<"lower limit = "<<-limits.first<<" ["<<(-limits.first-LIMIT_WINDOW)<<", "<<(-limits.first+LIMIT_WINDOW)<<"]"<<std::endl;
+			std::cout<<"upper limit = "<<limits.second<<" ["<<(limits.second-LIMIT_WINDOW)<<", "<<(limits.second+LIMIT_WINDOW)<<"]"<<std::endl;
+
+			fitFunction->FixParameter(1, limits.second);
+			fitFunction->FixParameter(2, -limits.first);
+
+/*
+			fitFunction->SetParameter(1, limits.second); // position both erf pairs right
+			fitFunction->SetParLimits(1, limits.second-LIMIT_WINDOW, limits.second+LIMIT_WINDOW);
+			fitFunction->SetParameter(2, -limits.first); // position both erf pairs left
+			fitFunction->SetParLimits(2, -limits.first-LIMIT_WINDOW, -limits.first+LIMIT_WINDOW);
+*/
 			fitFunction->SetParameter(3, 0.025);       // sigma 1st erf pair right
 			fitFunction->SetParLimits(3, 0, 5);
 			fitFunction->SetParameter(4, 0.025);       // sigma 1st erf pair left
@@ -587,12 +633,25 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			fitFunction->SetParameter(7, 0.1);        // sigma 2nd erf pair left
 			fitFunction->SetParLimits(7, 0, 10);
 
-			TFitResultPtr result = fitHist->Fit(fitFunction, "RSEMI");
+//			TFitResultPtr result = fitHist->Fit(fitFunction, "RSEMIL");
+			TFitResultPtr result = fitHist->Fit(fitFunction, "RSL");
 			fitResults.push_back(result);
 			int status = result->Status();
 			std::cout<<status<<std::endl;
+			if(status != 0) {
+				std::cout<<"FIT FAILED FIT FAILED FIT FAILED FIT FAILED FIT FAILED FIT FAILED FIT FAILED FIT FAILED"<<std::endl;
+				failedFitBins.push_back(std::pair<unsigned int, unsigned int>(i, j));
+			}
 			currentFit++;
 		}
+	}
+
+	if(failedFitBins.size() > 0) {
+		std::cout<<"Fit failed in bins: ["<<failedFitBins[0].first<<"."<<failedFitBins[0].second;
+		for(unsigned int i = 1; i < failedFitBins.size(); ++i) {
+			std::cout<<", "<<failedFitBins[i].first<<"."<<failedFitBins[i].second;
+		}
+		std::cout<<"]"<<std::endl;
 	}
 
 	bins.writeFitResultsAsGraphs(outFile, fitResults);
