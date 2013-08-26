@@ -230,10 +230,8 @@ class bin0r {
 				fitResultIndex++;
 			}
 		}
-/*		for(unsigned int i = 0; i < getNBins(); ++i) {
-			std::cout<<"z_ll["<<i<<
-		}
-*/		std::vector<TGraph2D*> graphs;
+
+		std::vector<TGraph2D*> graphs;
 		dir->cd();
 		graphs.push_back(new TGraph2D("left_slab_lower_bound", "left_slab_lower_bound", nEntries, x, y, z_ll));
 		graphs.push_back(new TGraph2D("left_slab_upper_bound", "left_slab_upper_bound", nEntries, x, y, z_lu));
@@ -478,10 +476,6 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			continue;
 		}
 
-/*		double t = std::fabs((pBeam - xVector).Mag2());
-		double tMin = std::fabs((std::pow(xVector.M2() - pBeam.M2(), 2)) / (4. * p3Beam.Mag2()));
-		double tPrime = t - tMin;
-*/
 		TLorentzVector rpdProton(rpdProtonX, rpdProtonY, rpdProtonZ, rpdProtonE);
 
 		double deltaPhi, res;
@@ -516,36 +510,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 				correctedDeltaPhi -= TMath::TwoPi();
 			}
 
-			/*
-			while(correctedVertexPhi < -TMath::Pi()) {
-				correctedVertexPhi = TMath::Pi() - correctedVertexPhi;
-			}
-			while(correctedVertexPhi > TMath::Pi()) {
-				correctedVertexPhi = correctedVertexPhi - TMath::Pi();
-			}
-			while(correctedDeltaPhi < -TMath::Pi()) {
-				correctedDeltaPhi = TMath::Pi() - correctedDeltaPhi;
-			}
-			while(correctedDeltaPhi > TMath::Pi()) {
-				correctedDeltaPhi = correctedDeltaPhi - TMath::Pi();
-			}
-			*/
 		}
-/*
-		std::cout<<"gradx="<<gradx<<" grady="<<grady<<std::endl;
-		pBeam.Print();
-		rpdProton.Print();
-		xVector.Print();
-		std::cout<<"--------"<<std::endl;
-		std::cout<<"r(v)="<<planarVertex.Mag()<<std::endl;
-		std::cout<<"phi(v)="<<planarVertex.Phi()<<std::endl;
-		std::cout<<"phi(p+)="<<protonPhi<<std::endl;
-		std::cout<<"deltaPhi="<<deltaPhi<<std::endl;
-		std::cout<<"deltaPhi'="<<correctedDeltaPhi<<std::endl;
-		std::cout<<"phi'(v)="<<correctedVertexPhi<<std::endl;
-		std::cout<<"phi'(p+)="<<correctedProtonPhi<<std::endl;
-		std::cout<<"########"<<std::endl;
-*/
 
 		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi);
 		if(not hist) {
@@ -584,44 +549,27 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			fitFunction->SetParameter(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 2.);        // overall strength
 			TFitter::SetMaxIterations(20000);
 			fitFunction->SetParLimits(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 20., 10000);
-/*			fitFunction->SetParameter(1, 0.130899694); // position both erf pairs right
-			fitFunction->SetParLimits(1, -0.1, 0.5);
-			fitFunction->SetParameter(2, 0.130899694); // position both erf pairs left
-			fitFunction->SetParLimits(2, -0.1, 0.5);
-*/
+
 			antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
 			TVector2 vertexXY = bins.getBinCenter(i);
 			double rpdPhi = 0.;
 			switch(j) {
 				case(0):
-						std::cout<<"left"<<std::endl;
 						rpdPhi = -0.196;
 						break;
 				case(1):
-						std::cout<<"middle"<<std::endl;
 						rpdPhi = 0.002;
 						break;
 				case(2):
-						std::cout<<"right"<<std::endl;
 						rpdPhi = 0.194;
 						break;
 
 			}
 			std::pair<double, double> limits = rpdHelperHelper->getLimits(rpdPhi, vertexXY);
-			std::cout<<"limits = "<<limits.first<<", "<<limits.second<<std::endl;
-			const double& LIMIT_WINDOW = 0.01;
-			std::cout<<"lower limit = "<<-limits.first<<" ["<<(-limits.first-LIMIT_WINDOW)<<", "<<(-limits.first+LIMIT_WINDOW)<<"]"<<std::endl;
-			std::cout<<"upper limit = "<<limits.second<<" ["<<(limits.second-LIMIT_WINDOW)<<", "<<(limits.second+LIMIT_WINDOW)<<"]"<<std::endl;
 
-			fitFunction->FixParameter(1, limits.second);
-			fitFunction->FixParameter(2, -limits.first);
+			fitFunction->FixParameter(1, limits.second); // position both erf pairs right
+			fitFunction->FixParameter(2, -limits.first); // position both erf pairs left
 
-/*
-			fitFunction->SetParameter(1, limits.second); // position both erf pairs right
-			fitFunction->SetParLimits(1, limits.second-LIMIT_WINDOW, limits.second+LIMIT_WINDOW);
-			fitFunction->SetParameter(2, -limits.first); // position both erf pairs left
-			fitFunction->SetParLimits(2, -limits.first-LIMIT_WINDOW, -limits.first+LIMIT_WINDOW);
-*/
 			fitFunction->SetParameter(3, 0.025);       // sigma 1st erf pair right
 			fitFunction->SetParLimits(3, 0, 5);
 			fitFunction->SetParameter(4, 0.025);       // sigma 1st erf pair left
