@@ -3,6 +3,8 @@
 #include<cmath>
 #include<iostream>
 
+#include<TMath.h>
+
 double antok::Constants::_charged_kaon_mass = -1.;
 double antok::Constants::_charged_pion_mass = -1.;
 double antok::Constants::_proton_mass = -1.;
@@ -21,6 +23,10 @@ bool antok::Constants::set_charged_kaon_mass(const double& charged_kaon_mass) {
 	}
 	return false;
 };
+
+const double antok::Constants::RPDPeriod() {
+	return TMath::Pi() / 6.;
+}
 
 bool antok::Constants::set_charged_pion_mass(const double& charged_pion_mass) {
 	if(charged_pion_mass > 0.) {
@@ -51,4 +57,3 @@ bool antok::Constants::set_n_particles(const unsigned int& n_particles) {
 	};
 	return false;
 };
-

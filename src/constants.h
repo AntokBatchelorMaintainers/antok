@@ -17,6 +17,11 @@ namespace antok {
 		static const double& chargedPionMass() { assert(initialized()); return _charged_pion_mass; };
 		static const double& protonMass() { assert(initialized()); return _proton_mass; };
 
+		static const double RPDPeriod();
+		static const double RPDRingADiameter() { return 12.0; /* cm, from 2008 spectro paper */ }
+		static const double RPDRingBDiameter() { return 75.0; /* cm, from 2008 spectro paper */ }
+		static const double TargetRadius() { return 1.75; /* cm, from 2008 spectro paper */ }
+
 		static const unsigned int& nParticles() { assert(initialized()); return _n_particles; };
 
 		static const bool& initialized() { return _initialized; };

@@ -198,8 +198,8 @@ void antok::getRPDExpectedHitsParameters(const TLorentzVector& pBeam,
                                          double& rpdZRingB)
 {
 
-	static const double INNER_RING_DIAMETER = 12.0; // cm, from 2008 spectro paper
-	static const double OUTER_RING_DIAMETER = 75.0; // cm, from 2008 spectro paper
+	static const double INNER_RING_DIAMETER = antok::Constants::RPDRingADiameter();
+	static const double OUTER_RING_DIAMETER = antok::Constants::RPDRingBDiameter();
 	static const double RPD_CENTER_Z_POSITION = -36.2; // cm, from COMGEANT's geom_hadron_2008.ffr
 
 	const TVector3& beamVector = pBeam.Vect();
