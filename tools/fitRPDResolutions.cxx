@@ -29,7 +29,7 @@ class bin0r {
 
   public:
 
-	bin0r() {
+	bin0r(TDirectory* dir) : _dir(dir) {
 		_radiusLimits.push_back(0);
 		for(unsigned int i = 1; i <= NUMBER_OF_RINGS; ++i) {
 			_radiusLimits.push_back((MAXIMUM_RADIUS/NUMBER_OF_RINGS)*i);
@@ -171,10 +171,18 @@ class bin0r {
 		return retval;
 	}
 
-	void writeFitResultsToRoot(TDirectory* dir, std::vector<TFitResultPtr> fitResults) {
+	TVector2 getBinCenter(const TH1D* hist) {
+		return getBinCenter(getBinNumber(hist));
+	}
+
+	unsigned int getBinNumber(const TH1D* hist) {
+		return _reverseHistMap[hist];
+	}
+
+	void writeFitResultsToRoot(std::vector<TFitResultPtr> fitResults) {
 		unsigned int fitResultIndex = 0;
 		for(unsigned int i = 0; i < getNBins(); ++i) {
-			dir->cd(_binNames[i].c_str());
+			_dir->cd(_binNames[i].c_str());
 			for(unsigned int j = 0; j < RPD_SLAB_PHI_ANGLES.size(); ++j) {
 				std::stringstream sstr;
 				sstr<<"fitResult_"<<i<<"_phi"<<RPD_SLAB_PHI_ANGLES[j];
@@ -183,7 +191,7 @@ class bin0r {
 		}
 	}
 
-	void writeFitResultsAsGraphs(TDirectory* dir, const std::vector<TFitResultPtr>& fitResults) {
+	void writeFitResultsAsGraphs(const std::vector<TFitResultPtr>& fitResults) {
 		unsigned int fitResultIndex = 0;
 		unsigned int nEntries = getNBins();
 		double x[nEntries];
@@ -232,7 +240,7 @@ class bin0r {
 		}
 
 		std::vector<TGraph2D*> graphs;
-		dir->cd();
+		_dir->cd();
 		graphs.push_back(new TGraph2D("left_slab_lower_bound", "left_slab_lower_bound", nEntries, x, y, z_ll));
 		graphs.push_back(new TGraph2D("left_slab_upper_bound", "left_slab_upper_bound", nEntries, x, y, z_lu));
 		graphs.push_back(new TGraph2D("middle_slab_lower_bound", "middle_slab_lower_bound", nEntries, x, y, z_ml));
@@ -327,16 +335,18 @@ class bin0r {
 		file_rw.close();
 	}
 
-	void prepareOutFile(TDirectory* dir) {
+	void prepareOutFile() {
 		assert(_binNames.size() == getNBins());
 		for(unsigned int i = 0; i < getNBins(); ++i) {
-			dir->cd();
-			dir->mkdir(_binNames[i].c_str());
-			dir->cd(_binNames[i].c_str());
+			_dir->cd();
+			_dir->mkdir(_binNames[i].c_str());
+			_dir->cd(_binNames[i].c_str());
 			for(unsigned int j = 0; j < RPD_SLAB_PHI_ANGLES.size(); ++j) {
 				std::stringstream sstr;
 				sstr<<"hist_bin"<<i<<"_phi"<<RPD_SLAB_PHI_ANGLES[j];
-				_histMap[i].push_back(new TH1D(sstr.str().c_str(), sstr.str().c_str(), 1000, -0.5, 0.5));
+				TH1D* hist = new TH1D(sstr.str().c_str(), sstr.str().c_str(), 1000, -0.5, 0.5);
+				_histMap[i].push_back(hist);
+				_reverseHistMap[hist] = i;
 			}
 		}
 	}
@@ -355,7 +365,11 @@ class bin0r {
 
 	std::map<unsigned int, std::pair<unsigned int, unsigned int> > _binNoToIndexMap;
 
+	std::map<const TH1D*, unsigned int> _reverseHistMap;
+
 	std::vector<std::string> _binNames;
+
+	TDirectory* _dir;
 
 };
 
@@ -363,21 +377,185 @@ class uberBin0r {
 
   public:
 
-	uberBin0r() { };
+	uberBin0r(TDirectory* dir) : _dir(dir) {
+		double tBinWidth = (LIMITS_T_UPPER - LIMITS_T_LOWER) / NBINS_T;
+		double mBinWidth = (LIMITS_M_UPPER - LIMITS_M_LOWER) / NBINS_M;
+		double lBinWidth = (LIMITS_L_UPPER - LIMITS_L_LOWER) / NBINS_L;
+		for(unsigned int i = 0; i <= NBINS_T; ++i) {
+			_tLimits.push_back(LIMITS_T_LOWER + i*tBinWidth);
+		}
+		for(unsigned int i = 0; i <= NBINS_M; ++i) {
+			_mLimits.push_back(LIMITS_M_LOWER + i*mBinWidth);
+		}
+		for(unsigned int i = 0; i <= NBINS_L; ++i) {
+			_lLimits.push_back(LIMITS_L_LOWER + i*lBinWidth);
+		}
+		unsigned int binNumber = 0;
+		for(unsigned int i = 1; i <= NBINS_T; ++i) {
+			for(unsigned int j = 1; j <= NBINS_M; ++j) {
+				for(unsigned int k = 1; k <= NBINS_L; ++k) {
+					std::stringstream sstr;
+					sstr<<"Bin_"<<binNumber++;
+					sstr<<"_t-"<<_tLimits[i];
+					sstr<<"_m-"<<_mLimits[j];
+					sstr<<"_l-"<<_lLimits[k];
+					_binNames.push_back(sstr.str());
+				}
+			}
+		}
+	};
+
+	unsigned int getNBins() const {
+		return NBINS_T * NBINS_M * NBINS_L;
+	}
+
+	unsigned int getNHistsInBin() const {
+		return _bins[0].getNBins() * _bins[0].getNHistsInBin();
+	}
+
+	std::vector<TH1D*> getHistsInBin(const unsigned int& binNo) {
+		bin0r& bin = _bins[binNo];
+		std::vector<TH1D*> retval;
+		for(unsigned int i = 0; i < bin.getNBins(); ++i) {
+			std::vector<TH1D*> histsInBin = bin.getHistsInBin(i);
+			retval.insert(retval.end(), histsInBin.begin(), histsInBin.end());
+		}
+		return retval;
+	}
+
+	void prepareOutFile() {
+		for(unsigned int i = 0; i < getNBins(); ++i) {
+			TDirectory* subDir = _dir->mkdir(_binNames[i].c_str());
+			_bins.push_back(bin0r(subDir));
+			_bins[i].prepareOutFile();
+		}
+	}
+
+	unsigned int getBinNumber(double t,
+	                          double m,
+	                          double l)
+	{
+//		std::cout<<"original = ("<<t<<", "<<m<<", "<<l<<")"<<std::endl;
+		if(t < _tLimits[0]) {
+			t = (_tLimits[0] + _tLimits[1]) / 2.;
+		} else if (t > _tLimits[_tLimits.size()-1]) {
+			t = (_tLimits[_tLimits.size()-2] + _tLimits[_tLimits.size()-1]) / 2.;
+		}
+		if(m < _mLimits[0]) {
+			m = (_mLimits[0] + _mLimits[1]) / 2.;
+		} else if (m > _mLimits[_mLimits.size()-1]) {
+			m = (_mLimits[_mLimits.size()-2] + _mLimits[_mLimits.size()-1]) / 2.;
+		}
+		if(l < _lLimits[0]) {
+			l = (_lLimits[0] + _lLimits[1]) / 2.;
+		} else if (l > _lLimits[_lLimits.size()-1]) {
+			l = (_lLimits[_lLimits.size()-2] + _lLimits[_lLimits.size()-1]) / 2.;
+		}
+//		std::cout<<"adjusted = ("<<t<<", "<<m<<", "<<l<<")"<<std::endl;
+//		std::stringstream sstr;
+		unsigned int binNumber = 0;
+		bool found = false;
+		for(unsigned int i = 0; i < _tLimits.size()-1; ++i) {
+			for(unsigned int j = 0; j < _tLimits.size()-1; ++j) {
+				for(unsigned int k = 0; k < _tLimits.size()-1; ++k) {
+/*					sstr<<"####### Bin "<<binNumber<<"#########"<<std::endl;
+					sstr<<_tLimits[i]<<" <? "<<t<<" <? "<<_tLimits[i+1]<<std::endl;
+					sstr<<_mLimits[j]<<" <? "<<m<<" <? "<<_mLimits[j+1]<<std::endl;
+					sstr<<_lLimits[k]<<" <? "<<l<<" <? "<<_lLimits[k+1]<<std::endl;
+					sstr<<"########################"<<std::endl;
+*/					if((_tLimits[i] <= t and t < _tLimits[i+1]) and
+					   (_mLimits[j] <= m and m < _mLimits[j+1]) and
+					   (_lLimits[k] <= l and l < _lLimits[k+1]))
+					{
+						found = true;
+						break;
+					}
+					++binNumber;
+				}
+				if(found) {
+					break;
+				}
+			}
+			if(found) {
+				break;
+			}
+		}
+//		std::cout<<"Bin number = "<<binNumber<<std::endl;
+		if(binNumber >= _bins.size()) {
+			std::cerr<<"Bin number found out of range."<<std::endl;
+//			std::cout<<sstr.str();
+			throw;
+		}
+		return binNumber;
+	}
+
+	TVector2 getBinCenter(const unsigned int& binNumber, const TH1D* hist) {
+		return _bins[binNumber].getBinCenter(hist);
+	}
 
 	TH1D* getHist(const double& r,
 	              const double& phi,
 	              const double& rpdPhi,
-	              const double& mX,
-	              const double& protonMag,
-	              const double& l)
-	{
-		throw;
-		return 0;
+	              const double& t,
+	              const double& m,
+	              const double& l) {
+//		std::cout<<"_bins.size()="<<_bins.size()<<std::endl;
+//		std::cout<<"binNumber = "<<getBinNumber(t, m, l)<<std::endl;
+		return _bins[getBinNumber(t, m, l)].getHist(r, phi, rpdPhi);
+	}
+
+	void addFitResults(const unsigned int& binNumber, std::vector<TFitResultPtr> fitResults) {
+		if(binNumber != _fitResults.size()) {
+			std::cerr<<"Fit results have to be added sequentially. Aborting..."<<std::endl;
+			throw;
+		}
+		_fitResults.push_back(fitResults);
+	}
+
+	void writeFitResultsToRoot() {
+		assert(_bins.size() == _fitResults.size());
+		for(unsigned int i = 0; i < _bins.size(); ++i) {
+			_bins[i].writeFitResultsToRoot(_fitResults[i]);
+		}
+	}
+
+	void writeFitResultsAsGraphs() {
+		assert(_bins.size() == _fitResults.size());
+		for(unsigned int i = 0; i < _bins.size(); ++i) {
+			_bins[i].writeFitResultsAsGraphs(_fitResults[i]);
+		}
+	}
+
+	void writeFitResultsToAscii(std::string fileNamePrefix) {
+		assert(_bins.size() == _fitResults.size());
+		for(unsigned int i = 0; i < _bins.size(); ++i) {
+			std::stringstream sstr;
+			sstr<<fileNamePrefix<<_binNames[i]<<"_";
+			_bins[i].writeFitResultsToAscii(sstr.str(), _fitResults[i]);
+		}
+	}
+
+	std::pair<double, double> getLimitsForFit(const unsigned int& binNumber, const TH1D* hist) {
+		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
+		TVector2 vertexXY = getBinCenter(binNumber, hist);
+		double rpdPhi;
+		std::vector<TH1D*> histsInBin = _bins[binNumber].getHistsInBin(_bins[binNumber].getBinNumber(hist));
+		assert(histsInBin.size() == 3);
+		if(hist == histsInBin[0]) {
+			rpdPhi = -0.196;
+		} else if(hist == histsInBin[1]) {
+			rpdPhi = 0.002;
+		} else if(hist == histsInBin[2]) {
+			rpdPhi = 0.194;
+		} else {
+			std::cerr<<"Could not find histogram. Aborting..."<<std::endl;
+			throw;
+		}
+		return rpdHelperHelper->getLimits(rpdPhi, vertexXY);
 	}
 
 	static double getL(const TVector3& vertex, const TVector3& proton) {
-		const double TARGET_RADIUS = antok::Constants::TargetRadius();
+		static const double TARGET_RADIUS = antok::Constants::TargetRadius();
 
 		const double a = proton.X()*proton.X() + proton.Y()*proton.Y();
 		const double b = 2 * (proton.X()*vertex.X() + proton.Y()*vertex.Y());
@@ -387,9 +565,9 @@ class uberBin0r {
 		TVector3 protonInTarget = n * proton;
 		TVector3 exitPoint = vertex + protonInTarget;
 
-		const double TARGET_ENLARGEMENT = 3.;
-		const double TARGET_DOWNSTREAM_EDGE = antok::Constants::TargetDownstreamEdge() + TARGET_ENLARGEMENT;
-		const double TARGET_UPSTREAM_EDGE = antok::Constants::TargetUpstreamEdge() - TARGET_ENLARGEMENT;
+		static const double TARGET_ENLARGEMENT = 3.;
+		static const double TARGET_DOWNSTREAM_EDGE = antok::Constants::TargetDownstreamEdge() + TARGET_ENLARGEMENT;
+		static const double TARGET_UPSTREAM_EDGE = antok::Constants::TargetUpstreamEdge() - TARGET_ENLARGEMENT;
 		double multiplier = 1.;
 		if(exitPoint.Z() > TARGET_DOWNSTREAM_EDGE) {
 			multiplier = (TARGET_DOWNSTREAM_EDGE - vertex.Z()) / protonInTarget.Z();
@@ -401,16 +579,35 @@ class uberBin0r {
 		if(multiplier < 0.) {
 			return 0.;
 		}
+		double retval = multiplier * protonInTarget.Mag();
+		if(std::isnan(retval)) {
+			throw(42);
+		}
 		return multiplier * protonInTarget.Mag();
-	}
-
-	void prepareOutFile(TDirectory* dir) {
-		throw;
 	}
 
   private:
 
-	char* dummy;
+	static const unsigned int NBINS_T = 3;
+	static const unsigned int NBINS_M = 3;
+	static const unsigned int NBINS_L = 3;
+
+	static const double LIMITS_T_LOWER = 0.3;
+	static const double LIMITS_T_UPPER = 1.;
+	static const double LIMITS_M_LOWER = 1.;
+	static const double LIMITS_M_UPPER = 4.2;
+	static const double LIMITS_L_LOWER = 0.;
+	static const double LIMITS_L_UPPER = 3.5;
+
+	std::vector<bin0r> _bins;
+	std::vector<std::string> _binNames;
+	std::vector<double> _tLimits;
+	std::vector<double> _mLimits;
+	std::vector<double> _lLimits;
+
+	TDirectory* _dir;
+
+	std::vector<std::vector<TFitResultPtr> > _fitResults;
 
 };
 
@@ -486,12 +683,14 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		return;
 	}
 
-	bin0r bins;
+	uberBin0r bins(outFile);
 
-	bins.prepareOutFile(outFile);
+	bins.prepareOutFile();
 
 	outFile->cd();
 	TH1D* predictedProtonMag = new TH1D("predictedProtonMag", "predictedProtonMag", 1000, 0, 50);
+	TH1D* lengthInTarget = new TH1D("lengthInTarget", "lengthInTarget", 1000, 0, 50);
+	TH1D* xMass = new TH1D("xMass", "xMass", 1000, 0, 7);
 
 	long nBins = inTree->GetEntries();
 
@@ -506,7 +705,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			         <<(i/(double)nBins*100)<<"%)"<<std::endl;
 		}
 
-		if(i > (double)nBins/4.) break;
+//		if(i > (double)nBins/4.) break;
 
 		inTree->GetEntry(i);
 
@@ -520,6 +719,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		for(unsigned int j = 1; j < allMomenta.size(); ++j) {
 			xVector += *(allMomenta[j]);
 		}
+		xMass->Fill(xVector.M());
 
 		TVector3 p3Beam;
 		TLorentzVector pBeam;
@@ -528,10 +728,8 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		p3Beam = pBeam.Vect();
 
 		TVector3 proton = p3Beam - xVector.Vect();
+		double t = proton.Mag();
 		predictedProtonMag->Fill(proton.Mag());
-		if(proton.Mag() < 0.425) {
-			continue;
-		}
 
 		TVector3 vertex(vertexX, vertexY, vertexZ);
 		double l = 0.;
@@ -546,6 +744,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			}
 			continue;
 		}
+		lengthInTarget->Fill(l);
 
 		TLorentzVector rpdProton(rpdProtonX, rpdProtonY, rpdProtonZ, rpdProtonE);
 
@@ -583,7 +782,9 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 		}
 
-		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi);
+//		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi);
+		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi,
+		                          t, xVector.M(), l);
 		if(not hist) {
 			continue;
 		}
@@ -602,12 +803,12 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 	roundingNumber = int(std::pow(10., (unsigned int)(log10((double)nFits / 100.) + 0.5)) + 0.5);
 
-	std::vector<TFitResultPtr> fitResults;
 
 	std::vector<std::pair<unsigned int, unsigned int> > failedFitBins;
 
 	for(unsigned int i = 0; i < bins.getNBins(); ++i) {
 		std::vector<TH1D*> histsInBin = bins.getHistsInBin(i);
+		std::vector<TFitResultPtr> fitResults;
 		for(unsigned int j = 0; j < histsInBin.size(); ++j) {
 
 			if(not (currentFit % roundingNumber)) {
@@ -621,22 +822,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			TFitter::SetMaxIterations(20000);
 			fitFunction->SetParLimits(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 20., 10000);
 
-			antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
-			TVector2 vertexXY = bins.getBinCenter(i);
-			double rpdPhi = 0.;
-			switch(j) {
-				case(0):
-						rpdPhi = -0.196;
-						break;
-				case(1):
-						rpdPhi = 0.002;
-						break;
-				case(2):
-						rpdPhi = 0.194;
-						break;
-
-			}
-			std::pair<double, double> limits = rpdHelperHelper->getLimits(rpdPhi, vertexXY);
+			std::pair<double, double> limits = bins.getLimitsForFit(i, fitHist);
 
 			fitFunction->FixParameter(1, limits.second); // position both erf pairs right
 			fitFunction->FixParameter(2, -limits.first); // position both erf pairs left
@@ -663,6 +849,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			}
 			currentFit++;
 		}
+		bins.addFitResults(i, fitResults);
 	}
 
 	if(failedFitBins.size() > 0) {
@@ -673,9 +860,9 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		std::cout<<"]"<<std::endl;
 	}
 
-	bins.writeFitResultsAsGraphs(outFile, fitResults);
-	bins.writeFitResultsToAscii(graphDataFileNamePrefix, fitResults);
-	bins.writeFitResultsToRoot(outFile, fitResults);
+	bins.writeFitResultsAsGraphs();
+	bins.writeFitResultsToAscii(graphDataFileNamePrefix);
+	bins.writeFitResultsToRoot();
 
 	outFile->Write();
 	outFile->Close();
