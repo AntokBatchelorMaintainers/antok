@@ -179,19 +179,90 @@ class bin0r {
 		return _reverseHistMap[hist];
 	}
 
-	void writeFitResultsToRoot(std::vector<TFitResultPtr> fitResults) {
+	std::pair<double, double> getLimitsForFit(const unsigned int& binNumber, const TH1D* hist) {
+		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
+		TVector2 vertexXY = getBinCenter(hist);
+		double rpdPhi;
+		std::vector<TH1D*> histsInBin = getHistsInBin(getBinNumber(hist));
+		assert(histsInBin.size() == 3);
+		if(hist == histsInBin[0]) {
+			rpdPhi = -0.196;
+		} else if(hist == histsInBin[1]) {
+			rpdPhi = 0.002;
+		} else if(hist == histsInBin[2]) {
+			rpdPhi = 0.194;
+		} else {
+			std::cerr<<"Could not find histogram. Aborting..."<<std::endl;
+			throw;
+		}
+		return rpdHelperHelper->getLimits(rpdPhi, vertexXY);
+	}
+
+	void addFitResults(const unsigned int& binNumber, std::vector<TFitResultPtr> fitResults) {
+		if(binNumber != _fitResults.size()) {
+			std::cerr<<"Fit results have to be added sequentially. Aborting..."<<std::endl;
+			throw;
+		}
+		_fitResults.push_back(fitResults);
+	}
+
+	void writeFitResultsToRoot(double* median1 = 0,
+	                           double* median2 = 0,
+	                           double* median3 = 0,
+	                           double* median4 = 0,
+	                           double* median5 = 0) {
+		bool medians = (median1 != 0) and (median2 != 0) and
+		               (median3 != 0) and (median4 != 0) and
+		               (median5 != 0);
+		std::vector<TFitResultPtr> fitResults = serializeFitResult();
+		_dir->cd();
+		TH1D* sigma1Hist[3] = { new TH1D("sigma11Hist", "sigma11Hist", 1000, 0, 0.5),
+				                new TH1D("sigma12Hist", "sigma12Hist", 1000, 0, 0.5),
+				                new TH1D("sigma13Hist", "sigma13Hist", 1000, 0, 0.5) };
+		TH1D* sigma2Hist[3] = { new TH1D("sigma21Hist", "sigma21Hist", 1000, 0, 0.5),
+				                new TH1D("sigma22Hist", "sigma22Hist", 1000, 0, 0.5),
+				                new TH1D("sigma23Hist", "sigma23Hist", 1000, 0, 0.5) };
+		TH1D* sigma3Hist = new TH1D("sigma3Hist", "sigma3Hist", 1000, 0, 0.5);
+		TH1D* sigma4Hist = new TH1D("sigma4Hist", "sigma4Hist", 1000, 0, 0.5);
+		TH1D* relativeContributionHist = new TH1D("relativeContributionHist", "relativeContributionHist", 5000, 0, 1.);
+		double results1[getNBins()*getNHistsInBin()]; // sharp sigmas left
+		double results2[getNBins()*getNHistsInBin()]; // sharp sigmas right
+		double results3[getNBins()*getNHistsInBin()]; // broad sigmas left
+		double results4[getNBins()*getNHistsInBin()]; // broad sigmas right
+		double results5[getNBins()*getNHistsInBin()]; // relative contribution broad sigmas
 		unsigned int fitResultIndex = 0;
 		for(unsigned int i = 0; i < getNBins(); ++i) {
 			_dir->cd(_binNames[i].c_str());
 			for(unsigned int j = 0; j < RPD_SLAB_PHI_ANGLES.size(); ++j) {
 				std::stringstream sstr;
 				sstr<<"fitResult_"<<i<<"_phi"<<RPD_SLAB_PHI_ANGLES[j];
-				fitResults[fitResultIndex++]->Write(sstr.str().c_str());
+				fitResults[fitResultIndex]->Write(sstr.str().c_str());
+				sigma1Hist[j]->Fill(fitResults[fitResultIndex]->Parameter(4));
+				sigma2Hist[j]->Fill(fitResults[fitResultIndex]->Parameter(3));
+				sigma3Hist->Fill(fitResults[fitResultIndex]->Parameter(7));
+				sigma4Hist->Fill(fitResults[fitResultIndex]->Parameter(6));
+				relativeContributionHist->Fill(fitResults[fitResultIndex]->Parameter(5));
+				if(medians) {
+					results1[fitResultIndex] = fitResults[fitResultIndex]->Parameter(4);
+					results2[fitResultIndex] = fitResults[fitResultIndex]->Parameter(3);
+					results3[fitResultIndex] = fitResults[fitResultIndex]->Parameter(7);
+					results4[fitResultIndex] = fitResults[fitResultIndex]->Parameter(6);
+					results5[fitResultIndex] = fitResults[fitResultIndex]->Parameter(5);
+				}
+				++fitResultIndex;
 			}
+		}
+		if(medians) {
+			(*median1) = TMath::Median(getNBins()*getNHistsInBin(), results1);
+			(*median2) = TMath::Median(getNBins()*getNHistsInBin(), results2);
+			(*median3) = TMath::Median(getNBins()*getNHistsInBin(), results3);
+			(*median4) = TMath::Median(getNBins()*getNHistsInBin(), results4);
+			(*median5) = TMath::Median(getNBins()*getNHistsInBin(), results5);
 		}
 	}
 
-	void writeFitResultsAsGraphs(const std::vector<TFitResultPtr>& fitResults) {
+	void writeFitResultsAsGraphs() {
+		std::vector<TFitResultPtr> fitResults = serializeFitResult();
 		unsigned int fitResultIndex = 0;
 		unsigned int nEntries = getNBins();
 		double x[nEntries];
@@ -255,7 +326,8 @@ class bin0r {
 		graphs.push_back(new TGraph2D("right_slab_width", "right_slab_width", nEntries, x, y, z_rw));
 	}
 
-	void writeFitResultsToAscii(std::string fileNamePrefix, const std::vector<TFitResultPtr>& fitResults) {
+	void writeFitResultsToAscii(std::string fileNamePrefix) {
+		std::vector<TFitResultPtr> fitResults = serializeFitResult();
 		unsigned int fitResultIndex = 0;
 		std::string fileName_ll = fileNamePrefix + "left_lower";
 		std::string fileName_lu = fileNamePrefix + "left_upper";
@@ -353,6 +425,16 @@ class bin0r {
 
   private:
 
+	std::vector<TFitResultPtr> serializeFitResult() {
+		std::vector<TFitResultPtr> retval;
+		for(unsigned int i = 0; i < _fitResults.size(); ++i) {
+			for(unsigned int j = 0; j < _fitResults[i].size(); ++j) {
+				retval.push_back(_fitResults[i][j]);
+			}
+		}
+		return retval;
+	}
+
 	static const unsigned int NUMBER_OF_RINGS = 6;
 	static const double MAXIMUM_RADIUS = 1.60;
 
@@ -371,6 +453,8 @@ class bin0r {
 
 	TDirectory* _dir;
 
+	std::vector<std::vector<TFitResultPtr> > _fitResults;
+
 };
 
 class uberBin0r {
@@ -380,33 +464,26 @@ class uberBin0r {
 	uberBin0r(TDirectory* dir) : _dir(dir) {
 		double tBinWidth = (LIMITS_T_UPPER - LIMITS_T_LOWER) / NBINS_T;
 		double mBinWidth = (LIMITS_M_UPPER - LIMITS_M_LOWER) / NBINS_M;
-		double lBinWidth = (LIMITS_L_UPPER - LIMITS_L_LOWER) / NBINS_L;
 		for(unsigned int i = 0; i <= NBINS_T; ++i) {
 			_tLimits.push_back(LIMITS_T_LOWER + i*tBinWidth);
 		}
 		for(unsigned int i = 0; i <= NBINS_M; ++i) {
 			_mLimits.push_back(LIMITS_M_LOWER + i*mBinWidth);
 		}
-		for(unsigned int i = 0; i <= NBINS_L; ++i) {
-			_lLimits.push_back(LIMITS_L_LOWER + i*lBinWidth);
-		}
 		unsigned int binNumber = 0;
 		for(unsigned int i = 1; i <= NBINS_T; ++i) {
 			for(unsigned int j = 1; j <= NBINS_M; ++j) {
-				for(unsigned int k = 1; k <= NBINS_L; ++k) {
-					std::stringstream sstr;
-					sstr<<"Bin_"<<binNumber++;
-					sstr<<"_t-"<<_tLimits[i];
-					sstr<<"_m-"<<_mLimits[j];
-					sstr<<"_l-"<<_lLimits[k];
-					_binNames.push_back(sstr.str());
-				}
+				std::stringstream sstr;
+				sstr<<"Bin_"<<binNumber++;
+				sstr<<"_t-"<<_tLimits[i];
+				sstr<<"_m-"<<_mLimits[j];
+				_binNames.push_back(sstr.str());
 			}
 		}
 	};
 
 	unsigned int getNBins() const {
-		return NBINS_T * NBINS_M * NBINS_L;
+		return NBINS_T * NBINS_M;
 	}
 
 	unsigned int getNHistsInBin() const {
@@ -432,8 +509,7 @@ class uberBin0r {
 	}
 
 	unsigned int getBinNumber(double t,
-	                          double m,
-	                          double l)
+	                          double m)
 	{
 //		std::cout<<"original = ("<<t<<", "<<m<<", "<<l<<")"<<std::endl;
 		if(t < _tLimits[0]) {
@@ -446,35 +522,24 @@ class uberBin0r {
 		} else if (m > _mLimits[_mLimits.size()-1]) {
 			m = (_mLimits[_mLimits.size()-2] + _mLimits[_mLimits.size()-1]) / 2.;
 		}
-		if(l < _lLimits[0]) {
-			l = (_lLimits[0] + _lLimits[1]) / 2.;
-		} else if (l > _lLimits[_lLimits.size()-1]) {
-			l = (_lLimits[_lLimits.size()-2] + _lLimits[_lLimits.size()-1]) / 2.;
-		}
 //		std::cout<<"adjusted = ("<<t<<", "<<m<<", "<<l<<")"<<std::endl;
 //		std::stringstream sstr;
 		unsigned int binNumber = 0;
 		bool found = false;
 		for(unsigned int i = 0; i < _tLimits.size()-1; ++i) {
 			for(unsigned int j = 0; j < _tLimits.size()-1; ++j) {
-				for(unsigned int k = 0; k < _tLimits.size()-1; ++k) {
 /*					sstr<<"####### Bin "<<binNumber<<"#########"<<std::endl;
 					sstr<<_tLimits[i]<<" <? "<<t<<" <? "<<_tLimits[i+1]<<std::endl;
 					sstr<<_mLimits[j]<<" <? "<<m<<" <? "<<_mLimits[j+1]<<std::endl;
 					sstr<<_lLimits[k]<<" <? "<<l<<" <? "<<_lLimits[k+1]<<std::endl;
 					sstr<<"########################"<<std::endl;
-*/					if((_tLimits[i] <= t and t < _tLimits[i+1]) and
-					   (_mLimits[j] <= m and m < _mLimits[j+1]) and
-					   (_lLimits[k] <= l and l < _lLimits[k+1]))
-					{
-						found = true;
-						break;
-					}
-					++binNumber;
-				}
-				if(found) {
+*/				if((_tLimits[i] <= t and t < _tLimits[i+1]) and
+				   (_mLimits[j] <= m and m < _mLimits[j+1]))
+				{
+					found = true;
 					break;
 				}
+				++binNumber;
 			}
 			if(found) {
 				break;
@@ -497,61 +562,87 @@ class uberBin0r {
 	              const double& phi,
 	              const double& rpdPhi,
 	              const double& t,
-	              const double& m,
-	              const double& l) {
+	              const double& m) {
 //		std::cout<<"_bins.size()="<<_bins.size()<<std::endl;
 //		std::cout<<"binNumber = "<<getBinNumber(t, m, l)<<std::endl;
-		return _bins[getBinNumber(t, m, l)].getHist(r, phi, rpdPhi);
+		return _bins[getBinNumber(t, m)].getHist(r, phi, rpdPhi);
 	}
 
 	void addFitResults(const unsigned int& binNumber, std::vector<TFitResultPtr> fitResults) {
-		if(binNumber != _fitResults.size()) {
-			std::cerr<<"Fit results have to be added sequentially. Aborting..."<<std::endl;
-			throw;
+		assert(fitResults.size() == _bins[binNumber].getNBins() * _bins[binNumber].getNHistsInBin());
+		const unsigned int histsInBin = _bins[binNumber].getNHistsInBin();
+		std::vector<TFitResultPtr> fitResultsInner;
+		unsigned int innerBinNumber = 0;
+		for(unsigned int i = 0; i < fitResults.size(); ++i) {
+			fitResultsInner.push_back(fitResults[i]);
+			if(fitResultsInner.size() == histsInBin) {
+				_bins[binNumber].addFitResults(innerBinNumber, fitResultsInner);
+				fitResultsInner.clear();
+				++innerBinNumber;
+			}
 		}
-		_fitResults.push_back(fitResults);
+	}
+
+	TVector2 getBinCoordinates(const unsigned int& binNumber) {
+		unsigned int binIndex = 0;
+		for(unsigned int i = 0; i < _tLimits.size()-1; ++i) {
+			for(unsigned int j = 0; j < _mLimits.size()-1; ++j) {
+				if(binIndex == binNumber) {
+					double t = (_tLimits[i] + _tLimits[i+1]) / 2.;
+					double m = (_mLimits[j] + _mLimits[j+1]) / 2.;
+					return TVector2(t, m);
+				}
+				binIndex++;
+			}
+		}
+		throw;
 	}
 
 	void writeFitResultsToRoot() {
-		assert(_bins.size() == _fitResults.size());
+		unsigned int nEntries = getNBins();
+		double m[nEntries];
+		double t[nEntries];
+		double m1[nEntries];
+		double m2[nEntries];
+		double m3[nEntries];
+		double m4[nEntries];
+		double m5[nEntries];
 		for(unsigned int i = 0; i < _bins.size(); ++i) {
-			_bins[i].writeFitResultsToRoot(_fitResults[i]);
+			TVector2 binCoordinates = getBinCoordinates(i);
+			m[i] = binCoordinates.X();
+			t[i] = binCoordinates.Y();
+			_bins[i].writeFitResultsToRoot(&(m1[i]), &(m2[i]), &(m3[i]), &(m4[i]), &(m5[i]));
 		}
+		_dir->cd();
+		new TGraph2D("median_sharp_sigmas_left", "median_sharp_sigmas_left", nEntries, m, t, m1);
+		new TGraph2D("median_sharp_sigmas_right", "median_sharp_sigmas_right", nEntries, m, t, m2);
+		new TGraph2D("median_broad_sigmas_left", "median_broad_sigmas_left", nEntries, m, t, m3);
+		new TGraph2D("median_broad_sigmas_right", "median_broad_sigmas_right", nEntries, m, t, m4);
+		new TGraph2D("relative_contribution_broad_sigmas", "relative_contribution_broad_sigmas", nEntries, m, t, m5);
 	}
 
 	void writeFitResultsAsGraphs() {
-		assert(_bins.size() == _fitResults.size());
 		for(unsigned int i = 0; i < _bins.size(); ++i) {
-			_bins[i].writeFitResultsAsGraphs(_fitResults[i]);
+			_bins[i].writeFitResultsAsGraphs();
 		}
 	}
 
 	void writeFitResultsToAscii(std::string fileNamePrefix) {
-		assert(_bins.size() == _fitResults.size());
 		for(unsigned int i = 0; i < _bins.size(); ++i) {
 			std::stringstream sstr;
 			sstr<<fileNamePrefix<<_binNames[i]<<"_";
-			_bins[i].writeFitResultsToAscii(sstr.str(), _fitResults[i]);
+			_bins[i].writeFitResultsToAscii(sstr.str());
 		}
 	}
 
 	std::pair<double, double> getLimitsForFit(const unsigned int& binNumber, const TH1D* hist) {
+		return _bins[binNumber].getLimitsForFit(binNumber, hist);
+	}
+
+	std::pair<double, double> getSigmasForBin(const unsigned int& binNumber) {
+		TVector2 tm = getBinCoordinates(binNumber);
 		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
-		TVector2 vertexXY = getBinCenter(binNumber, hist);
-		double rpdPhi;
-		std::vector<TH1D*> histsInBin = _bins[binNumber].getHistsInBin(_bins[binNumber].getBinNumber(hist));
-		assert(histsInBin.size() == 3);
-		if(hist == histsInBin[0]) {
-			rpdPhi = -0.196;
-		} else if(hist == histsInBin[1]) {
-			rpdPhi = 0.002;
-		} else if(hist == histsInBin[2]) {
-			rpdPhi = 0.194;
-		} else {
-			std::cerr<<"Could not find histogram. Aborting..."<<std::endl;
-			throw;
-		}
-		return rpdHelperHelper->getLimits(rpdPhi, vertexXY);
+		return rpdHelperHelper->getSharpSigmas(tm.Y(), tm.X());
 	}
 
 	static double getL(const TVector3& vertex, const TVector3& proton) {
@@ -588,26 +679,20 @@ class uberBin0r {
 
   private:
 
-	static const unsigned int NBINS_T = 3;
-	static const unsigned int NBINS_M = 3;
-	static const unsigned int NBINS_L = 3;
+	static const unsigned int NBINS_T = 5;
+	static const unsigned int NBINS_M = 5;
 
 	static const double LIMITS_T_LOWER = 0.3;
 	static const double LIMITS_T_UPPER = 1.;
 	static const double LIMITS_M_LOWER = 1.;
 	static const double LIMITS_M_UPPER = 4.2;
-	static const double LIMITS_L_LOWER = 0.;
-	static const double LIMITS_L_UPPER = 3.5;
 
 	std::vector<bin0r> _bins;
 	std::vector<std::string> _binNames;
 	std::vector<double> _tLimits;
 	std::vector<double> _mLimits;
-	std::vector<double> _lLimits;
 
 	TDirectory* _dir;
-
-	std::vector<std::vector<TFitResultPtr> > _fitResults;
 
 };
 
@@ -684,12 +769,13 @@ void fitErrorFunctionForRPD(std::string inFileName,
 	}
 
 	uberBin0r bins(outFile);
+//	bin0r bins(outFile);
 
 	bins.prepareOutFile();
 
 	outFile->cd();
 	TH1D* predictedProtonMag = new TH1D("predictedProtonMag", "predictedProtonMag", 1000, 0, 50);
-	TH1D* lengthInTarget = new TH1D("lengthInTarget", "lengthInTarget", 1000, 0, 50);
+//	TH1D* lengthInTarget = new TH1D("lengthInTarget", "lengthInTarget", 1000, 0, 50);
 	TH1D* xMass = new TH1D("xMass", "xMass", 1000, 0, 7);
 
 	long nBins = inTree->GetEntries();
@@ -705,7 +791,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			         <<(i/(double)nBins*100)<<"%)"<<std::endl;
 		}
 
-//		if(i > (double)nBins/4.) break;
+//		if(i > (double)nBins/40.) break;
 
 		inTree->GetEntry(i);
 
@@ -730,7 +816,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		TVector3 proton = p3Beam - xVector.Vect();
 		double t = proton.Mag();
 		predictedProtonMag->Fill(proton.Mag());
-
+/*
 		TVector3 vertex(vertexX, vertexY, vertexZ);
 		double l = 0.;
 		try {
@@ -745,7 +831,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			continue;
 		}
 		lengthInTarget->Fill(l);
-
+*/
 		TLorentzVector rpdProton(rpdProtonX, rpdProtonY, rpdProtonZ, rpdProtonE);
 
 		double deltaPhi, res;
@@ -784,7 +870,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 //		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi);
 		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi,
-		                          t, xVector.M(), l);
+		                          t, xVector.M());
 		if(not hist) {
 			continue;
 		}
@@ -817,34 +903,44 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			}
 
 			TH1D* fitHist = histsInBin[j];
-			TF1* fitFunction = new TF1("fitFunction", "(-[0])*(TMath::Erf((x-[1])/[3])-TMath::Erf((x+[2])/[4])+[5]*(TMath::Erf((x-[2])/[6])-TMath::Erf((x+[4])/[7])))", -0.3, 0.3);
+			TF1* fitFunction = new TF1("fitFunction", "(-[0])*(TMath::Erf((x-[1])/[3])-TMath::Erf((x+[2])/[4])+[5]*(TMath::Erf((x-[1])/[6])-TMath::Erf((x+[2])/[7])))", -0.4, 0.4);
 			fitFunction->SetParameter(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 2.);        // overall strength
 			TFitter::SetMaxIterations(20000);
 			fitFunction->SetParLimits(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 20., 10000);
 
 			std::pair<double, double> limits = bins.getLimitsForFit(i, fitHist);
-
+			std::pair<double, double> sigmas = bins.getSigmasForBin(i);
+/*
+			std::cout<<"sigmas.first="<<sigmas.first<<std::endl;
+			std::cout<<"sigmas.second="<<sigmas.second<<std::endl;
+*/
 			fitFunction->FixParameter(1, limits.second); // position both erf pairs right
 			fitFunction->FixParameter(2, -limits.first); // position both erf pairs left
+
+			fitFunction->FixParameter(3, sigmas.second);       // sigma 1st erf pair right
+			fitFunction->FixParameter(4, sigmas.first);       // sigma 1st erf pair left
+
+/*			fitFunction->SetParameter(1, limits.second);
+			fitFunction->SetParameter(2, -limits.first);
 
 			fitFunction->SetParameter(3, 0.025);       // sigma 1st erf pair right
 			fitFunction->SetParLimits(3, 0, 5);
 			fitFunction->SetParameter(4, 0.025);       // sigma 1st erf pair left
 			fitFunction->SetParLimits(4, 0, 5);
+*/
 			fitFunction->SetParameter(5, 0.02);        // relative strength 2nd erf pair
 			fitFunction->SetParLimits(5, 0., 0.5);
-			fitFunction->SetParameter(6, 0.1);         // sigma 2nd erf pair left
+			fitFunction->SetParameter(6, 0.1);         // sigma 2nd erf pair right
 			fitFunction->SetParLimits(6, 0, 10);
-			fitFunction->SetParameter(7, 0.1);        // sigma 2nd erf pair left
+			fitFunction->SetParameter(7, 0.1);         // sigma 2nd erf pair left
 			fitFunction->SetParLimits(7, 0, 10);
 
 //			TFitResultPtr result = fitHist->Fit(fitFunction, "RSEMIL");
-			TFitResultPtr result = fitHist->Fit(fitFunction, "RSL");
+			TFitResultPtr result = fitHist->Fit(fitFunction, "RSLQ");
 			fitResults.push_back(result);
 			int status = result->Status();
-			std::cout<<status<<std::endl;
 			if(status != 0) {
-				std::cout<<"FIT FAILED FIT FAILED FIT FAILED FIT FAILED FIT FAILED FIT FAILED FIT FAILED FIT FAILED"<<std::endl;
+				std::cout<<"Fit failed..."<<std::endl;
 				failedFitBins.push_back(std::pair<unsigned int, unsigned int>(i, j));
 			}
 			currentFit++;
@@ -861,7 +957,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 	}
 
 	bins.writeFitResultsAsGraphs();
-	bins.writeFitResultsToAscii(graphDataFileNamePrefix);
+//	bins.writeFitResultsToAscii(graphDataFileNamePrefix);
 	bins.writeFitResultsToRoot();
 
 	outFile->Write();
