@@ -31,6 +31,9 @@ namespace antok {
 		std::pair<double, double> getLimits(const double& rpdPhi,
 		                                    const TVector2& vertexXY);
 
+		std::pair<double, double> getSharpSigmas(const double& m,
+		                                         const double& q);
+
 	  private:
 
 		enum {
@@ -45,6 +48,10 @@ namespace antok {
 		                             const double& y,
 		                             const FitParameters& fitParameters);
 
+		double evaluateSharpSigmaFunction(const double& m,
+		                                  const double& q,
+		                                  const FitParameters& fitParameters);
+
 		std::pair<double, TVector2> rotateRpdAndVertex(const double& rpdPhi,
 		                                               const TVector2 vertexXY);
 
@@ -55,6 +62,8 @@ namespace antok {
 		std::pair<antok::FitParameters, antok::FitParameters> _middleSlabLimitsParameters;
 		std::pair<antok::FitParameters, antok::FitParameters> _leftSlabLimitsParameters;
 		std::pair<antok::FitParameters, antok::FitParameters> _rightSlabLimitsParameters;
+
+		std::pair<antok::FitParameters, antok::FitParameters> _sharpSigmaParameters;
 
 	};
 

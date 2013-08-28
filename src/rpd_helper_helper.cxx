@@ -65,6 +65,20 @@ antok::RpdHelperHelper::RpdHelperHelper() {
 	_rightSlabLimitsParameters = std::pair<antok::FitParameters,
 	                                       antok::FitParameters>(rightSideLowerParams, rightSideUpperParams);
 
+	std::vector<double> sigmasLeft;
+	sigmasLeft.push_back(-0.00549694);
+	sigmasLeft.push_back(0.000954602);
+	sigmasLeft.push_back(0.0170168);
+	antok::FitParameters sigmasLeftParams = antok::FitParameters(sigmasLeft);
+
+	std::vector<double> sigmasRight;
+	sigmasRight.push_back(-0.0065596);
+	sigmasRight.push_back(0.000966224);
+	sigmasRight.push_back(0.0174041);
+	antok::FitParameters sigmasRightParams = antok::FitParameters(sigmasRight);
+
+	_sharpSigmaParameters = std::pair<antok::FitParameters,
+	                                  antok::FitParameters>(sigmasLeftParams, sigmasRightParams);
 
 }
 
@@ -103,6 +117,15 @@ std::pair<double, double> antok::RpdHelperHelper::getLimits(const double& rpdPhi
 
 }
 
+std::pair<double, double> antok::RpdHelperHelper::getSharpSigmas(const double& m,
+                                                                 const double& q)
+{
+	std::pair<double, double> retval = std::pair<double, double>(0., 0.);
+	retval.first = evaluateSharpSigmaFunction(m, q, _sharpSigmaParameters.first);
+	retval.second = evaluateSharpSigmaFunction(m, q, _sharpSigmaParameters.second);
+	return retval;
+}
+
 double antok::RpdHelperHelper::evaluatePlaneFunction(const double& x,
                                                      const double& y,
                                                      const antok::FitParameters& fitParameters)
@@ -110,6 +133,15 @@ double antok::RpdHelperHelper::evaluatePlaneFunction(const double& x,
 	return fitParameters.getParameter(0) +
 	       fitParameters.getParameter(1) * x +
 	       fitParameters.getParameter(2) * y;
+}
+
+double antok::RpdHelperHelper::evaluateSharpSigmaFunction(const double& m,
+                                                          const double& q,
+                                                          const antok::FitParameters& fitParameters)
+{
+	return fitParameters.getParameter(0) +
+	       fitParameters.getParameter(1) * m*m +
+	       fitParameters.getParameter(2) / q;
 }
 
 std::pair<double, TVector2> antok::RpdHelperHelper::rotateRpdAndVertex(const double& rpdPhi,
