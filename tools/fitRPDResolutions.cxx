@@ -639,10 +639,22 @@ class uberBin0r {
 		return _bins[binNumber].getLimitsForFit(binNumber, hist);
 	}
 
-	std::pair<double, double> getSigmasForBin(const unsigned int& binNumber) {
+	std::pair<double, double> getSharpSigmasForBin(const unsigned int& binNumber) {
 		TVector2 tm = getBinCoordinates(binNumber);
 		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
 		return rpdHelperHelper->getSharpSigmas(tm.Y(), tm.X());
+	}
+
+	std::pair<double, double> getBroadSigmasForBin(const unsigned int& binNumber) {
+		TVector2 tm = getBinCoordinates(binNumber);
+		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
+		return rpdHelperHelper->getBroadSigmas(tm.Y(), tm.X());
+	}
+
+	double getBroadSigmaContributionForBin(const unsigned int& binNumber) {
+		TVector2 tm = getBinCoordinates(binNumber);
+		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
+		return rpdHelperHelper->getBroadSigmasScalingFactor(tm.Y(), tm.X());
 	}
 
 	static double getL(const TVector3& vertex, const TVector3& proton) {
@@ -909,7 +921,9 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			fitFunction->SetParLimits(0, fitHist->GetBinContent(fitHist->GetMaximumBin()) / 20., 10000);
 
 			std::pair<double, double> limits = bins.getLimitsForFit(i, fitHist);
-			std::pair<double, double> sigmas = bins.getSigmasForBin(i);
+			std::pair<double, double> sharpSigmas = bins.getSharpSigmasForBin(i);
+			std::pair<double, double> broadSigmas = bins.getBroadSigmasForBin(i);
+			double broadSigmaScalingFactor = bins.getBroadSigmaContributionForBin(i);
 /*
 			std::cout<<"sigmas.first="<<sigmas.first<<std::endl;
 			std::cout<<"sigmas.second="<<sigmas.second<<std::endl;
@@ -917,8 +931,13 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			fitFunction->FixParameter(1, limits.second); // position both erf pairs right
 			fitFunction->FixParameter(2, -limits.first); // position both erf pairs left
 
-			fitFunction->FixParameter(3, sigmas.second);       // sigma 1st erf pair right
-			fitFunction->FixParameter(4, sigmas.first);       // sigma 1st erf pair left
+			fitFunction->FixParameter(3, sharpSigmas.second);       // sigma 1st erf pair right
+			fitFunction->FixParameter(4, sharpSigmas.first);       // sigma 1st erf pair left
+
+			fitFunction->FixParameter(5, broadSigmaScalingFactor);        // relative strength 2nd erf pair
+
+			fitFunction->FixParameter(6, broadSigmas.second);         // sigma 2nd erf pair right
+			fitFunction->FixParameter(7, broadSigmas.first);         // sigma 2nd erf pair left
 
 /*			fitFunction->SetParameter(1, limits.second);
 			fitFunction->SetParameter(2, -limits.first);
@@ -927,14 +946,14 @@ void fitErrorFunctionForRPD(std::string inFileName,
 			fitFunction->SetParLimits(3, 0, 5);
 			fitFunction->SetParameter(4, 0.025);       // sigma 1st erf pair left
 			fitFunction->SetParLimits(4, 0, 5);
-*/
+
 			fitFunction->SetParameter(5, 0.02);        // relative strength 2nd erf pair
 			fitFunction->SetParLimits(5, 0., 0.5);
 			fitFunction->SetParameter(6, 0.1);         // sigma 2nd erf pair right
 			fitFunction->SetParLimits(6, 0, 10);
 			fitFunction->SetParameter(7, 0.1);         // sigma 2nd erf pair left
 			fitFunction->SetParLimits(7, 0, 10);
-
+*/
 //			TFitResultPtr result = fitHist->Fit(fitFunction, "RSEMIL");
 			TFitResultPtr result = fitHist->Fit(fitFunction, "RSLQ");
 			fitResults.push_back(result);
