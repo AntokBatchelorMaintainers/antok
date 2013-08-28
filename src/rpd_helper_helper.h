@@ -3,7 +3,9 @@
 
 #include<vector>
 
-class TVector2;
+#include<TVector2.h>
+
+class TF1;
 
 namespace antok {
 
@@ -28,11 +30,29 @@ namespace antok {
 
 		static RpdHelperHelper* getInstance();
 
+		double getLikelihood(const double& deltaPhi,
+		                     const double& rpdProtonPhi,
+		                     const double& vertexX,
+		                     const double& vertexY,
+		                     const double& xMass,
+		                     const double& predictedProtonMom) const;
+
+		double getScalingFactor(const double& rpdProtonPhi,
+		                        const double& vertexX,
+		                        const double& vertexY,
+		                        const double& xMass,
+		                        const double& predictedProtonMom) const;
+
 		std::pair<double, double> getLimits(const double& rpdPhi,
-		                                    const TVector2& vertexXY);
+		                                    const TVector2& vertexXY) const;
 
 		std::pair<double, double> getSharpSigmas(const double& m,
-		                                         const double& q);
+		                                         const double& q) const;
+		std::pair<double, double> getBroadSigmas(const double& m,
+		                                         const double& q) const;
+
+		double getBroadSigmasScalingFactor(const double& m,
+		                                   const double& q) const;
 
 	  private:
 
@@ -44,16 +64,27 @@ namespace antok {
 
 		RpdHelperHelper();
 
+		std::vector<double> getAllLimits() const;
+
+		double getScalingFactor(const std::vector<double>& allLimits,
+		                        const double& broadSigmasScalingFactor) const;
+
 		double evaluatePlaneFunction(const double& x,
 		                             const double& y,
-		                             const FitParameters& fitParameters);
+		                             const FitParameters& fitParameters) const;
 
 		double evaluateSharpSigmaFunction(const double& m,
 		                                  const double& q,
-		                                  const FitParameters& fitParameters);
+		                                  const FitParameters& fitParameters) const;
+
+		double evaluateBroadSigmaFunction(const double& m,
+		                                  const double& q,
+		                                  const FitParameters& fitParameters) const;
 
 		std::pair<double, TVector2> rotateRpdAndVertex(const double& rpdPhi,
-		                                               const TVector2 vertexXY);
+		                                               const TVector2 vertexXY) const;
+
+		unsigned int getHitSlab(const double& correctedProtonPhi) const;
 
 		static RpdHelperHelper* _instance;
 
@@ -64,6 +95,13 @@ namespace antok {
 		std::pair<antok::FitParameters, antok::FitParameters> _rightSlabLimitsParameters;
 
 		std::pair<antok::FitParameters, antok::FitParameters> _sharpSigmaParameters;
+		antok::FitParameters _broadSigmaScalingFactor;
+		std::pair<antok::FitParameters, antok::FitParameters> _broadSigmaParameters;
+
+		TF1* _likelihoodFunction;
+
+		mutable double __correctedProtonPhi;
+		mutable TVector2 __correctedVertexXY;
 
 	};
 
