@@ -66,15 +66,15 @@ antok::RpdHelperHelper::RpdHelperHelper() {
 	                                       antok::FitParameters>(rightSideLowerParams, rightSideUpperParams);
 
 	std::vector<double> sigmasLeft;
-	sigmasLeft.push_back(-0.00549694);
-	sigmasLeft.push_back(0.000954602);
-	sigmasLeft.push_back(0.0170168);
+	sigmasLeft.push_back(-0.0051137);
+	sigmasLeft.push_back(0.00091844);
+	sigmasLeft.push_back(0.0169681);
 	antok::FitParameters sigmasLeftParams = antok::FitParameters(sigmasLeft);
 
 	std::vector<double> sigmasRight;
-	sigmasRight.push_back(-0.0065596);
-	sigmasRight.push_back(0.000966224);
-	sigmasRight.push_back(0.0174041);
+	sigmasRight.push_back(-0.00570525);
+	sigmasRight.push_back(0.000937381);
+	sigmasRight.push_back(0.0171201);
 	antok::FitParameters sigmasRightParams = antok::FitParameters(sigmasRight);
 
 	_sharpSigmaParameters = std::pair<antok::FitParameters,
