@@ -211,11 +211,13 @@ namespace antok {
 			          double* rpdDeltaPhiResAddr,
 			          int method,
 			          double* protonPhiAddr = 0,
-			          double* xPhiAddr = 0
+			          double* xPhiAddr = 0,
+			          TVector3* vertex = 0
 			)
 				: _beamLorentzVecAddr(beamLorentzVecAddr),
 				  _rpdProtonLorentzVecAddr(rpdProtonLorentzVecAddr),
 				  _xLorentzVecAddr(xLorentzVecAddr),
+				  _vertex(vertex),
 				  _rpdDeltaPhiAddr(rpdDeltaPhiAddr),
 				  _rpdDeltaPhiResAddr(rpdDeltaPhiResAddr),
 				  _protonPhiAddr(protonPhiAddr),
@@ -238,10 +240,14 @@ namespace antok {
 						}
 						return true;
 					case 2:
+						if(not _vertex) {
+							std::cerr<<"Found null pointer for vertex in GetRpdPhi while using prediction method."<<std::endl;
+							return false;
+						}
 						if(_protonPhiAddr == 0 and _xPhiAddr == 0) {
-							antok::getRPDDeltaPhiResPrediction((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+							antok::getRPDDeltaPhiResPrediction((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_vertex), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
 						} else {
-							antok::getRPDDeltaPhiResPrediction((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr), (*_protonPhiAddr), (*_xPhiAddr));
+							antok::getRPDDeltaPhiResPrediction((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_vertex), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr), (*_protonPhiAddr), (*_xPhiAddr));
 						}
 						return true;
 				}
@@ -253,6 +259,7 @@ namespace antok {
 			TLorentzVector* _beamLorentzVecAddr;
 			TLorentzVector* _rpdProtonLorentzVecAddr;
 			TLorentzVector* _xLorentzVecAddr;
+			TVector3* _vertex;
 			double* _rpdDeltaPhiAddr;
 			double* _rpdDeltaPhiResAddr;
 			double* _protonPhiAddr;

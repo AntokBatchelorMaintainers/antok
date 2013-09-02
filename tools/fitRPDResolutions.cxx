@@ -725,7 +725,8 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 	TFile* inFile = TFile::Open(inFileName.c_str(), "READ");
 
-	TTree* inTree = (TTree*)inFile->Get("RPDFitsTree/USR55");
+//	TTree* inTree = (TTree*)inFile->Get("RPDFitsTree/USR55");
+	TTree* inTree = (TTree*)inFile->Get("kbicker_5pic/USR55");
 
 	double gradx, grady;
 	inTree->SetBranchAddress("gradx", &gradx);
@@ -780,8 +781,8 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		return;
 	}
 
-	uberBin0r bins(outFile);
-//	bin0r bins(outFile);
+//	uberBin0r bins(outFile);
+	bin0r bins(outFile);
 
 	bins.prepareOutFile();
 
@@ -826,7 +827,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		p3Beam = pBeam.Vect();
 
 		TVector3 proton = p3Beam - xVector.Vect();
-		double t = proton.Mag();
+//		double t = proton.Mag();
 		predictedProtonMag->Fill(proton.Mag());
 /*
 		TVector3 vertex(vertexX, vertexY, vertexZ);
@@ -848,7 +849,8 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 		double deltaPhi, res;
 		double protonPhi, xPhi;
-		antok::getRPDDeltaPhiResPrediction(pBeam, rpdProton, xVector, deltaPhi, res, protonPhi, xPhi);
+		TVector3 vertex(vertexX, vertexY, vertexZ);
+		antok::getRPDDeltaPhiResPrediction(pBeam, rpdProton, xVector, vertex, deltaPhi, res, protonPhi, xPhi);
 
 		TVector3 planarVertex(vertexX, vertexY, 0.);
 
@@ -880,9 +882,9 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 		}
 
-//		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi);
-		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi,
-		                          t, xVector.M());
+		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi);
+//		TH1D* hist = bins.getHist(planarVertex.Mag(), correctedVertexPhi, correctedProtonPhi,
+//		                          t, xVector.M());
 		if(not hist) {
 			continue;
 		}
@@ -890,6 +892,8 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 	}
 
+	return;
+#if(0)
 	std::cout<<std::endl;
 	std::cout<<"#---------------------#"<<std::endl;
 	std::cout<<"| Starting fitting... |"<<std::endl;
@@ -978,7 +982,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 	bins.writeFitResultsAsGraphs();
 //	bins.writeFitResultsToAscii(graphDataFileNamePrefix);
 	bins.writeFitResultsToRoot();
-
+#endif
 	outFile->Write();
 	outFile->Close();
 

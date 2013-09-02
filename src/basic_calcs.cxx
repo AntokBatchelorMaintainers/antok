@@ -7,6 +7,7 @@
 #include<TVector3.h>
 
 #include<constants.h>
+#include<rpd_helper_helper.h>
 
 TLorentzVector antok::getBeamEnergy(TVector3 p3_beam, const TLorentzVector& pX) {
 
@@ -111,19 +112,10 @@ void antok::getRPDDeltaPhiResRotation(const TLorentzVector& pBeam,
 void antok::getRPDDeltaPhiResPrediction(const TLorentzVector& pBeam,
                                         const TLorentzVector& pProton,
                                         const TLorentzVector& pX,
-                                        double& delta_phi, double& res,
+                                        const TVector3& vertex,
+                                        double& delta_phi, double& likelihood,
                                         double& phiProton, double& phiX)
 {
-
-	double rpd_Phi = pProton.Phi();
-	rpd_Phi /= TMath::TwoPi();
-
-	if(rpd_Phi < 0.) rpd_Phi += 1.;
-	int hit_slat = (int)((rpd_Phi*24.) + 0.5);
-	if(hit_slat >= 24) hit_slat -= 24;
-	if(hit_slat % 2) res = 3.75;
-	else res = 7.5;
-	res = (res/180.)*TMath::Pi();
 
 	const TVector3& beamVector = pBeam.Vect();
 	const TVector3& XVector = pX.Vect();
@@ -142,17 +134,25 @@ void antok::getRPDDeltaPhiResPrediction(const TLorentzVector& pBeam,
 		delta_phi -= TMath::TwoPi();
 	}
 
-	res = std::sqrt(res*res + 0.067260*0.067260);
+	double vertexX = vertex.X();
+	double vertexY = vertex.Y();
+	likelihood = RpdHelperHelper::getInstance()->getLikelihood(delta_phi,
+	                                                           phiProton,
+	                                                           vertexX,
+	                                                           vertexY,
+	                                                           pX.M(),
+	                                                           proton.Mag());
 
 };
 
 void antok::getRPDDeltaPhiResPrediction(const TLorentzVector& pBeam,
                                       const TLorentzVector& pProton,
                                       const TLorentzVector& pX,
-                                      double& delta_phi, double& res)
+                                      const TVector3& vertex,
+                                      double& delta_phi, double& likelihood)
 {
 	double phiProton, phiX;
-	getRPDDeltaPhiResPrediction(pBeam, pProton, pX, delta_phi, res, phiProton, phiX);
+	getRPDDeltaPhiResPrediction(pBeam, pProton, pX, vertex, delta_phi, likelihood, phiProton, phiX);
 }
 
 void antok::getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,

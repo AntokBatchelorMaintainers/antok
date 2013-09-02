@@ -27,13 +27,15 @@ namespace antok {
 	void getRPDDeltaPhiResPrediction(const TLorentzVector& pBeam,
 	                                 const TLorentzVector& pProton,
 	                                 const TLorentzVector& pX,
-	                                 double& delta_phi, double& res,
+	                                 const TVector3& vertex,
+	                                 double& delta_phi, double& likelihood,
 	                                 double& phiProton, double& phiX);
 
 	void getRPDDeltaPhiResPrediction(const TLorentzVector& pBeam,
 	                                 const TLorentzVector& pProton,
 	                                 const TLorentzVector& pX,
-	                                 double& delta_phi, double& res);
+	                                 const TVector3& vertex,
+	                                 double& delta_phi, double& likelihood);
 
 	void getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
 	                                  double& centerOfMassEnergy,

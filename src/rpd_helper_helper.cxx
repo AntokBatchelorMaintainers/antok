@@ -4,6 +4,9 @@
 
 #include<constants.h>
 
+#include<TApplication.h>
+#include<cmath>
+
 antok::RpdHelperHelper* antok::RpdHelperHelper::_instance = 0;
 
 antok::RpdHelperHelper* antok::RpdHelperHelper::getInstance() {
@@ -22,6 +25,12 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
                                              const double& xMass,
                                              const double& predictedProtonMom) const
 {
+	bool inBetweenSlabs = (std::fabs(std::fabs(rpdProtonPhi)-2.35619449019) < 0.00001) or
+	                      (std::fabs(std::fabs(rpdProtonPhi)-0.785652) < 0.00001);
+//	                      (std::fabs(std::fabs(rpdProtonPhi)-0.785398163397) < 0.00001);
+	if(inBetweenSlabs) {
+		return 0.;
+	}
 	TVector2 vertexXY(vertexX, vertexY);
 	std::pair<double, TVector2> transformedVariabes = rotateRpdAndVertex(rpdProtonPhi, vertexXY);
 	__correctedProtonPhi = transformedVariabes.first;
@@ -29,6 +38,11 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 
 	std::vector<double> limits = getAllLimits();
 	unsigned int slabType = getHitSlab(__correctedProtonPhi);
+
+	if(slabType > 2) {
+		return 0.;
+	}
+
 	double limitFirst, limitSecond;
 	switch(slabType) {
 		case LEFTSLAB:
@@ -44,8 +58,20 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 			limitSecond = limits[5];
 			break;
 	}
+	if((limitSecond - limitFirst) < 0.) {
+		return 0.;
+	}
 	std::pair<double, double> sharpSigmas = getSharpSigmas(xMass, predictedProtonMom);
+	if(sharpSigmas.first < 1e-9) {
+		sharpSigmas.first = 1e-9;
+	}
+	if(sharpSigmas.second < 1e-9) {
+		sharpSigmas.second = 1e-9;
+	}
 	double broadSigmaScalingFactor = getBroadSigmasScalingFactor(xMass, predictedProtonMom);
+	if(broadSigmaScalingFactor < 0.) {
+		broadSigmaScalingFactor = 0.00000001;
+	}
 	std::pair<double, double> broadSigmas = getBroadSigmas(xMass, predictedProtonMom);
 
 	_likelihoodFunction->SetParameter(0, limitSecond); // limit right
@@ -55,7 +81,50 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 	_likelihoodFunction->SetParameter(4, broadSigmaScalingFactor); // relative contribution broad sigmas
 	_likelihoodFunction->SetParameter(5, broadSigmas.second); // broad sigma right
 	_likelihoodFunction->SetParameter(6, broadSigmas.first); // broad sigma left
-	return getScalingFactor(limits, broadSigmaScalingFactor) * _likelihoodFunction->Eval(deltaPhi);
+	double likelihood = getScalingFactor(limits, broadSigmaScalingFactor) * _likelihoodFunction->Eval(deltaPhi);
+/*
+	if(likelihood < 0.) {
+		std::cerr<<"Calculated negative likelihood. Aborting..."<<std::endl;
+		throw;
+	}
+*/
+	if(likelihood < 0. or likelihood > 1.) {
+		std::cout<<"-------------------------------------------------------------"<<std::endl;
+		std::cout<<"rpdProtonPhi-135 = "<<std::fabs(std::fabs(rpdProtonPhi)-2.35619449019)<<std::endl;
+		std::cout<<"rpdProtonPhi-45 = "<<std::fabs(std::fabs(rpdProtonPhi)-0.785398163397)<<std::endl;
+		std::cout<<"rpdProtonPhi     = "<<rpdProtonPhi<<std::endl;
+		std::cout<<"corRpdProtonPhi  = "<<__correctedProtonPhi<<std::endl;
+		std::cout<<"slabType         = "<<slabType<<std::endl;
+		std::cout<<"deltaPhi         = "<<deltaPhi<<std::endl;
+		std::cout<<std::endl;
+		std::cout<<"allLimits        = ["<<limits[0];
+		for(unsigned int i = 1; i <  limits.size(); ++i) std::cout<<", "<<limits[i];
+		std::cout<<"]"<<std::endl;
+		std::cout<<std::endl;
+		std::cout<<"vertex x         = "<<vertexX<<std::endl;
+		std::cout<<"vertex y         = "<<vertexY<<std::endl;
+		std::cout<<"m                = "<<xMass<<std::endl;
+		std::cout<<"q                = "<<predictedProtonMom<<std::endl;
+		std::cout<<std::endl;
+		std::cout<<"limit left       = "<<limitFirst<<std::endl;
+		std::cout<<"limit right      = "<<limitSecond<<std::endl;
+		std::cout<<"ssigma left      = "<<sharpSigmas.first<<std::endl;
+		std::cout<<"ssigma right     = "<<sharpSigmas.second<<std::endl;
+		std::cout<<"bsigma scaling   = "<<broadSigmaScalingFactor<<std::endl;
+		std::cout<<"bsigma left      = "<<broadSigmas.first<<std::endl;
+		std::cout<<"bsigma right     = "<<broadSigmas.second<<std::endl;
+		std::cout<<std::endl;
+		std::cout<<"unscaled LH      = "<<_likelihoodFunction->Eval(deltaPhi)<<std::endl;
+		std::cout<<"scaling factor   = "<<getScalingFactor(limits, broadSigmaScalingFactor)<<std::endl;
+		std::cout<<"likelihood       = "<<likelihood<<std::endl;
+		std::cout<<"-------------------------------------------------------------"<<std::endl;
+//		_likelihoodFunction->Draw();
+//		gApplication->Run();
+	}
+	if(likelihood < 0.) {
+		likelihood = 0.;
+	}
+	return likelihood;
 }
 
 double antok::RpdHelperHelper::getScalingFactor(const double& rpdProtonPhi,
@@ -78,16 +147,19 @@ double antok::RpdHelperHelper::getScalingFactor(const double& rpdProtonPhi,
 double antok::RpdHelperHelper::getScalingFactor(const std::vector<double>& allLimits,
                                                 const double& broadSigmasScalingFactor) const
 {
-	double sum = 0;
+/*	double sum = 0.;
 	sum += (allLimits[1] - allLimits[0]);
 	sum += (allLimits[3] - allLimits[2]);
 	sum += (allLimits[5] - allLimits[4]);
-	sum *= 2 * (1 + broadSigmasScalingFactor);
+	sum *= 4 * (1 + broadSigmasScalingFactor);
+	*/
+	double sum = 2 * (1 + broadSigmasScalingFactor);
+	assert(sum > 0.);
 	return (1. / sum);
 }
 
 antok::RpdHelperHelper::RpdHelperHelper()
-	: _likelihoodFunction(new TF1("antok_RpdHelperHelper_likelihoodFunction", "-1*(TMath::Erf((x-[0])/[2])-TMath::Erf((x+[1])/[3])+[4]*(TMath::Erf((x-[0])/[5])-TMath::Erf((x+[1])/[6])))")),
+	: _likelihoodFunction(new TF1("antok_RpdHelperHelper_likelihoodFunction", "-1*(TMath::Erf((x-[0])/[2])-TMath::Erf((x+[1])/[3])+[4]*(TMath::Erf((x-[0])/[5])-TMath::Erf((x+[1])/[6])))", -1, 1)),
 	  __correctedProtonPhi(),
 	  __correctedVertexXY()
 {
@@ -228,8 +300,10 @@ std::pair<double, double> antok::RpdHelperHelper::getBroadSigmas(const double& m
                                                                  const double& q) const
 {
 	std::pair<double, double> retval = std::pair<double, double>(0., 0.);
-	retval.first = evaluateBroadSigmaFunction(m, q, _broadSigmaParameters.first);
-	retval.second = evaluateBroadSigmaFunction(m, q, _broadSigmaParameters.second);
+//	retval.first = evaluateBroadSigmaFunction(m, q, _broadSigmaParameters.first);
+//	retval.second = evaluateBroadSigmaFunction(m, q, _broadSigmaParameters.second);
+	retval.first = 0.215095;
+	retval.second = 0.214565;
 	return retval;
 }
 

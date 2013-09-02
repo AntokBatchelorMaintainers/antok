@@ -550,10 +550,24 @@ antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function
 	TLorentzVector* RPDprotLVAddr = data.getAddr<TLorentzVector>(args[1].first);
 	TLorentzVector* xLVAddr = data.getAddr<TLorentzVector>(args[2].first);
 
+	TVector3* vertexAddr = 0;
+
+	if(method == "Prediction") {
+		args.clear();
+		args.push_back(std::pair<std::string, std::string>("Vertex", "TVector3"));
+		if(not __functionArgumentHandler(args, function, index)) {
+			std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+			std::cerr<<"\"Prediction\" method requires \"Vertex\"."<<std::endl;
+			return 0;
+		}
+		vertexAddr = data.getAddr<TVector3>(args[0].first);
+	}
+
+
 	int methodSwitch = -1;
 	if(method == "Projection") {
 		if(quantityNames.size() != 2) {
-			std::cerr<<"\"getRpdPhi\" with method \"Projection\" only works with 2 arguments, found "
+			std::cerr<<"\"getRpdPhi\" with method \"Projection\" only works with 2 calculated quantities, found "
 			         <<quantityNames.size()<<" when calculating variables \"["<<std::endl;
 			for(unsigned int i = 0; i < quantityNames.size()-1; ++i) {
 				std::cerr<<quantityNames[i]<<", ";
@@ -588,11 +602,14 @@ antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function
 		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
 	}
 
-	if(quantityNames.size() == 2) {
-		return (new antok::functions::GetRpdPhi(beamLVAddr, RPDprotLVAddr, xLVAddr, quantityAddrs[0], quantityAddrs[1], methodSwitch));
-	} else {
-		return (new antok::functions::GetRpdPhi(beamLVAddr, RPDprotLVAddr, xLVAddr, quantityAddrs[0], quantityAddrs[1], methodSwitch, quantityAddrs[2], quantityAddrs[3]));
+	double* quantityAddrs2 = 0;
+	double* quantityAddrs3 = 0;
+
+	if(quantityNames.size() == 4) {
+		quantityAddrs2 = quantityAddrs[2];
+		quantityAddrs3 = quantityAddrs[3];
 	}
+	return (new antok::functions::GetRpdPhi(beamLVAddr, RPDprotLVAddr, xLVAddr, quantityAddrs[0], quantityAddrs[1], methodSwitch, quantityAddrs2, quantityAddrs3, vertexAddr));
 
 };
 
