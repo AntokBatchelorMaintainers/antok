@@ -25,11 +25,15 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
                                              const double& xMass,
                                              const double& predictedProtonMom) const
 {
-	bool inBetweenSlabs = (std::fabs(std::fabs(rpdProtonPhi)-2.35619449019) < 0.00001) or
-	                      (std::fabs(std::fabs(rpdProtonPhi)-0.785652) < 0.00001);
-//	                      (std::fabs(std::fabs(rpdProtonPhi)-0.785398163397) < 0.00001);
+	const double inBetweenThreshold = 0.1;
+	bool inBetweenSlabs = (std::fabs(std::fabs(rpdProtonPhi)-0.261799388) < inBetweenThreshold) or   //  15 deg
+	                      (std::fabs(std::fabs(rpdProtonPhi)-0.785398163) < inBetweenThreshold) or   //  45 deg
+	                      (std::fabs(std::fabs(rpdProtonPhi)-1.30899694) < inBetweenThreshold) or    //  75 deg
+	                      (std::fabs(std::fabs(rpdProtonPhi)-1.83259571) < inBetweenThreshold) or    // 105 deg
+	                      (std::fabs(std::fabs(rpdProtonPhi)-2.35619449019) < inBetweenThreshold) or // 135 deg
+	                      (std::fabs(std::fabs(rpdProtonPhi)-2.87979327) < inBetweenThreshold);      // 165 deg
 	if(inBetweenSlabs) {
-		return 0.;
+		return -10.;
 	}
 	TVector2 vertexXY(vertexX, vertexY);
 	std::pair<double, TVector2> transformedVariabes = rotateRpdAndVertex(rpdProtonPhi, vertexXY);
@@ -39,8 +43,10 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 	std::vector<double> limits = getAllLimits();
 	unsigned int slabType = getHitSlab(__correctedProtonPhi);
 
+	bool print = false;
 	if(slabType > 2) {
-		return 0.;
+		std::cerr<<"getHitSlab failed, returned slabType="<<slabType<<". Setting likelihood to 0."<<std::endl;
+		return 0;
 	}
 
 	double limitFirst, limitSecond;
@@ -81,17 +87,16 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 	_likelihoodFunction->SetParameter(4, broadSigmaScalingFactor); // relative contribution broad sigmas
 	_likelihoodFunction->SetParameter(5, broadSigmas.second); // broad sigma right
 	_likelihoodFunction->SetParameter(6, broadSigmas.first); // broad sigma left
-	double likelihood = getScalingFactor(limits, broadSigmaScalingFactor) * _likelihoodFunction->Eval(deltaPhi);
-/*
-	if(likelihood < 0.) {
-		std::cerr<<"Calculated negative likelihood. Aborting..."<<std::endl;
-		throw;
-	}
-*/
+	double likelihood = getScalingFactor(broadSigmaScalingFactor) * _likelihoodFunction->Eval(deltaPhi);
+
 	if(likelihood < 0. or likelihood > 1.) {
 		std::cout<<"-------------------------------------------------------------"<<std::endl;
+		std::cout<<"rpdProtonPhi-165 = "<<std::fabs(std::fabs(rpdProtonPhi)-2.87979327)<<std::endl;
 		std::cout<<"rpdProtonPhi-135 = "<<std::fabs(std::fabs(rpdProtonPhi)-2.35619449019)<<std::endl;
-		std::cout<<"rpdProtonPhi-45 = "<<std::fabs(std::fabs(rpdProtonPhi)-0.785398163397)<<std::endl;
+		std::cout<<"rpdProtonPhi-105 = "<<std::fabs(std::fabs(rpdProtonPhi)-1.83259571)<<std::endl;
+		std::cout<<"rpdProtonPhi-75  = "<<std::fabs(std::fabs(rpdProtonPhi)-1.30899694)<<std::endl;
+		std::cout<<"rpdProtonPhi-45  = "<<std::fabs(std::fabs(rpdProtonPhi)-0.785398163397)<<std::endl;
+		std::cout<<"rpdProtonPhi-15  = "<<std::fabs(std::fabs(rpdProtonPhi)-0.261799388)<<std::endl;
 		std::cout<<"rpdProtonPhi     = "<<rpdProtonPhi<<std::endl;
 		std::cout<<"corRpdProtonPhi  = "<<__correctedProtonPhi<<std::endl;
 		std::cout<<"slabType         = "<<slabType<<std::endl;
@@ -115,11 +120,10 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 		std::cout<<"bsigma right     = "<<broadSigmas.second<<std::endl;
 		std::cout<<std::endl;
 		std::cout<<"unscaled LH      = "<<_likelihoodFunction->Eval(deltaPhi)<<std::endl;
-		std::cout<<"scaling factor   = "<<getScalingFactor(limits, broadSigmaScalingFactor)<<std::endl;
+		std::cout<<"scaling factor   = "<<getScalingFactor(broadSigmaScalingFactor)<<std::endl;
 		std::cout<<"likelihood       = "<<likelihood<<std::endl;
 		std::cout<<"-------------------------------------------------------------"<<std::endl;
-//		_likelihoodFunction->Draw();
-//		gApplication->Run();
+		if(print) return 0.;
 	}
 	if(likelihood < 0.) {
 		likelihood = 0.;
@@ -127,39 +131,21 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 	return likelihood;
 }
 
-double antok::RpdHelperHelper::getScalingFactor(const double& rpdProtonPhi,
-                                                const double& vertexX,
-                                                const double& vertexY,
-                                                const double& xMass,
+double antok::RpdHelperHelper::getScalingFactor(const double& xMass,
                                                 const double& predictedProtonMom) const
 {
-	TVector2 vertexXY(vertexX, vertexY);
-	std::pair<double, TVector2> transformedVariabes = rotateRpdAndVertex(rpdProtonPhi, vertexXY);
-	__correctedProtonPhi = transformedVariabes.first;
-	__correctedVertexXY = transformedVariabes.second;
-
-	std::vector<double> limits = getAllLimits();
 	double broadSigmaScalingFactor = getBroadSigmasScalingFactor(xMass, predictedProtonMom);
-
-	return getScalingFactor(limits, broadSigmaScalingFactor);
+	return getScalingFactor(broadSigmaScalingFactor);
 }
 
-double antok::RpdHelperHelper::getScalingFactor(const std::vector<double>& allLimits,
-                                                const double& broadSigmasScalingFactor) const
+double antok::RpdHelperHelper::getScalingFactor(const double& broadSigmasScalingFactor) const
 {
-/*	double sum = 0.;
-	sum += (allLimits[1] - allLimits[0]);
-	sum += (allLimits[3] - allLimits[2]);
-	sum += (allLimits[5] - allLimits[4]);
-	sum *= 4 * (1 + broadSigmasScalingFactor);
-	*/
 	double sum = 2 * (1 + broadSigmasScalingFactor);
-	assert(sum > 0.);
 	return (1. / sum);
 }
 
 antok::RpdHelperHelper::RpdHelperHelper()
-	: _likelihoodFunction(new TF1("antok_RpdHelperHelper_likelihoodFunction", "-1*(TMath::Erf((x-[0])/[2])-TMath::Erf((x+[1])/[3])+[4]*(TMath::Erf((x-[0])/[5])-TMath::Erf((x+[1])/[6])))", -1, 1)),
+	: _likelihoodFunction(new TF1("antok_RpdHelperHelper_likelihoodFunction", "-1*(TMath::Erf((x-[0])/[2])-TMath::Erf((x+[1])/[3])+[4]*(TMath::Erf((x-[0])/[5])-TMath::Erf((x+[1])/[6])))")),
 	  __correctedProtonPhi(),
 	  __correctedVertexXY()
 {
@@ -234,17 +220,7 @@ antok::RpdHelperHelper::RpdHelperHelper()
 	broadSigmasLeft.push_back(0.0494617);
 	antok::FitParameters broadSigmasLeftParams(broadSigmasLeft);
 
-	std::vector<double> broadSigmasRight;
-	broadSigmasRight.push_back(0.332375);
-	broadSigmasRight.push_back(-0.0211877);
-	broadSigmasRight.push_back(2.0332);
-	broadSigmasRight.push_back(-0.0123179);
-	broadSigmasRight.push_back(-3.19505);
-	broadSigmasRight.push_back(0.0526866);
-	antok::FitParameters broadSigmasRightParams(broadSigmasRight);
-
-	_broadSigmaParameters = std::pair<antok::FitParameters,
-	                                  antok::FitParameters>(broadSigmasLeftParams, broadSigmasRightParams);
+	_broadSigmaParameters = std::pair<double, double>(0.215095, 0.214565);
 
 	std::vector<double> broadSigmaContribution;
 	broadSigmaContribution.push_back(-0.0337792);
@@ -299,12 +275,7 @@ std::pair<double, double> antok::RpdHelperHelper::getSharpSigmas(const double& m
 std::pair<double, double> antok::RpdHelperHelper::getBroadSigmas(const double& m,
                                                                  const double& q) const
 {
-	std::pair<double, double> retval = std::pair<double, double>(0., 0.);
-//	retval.first = evaluateBroadSigmaFunction(m, q, _broadSigmaParameters.first);
-//	retval.second = evaluateBroadSigmaFunction(m, q, _broadSigmaParameters.second);
-	retval.first = 0.215095;
-	retval.second = 0.214565;
-	return retval;
+	return _broadSigmaParameters;
 }
 
 double antok::RpdHelperHelper::getBroadSigmasScalingFactor(const double& m,

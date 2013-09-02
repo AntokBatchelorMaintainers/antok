@@ -37,10 +37,7 @@ namespace antok {
 		                     const double& xMass,
 		                     const double& predictedProtonMom) const;
 
-		double getScalingFactor(const double& rpdProtonPhi,
-		                        const double& vertexX,
-		                        const double& vertexY,
-		                        const double& xMass,
+		double getScalingFactor(const double& xMass,
 		                        const double& predictedProtonMom) const;
 
 		std::pair<double, double> getLimits(const double& rpdPhi,
@@ -66,8 +63,7 @@ namespace antok {
 
 		std::vector<double> getAllLimits() const;
 
-		double getScalingFactor(const std::vector<double>& allLimits,
-		                        const double& broadSigmasScalingFactor) const;
+		double getScalingFactor(const double& broadSigmasScalingFactor) const;
 
 		double evaluatePlaneFunction(const double& x,
 		                             const double& y,
@@ -96,7 +92,7 @@ namespace antok {
 
 		std::pair<antok::FitParameters, antok::FitParameters> _sharpSigmaParameters;
 		antok::FitParameters _broadSigmaScalingFactor;
-		std::pair<antok::FitParameters, antok::FitParameters> _broadSigmaParameters;
+		std::pair<double, double> _broadSigmaParameters;
 
 		TF1* _likelihoodFunction;
 
