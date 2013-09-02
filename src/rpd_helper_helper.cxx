@@ -25,16 +25,18 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
                                              const double& xMass,
                                              const double& predictedProtonMom) const
 {
-	const double inBetweenThreshold = 0.1;
-	bool inBetweenSlabs = (std::fabs(std::fabs(rpdProtonPhi)-0.261799388) < inBetweenThreshold) or   //  15 deg
-	                      (std::fabs(std::fabs(rpdProtonPhi)-0.785398163) < inBetweenThreshold) or   //  45 deg
-	                      (std::fabs(std::fabs(rpdProtonPhi)-1.30899694) < inBetweenThreshold) or    //  75 deg
-	                      (std::fabs(std::fabs(rpdProtonPhi)-1.83259571) < inBetweenThreshold) or    // 105 deg
-	                      (std::fabs(std::fabs(rpdProtonPhi)-2.35619449019) < inBetweenThreshold) or // 135 deg
-	                      (std::fabs(std::fabs(rpdProtonPhi)-2.87979327) < inBetweenThreshold);      // 165 deg
-	if(inBetweenSlabs) {
-		return -10.;
+
+	bool invalidRpdProtonPhi = true;
+	for(unsigned int i = 0; i < _allowedProtonPhiValues.size(); ++i) {
+		if(std::fabs(rpdProtonPhi - _allowedProtonPhiValues[i]) < 1e-5) {
+			invalidRpdProtonPhi = false;
+			break;
+		}
 	}
+	if(invalidRpdProtonPhi) {
+		return 0.;
+	}
+
 	TVector2 vertexXY(vertexX, vertexY);
 	std::pair<double, TVector2> transformedVariabes = rotateRpdAndVertex(rpdProtonPhi, vertexXY);
 	__correctedProtonPhi = transformedVariabes.first;
@@ -43,7 +45,6 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 	std::vector<double> limits = getAllLimits();
 	unsigned int slabType = getHitSlab(__correctedProtonPhi);
 
-	bool print = false;
 	if(slabType > 2) {
 		std::cerr<<"getHitSlab failed, returned slabType="<<slabType<<". Setting likelihood to 0."<<std::endl;
 		return 0;
@@ -75,8 +76,8 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 		sharpSigmas.second = 1e-9;
 	}
 	double broadSigmaScalingFactor = getBroadSigmasScalingFactor(xMass, predictedProtonMom);
-	if(broadSigmaScalingFactor < 0.) {
-		broadSigmaScalingFactor = 0.00000001;
+	if(broadSigmaScalingFactor < 1e-8) {
+		broadSigmaScalingFactor = 1e-8;
 	}
 	std::pair<double, double> broadSigmas = getBroadSigmas(xMass, predictedProtonMom);
 
@@ -89,7 +90,7 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 	_likelihoodFunction->SetParameter(6, broadSigmas.first); // broad sigma left
 	double likelihood = getScalingFactor(broadSigmaScalingFactor) * _likelihoodFunction->Eval(deltaPhi);
 
-	if(likelihood < 0. or likelihood > 1.) {
+	if(false /*or likelihood < 0. or likelihood > 1.*/) {
 		std::cout<<"-------------------------------------------------------------"<<std::endl;
 		std::cout<<"rpdProtonPhi-165 = "<<std::fabs(std::fabs(rpdProtonPhi)-2.87979327)<<std::endl;
 		std::cout<<"rpdProtonPhi-135 = "<<std::fabs(std::fabs(rpdProtonPhi)-2.35619449019)<<std::endl;
@@ -123,7 +124,6 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 		std::cout<<"scaling factor   = "<<getScalingFactor(broadSigmaScalingFactor)<<std::endl;
 		std::cout<<"likelihood       = "<<likelihood<<std::endl;
 		std::cout<<"-------------------------------------------------------------"<<std::endl;
-		if(print) return 0.;
 	}
 	if(likelihood < 0.) {
 		likelihood = 0.;
@@ -228,6 +228,43 @@ antok::RpdHelperHelper::RpdHelperHelper()
 	broadSigmaContribution.push_back(0.0325389);
 
 	_broadSigmaScalingFactor = antok::FitParameters(broadSigmaContribution);
+
+	_allowedProtonPhiValues.push_back(-3.141330854);
+	_allowedProtonPhiValues.push_back(-2.944981313);
+	_allowedProtonPhiValues.push_back(-2.814081619);
+	_allowedProtonPhiValues.push_back(-2.617732078);
+	_allowedProtonPhiValues.push_back(-2.421382537);
+	_allowedProtonPhiValues.push_back(-2.290482844);
+	_allowedProtonPhiValues.push_back(-2.094133302);
+	_allowedProtonPhiValues.push_back(-1.897783762);
+	_allowedProtonPhiValues.push_back(-1.766884068);
+	_allowedProtonPhiValues.push_back(-1.570534527);
+	_allowedProtonPhiValues.push_back(-1.374184986);
+	_allowedProtonPhiValues.push_back(-1.243285292);
+	_allowedProtonPhiValues.push_back(-1.046935751);
+	_allowedProtonPhiValues.push_back(-0.850586211);
+	_allowedProtonPhiValues.push_back(-0.719686516);
+	_allowedProtonPhiValues.push_back(-0.523336976);
+	_allowedProtonPhiValues.push_back(-0.326987435);
+	_allowedProtonPhiValues.push_back(-0.196087741);
+	_allowedProtonPhiValues.push_back(0.000261799);
+	_allowedProtonPhiValues.push_back(0.196611340);
+	_allowedProtonPhiValues.push_back(0.327511034);
+	_allowedProtonPhiValues.push_back(0.523860574);
+	_allowedProtonPhiValues.push_back(0.720210115);
+	_allowedProtonPhiValues.push_back(0.851109809);
+	_allowedProtonPhiValues.push_back(1.047459350);
+	_allowedProtonPhiValues.push_back(1.243808891);
+	_allowedProtonPhiValues.push_back(1.374708585);
+	_allowedProtonPhiValues.push_back(1.571058126);
+	_allowedProtonPhiValues.push_back(1.767407666);
+	_allowedProtonPhiValues.push_back(1.898307360);
+	_allowedProtonPhiValues.push_back(2.094656901);
+	_allowedProtonPhiValues.push_back(2.291006442);
+	_allowedProtonPhiValues.push_back(2.421906136);
+	_allowedProtonPhiValues.push_back(2.618255677);
+	_allowedProtonPhiValues.push_back(2.814605217);
+	_allowedProtonPhiValues.push_back(2.945504912);
 
 }
 

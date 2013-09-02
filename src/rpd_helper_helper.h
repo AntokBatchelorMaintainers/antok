@@ -94,6 +94,8 @@ namespace antok {
 		antok::FitParameters _broadSigmaScalingFactor;
 		std::pair<double, double> _broadSigmaParameters;
 
+		std::vector<double> _allowedProtonPhiValues;
+
 		TF1* _likelihoodFunction;
 
 		mutable double __correctedProtonPhi;
