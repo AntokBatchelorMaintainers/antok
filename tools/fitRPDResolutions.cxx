@@ -852,6 +852,10 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		TVector3 vertex(vertexX, vertexY, vertexZ);
 		antok::getRPDDeltaPhiResPrediction(pBeam, rpdProton, xVector, vertex, deltaPhi, res, protonPhi, xPhi);
 
+		if(not antok::RpdHelperHelper::getInstance()->rpdProtonPhiValid(protonPhi)) {
+			continue;
+		}
+
 		TVector3 planarVertex(vertexX, vertexY, 0.);
 
 		double correctedVertexPhi = planarVertex.Phi();
