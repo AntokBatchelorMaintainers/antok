@@ -180,7 +180,7 @@ class bin0r {
 	}
 
 	std::pair<double, double> getLimitsForFit(const unsigned int& binNumber, const TH1D* hist) {
-		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
+		const antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
 		TVector2 vertexXY = getBinCenter(hist);
 		double rpdPhi;
 		std::vector<TH1D*> histsInBin = getHistsInBin(getBinNumber(hist));
@@ -641,19 +641,19 @@ class uberBin0r {
 
 	std::pair<double, double> getSharpSigmasForBin(const unsigned int& binNumber) {
 		TVector2 tm = getBinCoordinates(binNumber);
-		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
+		const antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
 		return rpdHelperHelper->getSharpSigmas(tm.Y(), tm.X());
 	}
 
 	std::pair<double, double> getBroadSigmasForBin(const unsigned int& binNumber) {
 		TVector2 tm = getBinCoordinates(binNumber);
-		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
+		const antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
 		return rpdHelperHelper->getBroadSigmas(tm.Y(), tm.X());
 	}
 
 	double getBroadSigmaContributionForBin(const unsigned int& binNumber) {
 		TVector2 tm = getBinCoordinates(binNumber);
-		antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
+		const antok::RpdHelperHelper* rpdHelperHelper = antok::RpdHelperHelper::getInstance();
 		return rpdHelperHelper->getBroadSigmasScalingFactor(tm.Y(), tm.X());
 	}
 

@@ -9,7 +9,7 @@
 
 antok::RpdHelperHelper* antok::RpdHelperHelper::_instance = 0;
 
-antok::RpdHelperHelper* antok::RpdHelperHelper::getInstance() {
+const antok::RpdHelperHelper* antok::RpdHelperHelper::getInstance() {
 
 	if(not _instance) {
 		_instance = new antok::RpdHelperHelper();
@@ -26,14 +26,7 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
                                              const double& predictedProtonMom) const
 {
 
-	bool invalidRpdProtonPhi = true;
-	for(unsigned int i = 0; i < _allowedProtonPhiValues.size(); ++i) {
-		if(std::fabs(rpdProtonPhi - _allowedProtonPhiValues[i]) < 1e-5) {
-			invalidRpdProtonPhi = false;
-			break;
-		}
-	}
-	if(invalidRpdProtonPhi) {
+	if(not rpdProtonPhiValid(rpdProtonPhi)) {
 		return 0.;
 	}
 
@@ -267,6 +260,18 @@ double antok::RpdHelperHelper::getBroadSigmasScalingFactor(const double& m,
                                                            const double& q) const
 {
 	return evaluateSharpSigmaFunction(m, q, _broadSigmaScalingFactor);
+}
+
+bool antok::RpdHelperHelper::rpdProtonPhiValid(const double& rpdProtonPhi) const
+{
+	bool invalidRpdProtonPhi = true;
+	for(unsigned int i = 0; i < _allowedProtonPhiValues.size(); ++i) {
+		if(std::fabs(rpdProtonPhi - _allowedProtonPhiValues[i]) < 1e-5) {
+			invalidRpdProtonPhi = false;
+			break;
+		}
+	}
+	return (not invalidRpdProtonPhi);
 }
 
 std::vector<double> antok::RpdHelperHelper::getAllLimits() const {

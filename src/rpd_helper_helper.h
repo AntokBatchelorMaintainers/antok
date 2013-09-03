@@ -28,7 +28,7 @@ namespace antok {
 
 	  public:
 
-		static RpdHelperHelper* getInstance();
+		static const RpdHelperHelper* getInstance();
 
 		double getLikelihood(const double& deltaPhi,
 		                     const double& rpdProtonPhi,
@@ -50,6 +50,8 @@ namespace antok {
 
 		double getBroadSigmasScalingFactor(const double& m,
 		                                   const double& q) const;
+
+		bool rpdProtonPhiValid(const double& rpdProtonPhi) const;
 
 	  private:
 
