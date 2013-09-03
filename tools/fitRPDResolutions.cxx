@@ -896,7 +896,6 @@ void fitErrorFunctionForRPD(std::string inFileName,
 
 	}
 
-	return;
 #if(0)
 	std::cout<<std::endl;
 	std::cout<<"#---------------------#"<<std::endl;
