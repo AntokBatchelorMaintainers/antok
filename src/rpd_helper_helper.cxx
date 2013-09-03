@@ -42,30 +42,11 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 	__correctedProtonPhi = transformedVariabes.first;
 	__correctedVertexXY = transformedVariabes.second;
 
-	std::vector<double> limits = getAllLimits();
-	unsigned int slabType = getHitSlab(__correctedProtonPhi);
+	std::pair<double, double> limits = getLimits(rpdProtonPhi, vertexXY);
+	double limitFirst = limits.first;
+	double limitSecond = limits.second;
 
-	if(slabType > 2) {
-		std::cerr<<"getHitSlab failed, returned slabType="<<slabType<<". Setting likelihood to 0."<<std::endl;
-		return 0;
-	}
-
-	double limitFirst, limitSecond;
-	switch(slabType) {
-		case LEFTSLAB:
-			limitFirst = limits[0];
-			limitSecond = limits[1];
-			break;
-		case MIDDLESLAB:
-			limitFirst = limits[2];
-			limitSecond = limits[3];
-			break;
-		case RIGHTSLAB:
-			limitFirst = limits[4];
-			limitSecond = limits[5];
-			break;
-	}
-	if((limitSecond - limitFirst) < 0.) {
+	if((limitSecond - limitFirst) <= 0.) {
 		return 0.;
 	}
 	std::pair<double, double> sharpSigmas = getSharpSigmas(xMass, predictedProtonMom);
@@ -90,41 +71,6 @@ double antok::RpdHelperHelper::getLikelihood(const double& deltaPhi,
 	_likelihoodFunction->SetParameter(6, broadSigmas.first); // broad sigma left
 	double likelihood = getScalingFactor(broadSigmaScalingFactor) * _likelihoodFunction->Eval(deltaPhi);
 
-	if(false /*or likelihood < 0. or likelihood > 1.*/) {
-		std::cout<<"-------------------------------------------------------------"<<std::endl;
-		std::cout<<"rpdProtonPhi-165 = "<<std::fabs(std::fabs(rpdProtonPhi)-2.87979327)<<std::endl;
-		std::cout<<"rpdProtonPhi-135 = "<<std::fabs(std::fabs(rpdProtonPhi)-2.35619449019)<<std::endl;
-		std::cout<<"rpdProtonPhi-105 = "<<std::fabs(std::fabs(rpdProtonPhi)-1.83259571)<<std::endl;
-		std::cout<<"rpdProtonPhi-75  = "<<std::fabs(std::fabs(rpdProtonPhi)-1.30899694)<<std::endl;
-		std::cout<<"rpdProtonPhi-45  = "<<std::fabs(std::fabs(rpdProtonPhi)-0.785398163397)<<std::endl;
-		std::cout<<"rpdProtonPhi-15  = "<<std::fabs(std::fabs(rpdProtonPhi)-0.261799388)<<std::endl;
-		std::cout<<"rpdProtonPhi     = "<<rpdProtonPhi<<std::endl;
-		std::cout<<"corRpdProtonPhi  = "<<__correctedProtonPhi<<std::endl;
-		std::cout<<"slabType         = "<<slabType<<std::endl;
-		std::cout<<"deltaPhi         = "<<deltaPhi<<std::endl;
-		std::cout<<std::endl;
-		std::cout<<"allLimits        = ["<<limits[0];
-		for(unsigned int i = 1; i <  limits.size(); ++i) std::cout<<", "<<limits[i];
-		std::cout<<"]"<<std::endl;
-		std::cout<<std::endl;
-		std::cout<<"vertex x         = "<<vertexX<<std::endl;
-		std::cout<<"vertex y         = "<<vertexY<<std::endl;
-		std::cout<<"m                = "<<xMass<<std::endl;
-		std::cout<<"q                = "<<predictedProtonMom<<std::endl;
-		std::cout<<std::endl;
-		std::cout<<"limit left       = "<<limitFirst<<std::endl;
-		std::cout<<"limit right      = "<<limitSecond<<std::endl;
-		std::cout<<"ssigma left      = "<<sharpSigmas.first<<std::endl;
-		std::cout<<"ssigma right     = "<<sharpSigmas.second<<std::endl;
-		std::cout<<"bsigma scaling   = "<<broadSigmaScalingFactor<<std::endl;
-		std::cout<<"bsigma left      = "<<broadSigmas.first<<std::endl;
-		std::cout<<"bsigma right     = "<<broadSigmas.second<<std::endl;
-		std::cout<<std::endl;
-		std::cout<<"unscaled LH      = "<<_likelihoodFunction->Eval(deltaPhi)<<std::endl;
-		std::cout<<"scaling factor   = "<<getScalingFactor(broadSigmaScalingFactor)<<std::endl;
-		std::cout<<"likelihood       = "<<likelihood<<std::endl;
-		std::cout<<"-------------------------------------------------------------"<<std::endl;
-	}
 	if(likelihood < 0.) {
 		likelihood = 0.;
 	}
@@ -293,7 +239,9 @@ std::pair<double, double> antok::RpdHelperHelper::getLimits(const double& rpdPhi
 			retval.second = evaluatePlaneFunction(correctedVertexXY.X(), correctedVertexXY.Y(), _rightSlabLimitsParameters.second);
 			break;
 		default:
-			throw;
+			std::cerr<<"getHitSlab failed in getLimits, returned slabType="<<slabType
+			         <<". Returning limits (0., 0.)."<<std::endl;
+			return std::pair<double, double>(0., 0.);
 	}
 
 	return retval;
