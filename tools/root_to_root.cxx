@@ -16,7 +16,16 @@
 #include<constants.h>
 #include<initializer.h>
 
-void convert_root_to_txt(char* infile_name, char* outfile_name, std::string configfilename = "../config/default.yaml") {
+void convert_root_to_txt(char* infile_name,
+                         char* outfile_name,
+                         std::string configfilename,
+                         std::string inputType)
+{
+
+	if(not (inputType == "data" or inputType == "gen" or inputType == "acc")) {
+		std::cerr<<"Invalid input type '"<<inputType<<"', must be in {'data', 'gen', 'acc'}"<<std::endl;
+		return;
+	}
 
 	antok::Initializer* initializer = antok::Initializer::instance();
 	if(not initializer->readConfigFile(configfilename)) {
@@ -25,6 +34,10 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 	}
 
 	const double& PION_MASS = antok::Constants::chargedPionMass();
+	const double& PROTON_MASS = antok::Constants::protonMass();
+
+	const std::string PHASE_SPACE_FILENAME_POSTFIX = "genPS";
+	const std::string RECO_FILENAME_POSTFIX = "accPS";
 
 	double bin_width = 0.03;		//GeV
 	double mass_range_lb = 1.3;		//GeV
@@ -49,7 +62,13 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 		std::ostringstream strs;
 		strs<<outfile_name<<"/"<<(int)(floor(bounds.at(i)*1000. + 0.5))<<"."<<(int)(floor(bounds.at(i+1)*1000. + 0.5));
 		mkdir(strs.str().c_str(), S_IRWXU | S_IRWXG);
-		strs<<"/"<<(int)(floor(bounds.at(i)*1000. + 0.5))<<"."<<(int)(floor(bounds.at(i+1)*1000. + 0.5))<<".root";
+		strs<<"/"<<(int)(floor(bounds.at(i)*1000. + 0.5))<<"."<<(int)(floor(bounds.at(i+1)*1000. + 0.5));
+		if(inputType == "gen") {
+			strs<<"."<<PHASE_SPACE_FILENAME_POSTFIX;
+		} else if(inputType == "acc") {
+			strs<<"."<<RECO_FILENAME_POSTFIX;
+		}
+		strs<<".root";
 		tfiles.at(i) = TFile::Open(strs.str().c_str(), "NEW");
 		if(tfiles.at(i) == 0) {
 			std::cout<<"Error opening file for writing."<<std::endl;
@@ -62,42 +81,81 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 	if(infile == 0) {
 		return;
 	}
-	TTree* tree = (TTree*)infile->Get("Standard Event Selection/USR55");
+	std::string inFileName = "Standard Event Selection/USR55";
+	if(inputType == "gen") {
+		inFileName = "kbicker_5pic/USR55";
+	}
+	TTree* tree = (TTree*)infile->Get(inFileName.c_str());
 	if(tree == 0) {
 		std::cout<<"Error opening in-TTree."<<std::endl;
 		return;
 	}
+	double px0, py0, pz0;
 	double px1, py1, pz1;
 	double px2, py2, pz2;
 	double px3, py3, pz3;
 	double px4, py4, pz4;
 	double px5, py5, pz5;
+	double pxR, pyR, pzR;
 	double gradx, grady;
-	tree->SetBranchAddress("Mom_x1", &px1);
-	tree->SetBranchAddress("Mom_y1", &py1);
-	tree->SetBranchAddress("Mom_z1", &pz1);
-	tree->SetBranchAddress("Mom_x2", &px2);
-	tree->SetBranchAddress("Mom_y2", &py2);
-	tree->SetBranchAddress("Mom_z2", &pz2);
-	tree->SetBranchAddress("Mom_x3", &px3);
-	tree->SetBranchAddress("Mom_y3", &py3);
-	tree->SetBranchAddress("Mom_z3", &pz3);
-	tree->SetBranchAddress("Mom_x4", &px4);
-	tree->SetBranchAddress("Mom_y4", &py4);
-	tree->SetBranchAddress("Mom_z4", &pz4);
-	tree->SetBranchAddress("Mom_x5", &px5);
-	tree->SetBranchAddress("Mom_y5", &py5);
-	tree->SetBranchAddress("Mom_z5", &pz5);
-	tree->SetBranchAddress("gradx", &gradx);
-	tree->SetBranchAddress("grady", &grady);
+
+	if(inputType == "data") {
+		tree->SetBranchAddress("Mom_x1", &px1);
+		tree->SetBranchAddress("Mom_y1", &py1);
+		tree->SetBranchAddress("Mom_z1", &pz1);
+		tree->SetBranchAddress("Mom_x2", &px2);
+		tree->SetBranchAddress("Mom_y2", &py2);
+		tree->SetBranchAddress("Mom_z2", &pz2);
+		tree->SetBranchAddress("Mom_x3", &px3);
+		tree->SetBranchAddress("Mom_y3", &py3);
+		tree->SetBranchAddress("Mom_z3", &pz3);
+		tree->SetBranchAddress("Mom_x4", &px4);
+		tree->SetBranchAddress("Mom_y4", &py4);
+		tree->SetBranchAddress("Mom_z4", &pz4);
+		tree->SetBranchAddress("Mom_x5", &px5);
+		tree->SetBranchAddress("Mom_y5", &py5);
+		tree->SetBranchAddress("Mom_z5", &pz5);
+		tree->SetBranchAddress("gradx", &gradx);
+		tree->SetBranchAddress("grady", &grady);
+	} else if (inputType == "gen" or inputType == "acc") {
+		tree->SetBranchAddress("Mom_MCTruth_x1", &px1);
+		tree->SetBranchAddress("Mom_MCTruth_y1", &py1);
+		tree->SetBranchAddress("Mom_MCTruth_z1", &pz1);
+		tree->SetBranchAddress("Mom_MCTruth_x2", &px2);
+		tree->SetBranchAddress("Mom_MCTruth_y2", &py2);
+		tree->SetBranchAddress("Mom_MCTruth_z2", &pz2);
+		tree->SetBranchAddress("Mom_MCTruth_x3", &px3);
+		tree->SetBranchAddress("Mom_MCTruth_y3", &py3);
+		tree->SetBranchAddress("Mom_MCTruth_z3", &pz3);
+		tree->SetBranchAddress("Mom_MCTruth_x4", &px4);
+		tree->SetBranchAddress("Mom_MCTruth_y4", &py4);
+		tree->SetBranchAddress("Mom_MCTruth_z4", &pz4);
+		tree->SetBranchAddress("Mom_MCTruth_x5", &px5);
+		tree->SetBranchAddress("Mom_MCTruth_y5", &py5);
+		tree->SetBranchAddress("Mom_MCTruth_z5", &pz5);
+		tree->SetBranchAddress("Mom_xP_MCTruth", &pxR);
+		tree->SetBranchAddress("Mom_yP_MCTruth", &pyR);
+		tree->SetBranchAddress("Mom_zP_MCTruth", &pzR);
+		tree->SetBranchAddress("Mom_x0_MCTruth", &px0);
+		tree->SetBranchAddress("Mom_y0_MCTruth", &py0);
+		tree->SetBranchAddress("Mom_z0_MCTruth", &pz0);
+	}
 
 	std::vector<TLorentzVector> particles;
 	particles.resize(6);
 
-	TClonesArray prodMomName("TObjString", 1);
+	TClonesArray* prodMomName;
+	if(inputType == "data") {
+		prodMomName = new TClonesArray("TObjString", 1);
+	} else {
+		prodMomName = new TClonesArray("TObjString", 2);
+	}
 	TClonesArray decayMomName("TObjString", 5);
 
-	new (prodMomName [0]) TObjString("pi-");
+	new ((*prodMomName) [0]) TObjString("pi-");
+	if(inputType != "data") {
+		new ((*prodMomName) [1]) TObjString("p+");
+	}
 	new (decayMomName [0]) TObjString("pi-");
 	new (decayMomName [1]) TObjString("pi-");
 	new (decayMomName [2]) TObjString("pi-");
@@ -119,7 +177,7 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 		trees.at(i) = new TTree("rootPwaEvtTree", "rootPwaEvtTree");
 		trees.at(i)->Branch("prodKinMomenta", "TClonesArray", &prodMom, buffsize, splitLevel);
 		trees.at(i)->Branch("decayKinMomenta", "TClonesArray", &decayMom, buffsize, splitLevel);
-		prodMomName.Write("prodKinParticles", TObject::kSingleKey);
+		prodMomName->Write("prodKinParticles", TObject::kSingleKey);
 		decayMomName.Write("decayKinParticles", TObject::kSingleKey);
 	}
 
@@ -139,8 +197,12 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 		for(unsigned int i = 1; i < 6; ++i) {
 			pSum += particles.at(i);
 		}
-		particles.at(0) = antok::getBeamEnergy(TVector3(gradx, grady, 1.), pSum);
 		double mass = pSum.M();
+		if(inputType == "data") {
+			particles.at(0) = antok::getBeamEnergy(TVector3(gradx, grady, 1.), pSum);
+		} else {
+			particles.at(0).SetXYZM(px0, py0, pz0, PION_MASS);
+		}
 
 		// If out of bounds, go to next event
 		if(mass < bounds.at(0) || mass > bounds.at(bounds.size()-1)) {
@@ -149,6 +211,9 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 
 		// Fill the TClonesArrays
 		new ((*prodMom)[0]) TVector3(particles.at(0).Vect());
+		if(inputType != "data") {
+			new ((*prodMom)[0]) TVector3(TLorentzVector(pxR, pyR, pzR, PROTON_MASS).Vect());
+		}
 		for(unsigned int i = 1; i < 6; ++i) {
 			new ((*decayMom)[i-1]) TVector3(particles.at(i).Vect());
 		}
@@ -172,11 +237,9 @@ void convert_root_to_txt(char* infile_name, char* outfile_name, std::string conf
 }
 
 int main(int argc, char* argv[]) {
-	if(argc == 3) {
-		convert_root_to_txt(argv[1], argv[2]);
-	} else if(argc == 4) {
-		convert_root_to_txt(argv[1], argv[2], argv[3]);
+	if(argc == 5) {
+		convert_root_to_txt(argv[1], argv[2], argv[3], argv[4]);
 	} else {
-		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be in [2, 3]."<<std::endl;
+		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be 4."<<std::endl;
 	}
 }
