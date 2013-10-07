@@ -2,6 +2,8 @@
 #include<iostream>
 #include<signal.h>
 
+#include <boost/progress.hpp>
+
 #include<TApplication.h>
 #include<TFile.h>
 #include<TTree.h>
@@ -68,6 +70,8 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 	}
 	TTree* inTree = objectManager->getInTree();
 
+	boost::progress_display* progressIndicator = new boost::progress_display(inTree->GetEntries(), std::cout, "");
+
 	for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
 
 		if(ABORT) {
@@ -83,6 +87,8 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 			std::cerr<<"Could not process event "<<i<<". Aborting..."<<std::endl;
 			exit(1);
 		}
+
+		++(*progressIndicator);
 
 	}
 
