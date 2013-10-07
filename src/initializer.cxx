@@ -272,6 +272,21 @@ bool antok::Initializer::initializeData() {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
+			} else if(type == "std::vector<double") {
+				if(not data.insert<std::vector<double> >(name)) {
+					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
+			} else if(type == "TLorentzVector") {
+				if(not data.insert<TLorentzVector>(name)) {
+					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
+			} else if(type == "TVector3") {
+				if(not data.insert<TVector3>(name)) {
+					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
 			} else if(type == "") {
 				std::cerr<<"Could not convert branch type to string when parsing the \"TreeBranches\"' \"onePerEvent\" part."<<std::endl;
 				return false;
@@ -305,6 +320,42 @@ bool antok::Initializer::initializeData() {
 					std::stringstream strStr;
 					strStr<<baseName<<(i+1);
 					if(not data.insert<int>(strStr.str())) {
+						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						return false;
+					}
+				}
+			} else if(type == "Long64_t") {
+				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
+					std::stringstream strStr;
+					strStr<<baseName<<(i+1);
+					if(not data.insert<Long64_t>(strStr.str())) {
+						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						return false;
+					}
+				}
+			} else if(type == "std::vector<double>") {
+				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
+					std::stringstream strStr;
+					strStr<<baseName<<(i+1);
+					if(not data.insert<std::vector<double> >(strStr.str())) {
+						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						return false;
+					}
+				}
+			} else if(type == "TLorentzVector") {
+				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
+					std::stringstream strStr;
+					strStr<<baseName<<(i+1);
+					if(not data.insert<TLorentzVector>(strStr.str())) {
+						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						return false;
+					}
+				}
+			} else if(type == "TVector3") {
+				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
+					std::stringstream strStr;
+					strStr<<baseName<<(i+1);
+					if(not data.insert<TVector3>(strStr.str())) {
 						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
 						return false;
 					}
@@ -344,6 +395,15 @@ bool antok::Initializer::initializeData() {
 		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 	for(std::map<std::string, Long64_t>::iterator it = data.long64_ts.begin(); it != data.long64_ts.end(); ++it) {
+		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+	}
+	for(std::map<std::string, std::vector<double> >::iterator it = data.doubleVectors.begin(); it != data.doubleVectors.end(); ++it) {
+		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+	}
+	for(std::map<std::string, TLorentzVector>::iterator it = data.lorentzVectors.begin(); it != data.lorentzVectors.end(); ++it) {
+		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+	}
+	for(std::map<std::string, TVector3>::iterator it = data.vectors.begin(); it != data.vectors.end(); ++it) {
 		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 
