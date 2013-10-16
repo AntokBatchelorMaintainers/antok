@@ -10,60 +10,63 @@
 #include<object_manager.h>
 #include<yaml_utils.hpp>
 
+bool antok::generators::functionArgumentHandler(std::vector<std::pair<std::string, std::string> >& args,
+                                                const YAML::Node& function,
+                                                int index,
+                                                bool argStringsAlreadyValues)
+{
+
+	using antok::YAMLUtils::hasNodeKey;
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	for(unsigned int i = 0; i < args.size(); ++i) {
+		std::string& argName = args[i].first;
+		if(not argStringsAlreadyValues) {
+			if(not hasNodeKey(function, argName)) {
+				std::cerr<<"Argument \""<<argName<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+				return false;
+			}
+			argName = antok::YAMLUtils::getString(function[argName]);
+			if(argName == "") {
+				std::cerr<<"Could not convert one of the arguments to std::string in function \""<<function["Name"]<<"\"."<<std::endl;
+				return false;
+			}
+		}
+		if(index > 0) {
+			std::stringstream strStr;
+			strStr<<argName<<index;
+			argName = strStr.str();
+		}
+		std::string type = data.getType(argName);
+		if(type == "") {
+			std::cerr<<"Argument \""<<argName<<"\" not found in Data's global map."<<std::endl;
+			return false;
+		}
+		if(type != args[i].second) {
+			std::cerr<<"Argument \""<<argName<<"\" has type \""<<type<<"\", expected \""<<args[i].second<<"\"."<<std::endl;
+			return false;
+		}
+	}
+
+	return true;
+
+};
+
+std::string antok::generators::getFunctionArgumentHandlerErrorMsg(std::vector<std::string> quantityNames) {
+	std::stringstream msgStream;
+	if(quantityNames.size() > 1) {
+		msgStream<<"Error when registering calculation for quantities \"[";
+		for(unsigned int i = 0; i < quantityNames.size()-1; ++i) {
+			msgStream<<quantityNames[i]<<", ";
+		}
+		msgStream<<quantityNames[quantityNames.size()-1]<<"]\"."<<std::endl;
+	} else {
+		msgStream<<"Error when registering calculation for quantity \""<<quantityNames[0]<<"\"."<<std::endl;
+	}
+	return msgStream.str();
+};
+
 namespace {
-
-	bool __functionArgumentHandler(std::vector<std::pair<std::string, std::string> >& args, const YAML::Node& function, int index, bool argStringsAlreadyValues = false)
-	{
-
-		using antok::YAMLUtils::hasNodeKey;
-
-		antok::Data& data = antok::ObjectManager::instance()->getData();
-		for(unsigned int i = 0; i < args.size(); ++i) {
-			std::string& argName = args[i].first;
-			if(not argStringsAlreadyValues) {
-				if(not hasNodeKey(function, argName)) {
-					std::cerr<<"Argument \""<<argName<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
-					return false;
-				}
-				argName = antok::YAMLUtils::getString(function[argName]);
-				if(argName == "") {
-					std::cerr<<"Could not convert one of the arguments to std::string in function \""<<function["Name"]<<"\"."<<std::endl;
-					return false;
-				}
-			}
-			if(index > 0) {
-				std::stringstream strStr;
-				strStr<<argName<<index;
-				argName = strStr.str();
-			}
-			std::string type = data.getType(argName);
-			if(type == "") {
-				std::cerr<<"Argument \""<<argName<<"\" not found in Data's global map."<<std::endl;
-				return false;
-			}
-			if(type != args[i].second) {
-				std::cerr<<"Argument \""<<argName<<"\" has type \""<<type<<"\", expected \""<<args[i].second<<"\"."<<std::endl;
-				return false;
-			}
-		}
-
-		return true;
-
-	};
-
-	std::string __getFunctionArgumentHandlerErrorMsg(std::vector<std::string> quantityNames) {
-		std::stringstream msgStream;
-		if(quantityNames.size() > 1) {
-			msgStream<<"Error when registering calculation for quantities \"[";
-			for(unsigned int i = 0; i < quantityNames.size()-1; ++i) {
-				msgStream<<quantityNames[i]<<", ";
-			}
-			msgStream<<quantityNames[quantityNames.size()-1]<<"]\"."<<std::endl;
-		} else {
-			msgStream<<"Error when registering calculation for quantity \""<<quantityNames[0]<<"\"."<<std::endl;
-		}
-		return msgStream.str();
-	};
 
 	template<typename T>
 	antok::Function* __getSumFunction(std::vector<std::pair<std::string, std::string> >& summandNames, std::string quantityName) {
@@ -176,8 +179,8 @@ antok::Function* antok::generators::generateAbs(const YAML::Node& function, std:
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("Arg", "double"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -206,8 +209,8 @@ antok::Function* antok::generators::generateConvertIntToDouble(const YAML::Node&
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("Int", "int"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -237,8 +240,8 @@ antok::Function* antok::generators::generateDiff(const YAML::Node& function, std
 	args.push_back(std::pair<std::string, std::string>("Minuend", "double"));
 	args.push_back(std::pair<std::string, std::string>("Subtrahend", "double"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -268,8 +271,8 @@ antok::Function* antok::generators::generateEnergy(const YAML::Node& function, s
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -303,8 +306,8 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 	args.push_back(std::pair<std::string, std::string>("dY", "double"));
 	args.push_back(std::pair<std::string, std::string>("XLorentzVec", "TLorentzVector"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -334,8 +337,8 @@ antok::Function* antok::generators::generateGetGradXGradY(const YAML::Node& func
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -367,8 +370,8 @@ antok::Function* antok::generators::generateGetLorentzVectorAttributes(const YAM
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -438,8 +441,8 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 		(*mAddr) = function["M"].as<double>();
 	}
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -459,160 +462,6 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 
 };
 
-antok::Function* antok::generators::generateGetRpdExpectedHitsParameters(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
-
-	using antok::YAMLUtils::hasNodeKey;
-
-	if(quantityNames.size() != 4) {
-		std::cerr<<"Need 4 names for function \""<<function["Name"]<<"\"."<<std::endl;
-		return 0;
-	}
-
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
-	args.push_back(std::pair<std::string, std::string>("XLorentzVec", "TLorentzVector"));
-	args.push_back(std::pair<std::string, std::string>("Vertex", "TVector3"));
-
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
-		return 0;
-	}
-
-	TLorentzVector* beamLorentzVecAddr = data.getAddr<TLorentzVector>(args[0].first);
-	TLorentzVector* XLorentzVecAddr = data.getAddr<TLorentzVector>(args[1].first);
-	TVector3* vertexAddr = data.getAddr<TVector3>(args[2].first);
-
-	std::vector<std::string> possiblyConstArgs;
-	possiblyConstArgs.push_back("XOffset");
-	possiblyConstArgs.push_back("YOffset");
-	possiblyConstArgs.push_back("XAngle");
-	possiblyConstArgs.push_back("YAngle");
-
-	for(unsigned int i = 0; i < possiblyConstArgs.size(); ++i) {
-		if(not hasNodeKey(function, possiblyConstArgs[i])) {
-			std::cerr<<"Argument \""<<possiblyConstArgs[i]<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
-			return 0;
-		}
-	}
-
-	double* xOffsetAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[0]]);
-	double* yOffsetAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[1]]);
-	double* xAngleAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[2]]);
-	double* yAngleAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[3]]);
-
-	std::vector<double*> quantityAddrs;
-	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
-		if(not data.insert<double>(quantityNames[i])) {
-			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
-			return 0;
-		}
-		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
-	}
-
-	return (new antok::functions::GetRPDExpectedHitsParameters(beamLorentzVecAddr,
-	                                                           XLorentzVecAddr,
-	                                                           vertexAddr,
-	                                                           xOffsetAddr,
-	                                                           yOffsetAddr,
-	                                                           xAngleAddr,
-	                                                           yAngleAddr,
-	                                                           quantityAddrs[0],
-	                                                           quantityAddrs[1],
-	                                                           quantityAddrs[2],
-	                                                           quantityAddrs[3]));
-
-}
-
-antok::Function* antok::generators::generateGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
-{
-
-	if(not (quantityNames.size() == 2 or quantityNames.size() == 4)) {
-		std::cerr<<"Need 2 names for function \"getRpdPhi\""<<std::endl;
-		return 0;
-	}
-
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-
-	std::string method = antok::YAMLUtils::getString(function["Method"]);
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
-	args.push_back(std::pair<std::string, std::string>("RPDProtonLorentzVec", "TLorentzVector"));
-	args.push_back(std::pair<std::string, std::string>("XLorentzVec", "TLorentzVector"));
-
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
-		return 0;
-	}
-
-	TLorentzVector* beamLVAddr = data.getAddr<TLorentzVector>(args[0].first);
-	TLorentzVector* RPDprotLVAddr = data.getAddr<TLorentzVector>(args[1].first);
-	TLorentzVector* xLVAddr = data.getAddr<TLorentzVector>(args[2].first);
-
-	TVector3* vertexAddr = 0;
-
-	if(method == "Prediction") {
-		args.clear();
-		args.push_back(std::pair<std::string, std::string>("Vertex", "TVector3"));
-		if(not __functionArgumentHandler(args, function, index)) {
-			std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
-			std::cerr<<"\"Prediction\" method requires \"Vertex\"."<<std::endl;
-			return 0;
-		}
-		vertexAddr = data.getAddr<TVector3>(args[0].first);
-	}
-
-
-	int methodSwitch = -1;
-	if(method == "Projection") {
-		if(quantityNames.size() != 2) {
-			std::cerr<<"\"getRpdPhi\" with method \"Projection\" only works with 2 calculated quantities, found "
-			         <<quantityNames.size()<<" when calculating variables \"["<<std::endl;
-			for(unsigned int i = 0; i < quantityNames.size()-1; ++i) {
-				std::cerr<<quantityNames[i]<<", ";
-			}
-			std::cerr<<quantityNames[quantityNames.size()-1]<<"]\"."<<std::endl;
-			return 0;
-		}
-		methodSwitch = 0;
-	} else if (method == "Rotation") {
-		methodSwitch = 1;
-	} else if (method == "Prediction") {
-		methodSwitch = 2;
-	} else {
-		if(method == "") {
-			std::cerr<<"Could not convert \"Method\" to std::string in function \"getRpdPhi\" when calculating variables \"["<<std::endl;
-		} else {
-			std::cerr<<"Method \""<<method<<"\" is not supported for function \"getRpdPhi\" when calculating variables \"["<<std::endl;
-		}
-		for(unsigned int i = 0; i < quantityNames.size()-1; ++i) {
-			std::cerr<<quantityNames[i]<<", ";
-		}
-		std::cerr<<quantityNames[quantityNames.size()-1]<<"]\"."<<std::endl;
-		return 0;
-	}
-
-	std::vector<double*> quantityAddrs;
-	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
-		if(not data.insert<double>(quantityNames[i])) {
-			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
-			return 0;
-		}
-		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
-	}
-
-	double* quantityAddrs2 = 0;
-	double* quantityAddrs3 = 0;
-
-	if(quantityNames.size() == 4) {
-		quantityAddrs2 = quantityAddrs[2];
-		quantityAddrs3 = quantityAddrs[3];
-	}
-	return (new antok::functions::GetRpdPhi(beamLVAddr, RPDprotLVAddr, xLVAddr, quantityAddrs[0], quantityAddrs[1], methodSwitch, quantityAddrs2, quantityAddrs3, vertexAddr));
-
-};
-
 antok::Function* antok::generators::generateGetTs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
@@ -628,8 +477,8 @@ antok::Function* antok::generators::generateGetTs(const YAML::Node& function, st
 	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
 	args.push_back(std::pair<std::string, std::string>("XLorentzVec", "TLorentzVector"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -664,8 +513,8 @@ antok::Function* antok::generators::generateGetVector3(const YAML::Node& functio
 	args.push_back(std::pair<std::string, std::string>("Y", "double"));
 	args.push_back(std::pair<std::string, std::string>("Z", "double"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -696,8 +545,8 @@ antok::Function* antok::generators::generateMass(const YAML::Node& function, std
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -725,8 +574,8 @@ antok::Function* antok::generators::generateRadToDegree(const YAML::Node& functi
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("Angle", "double"));
 
-	if(not __functionArgumentHandler(args, function, index)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -756,8 +605,8 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 	}
 	std::vector<std::pair<std::string, std::string> >& summandNames = (*summandNamesPtr);
 
-	if(not __functionArgumentHandler(summandNames, function, index, true)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(summandNames, function, index, true)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
@@ -803,8 +652,8 @@ antok::Function* antok::generators::generateSum2(const YAML::Node& function, std
 	}
 	std::vector<std::pair<std::string, std::string> >& summandNames = (*summandNamesPtr);
 
-	if(not __functionArgumentHandler(summandNames, function, index, true)) {
-		std::cerr<<__getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if(not antok::generators::functionArgumentHandler(summandNames, function, index, true)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 

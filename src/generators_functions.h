@@ -9,6 +9,12 @@ namespace antok {
 
 	namespace generators {
 
+		bool functionArgumentHandler(std::vector<std::pair<std::string, std::string> >& args,
+		                             const YAML::Node& function,
+		                             int index,
+		                             bool argStringsAlreadyValues = false);
+		std::string getFunctionArgumentHandlerErrorMsg(std::vector<std::string> quantityNames);
+
 		antok::Function* generateAbs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateConvertIntToDouble(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateDiff(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
@@ -17,8 +23,6 @@ namespace antok {
 		antok::Function* generateGetGradXGradY(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateGetLorentzVectorAttributes(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateGetLorentzVec(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-		antok::Function* generateGetRpdExpectedHitsParameters(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-		antok::Function* generateGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateGetTs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateGetVector3(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateMass(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);

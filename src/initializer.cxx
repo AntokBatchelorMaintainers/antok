@@ -9,6 +9,7 @@
 #include<constants.h>
 #include<cut.hpp>
 #include<cutter.h>
+#include<entryPoint.hpp>
 #include<event.h>
 #include<data.h>
 #include<functions.hpp>
@@ -516,10 +517,6 @@ bool antok::Initializer::initializeEvent() {
 				antokFunctionPtr = antok::generators::generateGetLorentzVectorAttributes(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getLorentzVec") {
 				antokFunctionPtr = antok::generators::generateGetLorentzVec(function, quantityNames, indices[indices_i]);
-			} else if(functionName == "getRpdExpectedHitsParameters") {
-				antokFunctionPtr = antok::generators::generateGetRpdExpectedHitsParameters(function, quantityNames, indices[indices_i]);
-			} else if(functionName == "getRpdPhi") {
-				antokFunctionPtr = antok::generators::generateGetRpdPhi(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getTs") {
 				antokFunctionPtr = antok::generators::generateGetTs(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getVector3") {
@@ -536,8 +533,11 @@ bool antok::Initializer::initializeEvent() {
 				std::cerr<<"Could not convert function name to std::string for CalculatedQuantity \""<<quantityNames[0]<<"\"."<<std::endl;
 				return false;
 			} else {
-				std::cerr<<"Function type \""<<functionName<<"\" not supported."<<std::endl;
-				return false;
+				antokFunctionPtr = antok::user::getUserFunction(function, quantityNames, indices[indices_i]);
+				if(antokFunctionPtr == 0) {
+					std::cerr<<"Function type \""<<functionName<<"\" not supported."<<std::endl;
+					return false;
+				}
 			}
 			if(antokFunctionPtr == 0) {
 				std::cerr<<"Error initializing function with name \"" + functionName + "\" which should calculate [";

@@ -4,6 +4,7 @@ set(INCLUDE_DIRECTORIES
 	${Boost_INCLUDE_DIRS}
 	${ROOT_INCLUDE_DIR}
 	${YAMLCPP_INCLUDE_DIR}
+	${USER_DIR}
    )
 include_directories(${INCLUDE_DIRECTORIES})
 
@@ -23,6 +24,7 @@ set(SOURCES
 	object_manager.cxx
 	plotter.cxx
 	rpd_helper_helper.cxx
+	${USER_SOURCES}
    )
 
 make_shared_library("antok" "${SOURCES}" "${ROOT_LIBS}" "${YAMLCPP_LIBRARY}")

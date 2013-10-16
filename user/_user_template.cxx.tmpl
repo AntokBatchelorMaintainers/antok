@@ -1,0 +1,31 @@
+
+#include<<username>.h>
+
+#include<functions.hpp>
+#include<yame_utils.hpp>
+
+namespace {
+
+	antok::Function* getUserFunction1(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+		return 0;
+	}
+
+	antok::Function* getUserFunction2(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+		return 0;
+	}
+
+}
+
+antok::Function* antok::user::<username>::getUserFunction(const YAML::Node& function,
+                                                          std::vector<std::string>& quantityNames,
+                                                          int index)
+{
+	std::string functionName = antok::YAMLUtils::getString(function["Name"]);
+	antok::Function antokFunctionPtr = 0;
+	if(functionName == "func1") {
+		antokFunctionPtr = getUserFunction1(function, quantityNames, index);
+	} else if(functionName == "func2") {
+		antokFunctionPtr = getUserFunction2(function, quantityNames, index);
+	}
+	return function;
+}

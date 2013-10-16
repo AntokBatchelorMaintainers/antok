@@ -1,0 +1,24 @@
+#ifndef ANTOK_USER_<USERNAME>_H
+#define ANTOK_USER_<USERNAME>_H
+
+#include<yaml-cpp/yaml.h>
+
+namespace antok {
+
+	class Function;
+
+	namespace user {
+
+		namespace <username> {
+
+			antok::Function* getUserFunction(const YAML::Node& function,
+			                                 std::vector<std::string>& quantityNames,
+			                                 int index);
+
+		}
+
+	}
+
+}
+
+#endif
