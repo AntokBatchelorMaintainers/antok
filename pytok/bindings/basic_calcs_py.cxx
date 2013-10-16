@@ -15,37 +15,22 @@ namespace {
 		return antok::py::convertToPy<TLorentzVector>(antok::getBeamEnergy(*beam, *LV_X));
 	}
 
-	bp::tuple __getRPDDeltaPhiResProjection(PyObject* pyBeam,
-	                                             PyObject* pyProton,
-	                                             PyObject* pyX)
+	bp::tuple __getBoostToCenterOfMassSystem(PyObject* pyBeam)
 	{
 		const TLorentzVector* beam = antok::py::convertFromPy<TLorentzVector*>(pyBeam);
-		const TLorentzVector* proton = antok::py::convertFromPy<TLorentzVector*>(pyProton);
-		const TLorentzVector* X = antok::py::convertFromPy<TLorentzVector*>(pyX);
-		double deltaPhi, res;
-		antok::getRPDDeltaPhiResProjection(*beam, *proton, *X, deltaPhi, res);
-		return bp::make_tuple(deltaPhi, res);
+		double centerOfMassEnergy;
+		TVector3 boostVector;
+		antok::getBoostToCenterOfMassSystem(*beam, centerOfMassEnergy, boostVector);
+		PyObject* pyBoostVector = antok::py::convertToPy<TVector3>(boostVector);
+		return bp::make_tuple(centerOfMassEnergy, *pyBoostVector);
 	}
-
-	bp::tuple __getRPDDeltaPhiResRotation(PyObject* pyBeam,
-	                                           PyObject* pyProton,
-	                                           PyObject* pyX)
-	{
-		const TLorentzVector* beam = antok::py::convertFromPy<TLorentzVector*>(pyBeam);
-		const TLorentzVector* proton = antok::py::convertFromPy<TLorentzVector*>(pyProton);
-		const TLorentzVector* X = antok::py::convertFromPy<TLorentzVector*>(pyX);
-		double deltaPhi, res;
-		antok::getRPDDeltaPhiResRotation(*beam, *proton, *X, deltaPhi, res);
-		return bp::make_tuple(deltaPhi, res);
-	}
-
 
 }
 
 void antok::py::exportBasicCalcs() {
 
 	bp::def("getBeamEnergy", &__getBeamEnergy);
-	bp::def("getRPDDeltaPhiResProjection", &__getRPDDeltaPhiResProjection);
-	bp::def("getRPDDeltaPhiResRotation", &__getRPDDeltaPhiResRotation);
+	bp::def("getBoostToCenterOfMassSystem", &__getBoostToCenterOfMassSystem);
+	bp::def("getPositiveSolutionOfQuadraticEquation", &antok::utils::getPositiveSolutionOfQuadraticEquation);
 
 }

@@ -23,6 +23,8 @@
 #include<initializer.h>
 #include<rpd_helper_helper.h>
 
+#include<kbicker.h>
+
 static bool useTransform = true;
 
 class bin0r {
@@ -850,7 +852,7 @@ void fitErrorFunctionForRPD(std::string inFileName,
 		double deltaPhi, res;
 		double protonPhi, xPhi;
 		TVector3 vertex(vertexX, vertexY, vertexZ);
-		antok::getRPDDeltaPhiResPrediction(pBeam, rpdProton, xVector, vertex, deltaPhi, res, protonPhi, xPhi);
+		antok::user::kbicker::getRPDDeltaPhiResPrediction(pBeam, rpdProton, xVector, vertex, deltaPhi, res, protonPhi, xPhi);
 
 		if(not antok::RpdHelperHelper::getInstance()->rpdProtonPhiValid(protonPhi)) {
 			continue;

@@ -6,7 +6,7 @@
 
 #include<TLorentzVector.h>
 
-#include<basic_calcs.h>
+#include<kbicker.h>
 
 namespace antok {
 
@@ -47,13 +47,13 @@ namespace antok {
 						switch(_method)
 						{
 							case 0:
-								antok::getRPDDeltaPhiResProjection((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+								antok::user::kbicker::getRPDDeltaPhiResProjection((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
 								return true;
 							case 1:
 								if(_protonPhiAddr == 0 and _xPhiAddr == 0) {
-									antok::getRPDDeltaPhiResRotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+									antok::user::kbicker::getRPDDeltaPhiResRotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
 								} else {
-									antok::getRPDDeltaPhiResRotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr), (*_protonPhiAddr), (*_xPhiAddr));
+									antok::user::kbicker::getRPDDeltaPhiResRotation((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr), (*_protonPhiAddr), (*_xPhiAddr));
 								}
 								return true;
 							case 2:
@@ -62,9 +62,9 @@ namespace antok {
 									return false;
 								}
 								if(_protonPhiAddr == 0 and _xPhiAddr == 0) {
-									antok::getRPDDeltaPhiResPrediction((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_vertex), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
+									antok::user::kbicker::getRPDDeltaPhiResPrediction((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_vertex), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr));
 								} else {
-									antok::getRPDDeltaPhiResPrediction((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_vertex), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr), (*_protonPhiAddr), (*_xPhiAddr));
+									antok::user::kbicker::getRPDDeltaPhiResPrediction((*_beamLorentzVecAddr), (*_rpdProtonLorentzVecAddr), (*_xLorentzVecAddr), (*_vertex), (*_rpdDeltaPhiAddr), (*_rpdDeltaPhiResAddr), (*_protonPhiAddr), (*_xPhiAddr));
 								}
 								return true;
 						}
@@ -116,17 +116,17 @@ namespace antok {
 					virtual ~GetRPDExpectedHitsParameters() { }
 
 					bool operator() () {
-						antok::getRPDExpectedHitsParameters(*_pBeamAddr,
-															*_pXAddr,
-															*_vertexAddr,
-															*_xOffsetAddr,
-															*_yOffsetAddr,
-															*_xAngleAddr,
-															*_yAngleAddr,
-															*_rpdPhiRingAAddr,
-															*_rpdPhiRingBAddr,
-															*_rpdZRingAAddr,
-															*_rpdZRingBAddr);
+						antok::user::kbicker::getRPDExpectedHitsParameters(*_pBeamAddr,
+						                                                   *_pXAddr,
+						                                                   *_vertexAddr,
+						                                                   *_xOffsetAddr,
+						                                                   *_yOffsetAddr,
+						                                                   *_xAngleAddr,
+						                                                   *_yAngleAddr,
+						                                                   *_rpdPhiRingAAddr,
+						                                                   *_rpdPhiRingBAddr,
+						                                                   *_rpdZRingAAddr,
+						                                                   *_rpdZRingBAddr);
 						return true;
 					}
 
