@@ -107,8 +107,8 @@ namespace {
 		antok::Data& data = antok::ObjectManager::instance()->getData();
 
 		if(hasNodeKey(function["Summands"], "Indices") or hasNodeKey(function["Summands"], "Name")) {
-			if(not hasNodeKey(function["Summands"], "Indices") and hasNodeKey(function["Summands"], "Name")) {
-				std::cerr<<"Either \"Summands\" or \"Name\" found in sum function, but not both (Variable: \""<<quantityName<<"\")."<<std::endl;
+			if(not (hasNodeKey(function["Summands"], "Indices") and hasNodeKey(function["Summands"], "Name"))) {
+				std::cerr<<"Either \"Indices\" or \"Name\" found in sum function, but not both (Variable: \""<<quantityName<<"\")."<<std::endl;
 				return 0;
 			}
 			if(index > 0) {
