@@ -273,7 +273,7 @@ bool antok::Initializer::initializeData() {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
-			} else if(type == "std::vector<double") {
+			} else if(type == "std::vector<double>") {
 				if(not data.insert<std::vector<double> >(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
@@ -398,7 +398,7 @@ bool antok::Initializer::initializeData() {
 	for(std::map<std::string, Long64_t>::iterator it = data.long64_ts.begin(); it != data.long64_ts.end(); ++it) {
 		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
-	for(std::map<std::string, std::vector<double> >::iterator it = data.doubleVectors.begin(); it != data.doubleVectors.end(); ++it) {
+	for(std::map<std::string, std::vector<double>* >::iterator it = data.doubleVectors.begin(); it != data.doubleVectors.end(); ++it) {
 		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 	for(std::map<std::string, TLorentzVector>::iterator it = data.lorentzVectors.begin(); it != data.lorentzVectors.end(); ++it) {

@@ -55,7 +55,7 @@ namespace antok {
 			return false;
 		}
 		global_map[name] = "std::vector<double>";
-		doubleVectors[name] = std::vector<double>();
+		doubleVectors[name] = 0;
 		return true;
 	}
 
@@ -108,7 +108,7 @@ namespace antok {
 		if(doubleVectors.count(name) < 1) {
 			return 0;
 		}
-		return &doubleVectors[name];
+		return doubleVectors[name];
 	}
 
 	template<>
