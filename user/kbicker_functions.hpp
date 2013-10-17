@@ -146,6 +146,72 @@ namespace antok {
 
 				};
 
+				class GetCutOnExtraTracks : public Function
+				{
+
+				  public:
+
+					GetCutOnExtraTracks(std::vector<double>* trackTimesAddr,
+					                    std::vector<double>* trackTimeSigmasAddr,
+					                    std::vector<double>* trackNHitsAddr,
+					                    std::vector<double>* trackZFirstAddr,
+					                    std::vector<double>* trackZLastAddr,
+					                    std::vector<double>* trackQAddr,
+					                    double* cutAddr,
+					                    int* nExtraTracksAddr,
+					                    double* xTracksMeanTime)
+						: _nParticles(antok::Constants::nParticles()),
+						  _trackTimesAddr(trackTimesAddr),
+						  _trackTimeSigmasAddr(trackTimeSigmasAddr),
+						  _trackNHitsAddr(trackNHitsAddr),
+						  _trackZFirstAddr(trackZFirstAddr),
+						  _trackZLastAddr(trackZLastAddr),
+						  _trackQAddr(trackQAddr),
+						  _cutAddr(cutAddr),
+						  _nExtraTracksAddr(nExtraTracksAddr),
+						  _xTracksMeanTime(xTracksMeanTime) { }
+
+					virtual ~GetCutOnExtraTracks() { }
+
+					bool operator() () {
+						// Do the cut
+						bool cut  = antok::user::kbicker::extraTracksCut(*_trackTimesAddr,
+						                                                 *_trackTimeSigmasAddr,
+						                                                 *_trackNHitsAddr,
+						                                                 *_trackZFirstAddr,
+						                                                 *_trackZLastAddr,
+						                                                 *_trackQAddr);
+						(*_cutAddr) = cut ? 1. : 0.;
+						// Number of extra tracks
+						(*_nExtraTracksAddr) = (int)(_trackTimesAddr->size() - _nParticles);
+						// Mean time of track from X
+						(*_xTracksMeanTime) = 0.;
+						double weightSum = 0.;
+						for(unsigned int i = 0; i < _nParticles; ++i) {
+							double weight = 1. / ((*_trackTimeSigmasAddr)[i] * (*_trackTimeSigmasAddr)[i]);
+							(*_xTracksMeanTime) += (*_trackTimesAddr)[i] * weight;
+							weightSum += weight;
+						}
+						(*_xTracksMeanTime) /= weightSum;
+						return true;
+					}
+
+					  private:
+
+						const unsigned int& _nParticles;
+
+						std::vector<double>* _trackTimesAddr;
+						std::vector<double>* _trackTimeSigmasAddr;
+						std::vector<double>* _trackNHitsAddr;
+						std::vector<double>* _trackZFirstAddr;
+						std::vector<double>* _trackZLastAddr;
+						std::vector<double>* _trackQAddr;
+						double* _cutAddr;
+						int* _nExtraTracksAddr;
+						double* _xTracksMeanTime;
+
+				};
+
 			}
 
 		}

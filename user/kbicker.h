@@ -20,6 +20,7 @@ namespace antok {
 
 			antok::Function* generateGetRpdExpectedHitsParameters(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetCutOnExtraTracks(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 
 
 			void getRPDDeltaPhiResProjection(const TLorentzVector& pBeam,
@@ -62,6 +63,13 @@ namespace antok {
 			                                  double& rpdPhiRingB,
 			                                  double& rpdZRingA,
 			                                  double& rpdZRingB);
+
+			bool extraTracksCut(std::vector<double> trackTimes,
+			                    std::vector<double> trackTimeSigmas,
+			                    std::vector<double> trackNHits,
+			                    std::vector<double> trackZFirst,
+			                    std::vector<double> trackZLast,
+			                    std::vector<double> trackQP);
 
 		}
 

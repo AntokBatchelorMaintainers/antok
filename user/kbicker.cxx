@@ -21,6 +21,8 @@ antok::Function* antok::user::kbicker::getUserFunction(const YAML::Node& functio
 		antokFunctionPtr = antok::user::kbicker::generateGetRpdExpectedHitsParameters(function, quantityNames, index);
 	} else if(functionName == "getRpdPhi") {
 		antokFunctionPtr = antok::user::kbicker::generateGetRpdPhi(function, quantityNames, index);
+	} else if(functionName == "handleExtraTracks") {
+		antokFunctionPtr = antok::user::kbicker::generateGetCutOnExtraTracks(function, quantityNames, index);
 	}
 	return antokFunctionPtr;
 }
@@ -186,6 +188,69 @@ antok::Function* antok::user::kbicker::generateGetRpdPhi(const YAML::Node& funct
 	                                                       vertexAddr));
 
 };
+
+antok::Function* antok::user::kbicker::generateGetCutOnExtraTracks(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 3) {
+		std::cerr<<"Need 2 names for function \"handleExtraTracks\""<<std::endl;
+		return 0;
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("TrackTimes", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("TrackTimeSigmas", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("TrackNHits", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("TrackZFirst", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("TrackZLast", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("TrackQP", "std::vector<double>"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* trackTimesAddr = data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* trackTimeSigmasAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* trackNHitsAddr = data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* trackZFirstAddr = data.getAddr<std::vector<double> >(args[3].first);
+	std::vector<double>* trackZLastAddr = data.getAddr<std::vector<double> >(args[4].first);
+	std::vector<double>* trackQAddr = data.getAddr<std::vector<double> >(args[5].first);
+
+	std::vector<double*> doubleQuantityAddrs;
+	std::vector<int*> intQuantityAddrs;
+
+	const unsigned int NUMBER_OF_INT_QUANTITIES = 1;
+
+	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
+		if(i >= quantityNames.size() - NUMBER_OF_INT_QUANTITIES) {
+			if(not data.insert<int>(quantityNames[i])) {
+				std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+				return 0;
+			}
+			intQuantityAddrs.push_back(data.getAddr<int>(quantityNames[i]));
+		} else {
+			if(not data.insert<double>(quantityNames[i])) {
+				std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+				return 0;
+			}
+			doubleQuantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
+		}
+	}
+
+	return (new antok::user::kbicker::functions::GetCutOnExtraTracks(trackTimesAddr,
+	                                                                 trackTimeSigmasAddr,
+	                                                                 trackNHitsAddr,
+	                                                                 trackZFirstAddr,
+	                                                                 trackZLastAddr,
+	                                                                 trackQAddr,
+	                                                                 doubleQuantityAddrs[0],
+	                                                                 intQuantityAddrs[0],
+	                                                                 doubleQuantityAddrs[1]));
+
+}
 
 
 void antok::user::kbicker::getRPDDeltaPhiResProjection(const TLorentzVector& pBeam,
@@ -389,5 +454,17 @@ void antok::user::kbicker::getRPDExpectedHitsParameters(const TLorentzVector& pB
 		rpdZRingB = 0.;
 		rpdPhiRingB = -10.;
 	}
+
+}
+
+bool antok::user::kbicker::extraTracksCut(std::vector<double> trackTimes,
+                                          std::vector<double> trackTimeSigmas,
+                                          std::vector<double> trackNHits,
+                                          std::vector<double> trackZFirst,
+                                          std::vector<double> trackZLast,
+                                          std::vector<double> trackQP)
+{
+
+	return false;
 
 }
