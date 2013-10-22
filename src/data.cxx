@@ -136,6 +136,17 @@ std::string antok::Data::getType(std::string name) {
 	return "";
 }
 
+bool antok::Data::isVector(std::string name) {
+	std::string prefix = "std::vector<";
+	std::string postfix = ">";
+	const std::string& typeName = getType(name);
+	if((not typeName.compare(0, prefix.size(), prefix)) and
+	    not typeName.compare(typeName.length() - postfix.length(), postfix.length(), postfix)) {
+		return true;
+	}
+	return false;
+}
+
 std::string antok::Data::getVariableInsertionErrorMsg(std::vector<std::string> quantityNames,
                                                       std::string quantityName)
 {

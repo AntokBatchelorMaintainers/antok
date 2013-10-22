@@ -26,6 +26,7 @@ namespace antok {
 		template<typename T> T* getAddr(std::string name);
 
 		std::string getType(std::string name);
+		bool isVector(std::string name);
 
 		static std::string getVariableInsertionErrorMsg(std::vector<std::string> quantityNames,
 		                                                std::string quantityName = "");
