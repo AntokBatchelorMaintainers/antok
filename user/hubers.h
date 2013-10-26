@@ -15,6 +15,10 @@ namespace antok {
 			                                 std::vector<std::string>& quantityNames,
 			                                 int index);
 
+			antok::Function* generateSqrt(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateFrac(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetPt(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateEnforceEConservation(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetNeuronalBeamEnergy(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 
 			void getNeuronalBeamEnergy(const double& X,
