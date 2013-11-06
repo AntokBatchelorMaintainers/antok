@@ -10,8 +10,8 @@
 #include<iostream>
 
 antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function,
-																											std::vector<std::string>& quantityNames,
-																											int index)
+                                                      std::vector<std::string>& quantityNames,
+                                                      int index)
 {
 	std::string functionName = antok::YAMLUtils::getString(function["Name"]);
 	antok::Function* antokFunctionPtr = 0;
