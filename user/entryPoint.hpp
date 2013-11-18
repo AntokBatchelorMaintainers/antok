@@ -9,12 +9,14 @@
 // and push back your getUserFunction() into the userFunctions std::vector<>
 // below.
 #include<kbicker.h>
+#include<hubers.h>
 namespace {
 	std::vector<antok::Function* (*)(const YAML::Node&, std::vector<std::string>&, int)> __getUserFunctions(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
 		std::vector<antok::Function* (*)(const YAML::Node&, std::vector<std::string>&, int)> userFunctions;
 		// User defined function have to be added here
 
 		userFunctions.push_back(&antok::user::kbicker::getUserFunction);
+		userFunctions.push_back(&antok::user::hubers::getUserFunction);
 
 		// End of user defined functions
 		return userFunctions;
