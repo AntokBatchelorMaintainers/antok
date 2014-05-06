@@ -55,7 +55,7 @@ namespace antok {
 			return false;
 		}
 		global_map[name] = "std::vector<double>";
-		doubleVectors[name] = 0;
+		doubleVectors[name] = (new std::vector<double>);
 		return true;
 	}
 
