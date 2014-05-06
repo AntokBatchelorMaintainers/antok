@@ -10,6 +10,7 @@
 // below.
 #include<kbicker.h>
 #include<hubers.h>
+
 namespace {
 	std::vector<antok::Function* (*)(const YAML::Node&, std::vector<std::string>&, int)> __getUserFunctions(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
 		std::vector<antok::Function* (*)(const YAML::Node&, std::vector<std::string>&, int)> userFunctions;
@@ -34,16 +35,17 @@ namespace antok {
 			userFunctions = __getUserFunctions(function, quantityNames, index);
 
 			antok::Function* retval = 0;
-			bool alreadyThere = false;
+
 			for(unsigned int i = 0; i < userFunctions.size(); ++i) {
-				if(alreadyThere) {
-					std::cerr<<"More than one user defined function responded (dublicate names?). Aborting..."<<std::endl;
+				antok::Function* userFunction = (*userFunctions[i])(function, quantityNames, index);
+				if(not userFunction) {
+					continue;
+				}
+				if(retval) {
+					std::cerr<<"More than one user defined function responded (duplicate names?). Aborting..."<<std::endl;
 					return 0;
 				}
-				retval = (*userFunctions[i])(function, quantityNames, index);
-				if(retval) {
-					alreadyThere = true;
-				}
+				retval = userFunction;
 			}
 			return retval;
 
