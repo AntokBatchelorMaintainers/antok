@@ -24,7 +24,7 @@ bool antok::Constants::set_charged_kaon_mass(const double& charged_kaon_mass) {
 	return false;
 };
 
-const double antok::Constants::RPDPeriod() {
+double antok::Constants::RPDPeriod() {
 	return TMath::Pi() / 6.;
 }
 

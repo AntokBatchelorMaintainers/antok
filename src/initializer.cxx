@@ -192,7 +192,7 @@ bool antok::Initializer::initializeCutter() {
 
 			antok::Cut* antokCut = 0;
 
-			if(cutter._cutsMap[shortName] > 0) {
+			if(cutter._cutsMap[shortName]) {
 				antokCut = cutter._cutsMap[shortName];
 			} else {
 				bool* result = 0;
