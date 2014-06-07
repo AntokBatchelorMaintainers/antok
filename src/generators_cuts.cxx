@@ -41,6 +41,50 @@ namespace {
 
 	}
 
+	antok::Cut* __getEllipticCut(const YAML::Node& cut,
+	                             const std::string& shortName,
+	                             const std::string& longName,
+	                             const std::string& abbreviation,
+	                             bool* result,
+	                             int mode)
+	{
+
+
+		double* meanX = antok::YAMLUtils::getAddress<double>(cut["meanX"]);
+		if(meanX == 0) {
+			std::cerr<<"Problem processing \"meanX\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		double* meanY = antok::YAMLUtils::getAddress<double>(cut["meanY"]);
+		if(meanY == 0) {
+			std::cerr<<"Problem processing \"meanY\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		double* cutX = antok::YAMLUtils::getAddress<double>(cut["cutX"]);
+		if(cutX == 0) {
+			std::cerr<<"Problem processing \"cutX\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		double* cutY = antok::YAMLUtils::getAddress<double>(cut["cutY"]);
+		if(cutX == 0) {
+			std::cerr<<"Problem processing \"cutY\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		double* X = antok::YAMLUtils::getAddress<double>(cut["X"]);
+		if(X == 0) {
+			std::cerr<<"Problem processing \"X\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		double* Y = antok::YAMLUtils::getAddress<double>(cut["Y"]);
+		if(X == 0) {
+			std::cerr<<"Problem processing \"Y\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		return (new antok::cuts::EllipticCut(shortName, longName, abbreviation, result,
+		                                        meanX, meanY, cutX, cutY, X, Y, mode));
+
+	}
 
 	antok::Cut* __generateRangeCut(const YAML::Node& cut,
 	                               const std::string& shortName,
@@ -156,6 +200,64 @@ namespace {
 			antokCut = __getEqualityCut<Long64_t>(cut, shortName, longName, abbreviation, result, mode);
 		} else if (typeName == "TLorentzVector") {
 			antokCut = __getEqualityCut<TLorentzVector>(cut, shortName, longName, abbreviation, result, mode);
+		} else {
+			std::cerr<<"Type \""<<typeName<<"\" not supported in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		return antokCut;
+
+	};
+
+	antok::Cut* __generateEllipticCut(const YAML::Node& cut,
+	                                  const std::string& shortName,
+	                                  const std::string& longName,
+	                                  const std::string& abbreviation,
+	                                  bool* result)
+	{
+
+		using antok::YAMLUtils::hasNodeKey;
+
+		if(not (hasNodeKey(cut, "Type") and hasNodeKey(cut, "meanX") and hasNodeKey(cut, "meanY")
+		   and hasNodeKey(cut, "cutX") and hasNodeKey(cut, "cutY") and hasNodeKey(cut, "X")
+		   and hasNodeKey(cut, "Y"))) {
+			std::cerr<<"One of the required arguments (\"Type\", \"meanX\", \"meanY\", \"cutX\", \"cutY\", \"X\", and \"Y\") for \"Equality\" cut \""<<shortName<<"\" is missing."<<std::endl;
+			return 0;
+		}
+
+		std::string type = antok::YAMLUtils::getString(cut["Type"]);
+		if(type == "") {
+			std::cerr<<"Could not convert \"Type\" to std::string in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		int mode = -1;
+		if(type == "Inclusive") {
+			mode = 0;
+		} else if (type == "Exclusive") {
+			mode = 1;
+		} else {
+			std::cerr<<"\"Type\" \""<<type<<"\" not supported by \"Elliptic\" cut."<<std::endl;
+			return 0;
+		}
+
+		std::string variableNameX = antok::YAMLUtils::getString(cut["X"]);
+		if(variableNameX == "") {
+			std::cerr<<"Could not convert \"Elliptic\" cut \""<<shortName<<"\"'s \"X\" to std::string."<<std::endl;
+			return 0;
+		}
+		std::string variableNameY = antok::YAMLUtils::getString(cut["Y"]);
+		if(variableNameY == "") {
+			std::cerr<<"Could not convert \"Elliptic\" cut \""<<shortName<<"\"'s \"Y\" to std::string."<<std::endl;
+			return 0;
+		}
+
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+		std::string typeName = data.getType(variableNameX);
+
+		antok::Cut* antokCut = 0;
+		if(typeName == "double") {
+			antokCut = __getEllipticCut(cut, shortName, longName, abbreviation, result, mode);
 		} else {
 			std::cerr<<"Type \""<<typeName<<"\" not supported in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
 			return 0;
@@ -311,6 +413,8 @@ namespace {
 			antokCut = __generateRangeCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "Equality") {
 			antokCut = __generateEqualityCut(cut, shortName, longName, abbreviation, result);
+		} else if (cutName == "Elliptic") {
+			antokCut = __generateEllipticCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "TriggerMask") {
 			antokCut = __generateTriggerMaskCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "Group") {
