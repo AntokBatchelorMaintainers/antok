@@ -257,6 +257,15 @@ namespace antok {
 						}
 						(*_outAddr) = retval;
 						return true;
+					case 2:
+						// nand
+						retval = true;
+						for(unsigned int i = 0; i < _cuts.size(); ++i) {
+							(*_cuts[i])();
+							retval = retval and (*_results[i]);
+						}
+						(*_outAddr) = not retval;
+						return true;
 				}
 				return false;
 			}

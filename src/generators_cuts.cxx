@@ -334,6 +334,8 @@ namespace {
 			mode = 0;
 		} else if (type == "Or") {
 			mode = 1;
+		} else if (type == "Nand") {
+			mode = 2;
 		} else if (type == "") {
 			std::cerr<<"Could not convert \"GroupCut\" \""<<shortName<<"\"'s \"Type\" to std::string."<<std::endl;
 			return 0;
