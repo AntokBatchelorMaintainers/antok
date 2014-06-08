@@ -64,27 +64,27 @@ namespace antok {
 
 
 				class GetPt : public Function
-				{   
+				{
 					public:
 						GetPt(TLorentzVector* pLorentzVec, TLorentzVector* beamLorentzVec, double *pTAddr)
 							: _pLorentzVec(pLorentzVec),
 							_beamLorentzVec(beamLorentzVec),
 							_pTAddr(pTAddr){}
 
-						virtual ~GetPt() { } 
+						virtual ~GetPt() { }
 
 						bool operator() () {
 							TVector3 beamVec = _beamLorentzVec->Vect();
 							TVector3 pVec = _pLorentzVec->Vect();
 							(*_pTAddr) = beamVec.Cross( pVec ) .Cross( beamVec ) .Unit() .Dot( pVec );
 							return true;
-						}   
+						}
 
 					private:
 						TLorentzVector* _pLorentzVec;
 						TLorentzVector* _beamLorentzVec;
 						double* _pTAddr;
-				};  
+				};
 
 				template<typename T>
 				class EnforceEConservation : public Function
@@ -129,25 +129,31 @@ namespace antok {
 						int _mode;
 				};
 
-				class GetNeuronalBeamEnergy : public Function
+				//***********************************
+				//Calculates the beam energy using a
+				//polynomial represention from a
+				//neuronal network
+				//calibrated for primakoff 2009
+				//***********************************
+				class GetNeuronalBeam : public Function
 				{
 					public:
-						GetNeuronalBeamEnergy(double* xAddr,
-								double* yAddr,
-								double* dxAddr,
-								double* dyAddr,
-								double* eAddr)
-							: _xAddr(xAddr),
-							_yAddr(yAddr),
-							_dxAddr(dxAddr),
-							_dyAddr(dyAddr),
-							_eAddr(eAddr) { }
+						GetNeuronalBeam(double* xAddr, double* yAddr, double* dxAddr,
+						                double* dyAddr, double* eAddr, TLorentzVector* LVAddr)
+						               :_xAddr(xAddr), _yAddr(yAddr), _dxAddr(dxAddr), _dyAddr(dyAddr),
+						                _eAddr(eAddr), _LVAddr(LVAddr){}
 
-						virtual ~GetNeuronalBeamEnergy() { }
+						virtual ~GetNeuronalBeam() { }
 
 						bool operator() () {
 							double xarr[4]={*_xAddr,*_yAddr,*_dxAddr,*_dyAddr};
-							*_eAddr=					antok::user::hubers::NNpoly::Ebeam(xarr,NNpoly::params);
+							if ( std::fabs(*_xAddr) > 1.8 || std::fabs(*_yAddr) > 1.8 || std::fabs(*_dxAddr) > 5e-4 || std::fabs(*_dyAddr+3e-4) > 5e-4 )
+								*_eAddr = 190;
+							else
+								*_eAddr = NNpoly::Ebeam(xarr,NNpoly::getParams2009());
+							TVector3 v3(*_dxAddr, *_dyAddr, std::sqrt( 1 - sqr(*_dxAddr) - sqr(*_dyAddr) ));
+							v3.SetMag(*_eAddr);
+							_LVAddr->SetXYZT(v3.X(),v3.Y(), v3.Z(), std::sqrt( sqr(*_eAddr) + sqr(antok::Constants::chargedPionMass())) );
 							return true;
 						}
 
@@ -157,6 +163,7 @@ namespace antok {
 						double* _dxAddr;
 						double* _dyAddr;
 						double* _eAddr;
+						TLorentzVector* _LVAddr;
 				};
 
 
@@ -168,6 +175,4 @@ namespace antok {
 	}
 
 }
-
-
 #endif

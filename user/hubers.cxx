@@ -23,9 +23,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetPt(function, quantityNames, index);
 	else if(functionName == "EnforceEConservation")
 		antokFunctionPtr = antok::user::hubers::generateEnforceEConservation(function, quantityNames, index);
-	else if(functionName == "BeamNN") {
-		antokFunctionPtr = antok::user::hubers::generateGetNeuronalBeamEnergy(function, quantityNames, index);
-	}
+	else if(functionName == "BeamNN")
+		antokFunctionPtr = antok::user::hubers::generateGetNeuronalBeam(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -125,30 +124,30 @@ antok::Function* antok::user::hubers::generateGetPt(const YAML::Node& function, 
 };
 
 antok::Function* antok::user::hubers::generateEnforceEConservation(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
-{                  
+{
 
-	if(quantityNames.size() > 1) {                                                                                      
+	if(quantityNames.size() > 1) {
 		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return 0;
-	}             
+	}
 	std::string quantityName = quantityNames[0];
 
 	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("LVBeam", "TLorentzVector"));                                    
+	args.push_back(std::pair<std::string, std::string>("LVBeam", "TLorentzVector"));
 	args.push_back(std::pair<std::string, std::string>("LVPion", "TLorentzVector"));
 	args.push_back(std::pair<std::string, std::string>("LVGamma", "TLorentzVector"));
 
 	if(not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
-	}                                                         
+	}
 
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
 	TLorentzVector* beamAddr = data.getAddr<TLorentzVector>(args[0].first);
 	TLorentzVector* pionAddr = data.getAddr<TLorentzVector>(args[1].first);
 	TLorentzVector* gammaAddr = data.getAddr<TLorentzVector>(args[2].first);
-	if(not data.insert<TLorentzVector>(quantityName)) {    
+	if(not data.insert<TLorentzVector>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
@@ -158,14 +157,15 @@ antok::Function* antok::user::hubers::generateEnforceEConservation(const YAML::N
 
 
 
-antok::Function* antok::user::hubers::generateGetNeuronalBeamEnergy(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
-	if(quantityNames.size() > 1) {
-		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+	if(quantityNames.size() != 2) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<" needed two\"."<<std::endl;
 		return 0;
 	}
-	std::string quantityName = quantityNames[0];
+	std::string quantityNameD = quantityNames[0];
+	std::string quantityNameLV = quantityNames[1];
 
 
 	std::vector<std::pair<std::string, std::string> > args;
@@ -185,11 +185,15 @@ antok::Function* antok::user::hubers::generateGetNeuronalBeamEnergy(const YAML::
 	double* yAddr  = data.getAddr<double>(args[1].first);
 	double* dxAddr = data.getAddr<double>(args[2].first);
 	double* dyAddr = data.getAddr<double>(args[3].first);
-	if(not data.insert<double>(quantityName)) {
+	if(not data.insert<double>(quantityNameD)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+	if(not data.insert<TLorentzVector>(quantityNameLV)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::user::hubers::functions::GetNeuronalBeamEnergy(xAddr, yAddr, dxAddr, dyAddr, data.getAddr<double>(quantityName)));
+	return (new antok::user::hubers::functions::GetNeuronalBeam(xAddr, yAddr, dxAddr, dyAddr, data.getAddr<double>(quantityNameD), data.getAddr<TLorentzVector>(quantityNameLV)));
 }
 

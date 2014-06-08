@@ -19,14 +19,10 @@ namespace antok {
 			antok::Function* generateFrac(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetPt(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateEnforceEConservation(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetNeuronalBeamEnergy(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetNeuronalBeam(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 
-			void getNeuronalBeamEnergy(const double& X,
-																 const double& Y, 
-																 const double& dX, 
-																 const double& dY, 
-																 double& E); 
- 
+			void getNeuronalBeamEnergy(const double& X, const double& Y, const double& dX, const double& dY, double& E);
+
 
 		}
 
