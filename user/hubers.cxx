@@ -34,6 +34,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetBadSpill(function, quantityNames, index);
 	else if(functionName == "Shift")
 		antokFunctionPtr = antok::user::hubers::generateGetShifted(function, quantityNames, index);
+	else if(functionName == "ScaleCluster")
+		antokFunctionPtr = antok::user::hubers::generateGetScaledCluster(function, quantityNames, index);
 	else if(functionName == "getNeutralLorentzVec")
 		antokFunctionPtr = antok::user::hubers::generateGetNeutralLorentzVec(function, quantityNames, index);
 	return antokFunctionPtr;
@@ -396,6 +398,61 @@ antok::Function* antok::user::hubers::generateGetShifted(const YAML::Node& funct
 }
 
 //***********************************
+// Scale Energy of a cluster depending
+// linear method in case of MC
+// posdep method in case of RD
+//***********************************
+antok::Function* antok::user::hubers::generateGetScaledCluster(const YAML::Node& function, std::vector<std::string>& quantityNames, int index){
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("X", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("Y", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("E", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("Method", "int"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* XAddr= data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* YAddr= data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* EAddr= data.getAddr<std::vector<double> >(args[2].first);
+	int* methodAddr = data.getAddr<int>(args[3].first);
+
+	std::vector<std::string> possiblyConstArgs;
+	possiblyConstArgs.push_back("Threshold");
+
+	for(unsigned int i = 0; i < possiblyConstArgs.size(); ++i) {
+		if(not antok::YAMLUtils::hasNodeKey(function, possiblyConstArgs[i])) {
+			std::cerr<<"Argument \""<<possiblyConstArgs[i]<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return 0;
+		}
+	}
+
+	double* thresholdAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[0]]);
+
+	if(not data.insert<std::vector<double> >(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetScaledCluster(XAddr, YAddr, EAddr, methodAddr, thresholdAddr,
+	                                                             data.getAddr<std::vector<double> >(quantityName)
+	                                                            )
+	       );
+};
+
+
+//***********************************
 //gets LorentzVector for cluster
 //produced in a  vertex with coordinates X/Y/Z
 //***********************************
@@ -442,3 +499,47 @@ antok::Function* antok::user::hubers::generateGetNeutralLorentzVec(const YAML::N
 	       );
 
 };
+
+double antok::user::hubers::IntraCellX( double cx ){
+	static const double fMeanECALX = 0.0;
+	const double xbound = 3.060 + 9.575 - fMeanECALX - 3.5 * 3.83;  // x-position of cell boundary closest to 0
+	return fabs( remainder( cx - xbound, 3.83 ) );
+}
+
+double antok::user::hubers::IntraCellY( double cy ){
+	static const double fMeanECALY = 0.00;
+	const double ybound = 0.150 + 5.745 - fMeanECALY - 1.5 * 3.83;  // y-position of cell boundary closest to 0
+	return fabs( remainder( cy - ybound, 3.83 ) );
+}
+
+double antok::user::hubers::PEDepGammaCorrection( double Egamma, double cx, double cy ){
+	// obtained from SelectorHelper::FitPosEnergyCorrection()
+	const double x190 = Egamma/190.;
+
+	const double p0 = -9.57965 - 6.42201 * atan( 7.38429*(x190-0.749578) )  +0.74;
+	const double p1 =  1.89692 + 1.2888  * atan( 8.79757*(x190-0.738527) );
+	const double p2 =  1.61223 + 1.13902 * atan( 9.43193*(x190-0.759991) );
+
+	const double p4 = 2.57235  - x190 * 15.9715;
+	const double p5 = 0.214072 - x190 *  0.202193;
+	const double p6 = 1.;
+	const double p7 = 0.97;
+
+	double x = IntraCellX( cx );
+	double y = IntraCellY( cy );
+
+	double retval= Egamma -
+	       ( p0 + p1 * antok::sqr(x-3.83/2.) +
+	         p2 * antok::sqr(y-3.83/2.) +
+	         p4 * exp( -0.5 * ( (antok::sqr(x-p6)+antok::sqr(y-p7)) / antok::sqr(p5) ) ) );
+			 return retval;
+
+}
+
+double antok::user::hubers::LinearGammaCorrection( double Egamma ) {
+	static const double fLinEcorr0 = -1.21919;
+	static const double fLinEcorr1 = 0.033045;
+	const double corr = fLinEcorr0 + fLinEcorr1 * Egamma;
+	Egamma-=corr;
+	return Egamma ;
+}

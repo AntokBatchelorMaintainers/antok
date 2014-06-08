@@ -303,6 +303,47 @@ namespace antok {
 				};
 
 				//***********************************
+				// Scale Energy of a cluster depending
+				// on energy and position
+				//***********************************
+				class GetScaledCluster : public Function
+				{
+					public:
+						GetScaledCluster(std::vector<double>* XAddr, std::vector<double>* YAddr,
+						                 std::vector<double>* EAddr, int* method, double* threshold,
+						                 std::vector<double>* resultAddr)
+						                :_XAddr(XAddr),_YAddr(YAddr),_EAddr(EAddr),
+						                 _method(method), _threshold(threshold), _resultAddr(resultAddr) {}
+
+						virtual ~GetScaledCluster() {}
+
+						bool operator() () {
+							_resultAddr->clear();
+							for(unsigned int i=0; i<(_XAddr->size()); ++i){
+								if((*_EAddr)[i] < *_threshold)
+									_resultAddr->push_back( (*_EAddr)[i] );
+								else if((*_method)==1)
+									_resultAddr->push_back( LinearGammaCorrection((*_EAddr)[i]) );
+								else if((*_method)==0)
+									_resultAddr->push_back( PEDepGammaCorrection((*_EAddr)[i], (*_XAddr)[i], (*_YAddr)[i]) );
+								else{
+									std::cerr<<__func__<<" wrong method specified."<<std::endl;
+									return 0;
+								}
+							}
+							return 1;
+						}
+
+					private:
+						std::vector<double> *_XAddr;
+						std::vector<double> *_YAddr;
+						std::vector<double>	*_EAddr;
+						int* _method;
+						double* _threshold;
+						std::vector<double>* _resultAddr;
+				};
+
+				//***********************************
 				//gets LorentzVector for cluster
 				//produced in a  vertex with coordinates X/Y/Z
 				//***********************************
