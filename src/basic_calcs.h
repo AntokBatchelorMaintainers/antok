@@ -12,7 +12,7 @@ namespace antok {
 	                                  double& centerOfMassEnergy,
 	                                  TVector3& boostVector);
 
-	template<typename T> T sqr(T t);
+	template<typename T> double sqr(T t) { return t*t; }
 
 	namespace utils {
 

@@ -44,12 +44,6 @@ void antok::getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
 }
 
 
-template<typename T> T antok::sqr(T t)
-{
-	return t*t;
-}
-
-
 double antok::utils::getPositiveSolutionOfQuadraticEquation(const double& a,
                                                             const double& b,
                                                             const double& c)
