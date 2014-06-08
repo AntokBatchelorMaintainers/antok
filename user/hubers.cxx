@@ -38,6 +38,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetScaledCluster(function, quantityNames, index);
 	else if(functionName == "CleanClusters")
 		antokFunctionPtr = antok::user::hubers::generateGetCleanedClusters(function, quantityNames, index);
+	else if(functionName == "MaximumCluster")
+		antokFunctionPtr = antok::user::hubers::generateGetMaximumCluster(function, quantityNames, index);
 	else if(functionName == "getNeutralLorentzVec")
 		antokFunctionPtr = antok::user::hubers::generateGetNeutralLorentzVec(function, quantityNames, index);
 	return antokFunctionPtr;
@@ -528,8 +530,74 @@ antok::Function* antok::user::hubers::generateGetCleanedClusters(const YAML::Nod
 	       );
 }
 
+//***********************************
+//gets highest energetic calorimeter cluster
+//***********************************
+antok::Function* antok::user::hubers::generateGetMaximumCluster(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
 
+	if(quantityNames.size() != 6) {
+		std::cerr<<function["Name"]<<" needs six quantities\"."<<std::endl;
+		return 0;
+	}
 
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("VectorX" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorY" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorZ" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorT" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorE" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("trackX" , "double"));
+	args.push_back(std::pair<std::string, std::string>("trackY" , "double"));
+	args.push_back(std::pair<std::string, std::string>("trackT" , "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* VectorXAddr = data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* VectorYAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* VectorZAddr = data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* VectorTAddr = data.getAddr<std::vector<double> >(args[3].first);
+	std::vector<double>* VectorEAddr = data.getAddr<std::vector<double> >(args[4].first);
+	double* trackXAddr = data.getAddr<double>(args[5].first);
+	double* trackYAddr = data.getAddr<double>(args[6].first);
+	double* trackTAddr = data.getAddr<double>(args[7].first);
+
+	std::string maximumX = quantityNames[0];
+	std::string maximumY = quantityNames[1];
+	std::string maximumZ = quantityNames[2];
+	std::string maximumT = quantityNames[3];
+	std::string maximumE = quantityNames[4];
+	std::string NClus    = quantityNames[5];
+
+	for(unsigned int i=0; i<5; ++i){
+		if(not data.insert<double>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			return 0;
+		}
+	}
+	for(unsigned int i=5; i<6; ++i){
+		if(not data.insert<int>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			return 0;
+		}
+	}
+	return (new antok::user::hubers::functions::GetMaximumCluster(VectorXAddr, VectorYAddr, VectorZAddr,
+	                                                              VectorTAddr, VectorEAddr,
+	                                                              trackXAddr, trackYAddr, trackTAddr,
+	                                                              data.getAddr<double>(maximumX),
+	                                                              data.getAddr<double>(maximumY),
+	                                                              data.getAddr<double>(maximumZ),
+	                                                              data.getAddr<double>(maximumT),
+	                                                              data.getAddr<double>(maximumE),
+	                                                              data.getAddr<int>(NClus)
+	                                                             )
+	       );
+}
 
 //***********************************
 //gets LorentzVector for cluster

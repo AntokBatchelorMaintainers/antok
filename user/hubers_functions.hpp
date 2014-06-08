@@ -465,6 +465,68 @@ namespace antok {
 						double _maximumE;
 				};
 
+				//***********************************
+				//gets highest energetic calorimeter cluster
+				//***********************************
+				class GetMaximumCluster : public Function
+				{
+					public:
+						GetMaximumCluster(std::vector<double>* VectorXAddr, std::vector<double>* VectorYAddr, std::vector<double>* VectorZAddr,
+						                  std::vector<double>* VectorTAddr, std::vector<double>* VectorEAddr,
+						                  double* trackX, double* trackY, double* trackT,
+						                  double* maximumX, double* maximumY, double* maximumZ, double* maximumT,
+						                  double* maximumE, int*  NClus)
+						                 :_VectorXAddr(VectorXAddr), _VectorYAddr(VectorYAddr), _VectorZAddr(VectorZAddr),
+						                  _VectorTAddr(VectorTAddr), _VectorEAddr(VectorEAddr),
+						                  _trackX(trackX), _trackY(trackY), _trackT(trackT),
+						                  _maximumX(maximumX), _maximumY(maximumY), _maximumZ(maximumZ), _maximumT(maximumT),
+						                  _maximumE(maximumE), _NClus(NClus) {}
+
+						virtual ~GetMaximumCluster(){}
+
+						bool operator() () {
+							double eMax = -99;
+							int iMax = -99;
+							*_NClus = 0;
+							for(unsigned int i = 0; i < _VectorXAddr->size(); ++i){
+								if(_VectorEAddr->at(i) < 2.)
+									continue;
+								(*_NClus)++;
+								if(eMax < (*_VectorEAddr)[i]){
+									eMax = (*_VectorEAddr)[i];
+									iMax = i;
+								}
+							}
+							*_maximumX = (*_VectorXAddr)[iMax];
+							*_maximumY = (*_VectorYAddr)[iMax];
+							*_maximumZ = (*_VectorZAddr)[iMax];
+							*_maximumT = (*_VectorTAddr)[iMax];
+							if(iMax >= 0)
+								*_maximumE = (*_VectorEAddr)[iMax];
+							else
+								*_maximumE = -99;
+
+							return true;
+						}
+
+					private:
+						std::vector<double>* _VectorXAddr;
+						std::vector<double>* _VectorYAddr;
+						std::vector<double>* _VectorZAddr;
+						std::vector<double>* _VectorTAddr;
+						std::vector<double>* _VectorEAddr;
+						double* _trackX;
+						double* _trackY;
+						double* _trackT;
+						double* _maximumX;
+						double* _maximumY;
+						double* _maximumZ;
+						double* _maximumT;
+						double* _maximumE;
+						int* _NClus;
+				};
+
+
 
 
 				//***********************************
