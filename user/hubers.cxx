@@ -36,6 +36,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetShifted(function, quantityNames, index);
 	else if(functionName == "ScaleCluster")
 		antokFunctionPtr = antok::user::hubers::generateGetScaledCluster(function, quantityNames, index);
+	else if(functionName == "CleanClusters")
+		antokFunctionPtr = antok::user::hubers::generateGetCleanedClusters(function, quantityNames, index);
 	else if(functionName == "getNeutralLorentzVec")
 		antokFunctionPtr = antok::user::hubers::generateGetNeutralLorentzVec(function, quantityNames, index);
 	return antokFunctionPtr;
@@ -450,6 +452,83 @@ antok::Function* antok::user::hubers::generateGetScaledCluster(const YAML::Node&
 	                                                            )
 	       );
 };
+
+//***********************************
+//cleans calorimeter clusters
+//and merges them dependend onn their distance
+//***********************************
+antok::Function* antok::user::hubers::generateGetCleanedClusters(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 5) {
+		std::cerr<<function["Name"]<<" needs five quantities\"."<<std::endl;
+		return 0;
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("VectorX" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorY" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorZ" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorT" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorE" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("trackX" , "double"));
+	args.push_back(std::pair<std::string, std::string>("trackY" , "double"));
+	args.push_back(std::pair<std::string, std::string>("trackT" , "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* VectorXAddr = data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* VectorYAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* VectorZAddr = data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* VectorTAddr = data.getAddr<std::vector<double> >(args[3].first);
+	std::vector<double>* VectorEAddr = data.getAddr<std::vector<double> >(args[4].first);
+	double* trackXAddr = data.getAddr<double>(args[5].first);
+	double* trackYAddr = data.getAddr<double>(args[6].first);
+	double* trackTAddr = data.getAddr<double>(args[7].first);
+
+	std::vector<std::string> possiblyConstArgs;
+	possiblyConstArgs.push_back("mergeDist");
+	possiblyConstArgs.push_back("timeThreshold");
+
+	for(unsigned int i = 0; i < possiblyConstArgs.size(); ++i) {
+		if(not antok::YAMLUtils::hasNodeKey(function, possiblyConstArgs[i])) {
+			std::cerr<<"Argument \""<<possiblyConstArgs[i]<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return 0;
+		}
+	}
+	double* mergeDistAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[0]]);
+	double* timeThresholdAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[1]]);
+
+	std::string resultVecX = quantityNames[0];
+	std::string resultVecY = quantityNames[1];
+	std::string resultVecZ = quantityNames[2];
+	std::string resultVecT = quantityNames[3];
+	std::string resultVecE = quantityNames[4];
+
+	for(unsigned int i = 0; i < 5; ++i){
+		if(not data.insert<std::vector<double> >(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			return 0;
+		}
+	}
+	return (new antok::user::hubers::functions::GetCleanedClusters(VectorXAddr, VectorYAddr, VectorZAddr, VectorTAddr, VectorEAddr,
+	                                                              trackXAddr, trackYAddr, trackTAddr,
+	                                                              mergeDistAddr, timeThresholdAddr,
+	                                                              data.getAddr<std::vector<double> >(resultVecX),
+	                                                              data.getAddr<std::vector<double> >(resultVecY),
+	                                                              data.getAddr<std::vector<double> >(resultVecZ),
+	                                                              data.getAddr<std::vector<double> >(resultVecT),
+	                                                              data.getAddr<std::vector<double> >(resultVecE)
+	                                                             )
+	       );
+}
+
+
 
 
 //***********************************

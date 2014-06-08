@@ -3,6 +3,7 @@
 
 #include<iostream>
 #include<vector>
+#include<algorithm>
 #include<NNpoly.h>
 
 #include<TLorentzVector.h>
@@ -342,6 +343,129 @@ namespace antok {
 						double* _threshold;
 						std::vector<double>* _resultAddr;
 				};
+
+				//***********************************
+				//cleanes up calorimeter clusters
+				//and merges them dependend on their distance
+				//***********************************
+				class GetCleanedClusters : public Function
+				{
+					public:
+						GetCleanedClusters(std::vector<double>* VectorXAddr, std::vector<double>* VectorYAddr, std::vector<double>* VectorZAddr,
+						                  std::vector<double>* VectorTAddr, std::vector<double>* VectorEAddr,
+						                  double* trackX, double* trackY, double* trackT, double* mergeDist, double*  timeThreshold,
+						                  std::vector<double>* resultVecX, std::vector<double>* resultVecY, std::vector<double>* resultVecZ,
+						                  std::vector<double>* resultVecT, std::vector<double>* resultVecE)
+						                 :_VectorXAddr(VectorXAddr), _VectorYAddr(VectorYAddr), _VectorZAddr(VectorZAddr),
+						                  _VectorTAddr(VectorTAddr), _VectorEAddr(VectorEAddr),
+						                  _trackX(trackX), _trackY(trackY), _trackT(trackT),
+						                  _mergeDist(mergeDist), _timeThreshold(timeThreshold),
+						                  _resultVecX(resultVecX), _resultVecY(resultVecY), _resultVecZ(resultVecZ),
+						                  _resultVecT(resultVecT), _resultVecE(resultVecE) {}
+
+						virtual ~GetCleanedClusters() {}
+
+						bool operator() () {
+
+
+							_resultVecE->clear(); _resultVecX->clear(); _resultVecY->clear(); _resultVecZ->clear(); _resultVecT->clear();
+							_maximumE = -999.;
+							int imax = -999;
+							int newCnt = -1;
+							for(unsigned int i=0; i<_VectorXAddr->size();++i){
+								double dT=fabs(((*_VectorTAddr)[i]-(*_trackT)));
+								if( *_trackT<1e9 && (std::fabs(dT) > *_timeThreshold) )
+									continue;
+								double dist=std::sqrt( antok::sqr(*_trackX-(*_VectorXAddr)[i]) +  antok::sqr(*_trackY-(*_VectorYAddr)[i])  );
+								if( dist < (3.+16./ (*_VectorEAddr)[i]) )
+									continue;
+								_resultVecE->push_back((*_VectorEAddr)[i]); _resultVecX->push_back((*_VectorXAddr)[i]);
+								_resultVecY->push_back((*_VectorYAddr)[i]); _resultVecZ->push_back((*_VectorZAddr)[i]);
+								_resultVecT->push_back((*_VectorTAddr)[i]);
+								newCnt++;
+								if(((*_VectorEAddr)[i]) < (_maximumE))
+									continue;
+								_maximumE=(*_VectorEAddr)[i];
+								imax=newCnt;
+							}
+
+							if(imax==-999){
+								_maximumE=-999;
+								return true;
+							}
+
+							std::swap((*_resultVecX)[imax],(*_resultVecX)[0]);
+							std::swap((*_resultVecY)[imax],(*_resultVecY)[0]);
+							std::swap((*_resultVecZ)[imax],(*_resultVecZ)[0]);
+							std::swap((*_resultVecE)[imax],(*_resultVecE)[0]);
+							std::swap((*_resultVecT)[imax],(*_resultVecT)[0]);
+
+							imax=0;
+
+							int nClusters=_resultVecX->size();
+							if(nClusters==0)
+								return true;
+
+							double closest, eMax=-99;
+							do {
+								closest = antok::sqr(*_mergeDist)+0.1;
+								int m2=-1;
+								for(int i=0; i<nClusters; ++i){
+									if(i==imax)
+										continue;
+									double dist = ( antok::sqr((*_resultVecX)[i]-(*_resultVecX)[imax]) + antok::sqr((*_resultVecY)[i]-(*_resultVecY)[imax]) );
+									if( dist < antok::sqr(*_mergeDist) ){
+										if((*_resultVecE)[i]>eMax){
+											eMax = (*_resultVecE)[i];
+											closest = dist;
+											m2 = i;
+										}
+									}
+								}
+								//-------------------------------------------------------------
+								if( closest < antok::sqr(*_mergeDist) ){
+									const double Esum = (*_resultVecE)[imax] + (*_resultVecE)[m2];
+									(*_resultVecX)[imax] = ( ((*_resultVecX)[imax] * (*_resultVecE)[imax]) + ((*_resultVecX)[m2] *  (*_resultVecE)[m2]) ) / Esum;
+									(*_resultVecY)[imax] = ( ((*_resultVecY)[imax] * (*_resultVecE)[imax]) + ((*_resultVecY)[m2] *  (*_resultVecE)[m2]) ) / Esum;
+									(*_resultVecZ)[imax] = ( ((*_resultVecZ)[imax] * (*_resultVecE)[imax]) + ((*_resultVecZ)[m2] *  (*_resultVecE)[m2]) ) / Esum;
+									(*_resultVecT)[imax] = ( ((*_resultVecT)[imax] * (*_resultVecE)[imax]) + ((*_resultVecT)[m2] *  (*_resultVecE)[m2]) ) / Esum;
+									(*_resultVecE)[imax] = Esum;
+									--nClusters;
+									(*_resultVecE)[m2]=(*_resultVecE)[nClusters]; (*_resultVecX)[m2]=(*_resultVecX)[nClusters];
+									(*_resultVecY)[m2]=(*_resultVecY)[nClusters]; (*_resultVecZ)[m2]=(*_resultVecZ)[nClusters];
+									(*_resultVecT)[m2]=(*_resultVecT)[nClusters];
+								}
+							} while(closest <  antok::sqr(*_mergeDist) );
+							_resultVecX->resize(nClusters);
+							_resultVecY->resize(nClusters);
+							_resultVecZ->resize(nClusters);
+							_resultVecT->resize(nClusters);
+							_resultVecE->resize(nClusters);
+
+							return true;
+
+
+						}
+					private:
+						std::vector<double>* _VectorXAddr;
+						std::vector<double>* _VectorYAddr;
+						std::vector<double>* _VectorZAddr;
+						std::vector<double>* _VectorTAddr;
+						std::vector<double>* _VectorEAddr;
+						double* _trackX;
+						double* _trackY;
+						double* _trackT;
+						double* _mergeDist;
+						double* _timeThreshold;
+						std::vector<double>* _resultVecX;
+						std::vector<double>* _resultVecY;
+						std::vector<double>* _resultVecZ;
+						std::vector<double>* _resultVecT;
+						std::vector<double>* _resultVecE;
+						double _maximumE;
+				};
+
+
 
 				//***********************************
 				//gets LorentzVector for cluster
