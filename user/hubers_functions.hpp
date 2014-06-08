@@ -4,9 +4,13 @@
 #include<iostream>
 #include<vector>
 #include<algorithm>
-#include<NNpoly.h>
 
 #include<TLorentzVector.h>
+#include<TRandom3.h>
+
+#include<constants.h>
+#include<basic_calcs.h>
+#include<NNpoly.h>
 
 namespace antok {
 
@@ -21,12 +25,12 @@ namespace antok {
 					public:
 						Sqrt(double* inAddr, double* outAddr)
 							: _inAddr(inAddr),
-							_outAddr(outAddr) { }
+							_outAddr(outAddr) {}
 
-						virtual ~Sqrt() { }
+						virtual ~Sqrt() {}
 
 						bool operator() () {
-							if(*_inAddr>0)
+							if(*_inAddr > 0)
 								(*_outAddr) = std::sqrt(*_inAddr);
 							else
 								(*_outAddr) = -std::sqrt(-*_inAddr);
@@ -44,12 +48,12 @@ namespace antok {
 						Frac(double* inAddr1, double* inAddr2, double* outAddr)
 							: _inAddr1(inAddr1),
 							_inAddr2(inAddr2),
-							_outAddr(outAddr) { }
+							_outAddr(outAddr) {}
 
-						virtual ~Frac() { }
+						virtual ~Frac() {}
 
 						bool operator() () {
-							if(*_inAddr2!=0)
+							if(*_inAddr2 != 0)
 								(*_outAddr) = (*_inAddr1) / (*_inAddr2);
 							else
 								(*_outAddr) = (1<<31);
@@ -72,7 +76,7 @@ namespace antok {
 							_beamLorentzVec(beamLorentzVec),
 							_pTAddr(pTAddr){}
 
-						virtual ~GetPt() { }
+						virtual ~GetPt() {}
 
 						bool operator() () {
 							TVector3 beamVec = _beamLorentzVec->Vect();
@@ -100,7 +104,7 @@ namespace antok {
 
 						};
 
-						virtual ~EnforceEConservation() { }
+						virtual ~EnforceEConservation() {}
 
 						bool operator() () {
 							if(_mode==0){
@@ -113,7 +117,7 @@ namespace antok {
 							else if(_mode==1){
 								const double E = _beamAddr->E()  - _gammaAddr->E();
 								TVector3 pi3( _pionAddr->Vect() );
-								pi3.SetMag(sqrt(E*E- 0.13957018*0.13957018));
+								pi3.SetMag( std::sqrt( antok::sqr(E) - antok::sqr(antok::Constants::chargedPionMass()) ));
 								_outAddr->SetVect(pi3);
 								_outAddr->SetE(E);
 							}
@@ -144,7 +148,7 @@ namespace antok {
 						               :_xAddr(xAddr), _yAddr(yAddr), _dxAddr(dxAddr), _dyAddr(dyAddr),
 						                _eAddr(eAddr), _LVAddr(LVAddr){}
 
-						virtual ~GetNeuronalBeam() { }
+						virtual ~GetNeuronalBeam() {}
 
 						bool operator() () {
 							double xarr[4]={*_xAddr,*_yAddr,*_dxAddr,*_dyAddr};
@@ -179,7 +183,7 @@ namespace antok {
 						        :_beamLVAddr(beamLVAddr), _outLVAddr(outLVAddr),
 						         _thetaAddr(thetaAddr){}
 
-						virtual ~GetTheta() { }
+						virtual ~GetTheta() {}
 
 						bool operator() () {
 							*_thetaAddr = _beamLVAddr->Vect().Angle( _outLVAddr->Vect() );
@@ -204,11 +208,11 @@ namespace antok {
 						            :_zAddr(zAddr), _thetaAddr(thetaAddr),
 						             _zMeanAddr(zMeanAddr), _passedAddr(passedAddr){}
 
-						virtual ~GetThetaZCut() { }
+						virtual ~GetThetaZCut() {}
 
 						bool operator() () {
 							double fCUT_Z = -50;
-							double fNsigma_theta=2.5;
+							double fNsigma_theta= 2.5;
 							double fCUT_Z0 = 0.5;
 							double fCUT_Z1 = 6.5;
 
@@ -320,7 +324,7 @@ namespace antok {
 
 						bool operator() () {
 							_resultAddr->clear();
-							for(unsigned int i=0; i<(_XAddr->size()); ++i){
+							for(unsigned int i = 0; i < (_XAddr->size()); ++i){
 								if((*_EAddr)[i] < *_threshold)
 									_resultAddr->push_back( (*_EAddr)[i] );
 								else if((*_method)==1)
@@ -372,25 +376,25 @@ namespace antok {
 							_maximumE = -999.;
 							int imax = -999;
 							int newCnt = -1;
-							for(unsigned int i=0; i<_VectorXAddr->size();++i){
-								double dT=fabs(((*_VectorTAddr)[i]-(*_trackT)));
+							for(unsigned int i = 0; i < _VectorXAddr->size(); ++i){
+								double dT = fabs(((*_VectorTAddr)[i]-(*_trackT)));
 								if( *_trackT<1e9 && (std::fabs(dT) > *_timeThreshold) )
 									continue;
-								double dist=std::sqrt( antok::sqr(*_trackX-(*_VectorXAddr)[i]) +  antok::sqr(*_trackY-(*_VectorYAddr)[i])  );
+								double dist = std::sqrt( antok::sqr(*_trackX-(*_VectorXAddr)[i]) +  antok::sqr(*_trackY-(*_VectorYAddr)[i])  );
 								if( dist < (3.+16./ (*_VectorEAddr)[i]) )
 									continue;
 								_resultVecE->push_back((*_VectorEAddr)[i]); _resultVecX->push_back((*_VectorXAddr)[i]);
 								_resultVecY->push_back((*_VectorYAddr)[i]); _resultVecZ->push_back((*_VectorZAddr)[i]);
 								_resultVecT->push_back((*_VectorTAddr)[i]);
 								newCnt++;
-								if(((*_VectorEAddr)[i]) < (_maximumE))
+								if((*_VectorEAddr)[i] < _maximumE)
 									continue;
-								_maximumE=(*_VectorEAddr)[i];
-								imax=newCnt;
+								_maximumE = (*_VectorEAddr)[i];
+								imax = newCnt;
 							}
 
-							if(imax==-999){
-								_maximumE=-999;
+							if(imax == -999){
+								_maximumE = -999;
 								return true;
 							}
 
@@ -402,20 +406,20 @@ namespace antok {
 
 							imax=0;
 
-							int nClusters=_resultVecX->size();
-							if(nClusters==0)
+							int nClusters = _resultVecX->size();
+							if(nClusters == 0)
 								return true;
 
-							double closest, eMax=-99;
+							double closest, eMax = -99;
 							do {
-								closest = antok::sqr(*_mergeDist)+0.1;
-								int m2=-1;
-								for(int i=0; i<nClusters; ++i){
-									if(i==imax)
+								closest = antok::sqr(*_mergeDist) + 0.1;
+								int m2 = -1;
+								for(unsigned int i = 0; i < nClusters; ++i){
+									if(i == imax)
 										continue;
 									double dist = ( antok::sqr((*_resultVecX)[i]-(*_resultVecX)[imax]) + antok::sqr((*_resultVecY)[i]-(*_resultVecY)[imax]) );
 									if( dist < antok::sqr(*_mergeDist) ){
-										if((*_resultVecE)[i]>eMax){
+										if((*_resultVecE)[i] > eMax){
 											eMax = (*_resultVecE)[i];
 											closest = dist;
 											m2 = i;
@@ -431,9 +435,9 @@ namespace antok {
 									(*_resultVecT)[imax] = ( ((*_resultVecT)[imax] * (*_resultVecE)[imax]) + ((*_resultVecT)[m2] *  (*_resultVecE)[m2]) ) / Esum;
 									(*_resultVecE)[imax] = Esum;
 									--nClusters;
-									(*_resultVecE)[m2]=(*_resultVecE)[nClusters]; (*_resultVecX)[m2]=(*_resultVecX)[nClusters];
-									(*_resultVecY)[m2]=(*_resultVecY)[nClusters]; (*_resultVecZ)[m2]=(*_resultVecZ)[nClusters];
-									(*_resultVecT)[m2]=(*_resultVecT)[nClusters];
+									(*_resultVecE)[m2] = (*_resultVecE)[nClusters]; (*_resultVecX)[m2] = (*_resultVecX)[nClusters];
+									(*_resultVecY)[m2] = (*_resultVecY)[nClusters]; (*_resultVecZ)[m2] = (*_resultVecZ)[nClusters];
+									(*_resultVecT)[m2] = (*_resultVecT)[nClusters];
 								}
 							} while(closest <  antok::sqr(*_mergeDist) );
 							_resultVecX->resize(nClusters);
@@ -563,6 +567,43 @@ namespace antok {
 						double *_yPVAddr;
 						double *_zPVAddr;
 						TLorentzVector *_resultAddr;
+				};
+
+				//***********************************
+				//Calculates the Form Factor correction
+				//for Nickel from -Q2-MCTRUTH
+				//returns true/false
+				//a lot of things are hardcoded for Nickel
+				//************************************
+				class FormFactor : public Function
+				{
+					public:
+						FormFactor(double* inAddr, int* outAddr)
+							:_inAddr(inAddr),
+							_outAddr(outAddr) {
+								const double A = 58.6934;
+								const double r0 = 0.97;
+								_r  = r0 * std::pow( A, 1./3. );
+								_random.SetSeed(0);
+							}
+
+						virtual ~FormFactor() {}
+
+						bool operator() () {
+							double q  = std::sqrt(*_inAddr);
+							double qr = q * _r / .1973269631;// hbar*c [MeV fm] PDG 2010
+							double F  = 3./qr/qr/qr * ( std::sin( qr ) - qr * std::cos( qr ) );
+							double FF = F*F;
+							double rand = (_random.Uniform( 1. ));
+							(*_outAddr) = (rand <= FF);
+							return true;
+						}
+
+					private:
+						double* _inAddr;
+						int* _outAddr;
+						double _r;
+						TRandom3 _random;
 				};
 
 			}

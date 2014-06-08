@@ -42,6 +42,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetMaximumCluster(function, quantityNames, index);
 	else if(functionName == "getNeutralLorentzVec")
 		antokFunctionPtr = antok::user::hubers::generateGetNeutralLorentzVec(function, quantityNames, index);
+	else if(functionName == "FormFactor")
+		antokFunctionPtr = antok::user::hubers::generateGetFormFactor(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -282,7 +284,7 @@ antok::Function* antok::user::hubers::generateGetThetaZCut(const YAML::Node& fun
 	try {
 		function["ZMean"].as<double>();
 	} catch(const YAML::TypedBadConversion<double>& e) {
-		std::cerr<<"Argument \"ZMean\" in function \""<<__func__<<"\" should be of type double (variable \""<<"ZMean\")."<<std::endl;
+		std::cerr<<"Argument \"ZMean\" in function \""<<function["Name"]<<"\" should be of type double (variable \""<<"ZMean\")."<<std::endl;
 		return 0;
 	}
 	zMeanAddr = new double();
@@ -325,7 +327,7 @@ antok::Function* antok::user::hubers::generateGetBadSpill(const YAML::Node& func
 		}
 	}
 	else{
-		std::cerr<<__FUNCTION__<<" could not open BadSpillList file: "<<fileName<<std::endl;
+		std::cerr<<function["Name"]<<" could not open BadSpillList file: "<<fileName<<std::endl;
 		return 0;
 
 	}
@@ -427,9 +429,9 @@ antok::Function* antok::user::hubers::generateGetScaledCluster(const YAML::Node&
 
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
-	std::vector<double>* XAddr= data.getAddr<std::vector<double> >(args[0].first);
-	std::vector<double>* YAddr= data.getAddr<std::vector<double> >(args[1].first);
-	std::vector<double>* EAddr= data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* XAddr = data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* YAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* EAddr = data.getAddr<std::vector<double> >(args[2].first);
 	int* methodAddr = data.getAddr<int>(args[3].first);
 
 	std::vector<std::string> possiblyConstArgs;
@@ -647,6 +649,43 @@ antok::Function* antok::user::hubers::generateGetNeutralLorentzVec(const YAML::N
 
 };
 
+//***********************************
+//Calculates the Form Factor correction
+//for Nickel from -Q2-MCTRUTH
+//returns true/false
+//a lot of things are hard coded for Nickel
+//***********************************
+antok::Function* antok::user::hubers::generateGetFormFactor(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Arg", "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	double* argAddr = data.getAddr<double>(args[0].first);
+
+	if(not data.insert<int>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::FormFactor(argAddr, data.getAddr<int>(quantityName)));
+};
+
+
+
 double antok::user::hubers::IntraCellX( double cx ){
 	static const double fMeanECALX = 0.0;
 	const double xbound = 3.060 + 9.575 - fMeanECALX - 3.5 * 3.83;  // x-position of cell boundary closest to 0
@@ -675,7 +714,7 @@ double antok::user::hubers::PEDepGammaCorrection( double Egamma, double cx, doub
 	double x = IntraCellX( cx );
 	double y = IntraCellY( cy );
 
-	double retval= Egamma -
+	double retval = Egamma -
 	       ( p0 + p1 * antok::sqr(x-3.83/2.) +
 	         p2 * antok::sqr(y-3.83/2.) +
 	         p4 * exp( -0.5 * ( (antok::sqr(x-p6)+antok::sqr(y-p7)) / antok::sqr(p5) ) ) );
@@ -687,6 +726,6 @@ double antok::user::hubers::LinearGammaCorrection( double Egamma ) {
 	static const double fLinEcorr0 = -1.21919;
 	static const double fLinEcorr1 = 0.033045;
 	const double corr = fLinEcorr0 + fLinEcorr1 * Egamma;
-	Egamma-=corr;
+	Egamma -= corr;
 	return Egamma ;
 }
