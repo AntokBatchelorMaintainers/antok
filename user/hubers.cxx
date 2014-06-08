@@ -34,6 +34,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetBadSpill(function, quantityNames, index);
 	else if(functionName == "Shift")
 		antokFunctionPtr = antok::user::hubers::generateGetShifted(function, quantityNames, index);
+	else if(functionName == "getNeutralLorentzVec")
+		antokFunctionPtr = antok::user::hubers::generateGetNeutralLorentzVec(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -392,3 +394,51 @@ antok::Function* antok::user::hubers::generateGetShifted(const YAML::Node& funct
 	                                                      )
 	       );
 }
+
+//***********************************
+//gets LorentzVector for cluster
+//produced in a  vertex with coordinates X/Y/Z
+//***********************************
+antok::Function* antok::user::hubers::generateGetNeutralLorentzVec(const YAML::Node& function, std::vector<std::string>& quantityNames, int index){
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("X", "double"));
+	args.push_back(std::pair<std::string, std::string>("Y", "double"));
+	args.push_back(std::pair<std::string, std::string>("Z", "double"));
+	args.push_back(std::pair<std::string, std::string>("E", "double"));
+	args.push_back(std::pair<std::string, std::string>("xPV", "double"));
+	args.push_back(std::pair<std::string, std::string>("yPV", "double"));
+	args.push_back(std::pair<std::string, std::string>("zPV", "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	double* xAddr= data.getAddr<double>(args[0].first);
+	double* yAddr= data.getAddr<double>(args[1].first);
+	double* zAddr= data.getAddr<double>(args[2].first);
+	double* eAddr= data.getAddr<double>(args[3].first);
+	double* xPVAddr= data.getAddr<double>(args[4].first);
+	double* yPVAddr= data.getAddr<double>(args[5].first);
+	double* zPVAddr= data.getAddr<double>(args[6].first);
+
+
+	if(not data.insert<TLorentzVector>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetNeutralLorentzVec(xAddr, yAddr, zAddr, eAddr, xPVAddr, yPVAddr, zPVAddr,
+	                                                                 data.getAddr<TLorentzVector>(quantityName)
+	                                                                )
+	       );
+
+};

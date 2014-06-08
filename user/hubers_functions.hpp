@@ -302,6 +302,42 @@ namespace antok {
 						std::vector<double>* _resultVec;
 				};
 
+				//***********************************
+				//gets LorentzVector for cluster
+				//produced in a  vertex with coordinates X/Y/Z
+				//***********************************
+				class GetNeutralLorentzVec : public Function
+				{
+					public:
+						GetNeutralLorentzVec(double* xAddr, double* yAddr,
+						                     double* zAddr, double* eAddr,
+						                     double* xPVAddr, double* yPVAddr,
+						                     double* zPVAddr, TLorentzVector* resultAddr)
+						                    :_xAddr(xAddr), _yAddr(yAddr),
+						                     _zAddr(zAddr), _eAddr(eAddr),
+						                     _xPVAddr(xPVAddr), _yPVAddr(yPVAddr),
+						                     _zPVAddr(zPVAddr), _resultAddr(resultAddr) {}
+
+						virtual ~GetNeutralLorentzVec() {}
+
+						bool operator() () {
+							TVector3 v3( (*_xAddr-*_xPVAddr), (*_yAddr-*_yPVAddr), (*_zAddr-*_zPVAddr));
+							v3.SetMag(*_eAddr);
+							_resultAddr->SetXYZT(v3.X(), v3.Y(), v3.Z(), *_eAddr);
+							return 1;
+
+						}
+					private:
+						double *_xAddr;
+						double *_yAddr;
+						double *_zAddr;
+						double *_eAddr;
+						double *_xPVAddr;
+						double *_yPVAddr;
+						double *_zPVAddr;
+						TLorentzVector *_resultAddr;
+				};
+
 			}
 
 		}
