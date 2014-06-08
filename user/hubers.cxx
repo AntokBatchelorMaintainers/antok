@@ -8,6 +8,7 @@
 #include<hubers_functions.hpp>
 #include<yaml_utils.hpp>
 #include<iostream>
+#include<fstream>
 
 antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function,
                                                       std::vector<std::string>& quantityNames,
@@ -29,6 +30,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetTheta(function, quantityNames, index);
 	else if(functionName == "ThetaZ")
 		antokFunctionPtr = antok::user::hubers::generateGetThetaZCut(function, quantityNames, index);
+	else if(functionName == "BadSpill")
+		antokFunctionPtr = antok::user::hubers::generateGetBadSpill(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -282,4 +285,58 @@ antok::Function* antok::user::hubers::generateGetThetaZCut(const YAML::Node& fun
 	}
 
 	return (new antok::user::hubers::functions::GetThetaZCut(zAddr, thetaAddr, zMeanAddr, data.getAddr<int>(quantityName)));
+}
+
+//***********************************
+//result is 1 if a run is in a bad
+//spill list
+//***********************************
+antok::Function* antok::user::hubers::generateGetBadSpill(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector< std::pair<int,int> > *badSpillList = new std::vector< std::pair<int,int> >;
+
+	std::string fileName = antok::YAMLUtils::getString(function["fileName"]);
+	std::ifstream file;
+	file.open(fileName.c_str());
+	char line[100];
+	int run,spill;
+	if(file.is_open()){
+		while(file.getline(line,100)){
+			int ret = sscanf(line,"%d %d",&run,&spill);
+			assert( ret == 2 );
+			badSpillList->push_back(std::make_pair(run,spill));
+		}
+	}
+	else{
+		std::cerr<<__FUNCTION__<<" could not open BadSpillList file: "<<fileName<<std::endl;
+		return 0;
+
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Run"  , "int"));
+	args.push_back(std::pair<std::string, std::string>("Spill", "int"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	int* runAddr   = data.getAddr<int>(args[0].first);
+	int* spillAddr = data.getAddr<int>(args[1].first);
+	if(not data.insert<int>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetBadSpill(runAddr, spillAddr, badSpillList, data.getAddr<int>(quantityName)));
 }

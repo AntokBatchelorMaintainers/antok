@@ -231,6 +231,51 @@ namespace antok {
 						int* _passedAddr;
 				};
 
+				//***********************************
+				//returns 1 if a run is in a bad
+				//spill list
+				//***********************************
+				class GetBadSpill : public Function
+				{
+					public:
+						GetBadSpill(int* runAddr, int* spillAddr,
+						            std::vector< std::pair<int,int> > *badSpillList,
+						            int* result)
+						           :_runAddr(runAddr), _spillAddr(spillAddr),
+						            _badSpillList(badSpillList), _result(result) {
+						            _prevRun=-100;
+						            _prevSpill=-100;
+												*_result=0;
+						}
+
+						virtual ~GetBadSpill() {}
+
+						bool operator() () {
+							if( (_prevRun != *_runAddr) || (_prevSpill != *_spillAddr) ){
+								_prevRun   = *_runAddr;
+								_prevSpill = *_spillAddr;
+								for(unsigned int i=0; i<_badSpillList->size(); i++){
+									if( (_prevRun=(*_badSpillList)[i].first) && (_prevSpill=(*_badSpillList)[i].second) ){
+										*_result=1;
+										break;
+									}
+									else {
+										*_result=0;
+									}
+								}
+							}
+							return true;
+						}
+					private:
+						int* _runAddr;
+						int* _spillAddr;
+						std::vector< std::pair<int,int> > *_badSpillList;
+						int* _result;
+						int _prevRun;
+						int _prevSpill;
+				};
+
+
 			}
 
 		}
