@@ -25,6 +25,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateEnforceEConservation(function, quantityNames, index);
 	else if(functionName == "BeamNN")
 		antokFunctionPtr = antok::user::hubers::generateGetNeuronalBeam(function, quantityNames, index);
+	else if(functionName == "Theta")
+		antokFunctionPtr = antok::user::hubers::generateGetTheta(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -197,3 +199,38 @@ antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& 
 	return (new antok::user::hubers::functions::GetNeuronalBeam(xAddr, yAddr, dxAddr, dyAddr, data.getAddr<double>(quantityNameD), data.getAddr<TLorentzVector>(quantityNameLV)));
 }
 
+
+//***********************************
+//Calculates the angle theta between
+//two TLorentzVectors
+//***********************************
+antok::Function* antok::user::hubers::generateGetTheta(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("OutLorentzVec",  "TLorentzVector"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	TLorentzVector* beamLVAddr  = data.getAddr<TLorentzVector>(args[0].first);
+	TLorentzVector* outLVAddr   = data.getAddr<TLorentzVector>(args[1].first);
+	if(not data.insert<double>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetTheta(beamLVAddr, outLVAddr, data.getAddr<double>(quantityName)));
+}

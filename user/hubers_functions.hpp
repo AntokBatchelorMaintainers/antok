@@ -166,7 +166,30 @@ namespace antok {
 						TLorentzVector* _LVAddr;
 				};
 
+				//***********************************
+				//Calculates the angle theta between
+				//two TLorentzVectors
+				//***********************************
+				class GetTheta : public Function
+				{
+					public:
+						GetTheta(TLorentzVector* beamLVAddr, TLorentzVector* outLVAddr,
+						         double* thetaAddr)
+						        :_beamLVAddr(beamLVAddr), _outLVAddr(outLVAddr),
+						         _thetaAddr(thetaAddr){}
 
+						virtual ~GetTheta() { }
+
+						bool operator() () {
+							*_thetaAddr = _beamLVAddr->Vect().Angle( _outLVAddr->Vect() );
+							return true;
+						}
+
+					private:
+						TLorentzVector* _beamLVAddr;
+						TLorentzVector* _outLVAddr;
+						double* _thetaAddr;
+				};
 
 			}
 
