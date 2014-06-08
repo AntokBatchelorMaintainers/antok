@@ -135,6 +135,58 @@ namespace antok {
 
 		};
 
+		class EllipticCut : public Cut {
+
+		  public:
+
+			EllipticCut(const std::string& shortname,
+			            const std::string& longname,
+			            const std::string& abbreviation,
+			            bool* outAddr,
+			            double* meanX,
+			            double* meanY,
+			            double* cutX,
+			            double* cutY,
+			            double* X,
+			            double* Y,
+			            int mode)
+				: Cut(shortname, longname, abbreviation, outAddr),
+				  _meanX(meanX),
+				  _meanY(meanY),
+				  _cutX(cutX),
+				  _cutY(cutY),
+				  _X(X),
+				  _Y(Y),
+				  _mode(mode) { }
+
+			bool operator() () {
+				switch(_mode) {
+					case 0:
+						// inclusive
+						(*_outAddr) = (  ((*_X-*_meanX)*(*_X-*_meanX)/(*_cutX * *_cutX) +
+						                  (*_Y-*_meanY)*(*_Y-*_meanY)/(*_cutY * *_cutY))  <= 1.  );
+						return true;
+					case 1:
+						// exclusive
+						(*_outAddr) = (  ((*_X-*_meanX)*(*_X-*_meanX)/(*_cutX * *_cutX) +
+						                  (*_Y-*_meanY)*(*_Y-*_meanY)/(*_cutY * *_cutY))  < 1.  );
+						return true;
+				}
+				return false;
+			}
+
+		  private:
+
+			double *_meanX;
+			double *_meanY;
+			double *_cutX;
+			double *_cutY;
+			double *_X;
+			double *_Y;
+			int _mode;
+
+		};
+
 		class TriggerMaskCut: public Cut {
 
 		  public:
@@ -204,6 +256,15 @@ namespace antok {
 							retval = retval or (*_results[i]);
 						}
 						(*_outAddr) = retval;
+						return true;
+					case 2:
+						// nand
+						retval = true;
+						for(unsigned int i = 0; i < _cuts.size(); ++i) {
+							(*_cuts[i])();
+							retval = retval and (*_results[i]);
+						}
+						(*_outAddr) = not retval;
 						return true;
 				}
 				return false;

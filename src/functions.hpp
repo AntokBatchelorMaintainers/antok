@@ -28,10 +28,11 @@ namespace antok {
 
 		  public:
 
-			Sum(std::vector<T*> inputAddrs, T* outAddr) {
-				_inputAddrs = inputAddrs;
+			Sum(std::vector<T*> inputAddrsSummands, std::vector<T*> inputAddrsSubtrahends, T* outAddr) {
+				_inputAddrsSummands = inputAddrsSummands;
+				_inputAddrsSubtrahends = inputAddrsSubtrahends;
 				_outAddr = outAddr;
-				if(_inputAddrs.size() < 1) {
+				if( (_inputAddrsSummands.size() < 1) and (_inputAddrsSubtrahends.size() < 1) ) {
 					std::cerr<<"Got empty address vector as input for a sum."<<std::endl;
 					throw 1;
 				}
@@ -40,9 +41,12 @@ namespace antok {
 			virtual ~Sum() { }
 
 			bool operator() () {
-				(*_outAddr) = *(_inputAddrs[0]);
-				for(unsigned int i = 1; i < _inputAddrs.size(); ++i) {
-					*_outAddr = *_outAddr + *(_inputAddrs[i]);
+				(*_outAddr) = T();
+				for(unsigned int i = 0; i < _inputAddrsSummands.size(); ++i) {
+					*_outAddr = *_outAddr + *(_inputAddrsSummands[i]);
+				}
+				for(unsigned int i = 0; i < _inputAddrsSubtrahends.size(); ++i) {
+					*_outAddr = *_outAddr - *(_inputAddrsSubtrahends[i]);
 				}
 				return true;
 			};
@@ -50,7 +54,8 @@ namespace antok {
 
 		  private:
 
-			std::vector<T*> _inputAddrs;
+			std::vector<T*> _inputAddrsSummands;
+			std::vector<T*> _inputAddrsSubtrahends;
 			T* _outAddr;
 
 		};

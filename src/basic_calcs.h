@@ -12,6 +12,8 @@ namespace antok {
 	                                  double& centerOfMassEnergy,
 	                                  TVector3& boostVector);
 
+	template<typename T> T sqr(T t);
+
 	namespace utils {
 
 		double getPositiveSolutionOfQuadraticEquation(const double& a,
