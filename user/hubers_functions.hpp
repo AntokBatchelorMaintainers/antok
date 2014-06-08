@@ -275,6 +275,32 @@ namespace antok {
 						int _prevSpill;
 				};
 
+				//***********************************
+				//Shifts std::vectors
+				//***********************************
+				class GetShifted : public Function
+				{
+					public:
+						GetShifted(std::vector<double>* VectorAddr, double* offsetAddr,
+						           std::vector<double>* resultVec)
+						          :_VectorAddr(VectorAddr), _offsetAddr(offsetAddr),
+						           _resultVec(resultVec) {}
+
+						virtual ~GetShifted() {}
+
+						bool operator() () {
+							_resultVec->clear();
+							for(unsigned int i = 0; i < _VectorAddr->size(); ++i) {
+								_resultVec->push_back((*_VectorAddr)[i] + *_offsetAddr);
+							}
+							return true;
+
+						}
+					private:
+						std::vector<double>* _VectorAddr;
+						double* _offsetAddr;
+						std::vector<double>* _resultVec;
+				};
 
 			}
 

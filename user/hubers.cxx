@@ -32,6 +32,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetThetaZCut(function, quantityNames, index);
 	else if(functionName == "BadSpill")
 		antokFunctionPtr = antok::user::hubers::generateGetBadSpill(function, quantityNames, index);
+	else if(functionName == "Shift")
+		antokFunctionPtr = antok::user::hubers::generateGetShifted(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -339,4 +341,54 @@ antok::Function* antok::user::hubers::generateGetBadSpill(const YAML::Node& func
 	}
 
 	return (new antok::user::hubers::functions::GetBadSpill(runAddr, spillAddr, badSpillList, data.getAddr<int>(quantityName)));
+}
+
+//***********************************
+//Shifts std::vectors
+//***********************************
+antok::Function* antok::user::hubers::generateGetShifted(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 1) {
+		std::cerr<<function["Name"]<<" needs one quantity\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Vector" , "std::vector<double>"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* VectorAddr  = data.getAddr<std::vector<double> >(args[0].first);
+
+
+	std::vector<std::string> possiblyConstArgs;
+	possiblyConstArgs.push_back("Offset");
+
+	for(unsigned int i = 0; i < possiblyConstArgs.size(); ++i) {
+		if(not antok::YAMLUtils::hasNodeKey(function, possiblyConstArgs[i])) {
+			std::cerr<<"Argument \""<<possiblyConstArgs[i]<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return 0;
+		}
+	}
+
+	double* offsetAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[0]]);
+
+
+	if(not data.insert<std::vector<double> >(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetShifted(VectorAddr, offsetAddr,
+	                                                       data.getAddr<std::vector<double> >(quantityName)
+	                                                      )
+	       );
 }
