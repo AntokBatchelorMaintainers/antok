@@ -191,6 +191,46 @@ namespace antok {
 						double* _thetaAddr;
 				};
 
+				//***********************************
+				//Calculates the condition for a
+				//theta dependend Z cut
+				//***********************************
+				class GetThetaZCut : public Function
+				{
+					public:
+						GetThetaZCut(double* zAddr, double* thetaAddr,
+						             double* zMeanAddr, int* passedAddr)
+						            :_zAddr(zAddr), _thetaAddr(thetaAddr),
+						             _zMeanAddr(zMeanAddr), _passedAddr(passedAddr){}
+
+						virtual ~GetThetaZCut() { }
+
+						bool operator() () {
+							double fCUT_Z = -50;
+							double fNsigma_theta=2.5;
+							double fCUT_Z0 = 0.5;
+							double fCUT_Z1 = 6.5;
+
+							const double zmin = (*_zMeanAddr) - fNsigma_theta * ( fCUT_Z0 + fCUT_Z1/(*_thetaAddr*1000) );
+							const double zmax = (*_zMeanAddr) + fNsigma_theta * ( fCUT_Z0 + fCUT_Z1/(*_thetaAddr*1000) );
+
+							if( zmin < *_zAddr && *_zAddr < zmax && *_zAddr < fCUT_Z  )
+								*_passedAddr=1;
+							else
+								*_passedAddr=0;
+
+							return true;
+						}
+
+					private:
+						TLorentzVector* _beamLVAddr;
+						TLorentzVector* _outLVAddr;
+						double* _zAddr;
+						double* _thetaAddr;
+						double* _zMeanAddr;
+						int* _passedAddr;
+				};
+
 			}
 
 		}

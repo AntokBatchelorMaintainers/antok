@@ -27,6 +27,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetNeuronalBeam(function, quantityNames, index);
 	else if(functionName == "Theta")
 		antokFunctionPtr = antok::user::hubers::generateGetTheta(function, quantityNames, index);
+	else if(functionName == "ThetaZ")
+		antokFunctionPtr = antok::user::hubers::generateGetThetaZCut(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -233,4 +235,51 @@ antok::Function* antok::user::hubers::generateGetTheta(const YAML::Node& functio
 	}
 
 	return (new antok::user::hubers::functions::GetTheta(beamLVAddr, outLVAddr, data.getAddr<double>(quantityName)));
+}
+
+//***********************************
+//Calculates the condition for a
+//theta dependend Z cut
+//***********************************
+antok::Function* antok::user::hubers::generateGetThetaZCut(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Theta" , "double"));
+	args.push_back(std::pair<std::string, std::string>("Z" , "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	double* thetaAddr  = data.getAddr<double>(args[0].first);
+	double* zAddr  = data.getAddr<double>(args[1].first);
+
+	double *zMeanAddr;
+	try {
+		function["ZMean"].as<double>();
+	} catch(const YAML::TypedBadConversion<double>& e) {
+		std::cerr<<"Argument \"ZMean\" in function \""<<__func__<<"\" should be of type double (variable \""<<"ZMean\")."<<std::endl;
+		return 0;
+	}
+	zMeanAddr = new double();
+	(*zMeanAddr) = function["ZMean"].as<double>();
+
+
+	if(not data.insert<int>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetThetaZCut(zAddr, thetaAddr, zMeanAddr, data.getAddr<int>(quantityName)));
 }

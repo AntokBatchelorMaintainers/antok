@@ -21,6 +21,7 @@ namespace antok {
 			antok::Function* generateEnforceEConservation(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetNeuronalBeam(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetTheta(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetThetaZCut(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 
 			void getNeuronalBeamEnergy(const double& X, const double& Y, const double& dX, const double& dY, double& E);
 
