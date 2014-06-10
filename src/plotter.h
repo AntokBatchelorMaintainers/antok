@@ -5,11 +5,11 @@
 #include<string>
 #include<vector>
 
+#include<TH1.h>
+
 namespace YAML {
 	class Node;
 }
-
-class TH1;
 
 namespace antok {
 
@@ -38,7 +38,18 @@ namespace antok {
 			waterfallHistogramContainer(TH1* hist,
 			                            std::vector<std::pair<const char*, const bool*> > cuts_)
 				: histogram(hist),
-				  cuts(cuts_) { };
+				  cuts(cuts_) {
+						int startBin = 1;
+						for(int i = 1; i < histogram->GetNbinsX(); ++i) {
+							if(std::string(histogram->GetXaxis()->GetBinLabel(i)) == "") {
+								startBin = i;
+								break;
+							}
+						}
+						for(unsigned int i = 0; i < cuts.size(); ++i) {
+							histogram->GetXaxis()->SetBinLabel(startBin + i, cuts[i].first);
+						}
+					};
 
 			TH1* histogram;
 			std::vector<std::pair<const char*, const bool*> > cuts;
