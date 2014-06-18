@@ -29,6 +29,7 @@ namespace antok {
 			antok::Function* generateGetMaximumCluster(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetNeutralLorentzVec(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetFormFactor(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetBgTrackCut(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 
 			void getNeuronalBeamEnergy(const double& X, const double& Y, const double& dX, const double& dY, double& E);
 

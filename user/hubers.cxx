@@ -44,6 +44,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetNeutralLorentzVec(function, quantityNames, index);
 	else if(functionName == "FormFactor")
 		antokFunctionPtr = antok::user::hubers::generateGetFormFactor(function, quantityNames, index);
+	else if(functionName == "CutBgTracks")
+		antokFunctionPtr = antok::user::hubers::generateGetBgTrackCut(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -685,6 +687,48 @@ antok::Function* antok::user::hubers::generateGetFormFactor(const YAML::Node& fu
 };
 
 
+//***********************************
+//Calculates bgTrack Cut
+//returns true/false
+//***********************************
+antok::Function* antok::user::hubers::generateGetBgTrackCut(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("evTime", "double"));
+	args.push_back(std::pair<std::string, std::string>("tracksP", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("tracksT", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("tracksTSigma", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("tracksZfirst", "std::vector<double>"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	double* evTimeAddr = data.getAddr<double>(args[0].first);
+	std::vector<double>* tracksPAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* tracksTAddr = data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* tracksTSigmaAddr = data.getAddr<std::vector<double> >(args[3].first);
+	std::vector<double>* tracksZfirstAddr = data.getAddr<std::vector<double> >(args[4].first);
+
+	if(not data.insert<int>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::BgTracks(evTimeAddr, tracksPAddr, tracksTAddr,
+	                                                     tracksTSigmaAddr, tracksZfirstAddr,
+	                                                     data.getAddr<int>(quantityName)));
+};
 
 double antok::user::hubers::IntraCellX( double cx ){
 	static const double fMeanECALX = 0.0;

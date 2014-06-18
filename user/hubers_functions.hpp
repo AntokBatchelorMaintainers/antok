@@ -606,6 +606,46 @@ namespace antok {
 						TRandom3 _random;
 				};
 
+				//***********************************
+				//Calculates bgTrack Cut
+				//returns true/false
+				//***********************************
+				class BgTracks : public Function
+				{
+					public:
+						BgTracks(double* evTimeAddr, std::vector<double>* tracksPAddr,
+						         std::vector<double>* tracksTAddr, std::vector<double>* tracksTSigmaAddr,
+						         std::vector<double>* tracksZfirstAddr, int* outAddr)
+						        :_evTimeAddr(evTimeAddr), _tracksPAddr(tracksPAddr),
+						         _tracksTAddr(tracksTAddr), _tracksTSigmaAddr(tracksTSigmaAddr),
+						         _tracksZfirstAddr(tracksZfirstAddr), _outAddr(outAddr) {}
+
+						virtual ~BgTracks() {}
+
+						bool operator() () {
+							*_outAddr = 0;
+							for(unsigned int i = 0; i < _tracksPAddr->size(); ++i) {
+								if((*_tracksTSigmaAddr)[i] != 0) {
+									if(std::fabs( ((*_tracksTAddr)[i] - *_evTimeAddr) / (*_tracksTSigmaAddr)[i] )  > 4)
+										continue;
+									if((*_tracksPAddr)[i]<9999 && std::fabs((*_tracksPAddr)[i]) > 170.)
+										continue;
+									if((*_tracksZfirstAddr)[i] < 3500)
+										(*_outAddr)++;
+								}
+							}
+							return true;
+						}
+
+					private:
+						double* _evTimeAddr;
+						std::vector<double>* _tracksPAddr;
+						std::vector<double>* _tracksTAddr;
+						std::vector<double>* _tracksTSigmaAddr;
+						std::vector<double>* _tracksZfirstAddr;
+						int* _outAddr;
+				};
+
 			}
 
 		}
