@@ -646,6 +646,59 @@ namespace antok {
 						int* _outAddr;
 				};
 
+				//***********************************
+				//Gets best pi0 pair
+				//gives an LV and the mass
+				//***********************************
+				class GetClosestPi0 : public Function
+				{
+					public:
+						GetClosestPi0(std::vector<double>* eAddr, std::vector<double>* xAddr, std::vector<double>* yAddr, std::vector<double>* zAddr,
+						          double* xPVAddr, double* yPVAddr, double* zPVAddr, double* selectedMass, TLorentzVector* outLVAddr, double* outMAddr)
+						         :_eAddr(eAddr), _xAddr(xAddr), _yAddr(yAddr), _zAddr(zAddr),
+						          _xPVAddr(xPVAddr), _yPVAddr(yPVAddr), _zPVAddr(zPVAddr),
+						          _selectedMass(selectedMass), _outLVAddr(outLVAddr), _outMAddr(outMAddr) {}
+
+						virtual ~GetClosestPi0() {}
+
+						bool operator() () {
+							_outLVAddr->SetPxPyPzE(9999, 9999, 9999, 99999);
+							*_outMAddr = -99;
+							double minDist=9e9;
+							if(_eAddr->size() < 2 )
+								return true;
+							TVector3 v3a( (*_xAddr)[0] - *_xPVAddr, (*_yAddr)[0] - *_yPVAddr, (*_zAddr)[0] - *_zPVAddr) ;
+							v3a.SetMag((*_eAddr)[0]);
+							TLorentzVector lva(v3a, (*_eAddr)[0]);
+							for(unsigned int j = 1; j < _eAddr->size(); ++j) {
+								if( (*_eAddr)[j] < 2 )
+									continue;
+								TVector3 v3b( (*_xAddr)[j] - *_xPVAddr, (*_yAddr)[j] - *_yPVAddr, (*_zAddr)[j] - *_zPVAddr) ;
+								v3b.SetMag((*_eAddr)[j]);
+								TLorentzVector lvb(v3b, (*_eAddr)[j]);
+								if(std::fabs((lva + lvb).Mag() - *_selectedMass < minDist)) {
+									minDist = std::fabs((lva + lvb).Mag() - *_selectedMass);
+									*_outLVAddr = lva + lvb;
+									*_outMAddr = _outLVAddr->Mag();
+								}
+							}
+							return true;
+						}
+
+					private:
+						std::vector<double>* _eAddr;
+						std::vector<double>* _xAddr;
+						std::vector<double>* _yAddr;
+						std::vector<double>* _zAddr;
+						double* _xPVAddr;
+						double* _yPVAddr;
+						double* _zPVAddr;
+						double* _selectedMass;
+						TLorentzVector* _outLVAddr;
+						double* _outMAddr;
+
+			};
+
 			}
 
 		}

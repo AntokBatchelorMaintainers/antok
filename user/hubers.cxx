@@ -46,6 +46,8 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetFormFactor(function, quantityNames, index);
 	else if(functionName == "CutBgTracks")
 		antokFunctionPtr = antok::user::hubers::generateGetBgTrackCut(function, quantityNames, index);
+	else if(functionName == "GetClosestPi0")
+		antokFunctionPtr = antok::user::hubers::generateGetClosestPi0(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -113,7 +115,7 @@ antok::Function* antok::user::hubers::generateGetPt(const YAML::Node& function, 
 {
 
 	if(quantityNames.size() != 1) {
-		std::cerr<<"Need 1 names for function \"getTs\""<<std::endl;
+		std::cerr<<"Need 1 names for function \"GetPt\""<<std::endl;
 		return 0;
 	}
 
@@ -729,6 +731,65 @@ antok::Function* antok::user::hubers::generateGetBgTrackCut(const YAML::Node& fu
 	                                                     tracksTSigmaAddr, tracksZfirstAddr,
 	                                                     data.getAddr<int>(quantityName)));
 };
+
+//***********************************
+//Gets best pi0 pair
+//gives an LV and the mass
+//***********************************
+antok::Function* antok::user::hubers::generateGetClosestPi0(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 2) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<" needed two\"."<<std::endl;
+		return 0;
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("VectorE", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorX", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorY", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorZ", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("xPV", "double"));
+	args.push_back(std::pair<std::string, std::string>("yPV", "double"));
+	args.push_back(std::pair<std::string, std::string>("zPV", "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* VectorEAddr = data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* VectorXAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* VectorYAddr = data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* VectorZAddr = data.getAddr<std::vector<double> >(args[3].first);
+	double* xPVAddr = data.getAddr<double>(args[4].first);
+	double* yPVAddr = data.getAddr<double>(args[5].first);
+	double* zPVAddr = data.getAddr<double>(args[6].first);
+
+	if(not data.insert<TLorentzVector>(quantityNames[0])) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[0]);
+		return 0;
+	}
+	if(not data.insert<double>(quantityNames[1])) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[1]);
+		return 0;
+	}
+
+
+		if(not antok::YAMLUtils::hasNodeKey(function, "selectedMass")) {
+			std::cerr<<"Argument \""<<"selectedMass"<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return 0;
+		}
+		double* selectedMassAddr = antok::YAMLUtils::getAddress<double>(function["selectedMass"]);
+
+	return (new antok::user::hubers::functions::GetClosestPi0(VectorEAddr, VectorXAddr, VectorYAddr, VectorZAddr,
+	                                                              xPVAddr, yPVAddr, zPVAddr, selectedMassAddr,
+	                                                              data.getAddr<TLorentzVector>(quantityNames[0]),
+	                                                              data.getAddr<double>(quantityNames[1])
+	                                                             ));
+}
 
 double antok::user::hubers::IntraCellX( double cx ){
 	static const double fMeanECALX = 0.0;
