@@ -72,9 +72,7 @@ namespace antok {
 				{
 					public:
 						GetPt(TLorentzVector* pLorentzVec, TLorentzVector* beamLorentzVec, double *pTAddr)
-							: _pLorentzVec(pLorentzVec),
-							_beamLorentzVec(beamLorentzVec),
-							_pTAddr(pTAddr){}
+						     :_pLorentzVec(pLorentzVec),_beamLorentzVec(beamLorentzVec), _pTAddr(pTAddr) {}
 
 						virtual ~GetPt() {}
 
@@ -91,46 +89,44 @@ namespace antok {
 						double* _pTAddr;
 				};
 
-				template<typename T>
 				class EnforceEConservation : public Function
 				{
 					public:
-						EnforceEConservation(T* beamAddr, T* pionAddr, T* gammaAddr,  T* outAddr) {
-							_beamAddr = beamAddr;
-							_pionAddr = pionAddr;
-							_gammaAddr = gammaAddr;
-							_outAddr = outAddr;
-							_mode=0;
-
-						};
+						EnforceEConservation(TLorentzVector* beamAddr, TLorentzVector* pionAddr,
+						                     TLorentzVector* neutralAddr, double* massAddr,  TLorentzVector* outAddr)
+						                    :_beamAddr(beamAddr), _pionAddr(pionAddr), _neutralAddr(neutralAddr),
+						                     _massAddr(massAddr), _outAddr(outAddr), _mode(0) {}
 
 						virtual ~EnforceEConservation() {}
 
 						bool operator() () {
 							if(_mode==0){
 								const double E = _beamAddr->E()  - _pionAddr->E();
-								TVector3 g3( _gammaAddr->Vect() );
-								g3.SetMag(E);
+								TVector3 g3( _neutralAddr->Vect() );
+								if(g3.Mag() == 0) {
+									_outAddr->SetXYZT(0,0,0,0);
+									return true;
+								}
+								g3.SetMag( std::sqrt(antok::sqr(E) - antok::sqr(*_massAddr)) );
 								_outAddr->SetVect(g3);
 								_outAddr->SetE(E);
 							}
 							else if(_mode==1){
-								const double E = _beamAddr->E()  - _gammaAddr->E();
+								const double E = _beamAddr->E()  - _neutralAddr->E();
 								TVector3 pi3( _pionAddr->Vect() );
-								pi3.SetMag( std::sqrt( antok::sqr(E) - antok::sqr(antok::Constants::chargedPionMass()) ));
+								pi3.SetMag( std::sqrt( antok::sqr(E) - antok::sqr(*_massAddr)) );
 								_outAddr->SetVect(pi3);
 								_outAddr->SetE(E);
 							}
 							return true;
 						};
 
-
 					private:
-
-						T* _beamAddr;
-						T* _pionAddr;
-						T* _gammaAddr;
-						T* _outAddr;
+						TLorentzVector* _beamAddr;
+						TLorentzVector* _pionAddr;
+						TLorentzVector* _neutralAddr;
+						double* _massAddr;
+						TLorentzVector* _outAddr;
 						int _mode;
 				};
 
@@ -223,7 +219,6 @@ namespace antok {
 								*_passedAddr=1;
 							else
 								*_passedAddr=0;
-
 							return true;
 						}
 
@@ -248,10 +243,9 @@ namespace antok {
 						            int* result)
 						           :_runAddr(runAddr), _spillAddr(spillAddr),
 						            _badSpillList(badSpillList), _result(result) {
-						            _prevRun=-100;
-						            _prevSpill=-100;
-												*_result=0;
-						}
+						            _prevRun=-100; _prevSpill=-100;
+						            *_result=0;
+						           }
 
 						virtual ~GetBadSpill() {}
 
@@ -271,6 +265,7 @@ namespace antok {
 							}
 							return true;
 						}
+
 					private:
 						int* _runAddr;
 						int* _spillAddr;
@@ -299,8 +294,8 @@ namespace antok {
 								_resultVec->push_back((*_VectorAddr)[i] + *_offsetAddr);
 							}
 							return true;
-
 						}
+
 					private:
 						std::vector<double>* _VectorAddr;
 						double* _offsetAddr;
@@ -370,8 +365,6 @@ namespace antok {
 						virtual ~GetCleanedClusters() {}
 
 						bool operator() () {
-
-
 							_resultVecE->clear(); _resultVecX->clear(); _resultVecY->clear(); _resultVecZ->clear(); _resultVecT->clear();
 							_maximumE = -999.;
 							int imax = -999;
@@ -447,9 +440,8 @@ namespace antok {
 							_resultVecE->resize(nClusters);
 
 							return true;
-
-
 						}
+
 					private:
 						std::vector<double>* _VectorXAddr;
 						std::vector<double>* _VectorYAddr;
@@ -509,7 +501,6 @@ namespace antok {
 								*_maximumE = (*_VectorEAddr)[iMax];
 							else
 								*_maximumE = -99;
-
 							return true;
 						}
 
@@ -556,8 +547,8 @@ namespace antok {
 							v3.SetMag(*_eAddr);
 							_resultAddr->SetXYZT(v3.X(), v3.Y(), v3.Z(), *_eAddr);
 							return 1;
-
 						}
+
 					private:
 						double *_xAddr;
 						double *_yAddr;
@@ -696,7 +687,6 @@ namespace antok {
 						double* _selectedMass;
 						TLorentzVector* _outLVAddr;
 						double* _outMAddr;
-
 			};
 
 			}

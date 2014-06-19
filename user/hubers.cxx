@@ -169,16 +169,23 @@ antok::Function* antok::user::hubers::generateEnforceEConservation(const YAML::N
 
 	TLorentzVector* beamAddr = data.getAddr<TLorentzVector>(args[0].first);
 	TLorentzVector* pionAddr = data.getAddr<TLorentzVector>(args[1].first);
-	TLorentzVector* gammaAddr = data.getAddr<TLorentzVector>(args[2].first);
+	TLorentzVector* neutralAddr = data.getAddr<TLorentzVector>(args[2].first);
 	if(not data.insert<TLorentzVector>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::user::hubers::functions::EnforceEConservation<TLorentzVector>(beamAddr, pionAddr, gammaAddr, data.getAddr<TLorentzVector>(quantityName)));
+	double* massAddr;
+	if(antok::YAMLUtils::hasNodeKey(function, "mass"))
+		massAddr = antok::YAMLUtils::getAddress<double>(function["mass"]);
+	else
+		massAddr = new double(0);
+
+	return (new antok::user::hubers::functions::EnforceEConservation(beamAddr, pionAddr, neutralAddr, massAddr,
+	                                                                 data.getAddr<TLorentzVector>(quantityName)
+	                                                                )
+	       );
 }
-
-
 
 antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
@@ -217,7 +224,11 @@ antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& 
 		return 0;
 	}
 
-	return (new antok::user::hubers::functions::GetNeuronalBeam(xAddr, yAddr, dxAddr, dyAddr, data.getAddr<double>(quantityNameD), data.getAddr<TLorentzVector>(quantityNameLV)));
+	return (new antok::user::hubers::functions::GetNeuronalBeam(xAddr, yAddr, dxAddr, dyAddr,
+	                                                            data.getAddr<double>(quantityNameD),
+	                                                            data.getAddr<TLorentzVector>(quantityNameLV)
+	                                                           )
+	       );
 }
 
 
@@ -729,7 +740,9 @@ antok::Function* antok::user::hubers::generateGetBgTrackCut(const YAML::Node& fu
 
 	return (new antok::user::hubers::functions::BgTracks(evTimeAddr, tracksPAddr, tracksTAddr,
 	                                                     tracksTSigmaAddr, tracksZfirstAddr,
-	                                                     data.getAddr<int>(quantityName)));
+	                                                     data.getAddr<int>(quantityName)
+	                                                    )
+	       );
 };
 
 //***********************************
@@ -788,7 +801,8 @@ antok::Function* antok::user::hubers::generateGetClosestPi0(const YAML::Node& fu
 	                                                              xPVAddr, yPVAddr, zPVAddr, selectedMassAddr,
 	                                                              data.getAddr<TLorentzVector>(quantityNames[0]),
 	                                                              data.getAddr<double>(quantityNames[1])
-	                                                             ));
+	                                                             )
+	       );
 }
 
 double antok::user::hubers::IntraCellX( double cx ){
@@ -820,9 +834,9 @@ double antok::user::hubers::PEDepGammaCorrection( double Egamma, double cx, doub
 	double y = IntraCellY( cy );
 
 	double retval = Egamma -
-	       ( p0 + p1 * antok::sqr(x-3.83/2.) +
-	         p2 * antok::sqr(y-3.83/2.) +
-	         p4 * exp( -0.5 * ( (antok::sqr(x-p6)+antok::sqr(y-p7)) / antok::sqr(p5) ) ) );
+	       ( p0 + p1 * antok::sqr(x - 3.83/2.) +
+	         p2 * antok::sqr(y - 3.83/2.) +
+	         p4 * exp( -0.5 * ( (antok::sqr(x - p6) + antok::sqr(y - p7)) / antok::sqr(p5) ) ) );
 			 return retval;
 
 }
