@@ -141,6 +141,10 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 		std::cerr<<"Could not get \"UpperBound\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
+	if(lowerBound >= upperBound){
+		std::cerr<<"\"LowerBound\" >= \"UpperBound\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+		return 0;
+	}
 	int nBins = 0;
 	if(not antok::YAMLUtils::getValue<int>(plot["NBins"], &nBins)) {
 		std::cerr<<"Could not get \"NBins\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
@@ -267,9 +271,17 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 		std::cerr<<"Could not get first of the \"UpperBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
+	if(lowerBound1 >= upperBound1){
+		std::cerr<<"\"LowerBoundX\" >= \"UpperBoundX\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+		return 0;
+	}
 	double upperBound2 = 0.;
 	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][1], &upperBound2)) {
 		std::cerr<<"Could not get second of the \"UpperBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+		return 0;
+	}
+	if(lowerBound2 >= upperBound2){
+		std::cerr<<"\"LowerBoundY\" >= \"UpperBoundY\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 
