@@ -132,7 +132,6 @@ bool antok::Initializer::initializeCutter() {
 
 	for(YAML::const_iterator cutTrain_it = config["CutTrains"].begin(); cutTrain_it != config["CutTrains"].end(); ++cutTrain_it) {
 
-
 		const YAML::Node& cutTrain = (*cutTrain_it);
 		if(not hasNodeKey(cutTrain, "Name")) {
 			std::cerr<<"\"Name\" not found in one of the \"CutTrains\"."<<std::endl;
@@ -191,15 +190,20 @@ bool antok::Initializer::initializeCutter() {
 			}
 
 			antok::Cut* antokCut = 0;
+			bool* result = 0;
+			if(not antok::generators::generateCut(cutEntry, antokCut, result)) {
+				std::cerr<<"Could not generate cut \""<<shortName<<"\" in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
+				return false;
+			}
 
 			if(cutter._cutsMap[shortName]) {
-				antokCut = cutter._cutsMap[shortName];
-			} else {
-				bool* result = 0;
-				if(not antok::generators::generateCut(cutEntry, antokCut, result)) {
-					std::cerr<<"Could not generate cut \""<<shortName<<"\" in cutTrain \""<<cutTrainName<<"\"."<<std::endl;
+				if(not (*cutter._cutsMap[shortName] == *antokCut)) {
+					std::cerr<<"Cannot have two different cuts with the same \"ShortName\" \""<<shortName<<"\"."<<std::endl;
 					return false;
 				}
+				delete antokCut;
+				antokCut = cutter._cutsMap[shortName];
+			} else {
 				cutter._cutsMap[shortName] = antokCut;
 				cutter._cuts.push_back(std::pair<antok::Cut*, bool*>(antokCut, result));
 			}
