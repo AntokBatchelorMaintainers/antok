@@ -8,6 +8,7 @@
 #include<hubers_functions.hpp>
 #include<yaml_utils.hpp>
 #include<iostream>
+#include<fstream>
 
 antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function,
                                                       std::vector<std::string>& quantityNames,
@@ -23,9 +24,30 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 		antokFunctionPtr = antok::user::hubers::generateGetPt(function, quantityNames, index);
 	else if(functionName == "EnforceEConservation")
 		antokFunctionPtr = antok::user::hubers::generateEnforceEConservation(function, quantityNames, index);
-	else if(functionName == "BeamNN") {
-		antokFunctionPtr = antok::user::hubers::generateGetNeuronalBeamEnergy(function, quantityNames, index);
-	}
+	else if(functionName == "BeamNN")
+		antokFunctionPtr = antok::user::hubers::generateGetNeuronalBeam(function, quantityNames, index);
+	else if(functionName == "Theta")
+		antokFunctionPtr = antok::user::hubers::generateGetTheta(function, quantityNames, index);
+	else if(functionName == "ThetaZ")
+		antokFunctionPtr = antok::user::hubers::generateGetThetaZCut(function, quantityNames, index);
+	else if(functionName == "BadSpill")
+		antokFunctionPtr = antok::user::hubers::generateGetBadSpill(function, quantityNames, index);
+	else if(functionName == "Shift")
+		antokFunctionPtr = antok::user::hubers::generateGetShifted(function, quantityNames, index);
+	else if(functionName == "ScaleCluster")
+		antokFunctionPtr = antok::user::hubers::generateGetScaledCluster(function, quantityNames, index);
+	else if(functionName == "CleanClusters")
+		antokFunctionPtr = antok::user::hubers::generateGetCleanedClusters(function, quantityNames, index);
+	else if(functionName == "MaximumCluster")
+		antokFunctionPtr = antok::user::hubers::generateGetMaximumCluster(function, quantityNames, index);
+	else if(functionName == "getNeutralLorentzVec")
+		antokFunctionPtr = antok::user::hubers::generateGetNeutralLorentzVec(function, quantityNames, index);
+	else if(functionName == "FormFactor")
+		antokFunctionPtr = antok::user::hubers::generateGetFormFactor(function, quantityNames, index);
+	else if(functionName == "CutBgTracks")
+		antokFunctionPtr = antok::user::hubers::generateGetBgTrackCut(function, quantityNames, index);
+	else if(functionName == "GetClosestPi0")
+		antokFunctionPtr = antok::user::hubers::generateGetClosestPi0(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -93,7 +115,7 @@ antok::Function* antok::user::hubers::generateGetPt(const YAML::Node& function, 
 {
 
 	if(quantityNames.size() != 1) {
-		std::cerr<<"Need 1 names for function \"getTs\""<<std::endl;
+		std::cerr<<"Need 1 names for function \"GetPt\""<<std::endl;
 		return 0;
 	}
 
@@ -125,40 +147,6 @@ antok::Function* antok::user::hubers::generateGetPt(const YAML::Node& function, 
 };
 
 antok::Function* antok::user::hubers::generateEnforceEConservation(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
-{                  
-
-	if(quantityNames.size() > 1) {                                                                                      
-		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
-		return 0;
-	}             
-	std::string quantityName = quantityNames[0];
-
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("LVBeam", "TLorentzVector"));                                    
-	args.push_back(std::pair<std::string, std::string>("LVPion", "TLorentzVector"));
-	args.push_back(std::pair<std::string, std::string>("LVGamma", "TLorentzVector"));
-
-	if(not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
-		return 0;
-	}                                                         
-
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-
-	TLorentzVector* beamAddr = data.getAddr<TLorentzVector>(args[0].first);
-	TLorentzVector* pionAddr = data.getAddr<TLorentzVector>(args[1].first);
-	TLorentzVector* gammaAddr = data.getAddr<TLorentzVector>(args[2].first);
-	if(not data.insert<TLorentzVector>(quantityName)) {    
-		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-		return 0;
-	}
-
-	return (new antok::user::hubers::functions::EnforceEConservation<TLorentzVector>(beamAddr, pionAddr, gammaAddr, data.getAddr<TLorentzVector>(quantityName)));
-}
-
-
-
-antok::Function* antok::user::hubers::generateGetNeuronalBeamEnergy(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -166,6 +154,48 @@ antok::Function* antok::user::hubers::generateGetNeuronalBeamEnergy(const YAML::
 		return 0;
 	}
 	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("LVBeam", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("LVPion", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("LVGamma", "TLorentzVector"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	TLorentzVector* beamAddr = data.getAddr<TLorentzVector>(args[0].first);
+	TLorentzVector* pionAddr = data.getAddr<TLorentzVector>(args[1].first);
+	TLorentzVector* neutralAddr = data.getAddr<TLorentzVector>(args[2].first);
+	if(not data.insert<TLorentzVector>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	double* massAddr;
+	if(antok::YAMLUtils::hasNodeKey(function, "mass"))
+		massAddr = antok::YAMLUtils::getAddress<double>(function["mass"]);
+	else
+		massAddr = new double(0);
+
+	return (new antok::user::hubers::functions::EnforceEConservation(beamAddr, pionAddr, neutralAddr, massAddr,
+	                                                                 data.getAddr<TLorentzVector>(quantityName)
+	                                                                )
+	       );
+}
+
+antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 2) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<" needed two\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityNameD = quantityNames[0];
+	std::string quantityNameLV = quantityNames[1];
 
 
 	std::vector<std::pair<std::string, std::string> > args;
@@ -185,11 +215,636 @@ antok::Function* antok::user::hubers::generateGetNeuronalBeamEnergy(const YAML::
 	double* yAddr  = data.getAddr<double>(args[1].first);
 	double* dxAddr = data.getAddr<double>(args[2].first);
 	double* dyAddr = data.getAddr<double>(args[3].first);
+	if(not data.insert<double>(quantityNameD)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+	if(not data.insert<TLorentzVector>(quantityNameLV)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetNeuronalBeam(xAddr, yAddr, dxAddr, dyAddr,
+	                                                            data.getAddr<double>(quantityNameD),
+	                                                            data.getAddr<TLorentzVector>(quantityNameLV)
+	                                                           )
+	       );
+}
+
+
+//***********************************
+//Calculates the angle theta between
+//two TLorentzVectors
+//***********************************
+antok::Function* antok::user::hubers::generateGetTheta(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("OutLorentzVec",  "TLorentzVector"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	TLorentzVector* beamLVAddr  = data.getAddr<TLorentzVector>(args[0].first);
+	TLorentzVector* outLVAddr   = data.getAddr<TLorentzVector>(args[1].first);
 	if(not data.insert<double>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::user::hubers::functions::GetNeuronalBeamEnergy(xAddr, yAddr, dxAddr, dyAddr, data.getAddr<double>(quantityName)));
+	return (new antok::user::hubers::functions::GetTheta(beamLVAddr, outLVAddr, data.getAddr<double>(quantityName)));
 }
 
+//***********************************
+//Calculates the condition for a
+//theta dependend Z cut
+//***********************************
+antok::Function* antok::user::hubers::generateGetThetaZCut(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Theta" , "double"));
+	args.push_back(std::pair<std::string, std::string>("Z" , "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	double* thetaAddr  = data.getAddr<double>(args[0].first);
+	double* zAddr  = data.getAddr<double>(args[1].first);
+
+	double *zMeanAddr;
+	try {
+		function["ZMean"].as<double>();
+	} catch(const YAML::TypedBadConversion<double>& e) {
+		std::cerr<<"Argument \"ZMean\" in function \""<<function["Name"]<<"\" should be of type double (variable \""<<"ZMean\")."<<std::endl;
+		return 0;
+	}
+	zMeanAddr = new double();
+	(*zMeanAddr) = function["ZMean"].as<double>();
+
+
+	if(not data.insert<int>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetThetaZCut(zAddr, thetaAddr, zMeanAddr, data.getAddr<int>(quantityName)));
+}
+
+//***********************************
+//result is 1 if a run is in a bad
+//spill list
+//***********************************
+antok::Function* antok::user::hubers::generateGetBadSpill(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector< std::pair<int,int> > *badSpillList = new std::vector< std::pair<int,int> >;
+
+	std::string fileName = antok::YAMLUtils::getString(function["fileName"]);
+	std::ifstream file;
+	file.open(fileName.c_str());
+	char line[100];
+	int run,spill;
+	if(file.is_open()){
+		while(file.getline(line,100)){
+			int ret = sscanf(line,"%d %d",&run,&spill);
+			assert( ret == 2 );
+			badSpillList->push_back(std::make_pair(run,spill));
+		}
+	}
+	else{
+		std::cerr<<function["Name"]<<" could not open BadSpillList file: "<<fileName<<std::endl;
+		return 0;
+
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Run"  , "int"));
+	args.push_back(std::pair<std::string, std::string>("Spill", "int"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	int* runAddr   = data.getAddr<int>(args[0].first);
+	int* spillAddr = data.getAddr<int>(args[1].first);
+	if(not data.insert<int>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetBadSpill(runAddr, spillAddr, badSpillList, data.getAddr<int>(quantityName)));
+}
+
+//***********************************
+//Shifts std::vectors
+//***********************************
+antok::Function* antok::user::hubers::generateGetShifted(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 1) {
+		std::cerr<<function["Name"]<<" needs one quantity\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Vector" , "std::vector<double>"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* VectorAddr  = data.getAddr<std::vector<double> >(args[0].first);
+
+
+	std::vector<std::string> possiblyConstArgs;
+	possiblyConstArgs.push_back("Offset");
+
+	for(unsigned int i = 0; i < possiblyConstArgs.size(); ++i) {
+		if(not antok::YAMLUtils::hasNodeKey(function, possiblyConstArgs[i])) {
+			std::cerr<<"Argument \""<<possiblyConstArgs[i]<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return 0;
+		}
+	}
+
+	double* offsetAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[0]]);
+
+
+	if(not data.insert<std::vector<double> >(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetShifted(VectorAddr, offsetAddr,
+	                                                       data.getAddr<std::vector<double> >(quantityName)
+	                                                      )
+	       );
+}
+
+//***********************************
+// Scale Energy of a cluster depending
+// linear method in case of MC
+// posdep method in case of RD
+//***********************************
+antok::Function* antok::user::hubers::generateGetScaledCluster(const YAML::Node& function, std::vector<std::string>& quantityNames, int index){
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("X", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("Y", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("E", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("Method", "int"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* XAddr = data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* YAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* EAddr = data.getAddr<std::vector<double> >(args[2].first);
+	int* methodAddr = data.getAddr<int>(args[3].first);
+
+	std::vector<std::string> possiblyConstArgs;
+	possiblyConstArgs.push_back("Threshold");
+
+	for(unsigned int i = 0; i < possiblyConstArgs.size(); ++i) {
+		if(not antok::YAMLUtils::hasNodeKey(function, possiblyConstArgs[i])) {
+			std::cerr<<"Argument \""<<possiblyConstArgs[i]<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return 0;
+		}
+	}
+
+	double* thresholdAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[0]]);
+
+	if(not data.insert<std::vector<double> >(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetScaledCluster(XAddr, YAddr, EAddr, methodAddr, thresholdAddr,
+	                                                             data.getAddr<std::vector<double> >(quantityName)
+	                                                            )
+	       );
+};
+
+//***********************************
+//cleans calorimeter clusters
+//and merges them dependend onn their distance
+//***********************************
+antok::Function* antok::user::hubers::generateGetCleanedClusters(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 5) {
+		std::cerr<<function["Name"]<<" needs five quantities\"."<<std::endl;
+		return 0;
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("VectorX" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorY" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorZ" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorT" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorE" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("trackX" , "double"));
+	args.push_back(std::pair<std::string, std::string>("trackY" , "double"));
+	args.push_back(std::pair<std::string, std::string>("trackT" , "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* VectorXAddr = data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* VectorYAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* VectorZAddr = data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* VectorTAddr = data.getAddr<std::vector<double> >(args[3].first);
+	std::vector<double>* VectorEAddr = data.getAddr<std::vector<double> >(args[4].first);
+	double* trackXAddr = data.getAddr<double>(args[5].first);
+	double* trackYAddr = data.getAddr<double>(args[6].first);
+	double* trackTAddr = data.getAddr<double>(args[7].first);
+
+	std::vector<std::string> possiblyConstArgs;
+	possiblyConstArgs.push_back("mergeDist");
+	possiblyConstArgs.push_back("timeThreshold");
+
+	for(unsigned int i = 0; i < possiblyConstArgs.size(); ++i) {
+		if(not antok::YAMLUtils::hasNodeKey(function, possiblyConstArgs[i])) {
+			std::cerr<<"Argument \""<<possiblyConstArgs[i]<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return 0;
+		}
+	}
+	double* mergeDistAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[0]]);
+	double* timeThresholdAddr = antok::YAMLUtils::getAddress<double>(function[possiblyConstArgs[1]]);
+
+	std::string resultVecX = quantityNames[0];
+	std::string resultVecY = quantityNames[1];
+	std::string resultVecZ = quantityNames[2];
+	std::string resultVecT = quantityNames[3];
+	std::string resultVecE = quantityNames[4];
+
+	for(unsigned int i = 0; i < 5; ++i){
+		if(not data.insert<std::vector<double> >(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			return 0;
+		}
+	}
+	return (new antok::user::hubers::functions::GetCleanedClusters(VectorXAddr, VectorYAddr, VectorZAddr, VectorTAddr, VectorEAddr,
+	                                                              trackXAddr, trackYAddr, trackTAddr,
+	                                                              mergeDistAddr, timeThresholdAddr,
+	                                                              data.getAddr<std::vector<double> >(resultVecX),
+	                                                              data.getAddr<std::vector<double> >(resultVecY),
+	                                                              data.getAddr<std::vector<double> >(resultVecZ),
+	                                                              data.getAddr<std::vector<double> >(resultVecT),
+	                                                              data.getAddr<std::vector<double> >(resultVecE)
+	                                                             )
+	       );
+}
+
+//***********************************
+//gets highest energetic calorimeter cluster
+//***********************************
+antok::Function* antok::user::hubers::generateGetMaximumCluster(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 6) {
+		std::cerr<<function["Name"]<<" needs six quantities\"."<<std::endl;
+		return 0;
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("VectorX" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorY" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorZ" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorT" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorE" , "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("trackX" , "double"));
+	args.push_back(std::pair<std::string, std::string>("trackY" , "double"));
+	args.push_back(std::pair<std::string, std::string>("trackT" , "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* VectorXAddr = data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* VectorYAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* VectorZAddr = data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* VectorTAddr = data.getAddr<std::vector<double> >(args[3].first);
+	std::vector<double>* VectorEAddr = data.getAddr<std::vector<double> >(args[4].first);
+	double* trackXAddr = data.getAddr<double>(args[5].first);
+	double* trackYAddr = data.getAddr<double>(args[6].first);
+	double* trackTAddr = data.getAddr<double>(args[7].first);
+
+	std::string maximumX = quantityNames[0];
+	std::string maximumY = quantityNames[1];
+	std::string maximumZ = quantityNames[2];
+	std::string maximumT = quantityNames[3];
+	std::string maximumE = quantityNames[4];
+	std::string NClus    = quantityNames[5];
+
+	for(unsigned int i=0; i<5; ++i){
+		if(not data.insert<double>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			return 0;
+		}
+	}
+	for(unsigned int i=5; i<6; ++i){
+		if(not data.insert<int>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			return 0;
+		}
+	}
+	return (new antok::user::hubers::functions::GetMaximumCluster(VectorXAddr, VectorYAddr, VectorZAddr,
+	                                                              VectorTAddr, VectorEAddr,
+	                                                              trackXAddr, trackYAddr, trackTAddr,
+	                                                              data.getAddr<double>(maximumX),
+	                                                              data.getAddr<double>(maximumY),
+	                                                              data.getAddr<double>(maximumZ),
+	                                                              data.getAddr<double>(maximumT),
+	                                                              data.getAddr<double>(maximumE),
+	                                                              data.getAddr<int>(NClus)
+	                                                             )
+	       );
+}
+
+//***********************************
+//gets LorentzVector for cluster
+//produced in a  vertex with coordinates X/Y/Z
+//***********************************
+antok::Function* antok::user::hubers::generateGetNeutralLorentzVec(const YAML::Node& function, std::vector<std::string>& quantityNames, int index){
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("X", "double"));
+	args.push_back(std::pair<std::string, std::string>("Y", "double"));
+	args.push_back(std::pair<std::string, std::string>("Z", "double"));
+	args.push_back(std::pair<std::string, std::string>("E", "double"));
+	args.push_back(std::pair<std::string, std::string>("xPV", "double"));
+	args.push_back(std::pair<std::string, std::string>("yPV", "double"));
+	args.push_back(std::pair<std::string, std::string>("zPV", "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	double* xAddr= data.getAddr<double>(args[0].first);
+	double* yAddr= data.getAddr<double>(args[1].first);
+	double* zAddr= data.getAddr<double>(args[2].first);
+	double* eAddr= data.getAddr<double>(args[3].first);
+	double* xPVAddr= data.getAddr<double>(args[4].first);
+	double* yPVAddr= data.getAddr<double>(args[5].first);
+	double* zPVAddr= data.getAddr<double>(args[6].first);
+
+
+	if(not data.insert<TLorentzVector>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::GetNeutralLorentzVec(xAddr, yAddr, zAddr, eAddr, xPVAddr, yPVAddr, zPVAddr,
+	                                                                 data.getAddr<TLorentzVector>(quantityName)
+	                                                                )
+	       );
+
+};
+
+//***********************************
+//Calculates the Form Factor correction
+//for Nickel from -Q2-MCTRUTH
+//returns true/false
+//a lot of things are hard coded for Nickel
+//***********************************
+antok::Function* antok::user::hubers::generateGetFormFactor(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Arg", "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	double* argAddr = data.getAddr<double>(args[0].first);
+
+	if(not data.insert<int>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::FormFactor(argAddr, data.getAddr<int>(quantityName)));
+};
+
+
+//***********************************
+//Calculates bgTrack Cut
+//returns true/false
+//***********************************
+antok::Function* antok::user::hubers::generateGetBgTrackCut(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("evTime", "double"));
+	args.push_back(std::pair<std::string, std::string>("tracksP", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("tracksT", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("tracksTSigma", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("tracksZfirst", "std::vector<double>"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	double* evTimeAddr = data.getAddr<double>(args[0].first);
+	std::vector<double>* tracksPAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* tracksTAddr = data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* tracksTSigmaAddr = data.getAddr<std::vector<double> >(args[3].first);
+	std::vector<double>* tracksZfirstAddr = data.getAddr<std::vector<double> >(args[4].first);
+
+	if(not data.insert<int>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::hubers::functions::BgTracks(evTimeAddr, tracksPAddr, tracksTAddr,
+	                                                     tracksTSigmaAddr, tracksZfirstAddr,
+	                                                     data.getAddr<int>(quantityName)
+	                                                    )
+	       );
+};
+
+//***********************************
+//Gets best pi0 pair
+//gives an LV and the mass
+//***********************************
+antok::Function* antok::user::hubers::generateGetClosestPi0(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() != 2) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<" needed two\"."<<std::endl;
+		return 0;
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("VectorE", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorX", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorY", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("VectorZ", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("xPV", "double"));
+	args.push_back(std::pair<std::string, std::string>("yPV", "double"));
+	args.push_back(std::pair<std::string, std::string>("zPV", "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* VectorEAddr = data.getAddr<std::vector<double> >(args[0].first);
+	std::vector<double>* VectorXAddr = data.getAddr<std::vector<double> >(args[1].first);
+	std::vector<double>* VectorYAddr = data.getAddr<std::vector<double> >(args[2].first);
+	std::vector<double>* VectorZAddr = data.getAddr<std::vector<double> >(args[3].first);
+	double* xPVAddr = data.getAddr<double>(args[4].first);
+	double* yPVAddr = data.getAddr<double>(args[5].first);
+	double* zPVAddr = data.getAddr<double>(args[6].first);
+
+	if(not data.insert<TLorentzVector>(quantityNames[0])) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[0]);
+		return 0;
+	}
+	if(not data.insert<double>(quantityNames[1])) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[1]);
+		return 0;
+	}
+
+
+		if(not antok::YAMLUtils::hasNodeKey(function, "selectedMass")) {
+			std::cerr<<"Argument \""<<"selectedMass"<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return 0;
+		}
+		double* selectedMassAddr = antok::YAMLUtils::getAddress<double>(function["selectedMass"]);
+
+	return (new antok::user::hubers::functions::GetClosestPi0(VectorEAddr, VectorXAddr, VectorYAddr, VectorZAddr,
+	                                                              xPVAddr, yPVAddr, zPVAddr, selectedMassAddr,
+	                                                              data.getAddr<TLorentzVector>(quantityNames[0]),
+	                                                              data.getAddr<double>(quantityNames[1])
+	                                                             )
+	       );
+}
+
+double antok::user::hubers::IntraCellX( double cx ){
+	static const double fMeanECALX = 0.0;
+	const double xbound = 3.060 + 9.575 - fMeanECALX - 3.5 * 3.83;  // x-position of cell boundary closest to 0
+	return fabs( remainder( cx - xbound, 3.83 ) );
+}
+
+double antok::user::hubers::IntraCellY( double cy ){
+	static const double fMeanECALY = 0.00;
+	const double ybound = 0.150 + 5.745 - fMeanECALY - 1.5 * 3.83;  // y-position of cell boundary closest to 0
+	return fabs( remainder( cy - ybound, 3.83 ) );
+}
+
+double antok::user::hubers::PEDepGammaCorrection( double Egamma, double cx, double cy ){
+	// obtained from SelectorHelper::FitPosEnergyCorrection()
+	const double x190 = Egamma/190.;
+
+	const double p0 = -9.57965 - 6.42201 * atan( 7.38429*(x190-0.749578) )  +0.74;
+	const double p1 =  1.89692 + 1.2888  * atan( 8.79757*(x190-0.738527) );
+	const double p2 =  1.61223 + 1.13902 * atan( 9.43193*(x190-0.759991) );
+
+	const double p4 = 2.57235  - x190 * 15.9715;
+	const double p5 = 0.214072 - x190 *  0.202193;
+	const double p6 = 1.;
+	const double p7 = 0.97;
+
+	double x = IntraCellX( cx );
+	double y = IntraCellY( cy );
+
+	double retval = Egamma -
+	       ( p0 + p1 * antok::sqr(x - 3.83/2.) +
+	         p2 * antok::sqr(y - 3.83/2.) +
+	         p4 * exp( -0.5 * ( (antok::sqr(x - p6) + antok::sqr(y - p7)) / antok::sqr(p5) ) ) );
+			 return retval;
+
+}
+
+double antok::user::hubers::LinearGammaCorrection( double Egamma ) {
+	static const double fLinEcorr0 = -1.21919;
+	static const double fLinEcorr1 = 0.033045;
+	const double corr = fLinEcorr0 + fLinEcorr1 * Egamma;
+	Egamma -= corr;
+	return Egamma ;
+}
