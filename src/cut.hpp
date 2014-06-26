@@ -18,13 +18,14 @@ namespace antok {
 			  _abbreviation(abbreviation),
 			  _outAddr(outAddr) { };
 
-		virtual ~Cut() { };
+		virtual ~Cut() { delete _outAddr; }
 
 		virtual bool operator() () = 0;
+		virtual bool operator==(const Cut& rhs) = 0;
 
-		std::string getShortName() const { return _shortname; };
-		std::string getLongName() const { return _longname; };
-		std::string getAbbreviation() const { return _abbreviation; };
+		std::string getShortName() const { return _shortname; }
+		std::string getLongName() const { return _longname; }
+		std::string getAbbreviation() const { return _abbreviation; }
 
 	  protected:
 
@@ -87,6 +88,27 @@ namespace antok {
 				return false;
 			};
 
+			bool operator==(const Cut& arhs) {
+				const RangeCut* rhs = dynamic_cast<const RangeCut*>(&arhs);
+				if(not rhs) {
+					return false;
+				}
+				if((this->_lowerBoundAddr and not rhs->_lowerBoundAddr) or (not this->_lowerBoundAddr and rhs->_lowerBoundAddr)) {
+					return false;
+				}
+				if((this->_lowerBoundAddr and rhs->_lowerBoundAddr) and (*this->_lowerBoundAddr != *rhs->_lowerBoundAddr)) {
+					return false;
+				}
+				if((this->_upperBoundAddr and not rhs->_upperBoundAddr) or (not this->_upperBoundAddr and rhs->_upperBoundAddr)) {
+					return false;
+				}
+				if((this->_upperBoundAddr and rhs->_upperBoundAddr) and (*this->_upperBoundAddr != *rhs->_upperBoundAddr)) {
+					return false;
+				}
+				return (*this->_valueAddr == *rhs->_valueAddr) and
+				       (this->_mode == rhs->_mode);
+			}
+
 		  private:
 
 			double* _lowerBoundAddr;
@@ -125,6 +147,16 @@ namespace antok {
 						return true;
 				}
 				return false;
+			}
+
+			bool operator==(const Cut& arhs) {
+				const EqualityCut* rhs = dynamic_cast<const EqualityCut*>(&arhs);
+				if(not rhs) {
+					return false;
+				}
+				return (*this->_leftAddr == *rhs->_leftAddr) and
+				       (*this->_rightAddr == *rhs->_rightAddr) and
+				       (this->_mode == rhs->_mode);
 			}
 
 		  private:
@@ -175,14 +207,28 @@ namespace antok {
 				return false;
 			}
 
+			bool operator==(const Cut& arhs) {
+				const EllipticCut* rhs = dynamic_cast<const EllipticCut*>(&arhs);
+				if(not rhs) {
+					return false;
+				}
+				return (*this->_meanX == *rhs->_meanX) and
+				       (*this->_meanY == *rhs->_meanY) and
+				       (*this->_cutX == *rhs->_cutX) and
+				       (*this->_cutY == *rhs->_cutY) and
+				       (*this->_X == *rhs->_X) and
+				       (*this->_Y == *rhs->_Y) and
+				       (this->_mode == rhs->_mode);
+			}
+
 		  private:
 
-			double *_meanX;
-			double *_meanY;
-			double *_cutX;
-			double *_cutY;
-			double *_X;
-			double *_Y;
+			double* _meanX;
+			double* _meanY;
+			double* _cutX;
+			double* _cutY;
+			double* _X;
+			double* _Y;
 			int _mode;
 
 		};
@@ -212,6 +258,16 @@ namespace antok {
 				return false;
 			}
 
+			bool operator==(const Cut& arhs) {
+				const TriggerMaskCut* rhs = dynamic_cast<const TriggerMaskCut*>(&arhs);
+				if(not rhs) {
+					return false;
+				}
+				return (*this->_maskAddr == *rhs->_maskAddr) and
+				       (*this->_triggerAddr == *rhs->_triggerAddr) and
+				       (this->_mode == rhs->_mode);
+			}
+
 		  private:
 
 			int* _maskAddr;
@@ -230,11 +286,19 @@ namespace antok {
 			         bool* outAddr,
 			         std::vector<antok::Cut*> cuts,
 			         std::vector<bool*> results,
-					 int mode)
+			         int mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
 				  _cuts(cuts),
 				  _results(results),
 				  _mode(mode) { }
+
+			~CutGroup() {
+				for(unsigned int i = 0; i < _cuts.size(); ++i) {
+					delete _cuts[i];
+				}
+				_cuts.clear();
+				_results.clear();
+			}
 
 			bool operator () () {
 				bool retval;
@@ -270,6 +334,22 @@ namespace antok {
 				return false;
 			}
 
+			bool operator==(const Cut& arhs) {
+				const CutGroup* rhs = dynamic_cast<const CutGroup*>(&arhs);
+				if(not rhs) {
+					return false;
+				}
+				if((this->_cuts.size() != rhs->_cuts.size()) or (this->_mode != rhs->_mode)) {
+					return false;
+				}
+				for(unsigned int i = 0; i < this->_cuts.size(); ++i) {
+					if(not (this->_cuts[i] == rhs->_cuts[i])) {
+						return false;
+					}
+				}
+				return true;
+			}
+
 		  private:
 
 			std::vector<antok::Cut*> _cuts;
@@ -290,6 +370,14 @@ namespace antok {
 
 			bool operator () () {
 				(*_outAddr) = true;
+				return true;
+			}
+
+			bool operator==(const Cut& arhs) {
+				const NoCut* rhs = dynamic_cast<const NoCut*>(&arhs);
+				if(not rhs) {
+					return false;
+				}
 				return true;
 			}
 

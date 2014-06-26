@@ -23,7 +23,7 @@ namespace {
 	                             const std::string& shortName,
 	                             const std::string& longName,
 	                             const std::string& abbreviation,
-	                             bool* result,
+	                             bool* const result,
 	                             int mode)
 	{
 
@@ -45,7 +45,7 @@ namespace {
 	                             const std::string& shortName,
 	                             const std::string& longName,
 	                             const std::string& abbreviation,
-	                             bool* result,
+	                             bool* const result,
 	                             int mode)
 	{
 
@@ -90,7 +90,7 @@ namespace {
 	                               const std::string& shortName,
 	                               const std::string& longName,
 	                               const std::string& abbreviation,
-	                               bool* result)
+	                               bool* const result)
 	{
 
 		using antok::YAMLUtils::hasNodeKey;
@@ -156,7 +156,7 @@ namespace {
 	                                  const std::string& shortName,
 	                                  const std::string& longName,
 	                                  const std::string& abbreviation,
-	                                  bool* result)
+	                                  bool* const result)
 	{
 
 		using antok::YAMLUtils::hasNodeKey;
@@ -213,7 +213,7 @@ namespace {
 	                                  const std::string& shortName,
 	                                  const std::string& longName,
 	                                  const std::string& abbreviation,
-	                                  bool* result)
+	                                  bool* const result)
 	{
 
 		using antok::YAMLUtils::hasNodeKey;
@@ -271,7 +271,7 @@ namespace {
 	                                     const std::string& shortName,
 	                                     const std::string& longName,
 	                                     const std::string& abbreviation,
-	                                     bool* result)
+	                                     bool* const result)
 	{
 
 		using antok::YAMLUtils::hasNodeKey;
@@ -313,7 +313,7 @@ namespace {
 	                               const std::string& shortName,
 	                               const std::string& longName,
 	                               const std::string& abbreviation,
-	                               bool* result)
+	                               bool* const result)
 	{
 
 		using antok::YAMLUtils::hasNodeKey;
