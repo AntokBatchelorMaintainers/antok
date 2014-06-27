@@ -10,6 +10,7 @@
 // below.
 #include<kbicker.h>
 #include<hubers.h>
+#include<cdreis.h>
 
 namespace {
 	std::vector<antok::Function* (*)(const YAML::Node&, std::vector<std::string>&, int)> __getUserFunctions(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
@@ -18,6 +19,7 @@ namespace {
 
 		userFunctions.push_back(&antok::user::kbicker::getUserFunction);
 		userFunctions.push_back(&antok::user::hubers::getUserFunction);
+		userFunctions.push_back(&antok::user::cdreis::getUserFunction);
 
 		// End of user defined functions
 		return userFunctions;
