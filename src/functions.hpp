@@ -110,12 +110,16 @@ namespace antok {
 				{
 					case 0:
 						_outAddr->SetXYZM(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
+						break;
 					case 1:
 						_outAddr->SetPxPyPzE(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
+						break;
 					case 2:
 						_outAddr->SetXYZM(_vec3Addr->X(),_vec3Addr->Y(),_vec3Addr->Z(),  *_mAddr);
+						break;
 					case 3:
 						_outAddr->SetPxPyPzE(_vec3Addr->X(),_vec3Addr->Y(),_vec3Addr->Z(), *_mAddr);
+						break;
 				}
 				return true;
 			}

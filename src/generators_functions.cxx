@@ -452,18 +452,13 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 			}
 			mAddr = new double();
 			(*mAddr) = function["M"].as<double>();
+			break;
 		case 1:
 			args.push_back(std::pair<std::string, std::string>("Px", "double"));
 			args.push_back(std::pair<std::string, std::string>("Py", "double"));
 			args.push_back(std::pair<std::string, std::string>("Pz", "double"));
-			try {
-				function["E"].as<double>();
-			} catch(const YAML::TypedBadConversion<double>& e) {
-				std::cerr<<"Argument \"E\" in function \"mass\" should be of type double (variable \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-			}
-			mAddr = new double();
-			(*mAddr) = function["E"].as<double>();
+			args.push_back(std::pair<std::string, std::string>("E", "double"));
+			break;
 		case 2:
 			args.push_back(std::pair<std::string, std::string>("Vec3", "TVector3"));
 			try {
@@ -474,16 +469,10 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 			}
 			mAddr = new double();
 			(*mAddr) = function["M"].as<double>();
+			break;
 		case 3:
 			args.push_back(std::pair<std::string, std::string>("Vec", "TVector3"));
-			try {
-				function["E"].as<double>();
-			} catch(const YAML::TypedBadConversion<double>& e) {
-				std::cerr<<"Argument \"E\" in function \"mass\" should be of type double (variable \""<<quantityName<<"\")."<<std::endl;
-			return 0;
-			}
-			mAddr = new double();
-			(*mAddr) = function["E"].as<double>();
+			args.push_back(std::pair<std::string, std::string>("E", "double"));
 	}
 
 	if(not antok::generators::functionArgumentHandler(args, function, index)) {
@@ -497,14 +486,21 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 			xAddr = data.getAddr<double>(args[0].first);
 			yAddr = data.getAddr<double>(args[1].first);
 			zAddr = data.getAddr<double>(args[2].first);
+			break;
 		case 1:
 			xAddr = data.getAddr<double>(args[0].first);
 			yAddr = data.getAddr<double>(args[1].first);
 			zAddr = data.getAddr<double>(args[2].first);
+			mAddr = data.getAddr<double>(args[3].first);
+			break;
 		case 2:
 			vec3Addr = data.getAddr<TVector3>(args[0].first);
+			mAddr = data.getAddr<double>(args[1].first);
+			break;
 		case 3:
 			vec3Addr = data.getAddr<TVector3>(args[0].first);
+			mAddr = data.getAddr<double>(args[1].first);
+			break;
 	}
 
 	if(not data.insert<TLorentzVector>(quantityName)) {
