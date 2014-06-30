@@ -96,8 +96,8 @@ namespace antok {
 				  _outAddr(outAddr),
 				  _pType(pType) { }
 
-			GetLorentzVec(TVector3* Vec3Addr, double* mAddr, TLorentzVector* outAddr, int pType)
-				: _Vec3Addr(Vec3Addr),
+			GetLorentzVec(TVector3* vec3Addr, double* mAddr, TLorentzVector* outAddr, int pType)
+				: _vec3Addr(vec3Addr),
 				  _mAddr(mAddr),
 				  _outAddr(outAddr),
 				  _pType(pType) { }
@@ -106,15 +106,17 @@ namespace antok {
 			virtual ~GetLorentzVec() { }
 
 			bool operator() () {
-				if(_pType == 0)
-					_outAddr->SetXYZM(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
-				else if(_pType == 1)
-					_outAddr->SetPxPyPzE(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
-				else if(_pType == 2)
-					_outAddr->SetXYZM(_Vec3Addr->X(),_Vec3Addr->Y(),_Vec3Addr->Z(),  *_mAddr);
-				else if(_pType == 3)
-					_outAddr->SetPxPyPzE(_Vec3Addr->X(),_Vec3Addr->Y(),_Vec3Addr->Z(), *_mAddr);
-
+				switch( _pType )
+				{
+					case 0:
+						_outAddr->SetXYZM(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
+					case 1:
+						_outAddr->SetPxPyPzE(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
+					case 2:
+						_outAddr->SetXYZM(_vec3Addr->X(),_vec3Addr->Y(),_vec3Addr->Z(),  *_mAddr);
+					case 3:
+						_outAddr->SetPxPyPzE(_vec3Addr->X(),_vec3Addr->Y(),_vec3Addr->Z(), *_mAddr);
+				}
 				return true;
 			}
 
@@ -123,7 +125,7 @@ namespace antok {
 			double* _xAddr;
 			double* _yAddr;
 			double* _zAddr;
-			TVector3* _Vec3Addr;
+			TVector3* _vec3Addr;
 			double* _mAddr;
 			TLorentzVector* _outAddr;
 			int _pType;
