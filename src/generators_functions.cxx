@@ -416,11 +416,15 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
-	bool pType;
+	int pType;
 	if(function["X"] and function["M"]) {
-		pType = false;
-	} else if (function["Px"]) {
-		pType = true;
+		pType = 0;
+	} else if (function["Px"] and function["E"]) {
+		pType = 1;
+	} else if (function["Vec3"] and function["M"]) {
+		pType = 2;
+	} else if (function["Vec3"] and function["E"]) {
+		pType = 3;
 	} else {
 		std::cerr<<"Function \"getLorentzVec\" needs either variables \"[X, Y, Z, M]\" or \"[Px, Py, Pz, E]\" (variable \""<<quantityName<<"\")."<<std::endl;
 		return 0;
@@ -432,23 +436,43 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 	double* yAddr;
 	double* zAddr;
 	double* mAddr;
-	if(pType) {
-		args.push_back(std::pair<std::string, std::string>("Px", "double"));
-		args.push_back(std::pair<std::string, std::string>("Py", "double"));
-		args.push_back(std::pair<std::string, std::string>("Pz", "double"));
-		args.push_back(std::pair<std::string, std::string>("E", "double"));
-	} else {
-		args.push_back(std::pair<std::string, std::string>("X", "double"));
-		args.push_back(std::pair<std::string, std::string>("Y", "double"));
-		args.push_back(std::pair<std::string, std::string>("Z", "double"));
-		try {
-			function["M"].as<double>();
-		} catch(const YAML::TypedBadConversion<double>& e) {
-			std::cerr<<"Argument \"M\" in function \"mass\" should be of type double (variable \""<<quantityName<<"\")."<<std::endl;
+	TVector3* vec3Addr;
+
+	switch(pType)
+	{
+		case 0:
+			args.push_back(std::pair<std::string, std::string>("X", "double"));
+			args.push_back(std::pair<std::string, std::string>("Y", "double"));
+			args.push_back(std::pair<std::string, std::string>("Z", "double"));
+			try {
+				function["M"].as<double>();
+			} catch(const YAML::TypedBadConversion<double>& e) {
+				std::cerr<<"Argument \"M\" in function \"mass\" should be of type double (variable \""<<quantityName<<"\")."<<std::endl;
 			return 0;
-		}
-		mAddr = new double();
-		(*mAddr) = function["M"].as<double>();
+			}
+			mAddr = new double();
+			(*mAddr) = function["M"].as<double>();
+			break;
+		case 1:
+			args.push_back(std::pair<std::string, std::string>("Px", "double"));
+			args.push_back(std::pair<std::string, std::string>("Py", "double"));
+			args.push_back(std::pair<std::string, std::string>("Pz", "double"));
+			args.push_back(std::pair<std::string, std::string>("E", "double"));
+			break;
+		case 2:
+			args.push_back(std::pair<std::string, std::string>("Vec3", "TVector3"));
+			try {
+				function["M"].as<double>();
+			} catch(const YAML::TypedBadConversion<double>& e) {
+				std::cerr<<"Argument \"M\" in function \"mass\" should be of type double (variable \""<<quantityName<<"\")."<<std::endl;
+			return 0;
+			}
+			mAddr = new double();
+			(*mAddr) = function["M"].as<double>();
+			break;
+		case 3:
+			args.push_back(std::pair<std::string, std::string>("Vec", "TVector3"));
+			args.push_back(std::pair<std::string, std::string>("E", "double"));
 	}
 
 	if(not antok::generators::functionArgumentHandler(args, function, index)) {
@@ -456,11 +480,27 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 		return 0;
 	}
 
-	xAddr = data.getAddr<double>(args[0].first);
-	yAddr = data.getAddr<double>(args[1].first);
-	zAddr = data.getAddr<double>(args[2].first);
-	if(pType) {
-		mAddr = data.getAddr<double>(args[3].first);
+	switch(pType)
+	{
+		case 0:
+			xAddr = data.getAddr<double>(args[0].first);
+			yAddr = data.getAddr<double>(args[1].first);
+			zAddr = data.getAddr<double>(args[2].first);
+			break;
+		case 1:
+			xAddr = data.getAddr<double>(args[0].first);
+			yAddr = data.getAddr<double>(args[1].first);
+			zAddr = data.getAddr<double>(args[2].first);
+			mAddr = data.getAddr<double>(args[3].first);
+			break;
+		case 2:
+			vec3Addr = data.getAddr<TVector3>(args[0].first);
+			mAddr = data.getAddr<double>(args[1].first);
+			break;
+		case 3:
+			vec3Addr = data.getAddr<TVector3>(args[0].first);
+			mAddr = data.getAddr<double>(args[1].first);
+			break;
 	}
 
 	if(not data.insert<TLorentzVector>(quantityName)) {
@@ -468,9 +508,21 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 		return 0;
 	}
 
-	return (new antok::functions::GetLorentzVec(xAddr, yAddr, zAddr, mAddr, data.getAddr<TLorentzVector>(quantityName), pType));
-
+	switch(pType)
+	{
+		case 0:
+			return (new antok::functions::GetLorentzVec(xAddr, yAddr, zAddr, mAddr, data.getAddr<TLorentzVector>(quantityName), pType));
+		case 1:
+			return (new antok::functions::GetLorentzVec(xAddr, yAddr, zAddr, mAddr, data.getAddr<TLorentzVector>(quantityName), pType));
+		case 2:
+			return (new antok::functions::GetLorentzVec(vec3Addr, mAddr, data.getAddr<TLorentzVector>(quantityName), pType));
+		case 3:
+			return (new antok::functions::GetLorentzVec(vec3Addr, mAddr, data.getAddr<TLorentzVector>(quantityName), pType));
+	}
+	return 0;
 };
+
+
 
 antok::Function* antok::generators::generateGetTs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {

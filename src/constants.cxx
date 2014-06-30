@@ -43,7 +43,7 @@ bool antok::Constants::set_proton_mass(const double& proton_mass) {
 	if(proton_mass > 0.) {
 		_proton_mass = proton_mass;
 		if(std::fabs(_proton_mass - 0.938272046) > 0.001) {
-			std::cerr<<"Warning: charged pion mass seems to be set strangely: "<<_proton_mass<<"."<<std::endl;
+			std::cerr<<"Warning: proton mass seems to be set strangely: "<<_proton_mass<<"."<<std::endl;
 		}
 		return true;
 	}
