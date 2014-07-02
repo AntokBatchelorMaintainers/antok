@@ -99,59 +99,53 @@ if(PYTHONINTERP_FOUND)
 		endif()
 	endif()
 
-	# get file name of shared library
-	execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LIBDEST'))"
-		OUTPUT_VARIABLE _PYTHON_LIBRARY_PATH
-		OUTPUT_STRIP_TRAILING_WHITESPACE)
-	# split path into directory and file name
-	get_filename_component(_PYTHON_LIBRARY_FILE_NAME "${_PYTHON_LIBRARY_PATH}" NAME)
-	get_filename_component(_PYTHON_LIBRARY_DIR       "${_PYTHON_LIBRARY_PATH}" PATH)
-	# find shared library
-	find_library(PYTHON_LIBRARIES
-		NAMES ${_PYTHON_LIBRARY_FILE_NAME}
-		PATHS ${_PYTHON_LIBRARY_DIR}
-		NO_DEFAULT_PATH)
-	if(NOT PYTHON_LIBRARIES)
-		# try again using info from LDLIBRARY variable; needed for installs from source
-		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LDLIBRARY'))"
-			OUTPUT_VARIABLE _PYTHON_LIBRARY_PATH
+	if(PYTHON_VERSION_STRING VERSION_LESS 3.2)
+		# get name of shared library
+		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print('python' + sysconfig.get_config_var('VERSION'))"
+			OUTPUT_VARIABLE _PYTHON_LIBRARY_NAME
 			OUTPUT_STRIP_TRAILING_WHITESPACE)
-		get_filename_component(_PYTHON_LIBRARY_FILE_NAME "${_PYTHON_LIBRARY_PATH}" NAME)
-		find_library(PYTHON_LIBRARIES
-			NAMES ${_PYTHON_LIBRARY_FILE_NAME}
-			PATHS ${_PYTHON_LIBRARY_DIR}
-			NO_DEFAULT_PATH)
-	endif()
-	if(NOT PYTHON_LIBRARIES)
-		# try yet again, this time using info from LIBPL variable; needed on some systems
+		# get path of shared library
+		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print(sysconfig.get_config_var('LIBPL'))"
+			OUTPUT_VARIABLE _PYTHON_LIBRARY_DIR
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+	else()
+		# get name of shared library
+		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; import sysconfig; print('python' + sysconfig.get_config_var('VERSION') + sys.abiflags)"
+			OUTPUT_VARIABLE _PYTHON_LIBRARY_NAME
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+		# get path of shared library
 		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LIBPL'))"
 			OUTPUT_VARIABLE _PYTHON_LIBRARY_DIR
 			OUTPUT_STRIP_TRAILING_WHITESPACE)
-		find_library(PYTHON_LIBRARIES
-			NAMES ${_PYTHON_LIBRARY_FILE_NAME}
-			PATHS ${_PYTHON_LIBRARY_DIR}
-			NO_DEFAULT_PATH)
 	endif()
-
+	# find shared library
+	find_library(PYTHON_LIBRARIES
+		NAMES ${_PYTHON_LIBRARY_NAME}
+		PATHS ${_PYTHON_LIBRARY_DIR}
+		NO_DEFAULT_PATH)
 	if(NOT PYTHON_LIBRARIES)
-		set(PYTHON_ERROR_REASON "${PYTHON_ERROR_REASON} Cannot find Python shared library '${_PYTHON_LIBRARY_FILE_NAME}' in '${_PYTHON_LIBRARY_DIR}'. Make sure Python is setup correctly.")
+		set(PYTHON_ERROR_REASON "${PYTHON_ERROR_REASON} Cannot find Python shared library '${_PYTHON_LIBRARY_NAME}' in '${_PYTHON_LIBRARY_DIR}'. Make sure Python is setup correctly.")
 	else()
 		set(PYTHONLIBS_FOUND TRUE)
 	endif()
-	unset(_PYTHON_LIBRARY_PATH)
-	unset(_PYTHON_LIBRARY_FILE_NAME)
+	unset(_PYTHON_LIBRARY_NAME)
 	unset(_PYTHON_LIBRARY_DIR)
 
 
 	if(PYTHONLIBS_FOUND)
 
 		# get include directories
-		execute_process(
-			# Python 2.7 on Ubuntu 12.04 requires to define the 'posix_prefix' scheme here explicitely
-			# otherwise a nonexisting path is returned; sigh!
-			COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print('{};{}'.format(sysconfig.get_path('include', 'posix_prefix'), sysconfig.get_path('platinclude', 'posix_prefix')))"
-			OUTPUT_VARIABLE PYTHON_INCLUDE_DIRS
-			OUTPUT_STRIP_TRAILING_WHITESPACE)
+		if(PYTHON_VERSION_STRING VERSION_LESS 3.2)
+			execute_process(
+				COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print('{0};{1}'.format(sysconfig.get_python_inc(), sysconfig.get_python_inc(plat_specific=True)))"
+				OUTPUT_VARIABLE PYTHON_INCLUDE_DIRS
+				OUTPUT_STRIP_TRAILING_WHITESPACE)
+		else()
+			execute_process(
+				COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print('{};{}'.format(sysconfig.get_path('include', 'posix_prefix'), sysconfig.get_path('platinclude', 'posix_prefix')))"
+				OUTPUT_VARIABLE PYTHON_INCLUDE_DIRS
+				OUTPUT_STRIP_TRAILING_WHITESPACE)
+		endif()
 		list(REMOVE_DUPLICATES PYTHON_INCLUDE_DIRS)
 		foreach(_PYTHON_INCLUDE_DIR ${PYTHON_INCLUDE_DIRS})
 			if(NOT EXISTS "${_PYTHON_INCLUDE_DIR}")
