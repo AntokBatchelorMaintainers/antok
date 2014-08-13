@@ -2,6 +2,7 @@
 #define ANTOK_TEMPLATE_PLOT_HPP
 
 #include<assert.h>
+#include<iostream>
 #include<map>
 #include<vector>
 
@@ -25,19 +26,19 @@ namespace antok {
 		             T* data2 = 0);
 
 		TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
-                     TH1* hist_template,
-                     std::vector<T*>* data1,
-                     std::vector<T*>* data2 = 0);
+		             TH1* hist_template,
+		             std::vector<T*>* data1,
+		             std::vector<T*>* data2 = 0);
 
 		TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
-                     TH1* hist_template,
-                     std::vector<T>* data1,
-                     std::vector<T>* data2 = 0);
+		             TH1* hist_template,
+		             std::vector<T>* data1,
+		             std::vector<T>* data2 = 0);
 
 		TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
-                     TH1* hist_template,
-                     std::vector<std::vector<T>*>* data1,
-                     std::vector<std::vector<T>*>* data2 = 0);
+		             TH1* hist_template,
+		             std::vector<std::vector<T>*>* data1,
+		             std::vector<std::vector<T>*>* data2 = 0);
 
 		void fill(long cutmask);
 
