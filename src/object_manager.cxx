@@ -136,7 +136,9 @@ bool antok::ObjectManager::finish() {
 
 	for(std::map<TObject*, TDirectory*>::const_iterator it = _objectsToWrite.begin(); it != _objectsToWrite.end(); ++it) {
 		it->second->cd();
-		it->first->Write();
+		if(it->first->Write() <= 0) {
+			success = false;
+		}
 	}
 
 	for(std::map<std::string, std::vector<histogramCopyInformation> >::const_iterator histsToCopy_it = _histogramsToCopy.begin();
@@ -169,7 +171,9 @@ bool antok::ObjectManager::finish() {
 			TH1* copiedHist = dynamic_cast<TH1*>(info.histogram->Clone(histName.c_str()));
 			assert(copiedHist != 0);
 			copiedHist->SetTitle(info.newTitle.c_str());
-			copiedHist->Write();
+			if(copiedHist->Write() <= 0) {
+				success = false;
+			}
 		}
 		dir->Close();
 	}
