@@ -66,7 +66,7 @@ namespace antok {
 
 		static Plotter* instance();
 
-		void fill(long cutPattern);
+		void fill(const long& cutPattern);
 
 		static bool handleAdditionalCuts(const YAML::Node& cuts, std::map<std::string, std::vector<long> >& map);
 
