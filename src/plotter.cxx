@@ -18,7 +18,7 @@ antok::Plotter* antok::Plotter::instance() {
 	return _plotter;
 }
 
-void antok::Plotter::fill(long cutPattern) {
+void antok::Plotter::fill(const long& cutPattern) {
 
 	for(unsigned int i = 0; i < _plots.size(); ++i) {
 		_plots[i]->fill(cutPattern);
