@@ -34,7 +34,6 @@ void convert_root_to_txt(char* infile_name,
 	}
 
 	const double& PION_MASS = antok::Constants::chargedPionMass();
-	const double& PROTON_MASS = antok::Constants::protonMass();
 
 	const std::string PHASE_SPACE_FILENAME_POSTFIX = "genPS";
 	const std::string RECO_FILENAME_POSTFIX = "accPS";
@@ -96,7 +95,6 @@ void convert_root_to_txt(char* infile_name,
 	double px3, py3, pz3;
 	double px4, py4, pz4;
 	double px5, py5, pz5;
-	double pxR, pyR, pzR;
 	double gradx, grady;
 
 	if(inputType == "data") {
@@ -133,9 +131,6 @@ void convert_root_to_txt(char* infile_name,
 		tree->SetBranchAddress("Mom_MCTruth_x5", &px5);
 		tree->SetBranchAddress("Mom_MCTruth_y5", &py5);
 		tree->SetBranchAddress("Mom_MCTruth_z5", &pz5);
-		tree->SetBranchAddress("Mom_xP_MCTruth", &pxR);
-		tree->SetBranchAddress("Mom_yP_MCTruth", &pyR);
-		tree->SetBranchAddress("Mom_zP_MCTruth", &pzR);
 		tree->SetBranchAddress("Mom_x0_MCTruth", &px0);
 		tree->SetBranchAddress("Mom_y0_MCTruth", &py0);
 		tree->SetBranchAddress("Mom_z0_MCTruth", &pz0);
@@ -144,18 +139,10 @@ void convert_root_to_txt(char* infile_name,
 	std::vector<TLorentzVector> particles;
 	particles.resize(6);
 
-	TClonesArray* prodMomName;
-	if(inputType == "data") {
-		prodMomName = new TClonesArray("TObjString", 1);
-	} else {
-		prodMomName = new TClonesArray("TObjString", 2);
-	}
+	TClonesArray prodMomName ("TObjString", 1);
 	TClonesArray decayMomName("TObjString", 5);
 
-	new ((*prodMomName) [0]) TObjString("pi-");
-	if(inputType != "data") {
-		new ((*prodMomName) [1]) TObjString("p+");
-	}
+	new (prodMomName  [0]) TObjString("pi-");
 	new (decayMomName [0]) TObjString("pi-");
 	new (decayMomName [1]) TObjString("pi-");
 	new (decayMomName [2]) TObjString("pi-");
@@ -177,7 +164,7 @@ void convert_root_to_txt(char* infile_name,
 		trees.at(i) = new TTree("rootPwaEvtTree", "rootPwaEvtTree");
 		trees.at(i)->Branch("prodKinMomenta", "TClonesArray", &prodMom, buffsize, splitLevel);
 		trees.at(i)->Branch("decayKinMomenta", "TClonesArray", &decayMom, buffsize, splitLevel);
-		prodMomName->Write("prodKinParticles", TObject::kSingleKey);
+		prodMomName.Write("prodKinParticles", TObject::kSingleKey);
 		decayMomName.Write("decayKinParticles", TObject::kSingleKey);
 	}
 
@@ -211,9 +198,6 @@ void convert_root_to_txt(char* infile_name,
 
 		// Fill the TClonesArrays
 		new ((*prodMom)[0]) TVector3(particles.at(0).Vect());
-		if(inputType != "data") {
-			new ((*prodMom)[0]) TVector3(TLorentzVector(pxR, pyR, pzR, PROTON_MASS).Vect());
-		}
 		for(unsigned int i = 1; i < 6; ++i) {
 			new ((*decayMom)[i-1]) TVector3(particles.at(i).Vect());
 		}
