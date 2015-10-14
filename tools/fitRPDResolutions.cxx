@@ -437,10 +437,10 @@ class bin0r {
 		return retval;
 	}
 
-	static const unsigned int NUMBER_OF_RINGS = 6;
-	static const double MAXIMUM_RADIUS = 1.60;
+	static const unsigned int NUMBER_OF_RINGS;
+	static const double MAXIMUM_RADIUS;
 
-	static const double RPD_SLAB_STEP = 0.025;
+	static const double RPD_SLAB_STEP;
 
 	std::vector<double> _radiusLimits;
 	std::vector<std::vector<double> > _phiLimits;
@@ -458,6 +458,11 @@ class bin0r {
 	std::vector<std::vector<TFitResultPtr> > _fitResults;
 
 };
+
+const unsigned int bin0r::NUMBER_OF_RINGS = 6;
+const double bin0r::MAXIMUM_RADIUS = 1.60;
+
+const double bin0r::RPD_SLAB_STEP = 0.025;
 
 class uberBin0r {
 
@@ -693,13 +698,13 @@ class uberBin0r {
 
   private:
 
-	static const unsigned int NBINS_T = 5;
-	static const unsigned int NBINS_M = 5;
+	static const unsigned int NBINS_T;
+	static const unsigned int NBINS_M;
 
-	static const double LIMITS_T_LOWER = 0.3;
-	static const double LIMITS_T_UPPER = 1.;
-	static const double LIMITS_M_LOWER = 1.;
-	static const double LIMITS_M_UPPER = 4.2;
+	static const double LIMITS_T_LOWER;
+	static const double LIMITS_T_UPPER;
+	static const double LIMITS_M_LOWER;
+	static const double LIMITS_M_UPPER;
 
 	std::vector<bin0r> _bins;
 	std::vector<std::string> _binNames;
@@ -709,6 +714,14 @@ class uberBin0r {
 	TDirectory* _dir;
 
 };
+
+const unsigned int uberBin0r::NBINS_T = 5;
+const unsigned int uberBin0r::NBINS_M = 5;
+
+const double uberBin0r::LIMITS_T_LOWER = 0.3;
+const double uberBin0r::LIMITS_T_UPPER = 1.;
+const double uberBin0r::LIMITS_M_LOWER = 1.;
+const double uberBin0r::LIMITS_M_UPPER = 4.2;
 
 void fitErrorFunctionForRPD(std::string inFileName,
                             std::string outFileName,

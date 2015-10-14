@@ -2,6 +2,7 @@
 #define ANTOK_TEMPLATE_PLOT_HPP
 
 #include<assert.h>
+#include<iostream>
 #include<map>
 #include<vector>
 
