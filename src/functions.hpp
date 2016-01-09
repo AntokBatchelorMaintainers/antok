@@ -60,6 +60,8 @@ namespace antok {
 
 		};
 
+
+
 		class Mass: public Function
 		{
 
@@ -246,6 +248,59 @@ namespace antok {
 			double* _outAddr;
 
 		};
+
+		template < typename T >
+		class Quotient: public Function
+		{
+
+		  public:
+
+			Quotient(T* inAddr1, T* inAddr2, T* outAddr)
+				: _inAddr1(inAddr1),
+				  _inAddr2(inAddr2),
+				  _outAddr(outAddr) { }
+
+			virtual ~Quotient() { }
+
+			bool operator() () {
+				(*_outAddr) = (*_inAddr1) / (*_inAddr2);
+				return true;
+			}
+
+		  private:
+
+			T* _inAddr1;
+			T* _inAddr2;
+			T* _outAddr;
+
+		};
+
+		template < typename T >
+		class Mul: public Function
+		{
+
+		  public:
+
+			Mul(T* inAddr1, T* inAddr2, T* outAddr)
+				: _inAddr1(inAddr1),
+				  _inAddr2(inAddr2),
+				  _outAddr(outAddr) { }
+
+			virtual ~Mul() { }
+
+			bool operator() () {
+				(*_outAddr) = (*_inAddr1) * (*_inAddr2);
+				return true;
+			}
+
+		  private:
+
+			T* _inAddr1;
+			T* _inAddr2;
+			T* _outAddr;
+
+		};
+
 
 		class Abs : public Function
 		{

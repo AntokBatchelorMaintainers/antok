@@ -269,6 +269,140 @@ antok::Function* antok::generators::generateDiff(const YAML::Node& function, std
 
 };
 
+template< typename T >
+antok::Function* __generateQuotientHelper( antok::Data& data, const std::vector<std::pair<std::string, std::string> >& args,
+		const std::vector<std::string>& quantityNames, const std::string& quantityName  ){
+
+	if(not data.insert<T>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+	return (new antok::functions::Quotient<T>( data.getAddr<T>(args[0].first),
+													data.getAddr<T>(args[1].first),
+													data.getAddr<T>(quantityName)));
+
+}
+
+antok::Function* antok::generators::generateQuotient(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::string quantityName = quantityNames[0];
+
+
+	using antok::YAMLUtils::hasNodeKey;
+
+	// Get type for arguments
+	std::string  typeNameArg1, typeNameArg2;
+	if( hasNodeKey(function, "Dividend") )	typeNameArg1 = data.getType( antok::YAMLUtils::getString( function["Dividend"] ) );
+	else {
+		std::cerr<<"Argument \"Dividend\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+		return 0;
+	}
+	if( hasNodeKey(function, "Divisor") )	typeNameArg2 = data.getType( antok::YAMLUtils::getString( function["Divisor"] ) );
+	else {
+		std::cerr<<"Argument \"Divisor\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+		return 0;
+	}
+
+	if ( typeNameArg1 != typeNameArg2 ){
+		std::cerr<<"Argument \"Dividend\" (" << typeNameArg1 << ") and \"Divisor\" (" << typeNameArg2 << ") have different types (required for function \""<<function["Name"]<<"\")."<<std::endl;
+
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Dividend", typeNameArg1));
+	args.push_back(std::pair<std::string, std::string>("Divisor", typeNameArg2));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+
+	if      (typeNameArg1 == "double") return __generateQuotientHelper<double>(data, args, quantityNames, quantityName);
+	else if (typeNameArg1 == "int")    return __generateQuotientHelper<int>(data, args, quantityNames, quantityName);
+	else {
+		std::cerr << "Divide not implemented for type \"" << typeNameArg1 << "\" for variables \"" << args[0].first << "\" and \"" << args[1].first << "\"." << std::endl;
+		return 0;
+	}
+
+	return 0;
+
+};
+
+template< typename T >
+antok::Function* __generateMulHelper( antok::Data& data, const std::vector<std::pair<std::string, std::string> >& args,
+		const std::vector<std::string>& quantityNames, const std::string& quantityName  ){
+
+	if(not data.insert<T>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+	return (new antok::functions::Mul<T>( data.getAddr<T>(args[0].first),
+													data.getAddr<T>(args[1].first),
+													data.getAddr<T>(quantityName)));
+
+}
+
+antok::Function* antok::generators::generateMul(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::string quantityName = quantityNames[0];
+
+
+	using antok::YAMLUtils::hasNodeKey;
+
+	// Get type for arguments
+	std::string  typeNameArg1, typeNameArg2;
+	if( hasNodeKey(function, "Factor1") )	typeNameArg1 = data.getType( antok::YAMLUtils::getString( function["Factor1"] ) );
+	else {
+		std::cerr<<"Argument \"Factor1\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+		return 0;
+	}
+	if( hasNodeKey(function, "Factor2") )	typeNameArg2 = data.getType( antok::YAMLUtils::getString( function["Factor2"] ) );
+	else {
+		std::cerr<<"Argument \"Factor2\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+		return 0;
+	}
+
+	if ( typeNameArg1 != typeNameArg2 ){
+		std::cerr<<"Argument \"Factor1\" (" << typeNameArg1 << ") and \"Factor2\" (" << typeNameArg2 << ") have different types (required for function \""<<function["Name"]<<"\")."<<std::endl;
+
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Factor1", typeNameArg1));
+	args.push_back(std::pair<std::string, std::string>("Factor2", typeNameArg2));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+
+	if      (typeNameArg1 == "double") return __generateMulHelper<double>(data, args, quantityNames, quantityName);
+	else if (typeNameArg1 == "int")    return __generateMulHelper<int>(data, args, quantityNames, quantityName);
+	else {
+		std::cerr << "Mul not implemented for type \"" << typeNameArg1 << "\" for variables \"" << args[0].first << "\" and \"" << args[1].first << "\"." << std::endl;
+		return 0;
+	}
+
+	return 0;
+
+};
+
 antok::Function* antok::generators::generateEnergy(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
@@ -695,6 +829,8 @@ antok::Function* antok::generators::generateSum(const YAML::Node& function, std:
 		antokFunction = __getSumFunction<Long64_t>(summandNames, subtrahendNames, quantityName);
 	} else if (typeName == "TLorentzVector") {
 		antokFunction = __getSumFunction<TLorentzVector>(summandNames, subtrahendNames, quantityName);
+	} else if (typeName == "TVector3") {
+		antokFunction = __getSumFunction<TVector3>(summandNames, subtrahendNames, quantityName);
 	} else {
 		std::cerr<<"Type \""<<typeName<<"\" not supported by \"sum\" (registering calculation of \""<<quantityName<<"\")."<<std::endl;
 		return 0;

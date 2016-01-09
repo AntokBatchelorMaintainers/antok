@@ -511,6 +511,10 @@ bool antok::Initializer::initializeEvent() {
 				antokFunctionPtr = antok::generators::generateConvertIntToDouble(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "diff") {
 				antokFunctionPtr = antok::generators::generateDiff(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "quotient") {
+				antokFunctionPtr = antok::generators::generateQuotient(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "mul") {
+				antokFunctionPtr = antok::generators::generateMul(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "energy") {
 				antokFunctionPtr = antok::generators::generateEnergy(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getBeamLorentzVector") {

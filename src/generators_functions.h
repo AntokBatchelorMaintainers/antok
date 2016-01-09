@@ -18,6 +18,8 @@ namespace antok {
 		antok::Function* generateAbs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateConvertIntToDouble(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateDiff(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+		antok::Function* generateQuotient(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+		antok::Function* generateMul(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateEnergy(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateGetBeamLorentzVector(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateGetGradXGradY(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
