@@ -1,6 +1,7 @@
 #include<generators_cuts.h>
 
 #include<iostream>
+#include<sstream>
 
 #include<TLorentzVector.h>
 
@@ -100,25 +101,52 @@ namespace {
 			return 0;
 		}
 		int method = -1;
-		double* lowerBound = 0;
-		double* upperBound = 0;
+		double* lowerBoundOrCentralValue = 0;
+		double* upperBoundOrRange = 0;
+
+		//=======================================
+		// Range means central_value +- range
+		//=======================================
+		if( (hasNodeKey(cut, "CentralValue") or hasNodeKey(cut, "Range") ) and (hasNodeKey(cut, "LowerBound") or hasNodeKey(cut, "UpperBound") )) {
+			std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in combination with \"CentralValue\"/\"Range\" in \"Range\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		if( hasNodeKey(cut, "CentralValue") xor hasNodeKey(cut, "Range") ){
+			std::cerr<<"Entries \"CentralValue\" and \"Range\" necessary in \"Range\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+
+
+
 		if(hasNodeKey(cut, "LowerBound") and hasNodeKey(cut, "UpperBound")) {
-			lowerBound = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
-			upperBound = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
-			if(lowerBound == 0 or upperBound == 0) {
+			lowerBoundOrCentralValue = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
+			upperBoundOrRange = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
+			if(lowerBoundOrCentralValue == 0 or upperBoundOrRange == 0) {
 				std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
+				return 0;
 			}
 			method = 0;
+		} else if (hasNodeKey(cut, "CentralValue") and hasNodeKey(cut, "Range") ){
+			lowerBoundOrCentralValue = antok::YAMLUtils::getAddress<double>(cut["CentralValue"]);
+			upperBoundOrRange = antok::YAMLUtils::getAddress<double>(cut["Range"]);
+			if(lowerBoundOrCentralValue == 0 or upperBoundOrRange == 0) {
+				std::cerr<<"Entries \"CentralValue\"/\"Range\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
+				return 0;
+			}
+			method = 6;
 		} else if(hasNodeKey(cut, "LowerBound")) {
-			lowerBound = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
-			if(lowerBound == 0) {
+			lowerBoundOrCentralValue = antok::YAMLUtils::getAddress<double>(cut["LowerBound"]);
+			if(lowerBoundOrCentralValue == 0) {
 				std::cerr<<"Entry \"LowerBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
+				return 0;
 			}
 			method = 4;
 		} else if(hasNodeKey(cut, "UpperBound")) {
-			upperBound = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
-			if(upperBound == 0) {
+			upperBoundOrRange = antok::YAMLUtils::getAddress<double>(cut["UpperBound"]);
+			if(upperBoundOrRange == 0) {
 				std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
+				return 0;
 			}
 			method = 2;
 		} else {
@@ -148,7 +176,7 @@ namespace {
 			std::cerr<<"Could not find \"Range\" cut \""<<shortName<<"\"'s \"Variable\" entry \""<<varName<<"\" in Data."<<std::endl;
 			return 0;
 		}
-		return (new antok::cuts::RangeCut(shortName, longName, abbreviation, result, lowerBound, upperBound, variable, method));
+		return (new antok::cuts::RangeCut(shortName, longName, abbreviation, result, lowerBoundOrCentralValue, upperBoundOrRange, variable, method));
 
 	};
 
