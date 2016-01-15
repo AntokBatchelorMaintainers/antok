@@ -10,6 +10,15 @@
 #include<object_manager.h>
 #include<yaml_utils.hpp>
 
+std::string antok::generators::mergeNameIndex( std::string const& name, int const index ){
+		if(index > 0) {
+			std::stringstream strStr;
+			strStr<<name<<index;
+			return strStr.str();
+		}
+		return name;
+}
+
 bool antok::generators::functionArgumentHandler(std::vector<std::pair<std::string, std::string> >& args,
                                                 const YAML::Node& function,
                                                 int index,
@@ -32,11 +41,7 @@ bool antok::generators::functionArgumentHandler(std::vector<std::pair<std::strin
 				return false;
 			}
 		}
-		if(index > 0) {
-			std::stringstream strStr;
-			strStr<<argName<<index;
-			argName = strStr.str();
-		}
+		argName = antok::generators::mergeNameIndex( argName, index );
 		std::string type = data.getType(argName);
 		if(type == "") {
 			std::cerr<<"Argument \""<<argName<<"\" not found in Data's global map."<<std::endl;
@@ -185,25 +190,40 @@ antok::Function* antok::generators::generateAbs(const YAML::Node& function, std:
 		return 0;
 	}
 	std::string quantityName = quantityNames[0];
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	using antok::YAMLUtils::hasNodeKey;
+	std::string typeNameArg1;
+	if( hasNodeKey(function, "Arg") )	typeNameArg1 = data.getType( antok::generators::mergeNameIndex( antok::YAMLUtils::getString( function["Arg"] ), index ) );
+	else {
+		std::cerr<<"Argument \"Arg\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+		return 0;
+	}
 
 	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Arg", "double"));
+	args.push_back(std::pair<std::string, std::string>("Arg", typeNameArg1));
 
 	if(not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
-	antok::Data& data = antok::ObjectManager::instance()->getData();
 
-	double* argAddr = data.getAddr<double>(args[0].first);
 
 	if(not data.insert<double>(quantityName)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
 
-	return (new antok::functions::Abs(argAddr, data.getAddr<double>(quantityName)));
+	if      ( typeNameArg1 == "double" )
+		return (new antok::functions::Abs<double>(data.getAddr<double>(args[0].first), data.getAddr<double>(quantityName)));
+	else if ( typeNameArg1 == "int" )
+		return (new antok::functions::Abs<int>(data.getAddr<int>(args[0].first), data.getAddr<double>(quantityName)));
+	else if ( typeNameArg1 == "TVector3" )
+		return (new antok::functions::Abs<TVector3>(data.getAddr<TVector3>(args[0].first), data.getAddr<double>(quantityName)));
+	else
+		std::cerr<<"abs is not (yet) implemented for input type '" << typeNameArg1 << "'."<<std::endl;
+	return 0;
 
 };
 
@@ -299,12 +319,12 @@ antok::Function* antok::generators::generateQuotient(const YAML::Node& function,
 
 	// Get type for arguments
 	std::string  typeNameArg1, typeNameArg2;
-	if( hasNodeKey(function, "Dividend") )	typeNameArg1 = data.getType( antok::YAMLUtils::getString( function["Dividend"] ) );
+	if( hasNodeKey(function, "Dividend") )	typeNameArg1 = data.getType( antok::generators::mergeNameIndex( antok::YAMLUtils::getString( function["Dividend"] ), index ) );
 	else {
 		std::cerr<<"Argument \"Dividend\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
 		return 0;
 	}
-	if( hasNodeKey(function, "Divisor") )	typeNameArg2 = data.getType( antok::YAMLUtils::getString( function["Divisor"] ) );
+	if( hasNodeKey(function, "Divisor") )	typeNameArg2 = data.getType( antok::generators::mergeNameIndex( antok::YAMLUtils::getString( function["Divisor"] ), index ) );
 	else {
 		std::cerr<<"Argument \"Divisor\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
 		return 0;
@@ -366,16 +386,17 @@ antok::Function* antok::generators::generateMul(const YAML::Node& function, std:
 
 	// Get type for arguments
 	std::string  typeNameArg1, typeNameArg2;
-	if( hasNodeKey(function, "Factor1") )	typeNameArg1 = data.getType( antok::YAMLUtils::getString( function["Factor1"] ) );
+	if( hasNodeKey(function, "Factor1") )	typeNameArg1 = data.getType( antok::generators::mergeNameIndex( antok::YAMLUtils::getString( function["Factor1"] ), index ) );
 	else {
 		std::cerr<<"Argument \"Factor1\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
 		return 0;
 	}
-	if( hasNodeKey(function, "Factor2") )	typeNameArg2 = data.getType( antok::YAMLUtils::getString( function["Factor2"] ) );
+	if( hasNodeKey(function, "Factor2") )	typeNameArg2 = data.getType( antok::generators::mergeNameIndex( antok::YAMLUtils::getString( function["Factor2"] ), index ) );
 	else {
 		std::cerr<<"Argument \"Factor2\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
 		return 0;
 	}
+
 
 	if ( typeNameArg1 != typeNameArg2 ){
 		std::cerr<<"Argument \"Factor1\" (" << typeNameArg1 << ") and \"Factor2\" (" << typeNameArg2 << ") have different types (required for function \""<<function["Name"]<<"\")."<<std::endl;

@@ -3,12 +3,14 @@
 
 #include<yaml-cpp/yaml.h>
 
+
 namespace antok {
 
 	class Function;
 
 	namespace generators {
 
+		std::string mergeNameIndex( std::string const& name, int const index );
 		bool functionArgumentHandler(std::vector<std::pair<std::string, std::string> >& args,
 		                             const YAML::Node& function,
 		                             int index,

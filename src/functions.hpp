@@ -302,28 +302,35 @@ namespace antok {
 		};
 
 
+
+		template< typename T>
 		class Abs : public Function
 		{
 
 		  public:
 
-			Abs(double* inAddr, double* outAddr)
+			Abs(T* inAddr, double* outAddr)
 				: _inAddr(inAddr),
 				  _outAddr(outAddr) { }
 
 			virtual ~Abs() { }
 
 			bool operator() () {
-				(*_outAddr) = std::fabs(*_inAddr);
+				(*_outAddr) = __abs(*_inAddr);
 				return true;
 			}
 
 		  private:
 
-			double* _inAddr;
+			T const*const _inAddr;
 			double* _outAddr;
 
+			double __abs (const TVector3 & x){ return x.Mag(); }
+			template <typename Q, class Dummy=int>
+			double __abs(Q const& x){ return std::fabs( x ); }
+
 		};
+
 
 		class Energy : public Function
 		{
