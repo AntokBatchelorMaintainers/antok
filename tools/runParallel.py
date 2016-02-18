@@ -68,6 +68,10 @@ def main():
 
     log_files = [];
     out_files = [];
+    
+    log_dir = os.path.join( os.path.dirname(options.outfile), 'log' )
+    if not os.path.isdir(log_dir):
+        os.makedirs( log_dir )
 
     for i_job, in_files in enumerate(files):
         out_file = os.path.join( os.path.dirname( options.outfile ), "{0}.root.{1:03d}".format(os.path.basename(in_files[0]).split('.root')[0], i_job) )
@@ -97,7 +101,7 @@ def main():
 
         cmd += " && echo \"STATUS: OK\" || echo \"STATUS: ERROR\""
 
-        log_file = os.path.join( os.path.dirname(out_file), "log-{0}".format(os.path.basename(out_file)))
+        log_file = os.path.join( log_dir , os.path.basename(out_file));
         log_files.append( log_file )
 
         if os.path.isfile( out_file ):

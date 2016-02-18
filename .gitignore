@@ -8,3 +8,5 @@
 *.so
 *.png
 .cproject
+.pydevproject
+.settings
