@@ -24,7 +24,7 @@ void signal_handler(int signum) {
 	ABORT = true;
 }
 
-void treereader(char* infilename=0, char* outfilename=0, std::string configfilename = "../config/default.yaml") {
+int treereader(char* infilename=0, char* outfilename=0, std::string configfilename = "../config/default.yaml") {
 
 	new TApplication("app", 0, 0);
 
@@ -41,7 +41,7 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 	}
 	if(infile == 0) {
 		std::cerr<<"Could not open input file. Aborting..."<<std::endl;
-		return;
+		return 1;
 	}
 
 	TFile* outfile;
@@ -51,7 +51,7 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 		outfile = TFile::Open("out_tree.root", "RECREATE");
 	}
 	if(outfile == 0) {
-		return;
+		return 1;
 	}
 
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
@@ -94,7 +94,9 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 
 	if(not objectManager->finish()) {
 		std::cerr<<"Problem when writing TObjects and/or closing output file."<<std::endl;
+		return 1;
 	}
+	return 0;
 
 }
 
@@ -103,12 +105,13 @@ int main(int argc, char* argv[]) {
 	signal(SIGINT, signal_handler);
 
 	if(argc == 1) {
-		treereader();
+		return treereader();
 	} else if (argc == 3) {
-		treereader(argv[1], argv[2]);
+		return treereader(argv[1], argv[2]);
 	} else if (argc == 4) {
-		treereader(argv[1], argv[2], argv[3]);
+		return treereader(argv[1], argv[2], argv[3]);
 	} else {
 		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be in [0, 2, 3]."<<std::endl;
+		return 1;
 	}
 }

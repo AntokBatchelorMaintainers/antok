@@ -51,7 +51,7 @@ def main():
         exit( 100 );
     options.outfile = os.path.realpath(options.outfile)
         
-    options.n_files_job = min(options.n_files_job, len(args))
+    options.n_files_job = min( int(options.n_files_job), len(args))
     n_jobs = len(args) / int(options.n_files_job)
 
     antok = os.path.join( os.path.dirname( __file__), "treereader" )
@@ -70,8 +70,7 @@ def main():
     out_files = [];
 
     for i_job, in_files in enumerate(files):
-        out_file = os.path.join( os.path.dirname(options.outfile), 
-                                    '{0}.{1:03d}'.format(os.path.basename(options.outfile), i_job) )
+        out_file = os.path.join( os.path.dirname( options.outfile ), "{0}.root.{1:03d}".format(os.path.basename(in_files[0]).split('.root')[0], i_job) )
         out_files.append( out_file );
         cmd = "echo \"Start: $(date)\""
         local_out_files= []
@@ -98,7 +97,7 @@ def main():
 
         cmd += " && echo \"STATUS: OK\" || echo \"STATUS: ERROR\""
 
-        log_file = os.path.join( os.getcwd(), os.path.splitext(os.path.basename( in_file ))[0] ) + ".log";
+        log_file = os.path.join( os.path.dirname(out_file), "log-{0}".format(os.path.basename(out_file)))
         log_files.append( log_file )
 
         if os.path.isfile( out_file ):
@@ -130,8 +129,8 @@ def main():
                 print "***************************************************************************"
                 print "ERROR in this process: "
                 print "***************************************************************************"
-            print log_content
-            print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+                print log_content
+                print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
     if options.outfile:
         print "==========================================================================="
