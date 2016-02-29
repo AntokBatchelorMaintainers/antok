@@ -28,6 +28,7 @@ def main():
     optparser = OptionParser( usage="Usage:%prog <args> [<options>]", description = program_description );
     optparser.add_option('-c', '--configfile', dest='configfile', action='store', type='str', default="", help="Config file for antok.")
     optparser.add_option('-o', '--outfile', dest='outfile', action='store', type='str', default="hist.root", help="Merge files to the given output file.")
+    optparser.add_option('-t', '--merge-trees', dest='merge_trees', action='store_true', help="Merge not only histograms but also all trees in one file.")
     optparser.add_option('-l', '--local', dest='local', action='store_true', help="Run local.")
     optparser.add_option('-n', '--n-files-per-job', dest='n_files_job', action='store', default=1, help="Number of input files per parallel job [default: %default]")
     optparser.add_option('', '--no-clear', dest='clear', action='store_false', default=True, help="Do not clear temporarily created histogram files after merging them to one" );
@@ -141,7 +142,7 @@ def main():
         print "========================  MERGING  ========================================"
         print "==========================================================================="
 
-        sp.check_call( "hadd -T {outfile} {out_files}".format( outfile = options.outfile, out_files = " ".join(out_files) ), shell=True, stdout=sp.PIPE, stderr = sp.STDOUT  );
+        sp.check_call( "hadd {merge} {outfile} {out_files}".format( merge = "" if options.merge_trees else "-T",  outfile = options.outfile, out_files = " ".join(out_files) ), shell=True, stdout=sp.PIPE, stderr = sp.STDOUT  );
         
 #     if options.clear and not errors:
 #         sp.check_call( "rm -f {0}".format(" ".join(out_files)), shell=True )
