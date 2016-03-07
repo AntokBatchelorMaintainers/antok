@@ -12,6 +12,7 @@ namespace antok {
 		namespace stefan {
 		antok::Function* getCalcLTProjections(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* getCalcArmenterosAlpha(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+		antok::Function* getCalcRICHPID(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 
 			antok::Function* getUserFunction(const YAML::Node& function,
 			                                 std::vector<std::string>& quantityNames,

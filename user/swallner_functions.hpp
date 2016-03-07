@@ -73,6 +73,65 @@ namespace functions{
 
 	};
 
+	class CalcRICHPID: public Function {
+	public:
+
+		CalcRICHPID( double const* L_pion,
+							 double const* L_kaon,
+							 double const* L_proton,
+							 double const* L_electron,
+							 double const* L_muon,
+							 double const* L_background,
+		                     double* P_pion,
+							 double* P_kaon,
+							 double* P_proton,
+							 double* P_electron,
+							 double* P_muon,
+							 double* P_background
+							 ):
+		                     L_pion_(         *L_pion),
+							 L_kaon_(         *L_kaon ),
+							 L_proton_(       *L_proton ),
+							 L_electron_(     *L_electron ),
+							 L_muon_(     *L_muon ),
+							 L_background_(   *L_background ),
+		                     P_pion_(         *P_pion ),
+							 P_kaon_(         *P_kaon ),
+							 P_proton_(       *P_proton ),
+							 P_electron_(     *P_electron ),
+							 P_muon_(     *P_muon ),
+							 P_background_ (  *P_background )
+		{}
+
+
+
+		bool operator() (){
+			P_pion_ = L_pion_ / fmax( L_kaon_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_background_))));
+			P_kaon_ = L_kaon_ / fmax( L_pion_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_background_))));
+			P_proton_ = L_proton_ / fmax( L_kaon_, fmax(L_pion_, fmax( L_electron_, fmax(L_muon_, L_background_))));
+			P_electron_ = L_electron_ / fmax( L_kaon_, fmax(L_proton_, fmax( L_pion_, fmax(L_muon_, L_background_))));
+			P_muon_= L_muon_/ fmax( L_kaon_, fmax(L_proton_, fmax( L_pion_, fmax(L_pion_ , L_background_))));
+			P_background_= L_background_/ fmax( L_kaon_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_pion_))));
+			return true;
+		}
+
+
+
+	private:
+		double const& L_pion_;
+		double const& L_kaon_;
+		double const& L_proton_;
+		double const& L_electron_;
+		double const& L_muon_;
+		double const& L_background_;
+		double& P_pion_;
+		double& P_kaon_;
+		double& P_proton_;
+		double& P_electron_;
+		double& P_muon_;
+		double& P_background_;
+
+	};
 }
 }
 }

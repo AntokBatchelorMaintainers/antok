@@ -84,6 +84,58 @@ antok::Function* antok::user::stefan::getCalcArmenterosAlpha(const YAML::Node& f
 	return new antok::user::stefan::functions::CalcArmenterosAlpha(longitudinal_mom_1, longitudinal_mom_2, quantityAddrs[0]);
 }
 
+antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+	if(quantityNames.size() != 6) {
+		std::cerr<<"Need 6 names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return nullptr;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<std::pair<std::string, std::string> > args_per_index;
+	std::vector<std::pair<std::string, std::string> > args;
+	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichPion", "double"));
+	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichKaon", "double"));
+	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichProton", "double"));
+	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichElectron", "double"));
+	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichMuon", "double"));
+	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichBackground", "double"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, 0)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+	if(not antok::generators::functionArgumentHandler(args_per_index, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+
+
+	std::vector<double*> quantityAddrs;
+	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
+		if(not data.insert<double>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+			return 0;
+		}
+		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
+	}
+
+	return new antok::user::stefan::functions::CalcRICHPID( data.getAddr<double>(args_per_index[0].first),
+															data.getAddr<double>(args_per_index[1].first),
+															data.getAddr<double>(args_per_index[2].first),
+															data.getAddr<double>(args_per_index[3].first),
+															data.getAddr<double>(args_per_index[4].first),
+															data.getAddr<double>(args_per_index[5].first),
+															quantityAddrs[0],
+															quantityAddrs[1],
+															quantityAddrs[2],
+															quantityAddrs[3],
+															quantityAddrs[4],
+															quantityAddrs[5]
+														);
+}
+
 
 antok::Function* antok::user::stefan::getUserFunction(const YAML::Node& function,
                                                           std::vector<std::string>& quantityNames,
@@ -96,6 +148,9 @@ antok::Function* antok::user::stefan::getUserFunction(const YAML::Node& function
 	}
 	if(functionName == "calcArmenterosAlpha") {
 		antokFunctionPtr = stefan::getCalcArmenterosAlpha(function, quantityNames, index);
+	}
+	if(functionName == "calcRICHPID") {
+		antokFunctionPtr = stefan::getCalcRICHPID(function, quantityNames, index);
 	}
 	return antokFunctionPtr;
 }
