@@ -14,3 +14,7 @@ make_executable(gen_kin				gen_kin.cxx				${ANTOK_LIB})
 make_executable(root_to_root		root_to_root.cxx		${ANTOK_LIB})
 make_executable(generateBeamfile	generateBeamfile.cxx	${ANTOK_LIB})
 make_executable(fitRPDResolutions   fitRPDResolutions.cxx   ${ANTOK_LIB})
+file( COPY runParallel.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/runParallel )
+add_custom_target( runParallel ALL
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/runParallel.py ${EXECUTABLE_OUTPUT_PATH}/runParallel
+    )
