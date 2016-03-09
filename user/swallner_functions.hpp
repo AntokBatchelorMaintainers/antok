@@ -73,10 +73,19 @@ namespace functions{
 
 	};
 
-	class CalcRICHPID: public Function {
+	class CalcRICHProbabilities: public Function {
 	public:
 
-		CalcRICHPID( double const* L_pion,
+		/***
+		 * If pid should be determined,
+		 * 	kaon: 0
+		 * 	pion: 1
+		 * 	proton: 2
+		 * 	electron: 3
+		 * 	muon: 4
+		 * 	background: 5
+		 */
+		CalcRICHProbabilities( double const* L_pion,
 							 double const* L_kaon,
 							 double const* L_proton,
 							 double const* L_electron,
@@ -117,7 +126,7 @@ namespace functions{
 
 
 
-	private:
+	protected:
 		double const& L_pion_;
 		double const& L_kaon_;
 		double const& L_proton_;
@@ -130,6 +139,160 @@ namespace functions{
 		double& P_electron_;
 		double& P_muon_;
 		double& P_background_;
+
+	};
+	class CalcRICHPID: public CalcRICHProbabilities{
+	public:
+
+		/***
+		 * If pid should be determined,
+		 * 	kaon: 0
+		 * 	pion: 1
+		 * 	proton: 2
+		 * 	electron: 3
+		 * 	muon: 4
+		 * 	background: 5
+		 */
+		CalcRICHPID(         double const* L_pion,
+							 double const* L_kaon,
+							 double const* L_proton,
+							 double const* L_electron,
+							 double const* L_muon,
+							 double const* L_background,
+							 TVector3 const* mom,
+							 double const* P_ratio_cut,
+							 double const* Mom_pion_min,
+							 double const* Mom_pion_max,
+							 double const* Mom_kaon_min,
+							 double const* Mom_kaon_max,
+							 double const* Mom_proton_min,
+							 double const* Mom_proton_max,
+							 double const* Mom_electron_min,
+							 double const* Mom_electron_max,
+							 double const* Mom_muon_min,
+							 double const* Mom_muon_max,
+		                     double* P_pion,
+							 double* P_kaon,
+							 double* P_proton,
+							 double* P_electron,
+							 double* P_muon,
+							 double* P_background,
+							 int* pid
+							 ):
+								 CalcRICHProbabilities(  L_pion,
+							  L_kaon,
+							  L_proton,
+							  L_electron,
+							  L_muon,
+							  L_background,
+		                     P_pion,
+							 P_kaon,
+							 P_proton,
+							 P_electron,
+							 P_muon,
+							 P_background ),
+							 mom_(*mom),
+							 P_ratio_cut_(*P_ratio_cut),
+							 Mom_pion_min_(*Mom_pion_min),
+							 Mom_pion_max_(*Mom_pion_max),
+							 Mom_kaon_min_(*Mom_kaon_min),
+							 Mom_kaon_max_(*Mom_kaon_max),
+							 Mom_proton_min_(*Mom_proton_min),
+							 Mom_proton_max_(*Mom_proton_max),
+							 Mom_electron_min_(*Mom_electron_min),
+							 Mom_electron_max_(*Mom_electron_max),
+							 Mom_muon_min_(*Mom_muon_min),
+							 Mom_muon_max_(*Mom_muon_max),
+							 pid_( *pid)
+		{}
+
+
+
+		bool operator() (){
+			CalcRICHProbabilities::operator ()();
+			const double mom = mom_.Mag();
+			pid_ = -1;
+			if(      P_pion_ > P_ratio_cut_ && mom > Mom_pion_min_ && mom < Mom_pion_max_)             pid_ = 0;
+			else if( P_kaon_ > P_ratio_cut_ && mom > Mom_kaon_min_ && mom < Mom_kaon_max_)             pid_ = 1;
+			else if( P_proton_ > P_ratio_cut_ && mom > Mom_proton_min_ && mom < Mom_proton_max_)       pid_ = 2;
+			else if( P_electron_ > P_ratio_cut_ && mom > Mom_electron_min_ && mom < Mom_electron_max_) pid_ = 3;
+			else if( P_muon_ > P_ratio_cut_ && mom > Mom_muon_min_ && mom < Mom_muon_max_)             pid_ = 4;
+			else if( P_background_ > P_ratio_cut_ )                                                    pid_ = 5;
+			return true;
+		}
+
+
+
+	private:
+		TVector3 const& mom_;
+		double const& P_ratio_cut_;
+		double const& Mom_pion_min_;
+		double const& Mom_pion_max_;
+		double const& Mom_kaon_min_;
+		double const& Mom_kaon_max_;
+		double const& Mom_proton_min_;
+		double const& Mom_proton_max_;
+		double const& Mom_electron_min_;
+		double const& Mom_electron_max_;
+		double const& Mom_muon_min_;
+		double const& Mom_muon_max_;
+		int& pid_;
+
+	};
+
+	/***
+	 * is_kp_pk = -2 -> no decision possible
+	 * is_kp_pk = 1  -> no first particle is kaon, second particle is pion
+	 * is_kp_pk = 2  -> no first particle is pion, second particle is kaon
+	 */
+	class DetermineKaonPionLV: public Function {
+	public:
+
+		DetermineKaonPionLV( TVector3* mom_1, int const* pid_1,
+		                     TVector3* mom_2, int const* pid_2,
+							 double const* mass_charged_kaon, double const* mass_charged_pion ,
+							 TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk):
+                                mom_1_(             *mom_1),
+                                pid_1_(             *pid_1),
+                                mom_2_(             *mom_2),
+                                pid_2_(             *pid_2),
+                                mass_charged_kaon_( *mass_charged_kaon),
+                                mass_charged_pion_( *mass_charged_pion),
+                                kaon_lv_(           *kaon_lv),
+                                pion_lv_(           *pion_lv),
+                                is_kp_pk_(          *is_kp_pk)
+								{}
+
+
+
+		bool operator() (){
+			if(        ( pid_1_ == 1 && pid_2_ != 1) || ( pid_2_ == 0 && pid_1_ != 0 ) ){ // 1 = kaon, 2 = pion
+				kaon_lv_ = TLorentzVector( mom_1_, mass_charged_kaon_);
+				pion_lv_ = TLorentzVector( mom_2_, mass_charged_pion_);
+				is_kp_pk_ = 1;
+			} else if( ( pid_1_ == 0 && pid_2_ != 0) || ( pid_2_ == 1 && pid_1_ != 1 ) ){ // 1 = pion , 2 = kaon
+				kaon_lv_ = TLorentzVector( mom_2_, mass_charged_kaon_);
+				pion_lv_ = TLorentzVector( mom_1_, mass_charged_pion_);
+				is_kp_pk_ = 2;
+			} else {
+				is_kp_pk_ = 0;
+				kaon_lv_ = TLorentzVector( -4444.0, -4444.0, -4444.0, mass_charged_kaon_);
+				pion_lv_ = TLorentzVector( -4444.0, -4444.0, -4444.0, mass_charged_pion_);
+			}
+		}
+
+
+
+	private:
+		TVector3 const& mom_1_;
+		int const& pid_1_;
+		TVector3 const& mom_2_;
+		int const& pid_2_;
+		double const& mass_charged_kaon_;
+		double const& mass_charged_pion_;
+		TLorentzVector& kaon_lv_;
+		TLorentzVector& pion_lv_;
+		int& is_kp_pk_;
 
 	};
 }
