@@ -20,6 +20,13 @@
 #include<plotter.h>
 #include<yaml_utils.hpp>
 
+
+/**
+	* If no OutputTree node is given in the configuration, the output tree is a clone of the input tree.
+	* If OutputTree is given, it has to be a list of variables wich are then stored in all output trees
+	*/
+TTree* createOutTree( TTree* const inTree, const YAML::Node& config);
+
 antok::Initializer* antok::Initializer::_initializer = 0;
 
 antok::Initializer* antok::Initializer::instance() {
@@ -170,7 +177,7 @@ bool antok::Initializer::initializeCutter() {
 		TDirectory::CurrentDirectory()->mkdir(cutTrainName.c_str());
 		if(pertinent) {
 			outFile->cd(cutTrainName.c_str());
-			TTree* outTree = inTree->CloneTree(0);
+			TTree* outTree = createOutTree( inTree, config );
 			cutter._outTreeMap[cutTrainName] = outTree;
 			assert(objectManager->registerObjectToWrite(TDirectory::CurrentDirectory(), outTree));
 		}
@@ -701,3 +708,41 @@ bool antok::Initializer::initializePlotter() {
 
 };
 
+
+template< typename T>
+void addToOutputBranch(TTree* const outTree, antok::Data& data, const std::string& variable_name){
+	outTree->Branch(variable_name.c_str(), data.getAddr<T>(variable_name) );
+}
+
+TTree* createOutTree( TTree* const inTree, const YAML::Node& config ){
+	using antok::YAMLUtils::hasNodeKey;
+
+	TTree* outTree = nullptr;
+	if(not hasNodeKey(config, "OutputTree")) { // no definition for the output tree given -> write full input tree
+		outTree = inTree->CloneTree(0);
+	} else { // own definition of output tree is given -> build output tree
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+		outTree = new TTree( inTree->GetName(), inTree->GetTitle() );
+
+		for( const auto variable_node: config["OutputTree"] ){
+			const std::string variable_name = antok::YAMLUtils::getString( variable_node );
+			const std::string variable_type = data.getType( variable_name );
+			if( variable_name != "" ){
+				if(      variable_type == "double" )	        addToOutputBranch<double>(         outTree, data, variable_name );
+				else if( variable_type == "int" )	        addToOutputBranch<int>(            outTree, data, variable_name );
+				else if( variable_type == "TVector3" )       addToOutputBranch<TVector3>(       outTree, data, variable_name );
+				else if( variable_type == "TLorentzVector" ) addToOutputBranch<TLorentzVector>( outTree, data, variable_name );
+				else {
+					std::cerr << "Variable type \"" << variable_type << "\" of variable \"" << variable_name << "\" not implemented for own output tree." << std::endl;
+					return nullptr;
+				}
+
+			} else {
+				std::cerr<<"Variable \""<<variable_name<<"\" not found in Data's global map for the output tree."<<std::endl;
+				return nullptr;
+			}
+		}
+
+	}
+	return outTree;
+}
