@@ -39,6 +39,7 @@ namespace antok {
 
 	namespace cuts {
 
+		template< typename T>
 		class RangeCut : public Cut {
 
 		  public:
@@ -47,9 +48,9 @@ namespace antok {
 			         const std::string& longname,
 			         const std::string& abbreviation,
 			         bool* outAddr,
-			         double* lowerBoundOrCentralValueAddr,
-			         double* upperBoundOrRangeAddr,
-			         double* valueAddr,
+			         T* lowerBoundOrCentralValueAddr,
+			         T* upperBoundOrRangeAddr,
+			         T* valueAddr,
 			         int mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
 				  _lowerBoundOrCentralValueAddr(lowerBoundOrCentralValueAddr),
@@ -121,9 +122,9 @@ namespace antok {
 
 		  private:
 
-			double* _lowerBoundOrCentralValueAddr;
-			double* _upperBoundOrRangeAddr;
-			double* _valueAddr;
+			T* _lowerBoundOrCentralValueAddr;
+			T* _upperBoundOrRangeAddr;
+			T* _valueAddr;
 			int _mode;
 
 		};

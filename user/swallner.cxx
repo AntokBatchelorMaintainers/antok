@@ -206,7 +206,7 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 }
 
 antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
-	if(quantityNames.size() != 3) {
+	if(quantityNames.size() != 5) {
 		std::cerr<<"Need 3 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
 	}
@@ -244,9 +244,13 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 	data.insert<TLorentzVector>( quantityNames[0] );
 	data.insert<TLorentzVector>( quantityNames[1] );
 	data.insert<int>( quantityNames[2] );
+	data.insert<int>( quantityNames[3] );
+	data.insert<int>( quantityNames[4] );
 	TLorentzVector* kaon_lv = data.getAddr<TLorentzVector>(quantityNames[0]);
 	TLorentzVector* pion_lv = data.getAddr<TLorentzVector>(quantityNames[1]);
 	int* is_kp_pk = data.getAddr<int>(quantityNames[2]);
+	int* pid_kaon = data.getAddr<int>(quantityNames[3]);
+	int* pid_pion = data.getAddr<int>(quantityNames[4]);
 
 
 	return new antok::user::stefan::functions::DetermineKaonPionLV(
@@ -258,7 +262,9 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 																	possible_const[1].second,
 																	kaon_lv,
 																	pion_lv,
-																	is_kp_pk
+																	is_kp_pk,
+																	pid_kaon,
+																	pid_pion
 																	);
 }
 

@@ -143,17 +143,18 @@ namespace antok {
 
 		  public:
 
-			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr)
+			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr, const double* mass_beam)
 				: _gradxAddr(gradxAddr),
 				  _gradyAddr(gradyAddr),
 				  _xLorentzVec(xLorentzVec),
+				  _mass_beam( mass_beam ),
 				  _outAddr(outAddr) { }
 
 			virtual ~GetBeamLorentzVec() { }
 
 			bool operator() () {
 				TVector3 p3Beam((*_gradxAddr), (*_gradyAddr), 1.);
-				(*_outAddr) = antok::getBeamEnergy(p3Beam, (*_xLorentzVec));
+				(*_outAddr) = antok::getBeamEnergy(p3Beam, (*_xLorentzVec), (*_mass_beam));
 				return true;
 			}
 
@@ -162,6 +163,7 @@ namespace antok {
 			double* _gradxAddr;
 			double* _gradyAddr;
 			TLorentzVector* _xLorentzVec;
+			const double* _mass_beam;
 			TLorentzVector* _outAddr;
 
 		};

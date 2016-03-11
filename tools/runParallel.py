@@ -64,6 +64,7 @@ def main():
 
     handler = batchelor.BatchelorHandler(configfile="~/.batchelorrc", 
                                          systemOverride="local" if options.local else "", 
+                                         memory='2.5G',
                                          n_threads=3)
 
 

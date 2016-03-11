@@ -9,6 +9,7 @@
 #include<initializer.h>
 #include<object_manager.h>
 #include<yaml_utils.hpp>
+#include<constants.h>
 
 std::string antok::generators::mergeNameIndex( std::string const& name, int const index ){
 		if(index > 0) {
@@ -476,6 +477,17 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 		return 0;
 	}
 
+	const double* beam_mass;
+	if( antok::YAMLUtils::hasNodeKey( function, "BeamMass") ){
+		beam_mass = antok::YAMLUtils::getAddress<double>( function["BeamMass"] );
+		if( beam_mass == NULL ){
+			std::cerr << "Variable \"" << antok::YAMLUtils::getString(function["BeamMass"]) << "\" not found for BeamMass in function \"" << quantityName << "\"" << std::endl;
+			return 0;
+		}
+	} else {
+		beam_mass = &antok::Constants::chargedPionMass();
+	}
+
 	double* dXaddr = data.getAddr<double>(args[0].first);
 	double* dYaddr = data.getAddr<double>(args[1].first);
 	TLorentzVector* xLorentzVecAddr = data.getAddr<TLorentzVector>(args[2].first);
@@ -485,7 +497,7 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 		return 0;
 	}
 
-	return (new antok::functions::GetBeamLorentzVec(dXaddr, dYaddr, xLorentzVecAddr, data.getAddr<TLorentzVector>(quantityName)));
+	return (new antok::functions::GetBeamLorentzVec(dXaddr, dYaddr, xLorentzVecAddr, data.getAddr<TLorentzVector>(quantityName), beam_mass));
 
 };
 
