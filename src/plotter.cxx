@@ -37,6 +37,15 @@ void antok::Plotter::fill(const long& cutPattern) {
 
 }
 
+void antok::Plotter::addInputfileToWaterfallHistograms(const TH1D* waterfall){
+	for( std::vector<antok::plotUtils::waterfallHistogramContainer>::iterator wp = _waterfallHistograms.begin(); wp != _waterfallHistograms.end(); ++wp){
+		for( int ibin = 1; ibin <= waterfall->GetNbinsX(); ++ibin ){
+			const int i_wp_bin = wp->histogram->FindBin(waterfall->GetBinCenter(ibin) );
+			wp->histogram->SetBinContent( i_wp_bin, wp->histogram->GetBinContent(i_wp_bin) + waterfall->GetBinContent(ibin));
+		}
+	}
+}
+
 namespace {
 
 	std::string __getCutnamesOffNode(const YAML::Node& withCut, const std::string& cutTrainName) {
@@ -226,4 +235,5 @@ bool antok::plotUtils::GlobalPlotOptions::handleOnOffOption(std::string optionNa
 	return false;
 
 }
+
 

@@ -79,28 +79,20 @@ def main():
         out_file = os.path.join( os.path.dirname( options.outfile ), "{0}.root.{1:03d}".format(os.path.basename(in_files[0]).split('.root')[0], i_job) )
         out_files.append( out_file );
         cmd = "echo \"Start: $(date)\""
-        local_out_files= []
+        in_filenamess = ""
         for i_infile, in_file in enumerate(in_files):
             if not os.path.isfile( in_file ):
                 print "File '{0}' not found!".format(in_file);
                 handler.shutdown();
                 exit(1)
-            local_out_file = out_file + '.{0:03d}'.format(i_infile)
-            local_out_files.append( local_out_file )
-            cmd += " && {antok} {in_file} {out_file} {config_file}".format( antok = antok, 
-                                                                           out_file = local_out_file, 
-                                                                           in_file = in_file, 
-                                                                           config_file = options.configfile ) 
+            in_filenamess += " '{0}'".format( in_file );
+        cmd += " && {antok} {in_files} {out_file} {config_file}".format( antok = antok, 
+                                                                        out_file = out_file, 
+                                                                        in_files = in_filenamess, 
+                                                                        config_file = options.configfile ) 
         
         
-        if len(local_out_files) > 1:
-            cmd += " && hadd {0} {1} >> /dev/null".format(out_file, " ".join(local_out_files))
-        else:
-            cmd += " && mv {0} {1}".format( local_out_files[0], out_file )
         
-        if options.clear:
-            cmd += " && rm -f " + " ".join(local_out_files)
-
         cmd += " && echo \"STATUS: OK\" || echo \"STATUS: ERROR\""
 
         log_file = os.path.join( log_dir , os.path.basename(out_file));
@@ -112,14 +104,17 @@ def main():
             exit(1)
 
 
-        print "Process file", in_file
+        print "Process files: ", in_filenamess
         print cmd
         handler.submitJob( cmd, log_file, wd = os.getcwd() );
 
 
 
 
-    handler.wait(2)
+    try:
+        handler.wait(2)
+    except batchelor.CancelException:
+        pass;
     handler.shutdown();
 
     print "==========================================================================="
@@ -130,7 +125,7 @@ def main():
     for l in log_files:
         with open(l) as fin:
             log_content = fin.read()
-            if not "STATUS: OK" in log_content:
+            if not "STATUS: OK\n" in log_content:
                 errors.append(log_file)
                 print "***************************************************************************"
                 print "ERROR in this process: "

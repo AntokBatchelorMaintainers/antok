@@ -67,6 +67,7 @@ namespace antok {
 		static Plotter* instance();
 
 		void fill(const long& cutPattern);
+		void addInputfileToWaterfallHistograms(const TH1D* waterfall);
 
 		static bool handleAdditionalCuts(const YAML::Node& cuts, std::map<std::string, std::vector<long> >& map);
 

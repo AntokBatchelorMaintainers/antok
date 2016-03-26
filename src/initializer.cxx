@@ -270,32 +270,32 @@ bool antok::Initializer::initializeData() {
 				return false;
 			}
 			if(type == "double") {
-				if(not data.insert<double>(name)) {
+				if(not data.insertInputVariable<double>(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
 			} else if(type == "int") {
-				if(not data.insert<int>(name)) {
+				if(not data.insertInputVariable<int>(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
 			} else if(type == "Long64_t") {
-				if(not data.insert<Long64_t>(name)) {
+				if(not data.insertInputVariable<Long64_t>(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
 			} else if(type == "std::vector<double>") {
-				if(not data.insert<std::vector<double> >(name)) {
+				if(not data.insertInputVariable<std::vector<double> >(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
 			} else if(type == "TLorentzVector") {
-				if(not data.insert<TLorentzVector>(name)) {
+				if(not data.insertInputVariable<TLorentzVector>(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
 			} else if(type == "TVector3") {
-				if(not data.insert<TVector3>(name)) {
+				if(not data.insertInputVariable<TVector3>(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
@@ -322,7 +322,7 @@ bool antok::Initializer::initializeData() {
 				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 					std::stringstream strStr;
 					strStr<<baseName<<(i+1);
-					if(not data.insert<double>(strStr.str())) {
+					if(not data.insertInputVariable<double>(strStr.str())) {
 						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
 						return false;
 					}
@@ -331,7 +331,7 @@ bool antok::Initializer::initializeData() {
 				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 					std::stringstream strStr;
 					strStr<<baseName<<(i+1);
-					if(not data.insert<int>(strStr.str())) {
+					if(not data.insertInputVariable<int>(strStr.str())) {
 						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
 						return false;
 					}
@@ -340,7 +340,7 @@ bool antok::Initializer::initializeData() {
 				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 					std::stringstream strStr;
 					strStr<<baseName<<(i+1);
-					if(not data.insert<Long64_t>(strStr.str())) {
+					if(not data.insertInputVariable<Long64_t>(strStr.str())) {
 						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
 						return false;
 					}
@@ -349,7 +349,7 @@ bool antok::Initializer::initializeData() {
 				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 					std::stringstream strStr;
 					strStr<<baseName<<(i+1);
-					if(not data.insert<std::vector<double> >(strStr.str())) {
+					if(not data.insertInputVariable<std::vector<double> >(strStr.str())) {
 						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
 						return false;
 					}
@@ -358,7 +358,7 @@ bool antok::Initializer::initializeData() {
 				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 					std::stringstream strStr;
 					strStr<<baseName<<(i+1);
-					if(not data.insert<TLorentzVector>(strStr.str())) {
+					if(not data.insertInputVariable<TLorentzVector>(strStr.str())) {
 						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
 						return false;
 					}
@@ -367,7 +367,7 @@ bool antok::Initializer::initializeData() {
 				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
 					std::stringstream strStr;
 					strStr<<baseName<<(i+1);
-					if(not data.insert<TVector3>(strStr.str())) {
+					if(not data.insertInputVariable<TVector3>(strStr.str())) {
 						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
 						return false;
 					}
@@ -381,6 +381,19 @@ bool antok::Initializer::initializeData() {
 			}
 		}
 	}
+
+
+	return true;
+
+}
+
+bool antok::Initializer::initializeInput(){
+	using antok::YAMLUtils::hasNodeKey;
+
+
+	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
+	antok::Data& data = objectManager->getData();
+	YAML::Node& config = *_config;
 
 	// Set the branch addresses of the tree
 	if(not hasNodeKey(config, "TreeName")) {
@@ -401,26 +414,53 @@ bool antok::Initializer::initializeData() {
 	objectManager->_inTree = inTree;
 
 	for(std::map<std::string, double>::iterator it = data.doubles.begin(); it != data.doubles.end(); ++it) {
-		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+		if( data.isInputVariable(it->first))
+			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 	for(std::map<std::string, int>::iterator it = data.ints.begin(); it != data.ints.end(); ++it) {
-		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+		if( data.isInputVariable(it->first))
+			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 	for(std::map<std::string, Long64_t>::iterator it = data.long64_ts.begin(); it != data.long64_ts.end(); ++it) {
-		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+		if( data.isInputVariable(it->first))
+			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 	for(std::map<std::string, std::vector<double>* >::iterator it = data.doubleVectors.begin(); it != data.doubleVectors.end(); ++it) {
-		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+		if( data.isInputVariable(it->first))
+			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 	for(std::map<std::string, TLorentzVector>::iterator it = data.lorentzVectors.begin(); it != data.lorentzVectors.end(); ++it) {
-		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+		if( data.isInputVariable(it->first))
+			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 	for(std::map<std::string, TVector3>::iterator it = data.vectors.begin(); it != data.vectors.end(); ++it) {
-		inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+		if( data.isInputVariable(it->first))
+			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 
 	return true;
+}
 
+bool antok::Initializer::updateInput(){
+	bool ok = true;
+	ok &= initializeInput(); // again set all input branches
+
+	{ // include waterfall plot of the new input file to the total waterfall plot
+		YAML::Node& config = *_config;
+
+		antok::ObjectManager* objectManager = antok::ObjectManager::instance();
+		antok::plotUtils::GlobalPlotOptions plotOptions(config["GlobalPlotOptions"]);
+
+		TH1D* statsHist = dynamic_cast<TH1D*>(objectManager->getInFile()->Get(plotOptions.statisticsHistInName.c_str()));
+		if ( statsHist != 0 )
+			objectManager->getPlotter().addInputfileToWaterfallHistograms( statsHist );
+		else {
+			std::cerr << "Can not find stats histogram in input file!" << std::endl;
+			ok = false;
+		}
+	}
+
+	return ok;
 }
 
 bool antok::Initializer::initializeEvent() {

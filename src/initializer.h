@@ -25,8 +25,9 @@ namespace antok {
 
 		bool initAll() {
 			return (
-				initializeData() and
-				initializeEvent() and
+				initializeData()   and
+				initializeInput()  and
+				initializeEvent()  and
 				initializeCutter() and
 				initializePlotter()
 			);
@@ -34,8 +35,10 @@ namespace antok {
 
 		bool initializeCutter();
 		bool initializeData();
+		bool initializeInput();
 		bool initializeEvent();
 		bool initializePlotter();
+		bool updateInput();
 
 	  private:
 

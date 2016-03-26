@@ -94,6 +94,10 @@ bool antok::ObjectManager::setInFile(TFile* inFile) {
 	return true;
 
 }
+bool antok::ObjectManager::changeInFile(TFile* inFile){
+	if( _inFile != 0 ) _inFile->Close();
+	return setInFile(inFile);
+}
 
 bool antok::ObjectManager::setOutFile(TFile* outFile) {
 
