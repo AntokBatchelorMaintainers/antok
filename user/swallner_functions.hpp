@@ -115,12 +115,12 @@ namespace functions{
 
 
 		bool operator() (){
-			P_pion_       = ( L_pion_       >= 0.0 )?  L_pion_ / fmax( L_kaon_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_background_)))) : -1.0;
-			P_kaon_       = ( L_kaon_       >= 0.0 )?  L_kaon_ / fmax( L_pion_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_background_)))) : -1.0;
-			P_proton_     = ( L_proton_     >= 0.0 )?  L_proton_ / fmax( L_kaon_, fmax(L_pion_, fmax( L_electron_, fmax(L_muon_, L_background_)))) : -1.0;
-			P_electron_   = ( L_electron_   >= 0.0 )?  L_electron_ / fmax( L_kaon_, fmax(L_proton_, fmax( L_pion_, fmax(L_muon_, L_background_)))) : -1.0;
-			P_muon_       = ( L_muon_       >= 0.0 )?  L_muon_/ fmax( L_kaon_, fmax(L_proton_, fmax( L_pion_, fmax(L_pion_ , L_background_))))     : -1.0;
-			P_background_ = ( L_background_ >= 0.0 )?  L_background_/ fmax( L_kaon_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_pion_))))  : -1.0;
+			P_pion_       = ( L_pion_       > 0.0 )?  L_pion_ / fmax( L_kaon_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_background_)))) : -1.0;
+			P_kaon_       = ( L_kaon_       > 0.0 )?  L_kaon_ / fmax( L_pion_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_background_)))) : -1.0;
+			P_proton_     = ( L_proton_     > 0.0 )?  L_proton_ / fmax( L_kaon_, fmax(L_pion_, fmax( L_electron_, fmax(L_muon_, L_background_)))) : -1.0;
+			P_electron_   = ( L_electron_   > 0.0 )?  L_electron_ / fmax( L_kaon_, fmax(L_proton_, fmax( L_pion_, fmax(L_muon_, L_background_)))) : -1.0;
+			P_muon_       = ( L_muon_       > 0.0 )?  L_muon_/ fmax( L_kaon_, fmax(L_proton_, fmax( L_pion_, fmax(L_pion_ , L_background_))))     : -1.0;
+			P_background_ = ( L_background_ > 0.0 )?  L_background_/ fmax( L_kaon_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_pion_))))  : -1.0;
 			return true;
 		}
 
