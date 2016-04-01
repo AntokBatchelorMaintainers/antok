@@ -217,7 +217,7 @@ def main():
         with open(l) as fin:
             log_content = fin.read()
             if not "STATUS: OK\n" in log_content:
-                errors.append(log_file)
+                errors.append(l)
                 print "***************************************************************************"
                 print "ERROR in this process: "
                 print "***************************************************************************"
