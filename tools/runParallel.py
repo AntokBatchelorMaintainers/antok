@@ -18,6 +18,9 @@ import os
 import subprocess as sp
 import shutil
 import re
+import multiprocessing
+import tempfile
+import math
 
 # root includes
 
@@ -55,31 +58,78 @@ def getSlot(filename):
 
 
 
+def mergeRootFiles(output_file, input_files, merge_trees, parallel = True, n_jobs_max = None):
+    
+    n_files = len( input_files )
+
+    n_jobs = max( 1, min( n_files/2, int(math.sqrt(n_files)), multiprocessing.cpu_count() ) ) if parallel else 1
+    if n_jobs_max:
+        n_jobs = min(n_jobs, n_jobs_max)
+    
+    q = n_files / n_jobs;
+    r = n_files % n_jobs;
+    
+    output_files = []
+    input_subfiles_list = []
+    processes = []
+    for i in xrange(n_jobs):
+        input_subfiles = input_files[i*q + min(r,i): (i+1)*q + min(r,i+1) ]
+        output_subfile = tempfile.mktemp() if n_jobs > 1 else output_file;
+        output_files.append( output_subfile );
+        input_subfiles_list.append( input_subfiles );
+        processes.append( sp.Popen("hadd {opts} {outfile} {infiles} ".format( opts = "" if merge_trees else "-T",
+                                                                              outfile = output_subfile, 
+                                                                              infiles = "'" + "' '".join(input_subfiles) + "'" )
+                                   ,shell=True, stdout=sp.PIPE, stderr = sp.STDOUT  )
+                         )
+
+    ok = True
+    for i,p in enumerate(processes):
+        p.communicate()
+        status = p.returncode
+        if status != 0:
+            print "Process exited with exit status", status, "when processing files"
+            for f in input_subfiles_list[i]:
+                print '\t', f
+            ok = False;
+            
+    if ok and n_jobs > 1:
+        # merge subfiles
+        ok = mergeRootFiles(output_file, output_files, merge_trees, parallel = False)
+        
+    if n_jobs > 1: # delete temporary files
+        for f in output_files:
+            os.remove(f)
+    
+    return ok
+
+def pfunc(args):
+    return mergeRootFiles(**args)
+
 def mergeSubfolders(output_files, merge_trees):
     subfolders = defaultdict(list)
     for f in output_files:
         subfolders[ os.path.basename(os.path.dirname(f))].append( f )
         
         
-    processes = []
     output_files = []
     
+
+    n_cores = multiprocessing.cpu_count()
+    n_subfolders = len( subfolders.keys() )
+    n_parallel_subfolders = max(1, n_cores/6)
+    pool = multiprocessing.Pool( n_parallel_subfolders )
+    
+    args = []
     for subname, subfiles in subfolders.iteritems():
         outfile = os.path.join( os.path.dirname( subfiles[0] ), "{0}.root".format(subname) )
         output_files.append( outfile )
-        processes.append( sp.Popen("hadd {opts} {outfile} {infiles} ".format( opts = "" if merge_trees else "-T",
-                                                                              outfile = outfile, 
-                                                                              infiles = "'" + "' '".join(subfiles) + "'" )
-                                   ,shell=True, stdout=sp.PIPE, stderr = sp.STDOUT  )
-                         )
+        args.append( {'output_file': outfile, "input_files": subfiles, "merge_trees": merge_trees, 
+                      "n_jobs_max": max( 1, multiprocessing.cpu_count() / n_parallel_subfolders  )} )
+
+    oks = pool.map(pfunc, iterable = args)
+    ok = not (False in oks );
         
-    ok = True
-    for p in processes:
-        p.communicate()
-        status = p.returncode
-        if status != 0:
-            print "Process exited with exit status", status
-            ok = False;
     
     return output_files if ok else [];
 
@@ -184,7 +234,7 @@ def main():
         log_file = os.path.join( log_dir , os.path.basename(out_file));
         log_files.append( log_file )
 
-        if os.path.isfile( out_file ):
+        if os.path.isfile( out_file ) :
             print "File '{0}' already exists!".format(out_file);
             handler.shutdown();
             exit(1)
@@ -229,14 +279,13 @@ def main():
         print "========================  MERGING  ========================================"
         print "==========================================================================="
 
-        files_to_merge = out_files
         if options.subfolders:
             files_to_merge = mergeSubfolders(out_files, merge_trees = options.merge_trees)
-
-        sp.check_call( "hadd {merge} {outfile} {out_files}".format( merge = "" if options.merge_trees else "-T",  
-                                                                    outfile = options.outfile, 
-                                                                    out_files = " ".join(files_to_merge) ), 
-                      shell=True, stdout=sp.PIPE, stderr = sp.STDOUT  );
+            mergeRootFiles(options.outfile, files_to_merge, merge_trees = options.merge_trees, parallel = False)
+        else:
+            mergeRootFiles(options.outfile, out_files, merge_trees = options.merge_trees)
+            
+        
             
         
 #     if options.clear and not errors:
