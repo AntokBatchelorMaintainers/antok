@@ -94,16 +94,19 @@ namespace antok {
 				: _xAddr(xAddr),
 				  _yAddr(yAddr),
 				  _zAddr(zAddr),
+                  _vec3Addr( nullptr ),
 				  _mAddr(mAddr),
 				  _outAddr(outAddr),
 				  _pType(pType) { }
 
 			GetLorentzVec(TVector3* vec3Addr, double* mAddr, TLorentzVector* outAddr, int pType)
-				: _vec3Addr(vec3Addr),
+				: _xAddr(NULL),
+				  _yAddr(NULL),
+				  _zAddr(NULL),
+				  _vec3Addr(vec3Addr),
 				  _mAddr(mAddr),
 				  _outAddr(outAddr),
-				  _pType(pType) { }
-
+				  _pType(pType) {}
 
 			virtual ~GetLorentzVec() { }
 
