@@ -11,7 +11,63 @@
 
 #include<swallner_functions.hpp>
 
+namespace antok{
+namespace user{
+namespace stefan{
 
+/**
+ * Sets the data pointers in the args vector to the address of the variable or to an constant if no variable name, but a number is given
+ * @param args Vector of pairs where first: node/variable name, second: data pointet (will be set in this function)
+ * @param function: Node of the function
+ * @param index: Index of the function call (0 if this arguments have no index)
+ * @return true if everything was ok
+ */
+template< typename T>
+bool functionrgumentHandlerPossibleConst( std::vector< std::pair< std::string, T* > >& args,
+		                                  const YAML::Node& function,
+		                                  int index) {
+
+	using antok::YAMLUtils::hasNodeKey;
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector< std::pair< std::string, std::string > > given_args;
+	std::map< int, int > map_args_given_args;
+
+	// find all arguments which are given in the function node
+	for( size_t i = 0; i < args.size(); ++i ){
+		auto& arg = args[i];
+		if( hasNodeKey(function, arg.first) ){
+			const YAML::Node& node = function[arg.first];
+			try {
+				const T val = node.as<T>();
+				arg.second = new T(val);
+			} catch (const YAML::TypedBadConversion<T>& e) { // test if variable is a variable name
+				std::string variable_name = antok::YAMLUtils::getString( node );
+				if(variable_name == "") {
+					std::cerr<<"Entry has to be either a variable name or a convertible type."<<std::endl;
+					return false;
+				}
+				variable_name = antok::generators::mergeNameIndex(variable_name, index);
+				arg.second = data.getAddr<T>(variable_name);
+				if( arg.second == nullptr ){
+					std::cerr<<"Can not find variable << \"" << variable_name << "\" (required for function \""<<function["Name"]<<"\")."<<std::endl;
+					return false;
+				}
+			}
+
+		} else {
+			std::cerr<<"Argument \""<<arg.first<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return false;
+		}
+	}
+
+
+	return true;
+}
+
+}
+}
+}
 
 antok::Function* antok::user::stefan::getCalcLTProjections(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
 	if(quantityNames.size() != 2) {
@@ -89,6 +145,7 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 		std::cerr<<"Need 6/7 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
 	}
+	using antok::YAMLUtils::hasNodeKey;
 
 	bool determine_pid = (quantityNames.size() == 7 )? true : false;
 
@@ -97,12 +154,16 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 	std::vector<std::pair<std::string, std::string> > args_per_index;
 	std::vector<std::pair<std::string, std::string> > args;
 	std::vector<std::pair<std::string, double*> > possible_const;
-	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichPion", "double"));
-	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichKaon", "double"));
-	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichProton", "double"));
-	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichElectron", "double"));
-	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichMuon", "double"));
-	args_per_index.push_back(std::pair<std::string, std::string>("PidLRichBackground", "double"));
+	std::vector<std::pair<std::string, double*> > possible_const_per_index;
+
+	// complete list of arguments
+    possible_const_per_index.push_back(std::pair<std::string, double* >("PidLRichPion", nullptr));
+    possible_const_per_index.push_back(std::pair<std::string, double* >("PidLRichKaon", nullptr));
+    possible_const_per_index.push_back(std::pair<std::string, double* >("PidLRichProton", nullptr));
+    possible_const_per_index.push_back(std::pair<std::string, double* >("PidLRichElectron", nullptr));
+    possible_const_per_index.push_back(std::pair<std::string, double* >("PidLRichMuon", nullptr));
+    possible_const_per_index.push_back(std::pair<std::string, double* >("PidLRichBackground", nullptr));
+
 
 	if (determine_pid ){
 		args_per_index.push_back(std::pair<std::string, std::string>("Mom", "TVector3"));
@@ -118,21 +179,23 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 		possible_const.push_back(std::pair<std::string, double* >("MomMuonMin", nullptr));
 		possible_const.push_back(std::pair<std::string, double* >("MomMuonMax", nullptr));
 
-		for( auto& para: possible_const){
-			if( antok::YAMLUtils::hasNodeKey( function, para.first )){
-				para.second = antok::YAMLUtils::getAddress<double>(function[para.first]);
-			} else{
-				std::cerr << "Argument \"" << para.first << "\" not given for function \"" << function["Name"] << "\"." << std::endl;
-				return nullptr;
-			}
+		if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0 ) ){
+			std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+			return 0;
 		}
 	}
+
 
 	if(not antok::generators::functionArgumentHandler(args, function, 0)) {
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 	if(not antok::generators::functionArgumentHandler(args_per_index, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	if(not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const_per_index, function, index ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -158,14 +221,15 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 		pidAddrs = data.getAddr<int>(quantityNames[i]);
 	}
 
+
 	if( ! determine_pid ){
 	return new antok::user::stefan::functions::CalcRICHProbabilities(
-			                                                data.getAddr<double>(args_per_index[0].first),
-															data.getAddr<double>(args_per_index[1].first),
-															data.getAddr<double>(args_per_index[2].first),
-															data.getAddr<double>(args_per_index[3].first),
-															data.getAddr<double>(args_per_index[4].first),
-															data.getAddr<double>(args_per_index[5].first),
+															possible_const_per_index[0].second,
+															possible_const_per_index[1].second,
+															possible_const_per_index[2].second,
+															possible_const_per_index[3].second,
+															possible_const_per_index[4].second,
+															possible_const_per_index[5].second,
 															quantityAddrs[0],
 															quantityAddrs[1],
 															quantityAddrs[2],
@@ -175,13 +239,13 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 														);
 	} else{
 	return new antok::user::stefan::functions::CalcRICHPID(
-			                                                data.getAddr<double>(args_per_index[0].first),
-															data.getAddr<double>(args_per_index[1].first),
-															data.getAddr<double>(args_per_index[2].first),
-															data.getAddr<double>(args_per_index[3].first),
-															data.getAddr<double>(args_per_index[4].first),
-															data.getAddr<double>(args_per_index[5].first),
-			                                                data.getAddr<TVector3>(args_per_index[6].first),
+															possible_const_per_index[0].second,
+															possible_const_per_index[1].second,
+															possible_const_per_index[2].second,
+															possible_const_per_index[3].second,
+															possible_const_per_index[4].second,
+															possible_const_per_index[5].second,
+			                                                data.getAddr<TVector3>(args_per_index[0].first),
 															possible_const[0].second,
 															possible_const[1].second,
 															possible_const[2].second,
@@ -232,14 +296,11 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 		return 0;
 	}
 
-	for( auto& para: possible_const){
-		if( antok::YAMLUtils::hasNodeKey( function, para.first )){
-			para.second = antok::YAMLUtils::getAddress<double>(function[para.first]);
-		} else{
-			std::cerr << "Argument \"" << para.first << "\" not given for function \"" << function["Name"] << "\"." << std::endl;
-			return nullptr;
-		}
+	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
 	}
+
 
 	data.insert<TLorentzVector>( quantityNames[0] );
 	data.insert<TLorentzVector>( quantityNames[1] );

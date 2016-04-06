@@ -115,30 +115,44 @@ namespace functions{
 
 
 		bool operator() (){
-			P_pion_       = ( L_pion_       > 0.0 )?  L_pion_ / fmax( L_kaon_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_background_)))) : -1.0;
-			P_kaon_       = ( L_kaon_       > 0.0 )?  L_kaon_ / fmax( L_pion_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_background_)))) : -1.0;
-			P_proton_     = ( L_proton_     > 0.0 )?  L_proton_ / fmax( L_kaon_, fmax(L_pion_, fmax( L_electron_, fmax(L_muon_, L_background_)))) : -1.0;
-			P_electron_   = ( L_electron_   > 0.0 )?  L_electron_ / fmax( L_kaon_, fmax(L_proton_, fmax( L_pion_, fmax(L_muon_, L_background_)))) : -1.0;
-			P_muon_       = ( L_muon_       > 0.0 )?  L_muon_/ fmax( L_kaon_, fmax(L_proton_, fmax( L_pion_, fmax(L_pion_ , L_background_))))     : -1.0;
-			P_background_ = ( L_background_ > 0.0 )?  L_background_/ fmax( L_kaon_, fmax(L_proton_, fmax( L_electron_, fmax(L_muon_, L_pion_))))  : -1.0;
-			return true;
+            const double L_max_nopion       = _getMaxL( L_kaon_, L_proton_, L_electron_, L_muon_,     L_background_ );
+            const double L_max_nokaon       = _getMaxL( L_pion_, L_proton_, L_electron_, L_muon_,     L_background_ );
+            const double L_max_noproton     = _getMaxL( L_pion_, L_kaon_,   L_electron_, L_muon_,     L_background_ );
+            const double L_max_noelectron   = _getMaxL( L_pion_, L_kaon_,   L_proton_,   L_muon_,     L_background_ );
+            const double L_max_nomuon       = _getMaxL( L_pion_, L_kaon_,   L_proton_,   L_electron_, L_background_ );
+            const double L_max_nobackground = _getMaxL( L_pion_, L_kaon_,   L_proton_,   L_electron_, L_muon_ );
+            P_pion_       = ( L_pion_        > 0.0 && L_max_nopion > 0.0 )?       L_pion_       / L_max_nopion       : -1.0;
+            P_kaon_       = ( L_kaon_        > 0.0 && L_max_nokaon > 0.0 )?       L_kaon_       / L_max_nokaon       : -1.0;
+            P_proton_     = ( L_proton_      > 0.0 && L_max_noproton > 0.0 )?     L_proton_     / L_max_noproton     : -1.0;
+            P_electron_   = ( L_electron_    > 0.0 && L_max_noelectron > 0.0 )?   L_electron_   / L_max_noelectron   : -1.0;
+            P_muon_       = ( L_muon_        > 0.0 && L_max_nomuon > 0.0 )?       L_muon_       / L_max_nomuon       : -1.0;
+            P_background_ = ( L_background_  > 0.0 && L_max_nobackground > 0.0 )? L_background_ / L_max_nobackground : -1.0;
+            return true;
+        }
+
+
+
+    protected:
+        double const& L_pion_;
+        double const& L_kaon_;
+        double const& L_proton_;
+        double const& L_electron_;
+        double const& L_muon_;
+        double const& L_background_;
+        double& P_pion_;
+        double& P_kaon_;
+        double& P_proton_;
+        double& P_electron_;
+        double& P_muon_;
+        double& P_background_;
+
+    private:
+        /**
+		 * @return Maximum of all likelihoods which are >= 0.0
+		 */
+		double _getMaxL( const double L1, const double L2, const double L3, const double L4, const double L5){
+			return fmax( 0.0, fmax( L1, fmax( L2, fmax( L3, fmax( L4, L5 ) ) ) ) );
 		}
-
-
-
-	protected:
-		double const& L_pion_;
-		double const& L_kaon_;
-		double const& L_proton_;
-		double const& L_electron_;
-		double const& L_muon_;
-		double const& L_background_;
-		double& P_pion_;
-		double& P_kaon_;
-		double& P_proton_;
-		double& P_electron_;
-		double& P_muon_;
-		double& P_background_;
 
 	};
 	class CalcRICHPID: public CalcRICHProbabilities{
@@ -146,8 +160,8 @@ namespace functions{
 
 		/***
 		 * If pid should be determined,
-		 * 	kaon: 0
-		 * 	pion: 1
+		 * 	pion: 0
+		 * 	kaon: 1
 		 * 	proton: 2
 		 * 	electron: 3
 		 * 	muon: 4
@@ -211,13 +225,13 @@ namespace functions{
 		bool operator() (){
 			CalcRICHProbabilities::operator ()();
 			const double mom = mom_.Mag();
-			pid_ = -1;
-			if(      P_pion_ > P_ratio_cut_ && mom > Mom_pion_min_ && mom < Mom_pion_max_)             pid_ = 0;
-			else if( P_kaon_ > P_ratio_cut_ && mom > Mom_kaon_min_ && mom < Mom_kaon_max_)             pid_ = 1;
-			else if( P_proton_ > P_ratio_cut_ && mom > Mom_proton_min_ && mom < Mom_proton_max_)       pid_ = 2;
-			else if( P_electron_ > P_ratio_cut_ && mom > Mom_electron_min_ && mom < Mom_electron_max_) pid_ = 3;
-			else if( P_muon_ > P_ratio_cut_ && mom > Mom_muon_min_ && mom < Mom_muon_max_)             pid_ = 4;
-			else if( P_background_ > P_ratio_cut_ )                                                    pid_ = 5;
+            if(      P_pion_       > P_ratio_cut_ && mom > Mom_pion_min_     && mom < Mom_pion_max_)     pid_ = 0;
+            else if( P_kaon_       > P_ratio_cut_ && mom > Mom_kaon_min_     && mom < Mom_kaon_max_)     pid_ = 1;
+            else if( P_proton_     > P_ratio_cut_ && mom > Mom_proton_min_   && mom < Mom_proton_max_)   pid_ = 2;
+            else if( P_electron_   > P_ratio_cut_ && mom > Mom_electron_min_ && mom < Mom_electron_max_) pid_ = 3;
+            else if( P_muon_       > P_ratio_cut_ && mom > Mom_muon_min_     && mom < Mom_muon_max_)     pid_ = 4;
+            else if( P_background_ > P_ratio_cut_ )                                                      pid_ = 5;
+            else                                                                                         pid_ = -1;
 			return true;
 		}
 
@@ -248,10 +262,10 @@ namespace functions{
 	class DetermineKaonPionLV: public Function {
 	public:
 
-		DetermineKaonPionLV( TVector3* mom_1, int const* pid_1,
-		                     TVector3* mom_2, int const* pid_2,
-							 double const* mass_charged_kaon, double const* mass_charged_pion ,
-							 TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk, int* pid_kaon, int* pid_pion):
+        DetermineKaonPionLV( TVector3* mom_1, int const* pid_1,
+                             TVector3* mom_2, int const* pid_2,
+                             double const* mass_charged_kaon, double const* mass_charged_pion ,
+                             TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk, int* pid_kaon, int* pid_pion):
                                 mom_1_(             *mom_1),
                                 pid_1_(             *pid_1),
                                 mom_2_(             *mom_2),
@@ -286,6 +300,7 @@ namespace functions{
 				kaon_lv_ = TLorentzVector( -4444.0, -4444.0, -4444.0, -4444.0 );
 				pion_lv_ = TLorentzVector( -4444.0, -4444.0, -4444.0, -4444.0 );
 			}
+			return true;
 		}
 
 
