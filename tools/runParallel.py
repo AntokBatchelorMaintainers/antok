@@ -85,12 +85,14 @@ def mergeRootFiles(output_file, input_files, merge_trees, parallel = True, n_job
 
     ok = True
     for i,p in enumerate(processes):
-        p.communicate()
+        pout, _ = p.communicate()
         status = p.returncode
         if status != 0:
-            print "Process exited with exit status", status, "when processing files"
+            print "Process exited with exit status", status, "when merging files"
             for f in input_subfiles_list[i]:
                 print '\t', f
+            for l in pout.split('\n'):
+                print '\t', l
             ok = False;
             
     if ok and n_jobs > 1:
@@ -186,7 +188,7 @@ def main():
     antok = os.path.join( os.path.dirname( __file__), "treereader" )
     handler = batchelor.BatchelorHandler(configfile="~/.batchelorrc", 
                                          systemOverride="local" if options.local else "", 
-                                         memory='2.5G',
+                                         memory='2.6G',
                                          n_threads=3)
 
 
@@ -196,6 +198,12 @@ def main():
     log_dir = os.path.join( os.path.dirname(options.outfile), 'log' )
     if not os.path.isdir(log_dir):
         os.makedirs( log_dir )
+
+
+    # make my own copy of the config file and use it to be protected from changes during the execution
+    shutil.copy2( options.configfile, log_dir)
+    options.configfile = os.path.join( log_dir, os.path.basename(options.configfile) )
+
 
     for i_job, in_files in enumerate(files):
         try:
