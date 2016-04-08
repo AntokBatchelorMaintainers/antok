@@ -84,6 +84,8 @@ namespace functions{
 		 * 	electron: 3
 		 * 	muon: 4
 		 * 	background: 5
+		 *
+		 * 	If a hypothesis is the only one with an L > 0.0, then its P is set to 10.0
 		 */
 		CalcRICHProbabilities( double const* L_pion,
 							 double const* L_kaon,
@@ -121,12 +123,12 @@ namespace functions{
             const double L_max_noelectron   = _getMaxL( L_pion_, L_kaon_,   L_proton_,   L_muon_,     L_background_ );
             const double L_max_nomuon       = _getMaxL( L_pion_, L_kaon_,   L_proton_,   L_electron_, L_background_ );
             const double L_max_nobackground = _getMaxL( L_pion_, L_kaon_,   L_proton_,   L_electron_, L_muon_ );
-            P_pion_       = ( L_pion_        > 0.0 && L_max_nopion > 0.0 )?       L_pion_       / L_max_nopion       : -1.0;
-            P_kaon_       = ( L_kaon_        > 0.0 && L_max_nokaon > 0.0 )?       L_kaon_       / L_max_nokaon       : -1.0;
-            P_proton_     = ( L_proton_      > 0.0 && L_max_noproton > 0.0 )?     L_proton_     / L_max_noproton     : -1.0;
-            P_electron_   = ( L_electron_    > 0.0 && L_max_noelectron > 0.0 )?   L_electron_   / L_max_noelectron   : -1.0;
-            P_muon_       = ( L_muon_        > 0.0 && L_max_nomuon > 0.0 )?       L_muon_       / L_max_nomuon       : -1.0;
-            P_background_ = ( L_background_  > 0.0 && L_max_nobackground > 0.0 )? L_background_ / L_max_nobackground : -1.0;
+            P_pion_       = ( L_pion_        > 0.0 )? ( ( L_max_nopion       > 0.0 )? L_pion_       / L_max_nopion       : 10.0 ) : -1.0;
+            P_kaon_       = ( L_kaon_        > 0.0 )? ( ( L_max_nokaon       > 0.0 )? L_kaon_       / L_max_nokaon       : 10.0 ) : -1.0;
+            P_proton_     = ( L_proton_      > 0.0 )? ( ( L_max_noproton     > 0.0 )? L_proton_     / L_max_noproton     : 10.0 ) : -1.0;
+            P_electron_   = ( L_electron_    > 0.0 )? ( ( L_max_noelectron   > 0.0 )? L_electron_   / L_max_noelectron   : 10.0 ) : -1.0;
+            P_muon_       = ( L_muon_        > 0.0 )? ( ( L_max_nomuon       > 0.0 )? L_muon_       / L_max_nomuon       : 10.0 ) : -1.0;
+            P_background_ = ( L_background_  > 0.0 )? ( ( L_max_nobackground > 0.0 )? L_background_ / L_max_nobackground : 10.0 ) : -1.0;
             return true;
         }
 
