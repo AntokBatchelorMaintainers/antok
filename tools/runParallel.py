@@ -21,6 +21,7 @@ import re
 import multiprocessing
 import tempfile
 import math
+import copy
 
 # root includes
 
@@ -135,15 +136,46 @@ def mergeSubfolders(output_files, merge_trees):
     
     return output_files if ok else [];
 
+
+def filterExcludes( fileslist, excludes_file):
+    '''
+    Removes files from args which are listed in the excludes_file
+    '''
+    out_fileslist = []
+
+    exclude_filelist = []
+    if excludes_file:
+        if os.path.isfile( excludes_file ):
+            with open( excludes_file ) as fin:
+                for line in fin:
+                    line = line.rstrip('\n').strip().strip("'").strip('"')
+                    if line:
+                        exclude_filelist.append( line );
+            
+            print exclude_filelist
+                
+            for filename in fileslist:
+                filename_real = os.path.realpath( os.path.abspath(filename) )
+                print filename_real
+                print [ exclude in filename_real for exclude in exclude_filelist ]
+                if not True in [ exclude in filename_real for exclude in exclude_filelist ]:
+                    out_fileslist.append( filename )
+        else:
+            print "Can not open excludes file '{0}'.".fromat(excludes_file)
+            exit(1)
+    else:
+        out_fileslist = copy.copy( fileslist )
+    return out_fileslist;
+
 def main():
     optparser = OptionParser( usage="Usage:%prog <args> [<options>]", description = program_description );
     optparser.add_option('-c', '--configfile', dest='configfile', action='store', type='str', default="", help="Config file for antok.")
     optparser.add_option('-o', '--outfile', dest='outfile', action='store', type='str', default="hist.root", help="Merge files to the given output file.")
     optparser.add_option('-t', '--merge-trees', dest='merge_trees', action='store_true', help="Merge not only histograms but also all trees in one file.")
     optparser.add_option('-l', '--local', dest='local', action='store_true', help="Run local.")
-    optparser.add_option('-n', '--n-files-per-job', dest='n_files_job', action='store', default=1, help="Number of input files per parallel job [default: %default]")
-    optparser.add_option('-s', '--subfolders', dest='subfolders' , action='store_true', help="Distribute output files to different folders, according to the input folders")
-    optparser.add_option('', '--no-clear', dest='clear', action='store_false', default=True, help="Do not clear temporarily created histogram files after merging them to one" );
+    optparser.add_option('-n', '--n-files-per-job', dest='n_files_job', action='store', default=1, help="Number of input files per parallel job [default: %default].")
+    optparser.add_option('-s', '--subfolders', dest='subfolders' , action='store_true', help="Distribute output files to different folders, according to the input folders.")
+    optparser.add_option('-e', '--excludes-file', dest='excludes_file' , action='store', default="", help='''File which contains a list of files which should be excluded from the processing (One line for each excluded file / Real paths have to be used ). Also full folders can be excluded by giving the folder path.''')
 
     ( options, args ) = optparser.parse_args();
 
@@ -163,6 +195,8 @@ def main():
         print optparser.usage
         exit( 100 );
     options.outfile = os.path.realpath(options.outfile)
+    
+    args = filterExcludes( args, options.excludes_file)
         
     options.n_files_job = min( int(options.n_files_job), len(args))
     
@@ -176,7 +210,6 @@ def main():
     files = []
     for group in sorted(grouped_inputfiles.keys()):
         group_files = grouped_inputfiles[group]
-        print group, group_files
         n_files = len(group_files);
         n_files_job = min(options.n_files_job, n_files);
         n_jobs = n_files / n_files_job;
