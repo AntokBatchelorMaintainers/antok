@@ -1,5 +1,4 @@
 
-#include<swallner.h>
 
 #include<iostream>
 #include<sstream>
@@ -9,6 +8,7 @@
 #include<data.h>
 #include<yaml_utils.hpp>
 
+#include<swallner.h>
 #include<swallner_functions.hpp>
 
 namespace antok{
@@ -280,12 +280,15 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 	std::vector<std::pair<std::string, std::string> > args_per_index;
 	std::vector<std::pair<std::string, std::string> > args;
 	std::vector<std::pair<std::string, double*> > possible_const;
+	std::vector<std::pair<std::string, int*> > possible_const_int;
 	args.push_back(std::pair<std::string, std::string>("MomCandidate1", "TVector3"));
 	args.push_back(std::pair<std::string, std::string>("PidCandidate1", "int"));
 	args.push_back(std::pair<std::string, std::string>("MomCandidate2", "TVector3"));
 	args.push_back(std::pair<std::string, std::string>("PidCandidate2", "int"));
 	possible_const.push_back(std::pair<std::string, double*>("MassChargedKaon", nullptr));
 	possible_const.push_back(std::pair<std::string, double*>("MassChargedPion", nullptr));
+
+	possible_const_int.push_back(std::pair<std::string, int*>("Method", nullptr));
 
 	if(not antok::generators::functionArgumentHandler(args, function, 0)) {
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -297,6 +300,10 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 	}
 
 	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -325,7 +332,8 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 																	pion_lv,
 																	is_kp_pk,
 																	pid_kaon,
-																	pid_pion
+																	pid_pion,
+																	possible_const_int[0].second
 																	);
 }
 

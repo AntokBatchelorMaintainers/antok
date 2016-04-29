@@ -9,12 +9,15 @@
 #define USER_SWALLNER_FUNCTIONS_HPP_
 
 #include <cmath>
-#include "swallner.h"
+//#include "swallner.h"
 
 
 #include "TVector3.h"
+#include "TLorentzVector.h"
+
 
 namespace antok{
+	class Function;
 namespace user{
 namespace stefan{
 namespace functions{
@@ -264,46 +267,89 @@ namespace functions{
 	class DetermineKaonPionLV: public Function {
 	public:
 
-        DetermineKaonPionLV( TVector3* mom_1, int const* pid_1,
-                             TVector3* mom_2, int const* pid_2,
-                             double const* mass_charged_kaon, double const* mass_charged_pion ,
-                             TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk, int* pid_kaon, int* pid_pion):
-                                mom_1_(             *mom_1),
-                                pid_1_(             *pid_1),
-                                mom_2_(             *mom_2),
-                                pid_2_(             *pid_2),
-                                mass_charged_kaon_( *mass_charged_kaon),
-                                mass_charged_pion_( *mass_charged_pion),
-                                kaon_lv_(           *kaon_lv),
-                                pion_lv_(           *pion_lv),
-                                is_kp_pk_(          *is_kp_pk),
-								pid_kaon_(          *pid_kaon),
-								pid_pion_(          *pid_pion)
-								{}
+	DetermineKaonPionLV(TVector3* mom_1, int const* pid_1, TVector3* mom_2, int const* pid_2, double const* mass_charged_kaon, double const* mass_charged_pion,
+	                    TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk, int* pid_kaon, int* pid_pion, const int* method) :
+			mom_1_(*mom_1),
+			pid_1_(*pid_1),
+			mom_2_(*mom_2),
+			pid_2_(*pid_2),
+			mass_charged_kaon_(*mass_charged_kaon),
+			mass_charged_pion_(*mass_charged_pion),
+			kaon_lv_(*kaon_lv),
+			pion_lv_(*pion_lv),
+			is_kp_pk_(*is_kp_pk),
+			pid_kaon_(*pid_kaon),
+			pid_pion_(*pid_pion),
+			method_(*method) {
+	}
 
 
 
-		bool operator() (){
-			if(        ( pid_1_ == 1 && pid_2_ != 1) || ( pid_2_ == 0 && pid_1_ != 0 ) ){ // 1 = kaon, 2 = pion
-
-				kaon_lv_ = TLorentzVector( mom_1_, sqrt( mass_charged_kaon_ * mass_charged_kaon_ + mom_1_.Mag2() ) );
-				pion_lv_ = TLorentzVector( mom_2_, sqrt( mass_charged_pion_ * mass_charged_pion_ + mom_2_.Mag2() ) );
-				is_kp_pk_ = 1;
-				pid_kaon_ = pid_1_;
-				pid_pion_ = pid_2_;
-			} else if( ( pid_1_ == 0 && pid_2_ != 0) || ( pid_2_ == 1 && pid_1_ != 1 ) ){ // 1 = pion , 2 = kaon
-				kaon_lv_ = TLorentzVector( mom_2_, sqrt( mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2() ) );
-				pion_lv_ = TLorentzVector( mom_1_, sqrt( mass_charged_pion_ * mass_charged_pion_ + mom_1_.Mag2() ) );
-				is_kp_pk_ = 2;
-				pid_kaon_ = pid_2_;
-				pid_pion_ = pid_1_;
-			} else {
-				is_kp_pk_ = -1;
-				kaon_lv_ = TLorentzVector( -4444.0, -4444.0, -4444.0, -4444.0 );
-				pion_lv_ = TLorentzVector( -4444.0, -4444.0, -4444.0, -4444.0 );
+		bool operator()() {
+		is_kp_pk_ = -1;
+		kaon_lv_ = TLorentzVector(-4444.0, -4444.0, -4444.0, -4444.0);
+		pion_lv_ = TLorentzVector(-4444.0, -4444.0, -4444.0, -4444.0);
+		switch (method_) {
+			case 0: // identify K- or pi-
+			{
+				if ((pid_1_ == 1 && pid_2_ != 1) || (pid_2_ == 0 && pid_1_ != 0)) { // 1 = kaon, 2 = pion
+					kaon_lv_ = TLorentzVector(mom_1_, sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_1_.Mag2()));
+					pion_lv_ = TLorentzVector(mom_2_, sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_2_.Mag2()));
+					is_kp_pk_ = 1;
+					pid_kaon_ = pid_1_;
+					pid_pion_ = pid_2_;
+				} else if ((pid_1_ == 0 && pid_2_ != 0) || (pid_2_ == 1 && pid_1_ != 1)) { // 1 = pion , 2 = kaon
+					kaon_lv_ = TLorentzVector(mom_2_,
+					        sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
+					pion_lv_ = TLorentzVector(mom_1_,
+					        sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_1_.Mag2()));
+					is_kp_pk_ = 2;
+					pid_kaon_ = pid_2_;
+					pid_pion_ = pid_1_;
+				}
+				break;
 			}
-			return true;
+			case 1: // identify K-
+			{
+				if ((pid_1_ == 1 && pid_2_ != 1)) { // 1 = kaon, 2 = pion
+					kaon_lv_ = TLorentzVector(mom_1_, sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_1_.Mag2()));
+					pion_lv_ = TLorentzVector(mom_2_, sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_2_.Mag2()));
+					is_kp_pk_ = 1;
+					pid_kaon_ = pid_1_;
+					pid_pion_ = pid_2_;
+				} else if (pid_2_ == 1 && pid_1_ != 1) { // 1 = pion , 2 = kaon
+					kaon_lv_ = TLorentzVector(mom_2_, sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
+					pion_lv_ = TLorentzVector(mom_1_, sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_1_.Mag2()));
+					is_kp_pk_ = 2;
+					pid_kaon_ = pid_2_;
+					pid_pion_ = pid_1_;
+				}
+			break;
+			}
+			case 2: // identify pi-
+			{
+				if (pid_2_ == 0 && pid_1_ != 0) { // 1 = kaon, 2 = pion
+					kaon_lv_ = TLorentzVector(mom_1_, sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_1_.Mag2()));
+					pion_lv_ = TLorentzVector(mom_2_, sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_2_.Mag2()));
+					is_kp_pk_ = 1;
+					pid_kaon_ = pid_1_;
+					pid_pion_ = pid_2_;
+				} else if (pid_1_ == 0 && pid_2_ != 0) { // 1 = pion , 2 = kaon
+					kaon_lv_ = TLorentzVector(mom_2_,
+					        sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
+					pion_lv_ = TLorentzVector(mom_1_,
+					        sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_1_.Mag2()));
+					is_kp_pk_ = 2;
+					pid_kaon_ = pid_2_;
+					pid_pion_ = pid_1_;
+				}
+				break;
+			}
+			default:
+				throw "Method not implemented for DetermineKaonPionLV.";
 		}
+		return true;
+	}
 
 
 
@@ -319,13 +365,13 @@ namespace functions{
 		int& is_kp_pk_;
 		int& pid_kaon_;
 		int& pid_pion_;
+		const int& method_;
 
 	};
 }
 }
 }
 }
-
 
 
 
