@@ -3,11 +3,20 @@
 #include<yaml-cpp/yaml.h>
 
 #include<TH1.h>
+#include<stdexcept>
 
 #include<cutter.h>
 #include<object_manager.h>
 #include<plot.hpp>
 #include<yaml_utils.hpp>
+
+
+namespace {
+	// Inserts a new bin with the given label at bin i_bos to the given histogram.
+	// All bins, starting from i_pos, will be moved one bin to the right
+	void insertLabeledBinInHist(TH1* h, const char* label, const int i_pos);
+}
+
 
 antok::Plotter* antok::Plotter::_plotter = 0;
 
@@ -39,9 +48,27 @@ void antok::Plotter::fill(const long& cutPattern) {
 
 void antok::Plotter::addInputfileToWaterfallHistograms(const TH1D* waterfall){
 	for( std::vector<antok::plotUtils::waterfallHistogramContainer>::iterator wp = _waterfallHistograms.begin(); wp != _waterfallHistograms.end(); ++wp){
-		for( int ibin = 1; ibin <= waterfall->GetNbinsX(); ++ibin ){
-			const int i_wp_bin = wp->histogram->FindBin(waterfall->GetBinCenter(ibin) );
-			wp->histogram->SetBinContent( i_wp_bin, wp->histogram->GetBinContent(i_wp_bin) + waterfall->GetBinContent(ibin));
+		for (int ibin = 1; ibin <= waterfall->GetNbinsX(); ++ibin) {
+			const char* label = waterfall->GetXaxis()->GetBinLabel(ibin);
+			if (std::string(label) != "") {
+#if ROOT_VERSION_CODE > ROOT_VERSION(6,0,0)
+				int i_wp_bin = wp->histogram->GetXaxis()->FindFixBin(label);
+#else
+				wp->histogram->SetBit(ROOT.TH1.kCanRebin, false);
+				const int i_wp_bin = wp->histogram->GetXaxis()->FindBin(label);
+#endif
+
+				if (i_wp_bin < 1) { // can not find label from new histogram in waterfall plot
+					insertLabeledBinInHist(wp->histogram, label, ibin);
+					i_wp_bin = ibin;
+				}
+				if (i_wp_bin != ibin) {
+					std::cerr << i_wp_bin << " != " << ibin;
+					throw std::logic_error("Order of bins in waterfall histogram changes from file to file.");
+				}
+
+				wp->histogram->SetBinContent(i_wp_bin, wp->histogram->GetBinContent(i_wp_bin) + waterfall->GetBinContent(ibin));
+			}
 		}
 	}
 }
@@ -237,3 +264,32 @@ bool antok::plotUtils::GlobalPlotOptions::handleOnOffOption(std::string optionNa
 }
 
 
+
+namespace {
+// Inserts a new bin with the given label at bin i_bos to the given histogram.
+// All bins, starting from i_pos, will be moved one bin to the right
+void insertLabeledBinInHist(TH1* h, const char* label, const int i_pos){
+	int nBins = h->GetNbinsX();
+	TAxis* xAxis = h->GetXaxis();
+
+	// last bin is not free --> increase number of bins by one
+	if( std::string(xAxis->GetBinLabel(nBins)) != "" ){
+		h->SetBins(nBins+1, h->GetXaxis()->GetBinLowEdge(1),
+		           h->GetXaxis()->GetBinUpEdge(nBins) + h->GetXaxis()->GetBinWidth(nBins));
+		nBins+=1;
+	}
+
+	for( int i = nBins-1 ; i >= i_pos; --i){
+
+		const char* binLabel = h->GetXaxis()->GetBinLabel(i);
+		if( std::string(binLabel) != ""){
+			xAxis->SetBinLabel(i+1,binLabel);
+			xAxis->SetBinLabel(i,"");
+			h->SetBinContent(i+1, h->GetBinContent(i));
+			h->SetBinContent(i, 0);
+		}
+	}
+
+	xAxis->SetBinLabel(i_pos, label);
+}
+}

@@ -40,11 +40,16 @@ namespace antok {
 				: histogram(hist),
 				  cuts(cuts_) {
 						int startBin = 1;
-						for(int i = 1; i < histogram->GetNbinsX(); ++i) {
-							if(std::string(histogram->GetXaxis()->GetBinLabel(i)) == "") {
+						for(int i = 1; i <= hist->GetNbinsX(); ++i) {
+							if(std::string(hist->GetXaxis()->GetBinLabel(i)) == "") {
 								startBin = i;
 								break;
 							}
+						}
+						const int nBinsNeeded = startBin + cuts.size()-1;
+						if(nBinsNeeded > hist->GetNbinsX()){
+							histogram->SetBins( nBinsNeeded, hist->GetXaxis()->GetBinLowEdge(1),
+							                    hist->GetXaxis()->GetBinUpEdge(startBin - 1) + hist->GetXaxis()->GetBinWidth(startBin - 1) * (nBinsNeeded-(startBin-1)));
 						}
 						for(unsigned int i = 0; i < cuts.size(); ++i) {
 							histogram->GetXaxis()->SetBinLabel(startBin + i, cuts[i].first);
