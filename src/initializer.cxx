@@ -66,12 +66,14 @@ bool antok::Initializer::readConfigFile(const std::string& filename) {
 
 	// Number of particles
 	try {
-		if(not (hasNodeKey(config, "NumberOfParticles") and antok::Constants::set_n_particles(config["NumberOfParticles"].as<unsigned int>()))) {
-			std::cerr<<"Could not set number of particles."<<std::endl;
-			return false;
+		if (hasNodeKey(config, "NumberOfParticles")) {
+			if (not antok::Constants::set_n_particles(config["NumberOfParticles"].as<unsigned int>())) {
+				std::cerr << "Could not set number of particles." << std::endl;
+				return false;
+			}
 		}
 	} catch (const YAML::TypedBadConversion<int>& e) {
-		std::cerr<<"Conversion error when reading \"NumberOfParticles\": "<<e.what()<<"."<<std::endl;
+		std::cerr << "Conversion error when reading \"NumberOfParticles\": " << e.what() << "." << std::endl;
 		return false;
 	}
 
@@ -253,8 +255,8 @@ bool antok::Initializer::initializeData() {
 		std::cerr<<"TreeBranches not found in configuration file."<<std::endl;
 		return false;
 	};
-	if(not hasNodeKey(config["TreeBranches"], "onePerEvent") or not hasNodeKey(config["TreeBranches"], "onePerParticle")) {
-		std::cerr<<"TreeBranches[{\"onePerEvent\"|\"onePerParticle\"}] not found in configuration file."<<std::endl;
+	if(not hasNodeKey(config["TreeBranches"], "onePerEvent")) {
+		std::cerr<<"TreeBranch[\"onePerEvent\"] not found in configuration file."<<std::endl;
 		return false;
 	}
 
@@ -308,78 +310,89 @@ bool antok::Initializer::initializeData() {
 			}
 		}
 	}
-	const unsigned int& N_PARTICLES = antok::Constants::nParticles();
-	for(YAML::const_iterator typeIt = perParticleTreeBranches.begin(); typeIt != perParticleTreeBranches.end(); ++typeIt) {
-		for(YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
-			std::string type = antok::YAMLUtils::getString(typeIt->first);
-			std::string baseName = antok::YAMLUtils::getString(*valIt);
-			if(baseName == "") {
-				std::cerr<<"Conversion to std::string failed for one of the \"TreeBranches\"' \"onePerParticle\" "<<type<<"s."<<std::endl;
-				return false;
-			}
 
-			if(type == "double") {
-				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
-					std::stringstream strStr;
-					strStr<<baseName<<(i+1);
-					if(not data.insertInputVariable<double>(strStr.str())) {
-						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
-						return false;
-					}
+	const unsigned int N_PARTICLES = antok::Constants::nParticles();
+	if (hasNodeKey(config["TreeBranches"], "onePerParticle")) {
+		if( N_PARTICLES == 0){
+			std::cerr << "Input branches \"onePerParticle\" given, but \"NumberOfParticles\" was not defined!" << std::endl;
+			return false;
+		}
+
+		for (YAML::const_iterator typeIt = perParticleTreeBranches.begin(); typeIt != perParticleTreeBranches.end(); ++typeIt) {
+			for (YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
+				std::string type = antok::YAMLUtils::getString(typeIt->first);
+				std::string baseName = antok::YAMLUtils::getString(*valIt);
+				if (baseName == "") {
+					std::cerr << "Conversion to std::string failed for one of the \"TreeBranches\"' \"onePerParticle\" " << type << "s." << std::endl;
+					return false;
 				}
-			} else if(type == "int") {
-				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
-					std::stringstream strStr;
-					strStr<<baseName<<(i+1);
-					if(not data.insertInputVariable<int>(strStr.str())) {
-						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
-						return false;
+
+				if (type == "double") {
+					for (unsigned int i = 0; i < N_PARTICLES; ++i) {
+						std::stringstream strStr;
+						strStr << baseName << (i + 1);
+						if (not data.insertInputVariable<double>(strStr.str())) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+							return false;
+						}
 					}
-				}
-			} else if(type == "Long64_t") {
-				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
-					std::stringstream strStr;
-					strStr<<baseName<<(i+1);
-					if(not data.insertInputVariable<Long64_t>(strStr.str())) {
-						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
-						return false;
+				} else if (type == "int") {
+					for (unsigned int i = 0; i < N_PARTICLES; ++i) {
+						std::stringstream strStr;
+						strStr << baseName << (i + 1);
+						if (not data.insertInputVariable<int>(strStr.str())) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+							return false;
+						}
 					}
-				}
-			} else if(type == "std::vector<double>") {
-				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
-					std::stringstream strStr;
-					strStr<<baseName<<(i+1);
-					if(not data.insertInputVariable<std::vector<double> >(strStr.str())) {
-						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
-						return false;
+				} else if (type == "Long64_t") {
+					for (unsigned int i = 0; i < N_PARTICLES; ++i) {
+						std::stringstream strStr;
+						strStr << baseName << (i + 1);
+						if (not data.insertInputVariable<Long64_t>(strStr.str())) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+							return false;
+						}
 					}
-				}
-			} else if(type == "TLorentzVector") {
-				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
-					std::stringstream strStr;
-					strStr<<baseName<<(i+1);
-					if(not data.insertInputVariable<TLorentzVector>(strStr.str())) {
-						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
-						return false;
+				} else if (type == "std::vector<double>") {
+					for (unsigned int i = 0; i < N_PARTICLES; ++i) {
+						std::stringstream strStr;
+						strStr << baseName << (i + 1);
+						if (not data.insertInputVariable<std::vector<double> >(strStr.str())) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+							return false;
+						}
 					}
-				}
-			} else if(type == "TVector3") {
-				for(unsigned int i = 0; i < N_PARTICLES; ++i) {
-					std::stringstream strStr;
-					strStr<<baseName<<(i+1);
-					if(not data.insertInputVariable<TVector3>(strStr.str())) {
-						std::cerr<<antok::Data::getVariableInsertionErrorMsg(strStr.str());
-						return false;
+				} else if (type == "TLorentzVector") {
+					for (unsigned int i = 0; i < N_PARTICLES; ++i) {
+						std::stringstream strStr;
+						strStr << baseName << (i + 1);
+						if (not data.insertInputVariable<TLorentzVector>(strStr.str())) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+							return false;
+						}
 					}
+				} else if (type == "TVector3") {
+					for (unsigned int i = 0; i < N_PARTICLES; ++i) {
+						std::stringstream strStr;
+						strStr << baseName << (i + 1);
+						if (not data.insertInputVariable<TVector3>(strStr.str())) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+							return false;
+						}
+					}
+				} else if (type == "") {
+					std::cerr << "Could not convert branch type to std::string when parsing the \"TreeBranches\"' \"onePerParticle\" part." << std::endl;
+					return false;
+				} else {
+					std::cerr << "Data type \"" << type << "\" not supported." << std::endl;
+					return false;
 				}
-			} else if(type == "") {
-				std::cerr<<"Could not convert branch type to std::string when parsing the \"TreeBranches\"' \"onePerParticle\" part."<<std::endl;
-				return false;
-			} else {
-				std::cerr<<"Data type \""<<type<<"\" not supported."<<std::endl;
-				return false;
 			}
 		}
+	} else if (N_PARTICLES > 0){
+		std::cerr << "\"NumberOfParticles\" given but input branch definition \"onePerParticle\" is missing!" << std::endl;
+		return false;
 	}
 
 

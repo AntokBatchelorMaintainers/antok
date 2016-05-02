@@ -24,7 +24,7 @@ namespace antok {
 		static double TargetUpstreamEdge() { return -68.5; /* cm */}
 		static double TargetDownstreamEdge() { return -28.5; /* cm */}
 
-		static const unsigned int& nParticles() { assert(initialized()); return _n_particles; };
+		static const unsigned int nParticles() { assert(initialized()); return _n_particles; };
 
 		static const bool& initialized() { return _initialized; };
 
