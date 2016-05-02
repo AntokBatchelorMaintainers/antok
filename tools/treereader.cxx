@@ -54,7 +54,6 @@ int treereader(std::vector<const char*> infilenames, char* outfilename=0, std::s
 
 	for(std::vector<const char*>::const_iterator infilename = infilenames.begin(); infilename != infilenames.end(); ++infilename ){
 		if(ABORT) break;
-		std::cout << "Processing input file '" << *infilename << "'" << std::endl;
 
 		TFile* infile;
 		if(*infilename != 0) {
@@ -82,6 +81,7 @@ int treereader(std::vector<const char*> infilenames, char* outfilename=0, std::s
 			}
 		}
 
+		std::cout << "Processing input file '" << *infilename << "'" << std::endl;
 		TTree* inTree = objectManager->getInTree();
 
 		boost::progress_display* progressIndicator = new boost::progress_display(inTree->GetEntries(), std::cout, "");

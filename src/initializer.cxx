@@ -464,12 +464,14 @@ bool antok::Initializer::updateInput(){
 		antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 		antok::plotUtils::GlobalPlotOptions plotOptions(config["GlobalPlotOptions"]);
 
-		TH1D* statsHist = dynamic_cast<TH1D*>(objectManager->getInFile()->Get(plotOptions.statisticsHistInName.c_str()));
-		if ( statsHist != 0 )
-			objectManager->getPlotter().addInputfileToWaterfallHistograms( statsHist );
-		else {
-			std::cerr << "Can not find stats histogram in input file!" << std::endl;
-			ok = false;
+		if (plotOptions.statisticsHistInName != "") {
+			TH1D* statsHist = dynamic_cast<TH1D*>(objectManager->getInFile()->Get(plotOptions.statisticsHistInName.c_str()));
+			if (statsHist != 0)
+				objectManager->getPlotter().addInputfileToWaterfallHistograms(statsHist);
+			else {
+				std::cerr << "Can not find stats histogram in input file!" << std::endl;
+				ok = false;
+			}
 		}
 	}
 
