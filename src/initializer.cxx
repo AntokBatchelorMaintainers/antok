@@ -455,6 +455,7 @@ bool antok::Initializer::initializeInput(){
 }
 
 bool antok::Initializer::updateInput(){
+	using antok::YAMLUtils::hasNodeKey;
 	bool ok = true;
 	ok &= initializeInput(); // again set all input branches
 
@@ -462,6 +463,7 @@ bool antok::Initializer::updateInput(){
 		YAML::Node& config = *_config;
 
 		antok::ObjectManager* objectManager = antok::ObjectManager::instance();
+		antok::Cutter& cutter = objectManager->getCutter();
 		antok::plotUtils::GlobalPlotOptions plotOptions(config["GlobalPlotOptions"]);
 
 		if (plotOptions.statisticsHistInName != "") {
@@ -473,6 +475,17 @@ bool antok::Initializer::updateInput(){
 				ok = false;
 			}
 		}
+
+		// set the addresses of all branches of all ouput trees to those of the input tree if no we have no deticated output trees
+		if(not hasNodeKey(config, "OutputTree")) { // no definition for the output tree given -> write full input tree
+			for( std::map<std::string,TTree *>::iterator it = cutter._outTreeMap.begin(); it != cutter._outTreeMap.end(); ++it){
+				objectManager->getInTree()->CopyAddresses(it->second);
+
+			}
+
+
+		}
+
 	}
 
 	return ok;
