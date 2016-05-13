@@ -155,6 +155,7 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 	std::vector<std::pair<std::string, std::string> > args;
 	std::vector<std::pair<std::string, double*> > possible_const;
 	std::vector<std::pair<std::string, double*> > possible_const_per_index;
+	bool is_momv3_given = not hasNodeKey(function, "MomMag");
 
 	// complete list of arguments
     possible_const_per_index.push_back(std::pair<std::string, double* >("PidLRichPion", nullptr));
@@ -166,7 +167,10 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 
 
 	if (determine_pid ){
-		args_per_index.push_back(std::pair<std::string, std::string>("Mom", "TVector3"));
+		if( is_momv3_given )
+			args_per_index.push_back(std::pair<std::string, std::string>("Mom", "TVector3"));
+		else
+			args_per_index.push_back(std::pair<std::string, std::string>("MomMag", "double"));
 		possible_const.push_back(std::pair<std::string, double* >("PRatioCut", nullptr));
 		possible_const.push_back(std::pair<std::string, double* >("MomPionMin", nullptr));
 		possible_const.push_back(std::pair<std::string, double* >("MomPionMax", nullptr));
@@ -245,7 +249,8 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 															possible_const_per_index[3].second,
 															possible_const_per_index[4].second,
 															possible_const_per_index[5].second,
-			                                                data.getAddr<TVector3>(args_per_index[0].first),
+			                                                (is_momv3_given)? data.getAddr<TVector3>(args_per_index[0].first): NULL,
+			                                                (is_momv3_given)? NULL : data.getAddr<double>(args_per_index[0].first),
 															possible_const[0].second,
 															possible_const[1].second,
 															possible_const[2].second,

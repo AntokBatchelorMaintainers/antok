@@ -179,6 +179,7 @@ namespace functions{
 							 double const* L_muon,
 							 double const* L_background,
 							 TVector3 const* mom,
+							 double const* mom_mag,
 							 double const* P_ratio_cut,
 							 double const* Mom_pion_min,
 							 double const* Mom_pion_max,
@@ -210,7 +211,8 @@ namespace functions{
 							 P_electron,
 							 P_muon,
 							 P_background ),
-							 mom_(*mom),
+							 mom_(mom),
+							 mom_mag_(mom_mag),
 							 P_ratio_cut_(*P_ratio_cut),
 							 Mom_pion_min_(*Mom_pion_min),
 							 Mom_pion_max_(*Mom_pion_max),
@@ -229,7 +231,7 @@ namespace functions{
 
 		bool operator() (){
 			CalcRICHProbabilities::operator ()();
-			const double mom = mom_.Mag();
+			const double mom = (mom_)? mom_->Mag() : *mom_mag_;
             if(      P_pion_       > P_ratio_cut_ && mom > Mom_pion_min_     && mom < Mom_pion_max_)     pid_ = 0;
             else if( P_kaon_       > P_ratio_cut_ && mom > Mom_kaon_min_     && mom < Mom_kaon_max_)     pid_ = 1;
             else if( P_proton_     > P_ratio_cut_ && mom > Mom_proton_min_   && mom < Mom_proton_max_)   pid_ = 2;
@@ -243,7 +245,8 @@ namespace functions{
 
 
 	private:
-		TVector3 const& mom_;
+		TVector3 const* mom_;
+		double const* mom_mag_;
 		double const& P_ratio_cut_;
 		double const& Mom_pion_min_;
 		double const& Mom_pion_max_;
