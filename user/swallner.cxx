@@ -11,6 +11,10 @@
 #include<swallner.h>
 #include<swallner_functions.hpp>
 
+namespace {
+	std::vector<double> getCalcCEDARPIDGetThresholds(const char* name, const YAML::Node& function);
+}
+
 namespace antok{
 namespace user{
 namespace stefan{
@@ -342,6 +346,94 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 																	);
 }
 
+
+antok::Function* antok::user::stefan::getCalcCEDARPID(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+	if(quantityNames.size() != 5 ) {
+		std::cerr<<"Need 3/5 names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return nullptr;
+	}
+	using antok::YAMLUtils::hasNodeKey;
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<std::pair<std::string, double*> > possible_const_double;
+	std::vector<std::pair<std::string, int*> > possible_const_int;
+
+	// complete list of arguments
+	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodPionCedar1", nullptr));
+	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodKaonCedar1", nullptr));
+//	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodProtonCedar1", nullptr));
+	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodPionCedar2", nullptr));
+	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodKaonCedar2", nullptr));
+//	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodProtonCedar2", nullptr));
+	possible_const_int.push_back(std::pair<std::string, int* >("NHitsCedar1", nullptr));
+	possible_const_int.push_back(std::pair<std::string, int* >("NHitsCedar2", nullptr));
+
+	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	const std::vector<double> thresholds_kaon_CEDAR1 = getCalcCEDARPIDGetThresholds("ThresholdsKaonDeltaLogLikeCedar1", function);
+	const std::vector<double> thresholds_pion_CEDAR1 = getCalcCEDARPIDGetThresholds("ThresholdsPionDeltaLogLikeCedar1", function);
+	const std::vector<double> thresholds_kaon_CEDAR2 = getCalcCEDARPIDGetThresholds("ThresholdsKaonDeltaLogLikeCedar2", function);
+	const std::vector<double> thresholds_pion_CEDAR2 = getCalcCEDARPIDGetThresholds("ThresholdsPionDeltaLogLikeCedar2", function);
+	if( thresholds_kaon_CEDAR1.size() == 0 or thresholds_pion_CEDAR1.size() == 0 or thresholds_kaon_CEDAR2.size() == 0 or thresholds_pion_CEDAR2.size() == 0){
+		return 0;
+	}
+
+
+	std::vector<int*> quantityAddrs_int;
+	std::vector<double*> quantityAddrs_double;
+	for(unsigned int i = 0; i < 3; ++i) {
+		if(not data.insert<int>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+			return 0;
+		}
+		quantityAddrs_int.push_back(data.getAddr<int>(quantityNames[i]));
+
+	}
+	if (quantityNames.size() == 5) {
+		for (unsigned int i = 3; i < quantityNames.size(); ++i) {
+			if (not data.insert<double>(quantityNames[i])) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+				return 0;
+			}
+			quantityAddrs_double.push_back(data.getAddr<double>(quantityNames[i]));
+		}
+	} else {
+		for (unsigned int i = 3; i < quantityNames.size(); ++i) {
+			quantityAddrs_double.push_back(nullptr);
+		}
+
+	}
+
+	return new antok::user::stefan::functions::CalcCEDARPID(
+	        possible_const_double[0].second,
+	        possible_const_double[1].second,
+	        new double(),
+	        possible_const_int[0].second,
+	        thresholds_kaon_CEDAR1,
+	        thresholds_pion_CEDAR1,
+	        possible_const_double[2].second,
+	        possible_const_double[3].second,
+	        new double(),
+	        possible_const_int[1].second,
+	        thresholds_kaon_CEDAR2,
+	        thresholds_pion_CEDAR2,
+	        quantityAddrs_int[0],
+	        quantityAddrs_int[1],
+	        quantityAddrs_int[2],
+	        quantityAddrs_double[0],
+	        quantityAddrs_double[1]
+	        );
+}
+
 antok::Function* antok::user::stefan::getUserFunction(const YAML::Node& function,
                                                           std::vector<std::string>& quantityNames,
                                                           int index)
@@ -360,5 +452,33 @@ antok::Function* antok::user::stefan::getUserFunction(const YAML::Node& function
 	if(functionName == "determineKaonPionLV") {
 		antokFunctionPtr = stefan::getDetermineKaonPionLV(function, quantityNames, index);
 	}
+	if(functionName == "calcCEDARPID") {
+		antokFunctionPtr = stefan::getCalcCEDARPID(function, quantityNames, index);
+	}
 	return antokFunctionPtr;
+}
+
+namespace {
+std::vector<double> getCalcCEDARPIDGetThresholds(const char* name, const YAML::Node& function) {
+	using antok::YAMLUtils::hasNodeKey;
+	if (not hasNodeKey(function, name)) {
+		std::cerr << "Need " << name << " for function \"" << function["Name"] << "\"." << std::endl;
+	}
+
+	const YAML::Node& node = function[name];
+
+	try {
+		std::vector<double> thresholds = node.as<std::vector<double> >();
+		if (thresholds.size() != 9) {
+			std::cerr << "Length of thresholds of argument " << name << " is << " <<
+			        thresholds.size() << " but should be 9 for function \"" << function["Name"] << "\"." << std::endl;
+			return std::vector<double>();
+		}
+		return thresholds;
+	} catch (const YAML::TypedBadConversion<std::vector<double> >& e) {
+		std::cerr << "Can not convert argument of node " << name << " for function \"" << function["Name"] << "\"." << std::endl;
+		return std::vector<double>();
+	}
+	return std::vector<double>();
+	}
 }

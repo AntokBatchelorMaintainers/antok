@@ -160,6 +160,7 @@ bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<
 			const YAML::Node& withCut = *withCuts_it;
 			long cutmask = __handleCutList(withCut, cutTrainName, false);
 			if(cutmask < 0) {
+				std::cout << "CutMask is < 0!" << std::endl;
 				innerError = true;
 				error = true;
 				break;
@@ -173,6 +174,7 @@ bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<
 			const YAML::Node& withoutCut = *withoutCuts_it;
 			long cutmask = __handleCutList(withoutCut, cutTrainName, true);
 			if(cutmask < 0) {
+				std::cout << "CutMask is < 0!" << std::endl;
 				innerError = true;
 				error = true;
 				break;

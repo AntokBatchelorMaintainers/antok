@@ -300,7 +300,7 @@ def main():
 			print "\t'{0}'".format(f)
 		print cmd
 		print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-		handler.submitJob( cmd, log_file, wd = os.getcwd() );
+		handler.submitJob( cmd, log_file, wd = os.getcwd(), jobName='Antok' );
 
 
 

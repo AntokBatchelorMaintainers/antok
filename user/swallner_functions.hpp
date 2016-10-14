@@ -9,6 +9,7 @@
 #define USER_SWALLNER_FUNCTIONS_HPP_
 
 #include <cmath>
+#include <limits>
 //#include "swallner.h"
 
 
@@ -79,17 +80,6 @@ namespace functions{
 	class CalcRICHProbabilities: public Function {
 	public:
 
-		/***
-		 * If pid should be determined,
-		 * 	kaon: 0
-		 * 	pion: 1
-		 * 	proton: 2
-		 * 	electron: 3
-		 * 	muon: 4
-		 * 	background: 5
-		 *
-		 * 	If a hypothesis is the only one with an L > 0.0, then its P is set to 10.0
-		 */
 		CalcRICHProbabilities( double const* L_pion,
 							 double const* L_kaon,
 							 double const* L_proton,
@@ -370,6 +360,125 @@ namespace functions{
 		int& pid_pion_;
 		const int& method_;
 
+	};
+
+	class CalcCEDARPID: public Function {
+	public:
+
+		/***
+		 * If pid should be determined,
+		 *  noPID: -1
+		 * 	kaon: 0
+		 * 	pion: 1
+		 * 	proton: 2
+		 *
+		 * The Thresholds are given for the difference of the log10 of the likelihood to be a kaon minus the log10 of the likelihood to be a pion
+		 *   - the difference must be larger than the kaon threshold to be identified as a kaon
+		 *   - the difference must be smaller than the pion threshold to be identified as a pion
+		 * A PID for that CEDAR is assigned if exactly one of the two conditions is fullfilled
+		 * A overall PID is assigned if both CEDARs give the same PID or one of the CEDARs has no PID
+		 *
+		 *
+		 */
+
+		enum PIDs {pidNo = -1, pidKaon = 0, pidPion = 1, pidProton = 2};
+		CalcCEDARPID(double const* L_pion_CEDAR1,
+		            double const* L_kaon_CEDAR1,
+		            double const* L_proton_CEDAR1,
+		            int const* n_hits_CEDAR1,
+		            std::vector<double> const& thresholds_kaon_DeltaLogLike_CEDAR1,
+		            std::vector<double> const& thresholds_pion_DeltaLogLike_CEDAR1,
+		            double const* L_pion_CEDAR2,
+		            double const* L_kaon_CEDAR2,
+		            double const* L_proton_CEDAR2,
+		            int const* n_hits_CEDAR2,
+		            std::vector<double> const& thresholds_kaon_DeltaLogLike_CEDAR2,
+		            std::vector<double> const& thresholds_pion_DeltaLogLike_CEDAR2,
+		            int* CEDARPid_CEDAR1,
+		            int* CEDARPid_CEDAR2,
+		            int* CEDARPid,
+		            double* LLdiff_CEDAR1,
+		            double* LLdiff_CEDAR2
+		            ):
+				L_pion_CEDAR1_(*L_pion_CEDAR1),
+				L_kaon_CEDAR1_(*L_kaon_CEDAR1),
+				L_proton_CEDAR1_(*L_proton_CEDAR1),
+				n_hits_CEDAR1_(*n_hits_CEDAR1),
+				thresholds_kaon_DeltaLogLike_CEDAR1_(thresholds_kaon_DeltaLogLike_CEDAR1),
+				thresholds_pion_DeltaLogLike_CEDAR1_(thresholds_pion_DeltaLogLike_CEDAR1),
+				L_pion_CEDAR2_(*L_pion_CEDAR2),
+				L_kaon_CEDAR2_(*L_kaon_CEDAR2),
+				L_proton_CEDAR2_(*L_proton_CEDAR2),
+				n_hits_CEDAR2_(*n_hits_CEDAR2),
+				thresholds_kaon_DeltaLogLike_CEDAR2_(thresholds_kaon_DeltaLogLike_CEDAR2),
+				thresholds_pion_DeltaLogLike_CEDAR2_(thresholds_pion_DeltaLogLike_CEDAR2),
+				CEDARPid_CEDAR1_(*CEDARPid_CEDAR1),
+				CEDARPid_CEDAR2_(*CEDARPid_CEDAR2),
+				CEDARPid_(*CEDARPid),
+				LLdiff_CEDAR1_( *((LLdiff_CEDAR1)? LLdiff_CEDAR1 : new double())),
+				LLdiff_CEDAR2_( *((LLdiff_CEDAR2)? LLdiff_CEDAR2 : new double()))
+		{
+		}
+
+		bool operator()() {
+
+			CEDARPid_CEDAR1_ = getPIDForCEDAR(L_kaon_CEDAR1_, L_pion_CEDAR1_, n_hits_CEDAR1_, thresholds_kaon_DeltaLogLike_CEDAR1_, thresholds_pion_DeltaLogLike_CEDAR1_, LLdiff_CEDAR1_);
+			CEDARPid_CEDAR2_ = getPIDForCEDAR(L_kaon_CEDAR2_, L_pion_CEDAR2_, n_hits_CEDAR2_, thresholds_kaon_DeltaLogLike_CEDAR2_, thresholds_pion_DeltaLogLike_CEDAR2_, LLdiff_CEDAR2_);
+
+
+			if (CEDARPid_CEDAR1_ == CEDARPid_CEDAR2_ )      CEDARPid_ = CEDARPid_CEDAR1_;
+			else if (CEDARPid_CEDAR2_ == pidNo)             CEDARPid_ = CEDARPid_CEDAR1_;
+			else if (CEDARPid_CEDAR1_ == pidNo)             CEDARPid_ = CEDARPid_CEDAR2_;
+			else                                            CEDARPid_ = pidNo;
+			return true;
+		}
+
+	protected:
+		double const& L_pion_CEDAR1_;
+		double const& L_kaon_CEDAR1_;
+		double const& L_proton_CEDAR1_;
+		const int& n_hits_CEDAR1_;
+		const std::vector<double> thresholds_kaon_DeltaLogLike_CEDAR1_;
+		const std::vector<double> thresholds_pion_DeltaLogLike_CEDAR1_;
+		int& CEDARPid_CEDAR1_;
+		double const& L_pion_CEDAR2_;
+		double const& L_kaon_CEDAR2_;
+		double const& L_proton_CEDAR2_;
+		const int& n_hits_CEDAR2_;
+		const std::vector<double> thresholds_kaon_DeltaLogLike_CEDAR2_;
+		const std::vector<double> thresholds_pion_DeltaLogLike_CEDAR2_;
+		int& CEDARPid_CEDAR2_;
+		int& CEDARPid_;
+		double& LLdiff_CEDAR1_;
+		double& LLdiff_CEDAR2_;
+
+
+	private:
+
+		int getPIDForCEDAR(const double L_kaon, const double L_pion, const int n_hits,
+		                   const std::vector<double>& thresholds_kaon, const std::vector<double>& thresholds_pion,
+		                   double& LogLikeDiff) {
+			int pid = pidNo;
+			LogLikeDiff = std::numeric_limits<double>::quiet_NaN();
+			if(L_kaon <= 0.0 and L_pion > 0.0){
+				pid = pidPion;
+				LogLikeDiff = -15.0;
+			} else if (L_pion <= 0.0 and L_kaon > 0.0){
+				pid = pidKaon;
+				LogLikeDiff = 15.0;
+			} else if (L_kaon > 0.0 and L_pion > 0.0) {
+				LogLikeDiff = log10(L_kaon) - log10(L_pion);
+				const bool is_kaon = LogLikeDiff > thresholds_kaon[n_hits];
+				const bool is_pion = LogLikeDiff < thresholds_pion[n_hits];
+				if        (is_kaon and not is_pion) {
+					pid = pidKaon;
+				} else if (is_pion and not is_kaon) {
+					pid = pidPion;
+				} // else stay with no pid
+			}
+
+			return pid;
+		}
 	};
 }
 }

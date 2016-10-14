@@ -245,7 +245,7 @@ namespace {
 		} else if (typeName == "TLorentzVector") {
 			antokCut = __getEqualityCut<TLorentzVector>(cut, shortName, longName, abbreviation, result, mode);
 		} else {
-			std::cerr<<"Type \""<<typeName<<"\" not supported in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
+			std::cerr<<"Variable type \""<<typeName<<"\" of variable \"" << variableName << "\" not supported in \"Equality\" cut \""<<shortName<<"\"."<<std::endl;
 			return 0;
 		}
 
