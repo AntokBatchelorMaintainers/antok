@@ -346,9 +346,17 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 																	);
 }
 
+antok::Function* antok::user::stefan::getCalcCEDARPID(const YAML::Node& function, std::vector<std::string>& quantityNames, int index){
+	using antok::YAMLUtils::hasNodeKey;
+	if(hasNodeKey(function, "ThresholdsKaonDeltaLogLikeCedar1")){
+		return antok::user::stefan::getCalcCEDARPIDMulitL(function, quantityNames, index);
+	}else{
+		return antok::user::stefan::getCalcCEDARPIDOneL(function, quantityNames, index);
+	}
+}
 
-antok::Function* antok::user::stefan::getCalcCEDARPID(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
-	if(quantityNames.size() != 5 ) {
+antok::Function* antok::user::stefan::getCalcCEDARPIDMulitL(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+	if(quantityNames.size() != 5 and quantityNames.size() != 3 ) {
 		std::cerr<<"Need 3/5 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
 	}
@@ -431,6 +439,82 @@ antok::Function* antok::user::stefan::getCalcCEDARPID(const YAML::Node& function
 	        quantityAddrs_int[2],
 	        quantityAddrs_double[0],
 	        quantityAddrs_double[1]
+	        );
+}
+
+
+antok::Function* antok::user::stefan::getCalcCEDARPIDOneL(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+	if(quantityNames.size() != 4 and quantityNames.size() != 1) {
+		std::cerr<<"Need 1/4 names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return nullptr;
+	}
+	using antok::YAMLUtils::hasNodeKey;
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<std::pair<std::string, double*> > possible_const_double;
+	std::vector<std::pair<std::string, int*> > possible_const_int;
+
+	// complete list of arguments
+	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodPionCedar1", nullptr));
+	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodKaonCedar1", nullptr));
+//	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodProtonCedar1", nullptr));
+	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodPionCedar2", nullptr));
+	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodKaonCedar2", nullptr));
+//	possible_const_double.push_back(std::pair<std::string, double* >("LikelihoodProtonCedar2", nullptr));
+//	possible_const_int.push_back(std::pair<std::string, int* >("NHitsCedar1", nullptr));
+//	possible_const_int.push_back(std::pair<std::string, int* >("NHitsCedar2", nullptr));
+	possible_const_double.push_back(std::pair<std::string, double* >("ThresholdKaonDeltaLogLike", nullptr));
+	possible_const_double.push_back(std::pair<std::string, double* >("ThresholdPionDeltaLogLike", nullptr));
+
+	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	std::vector<int*> quantityAddrs_int;
+	std::vector<double*> quantityAddrs_double;
+	for(unsigned int i = 0; i < 1; ++i) {
+		if(not data.insert<int>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+			return 0;
+		}
+		quantityAddrs_int.push_back(data.getAddr<int>(quantityNames[i]));
+
+	}
+	if (quantityNames.size() == 4) {
+		for (unsigned int i = 1; i < quantityNames.size(); ++i) {
+			if (not data.insert<double>(quantityNames[i])) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+				return 0;
+			}
+			quantityAddrs_double.push_back(data.getAddr<double>(quantityNames[i]));
+		}
+	} else {
+		for (unsigned int i = 1; i < quantityNames.size(); ++i) {
+			quantityAddrs_double.push_back(nullptr);
+		}
+
+	}
+
+	return new antok::user::stefan::functions::CalcCEDARPIDOneL(
+	        possible_const_double[0].second,
+	        possible_const_double[1].second,
+	        new double(),
+	        possible_const_double[2].second,
+	        possible_const_double[3].second,
+	        new double(),
+	        possible_const_double[4].second,
+	        possible_const_double[5].second,
+	        quantityAddrs_int[0],
+	        quantityAddrs_double[0],
+	        quantityAddrs_double[1],
+	        quantityAddrs_double[2]
 	        );
 }
 

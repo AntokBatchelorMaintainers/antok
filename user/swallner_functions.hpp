@@ -372,6 +372,8 @@ namespace functions{
 		 * 	pion: 1
 		 * 	proton: 2
 		 *
+		 * This method takes into account the likelihood of each CEDAR individually and finally combines both CEDARs.
+		 *
 		 * The Thresholds are given for the difference of the log10 of the likelihood to be a kaon minus the log10 of the likelihood to be a pion
 		 *   - the difference must be larger than the kaon threshold to be identified as a kaon
 		 *   - the difference must be smaller than the pion threshold to be identified as a pion
@@ -478,6 +480,97 @@ namespace functions{
 			}
 
 			return pid;
+		}
+	};
+
+
+	class CalcCEDARPIDOneL: public Function {
+	public:
+
+		/***
+		 * If pid should be determined,
+		 *  noPID: -1
+		 * 	kaon: 0
+		 * 	pion: 1
+		 * 	proton: 2
+		 *
+		 * The Thresholds are given for the difference of the log10 of the likelihood to be a kaon minus the log10 of the likelihood to be a pion
+		 *   - the difference must be larger than the kaon threshold to be identified as a kaon
+		 *   - the difference must be smaller than the pion threshold to be identified as a pion
+		 *
+		 *
+		 */
+
+		enum PIDs {pidNo = -1, pidKaon = 0, pidPion = 1, pidProton = 2};
+		CalcCEDARPIDOneL(double const* L_pion_CEDAR1,
+		            double const* L_kaon_CEDAR1,
+		            double const* L_proton_CEDAR1,
+		            double const* L_pion_CEDAR2,
+		            double const* L_kaon_CEDAR2,
+		            double const* L_proton_CEDAR2,
+		            double const* threshold_kaon_DeltaLogLike,
+		            double const* threshold_pion_DeltaLogLike,
+		            int* CEDARPid,
+		            double* LLdiff_CEDAR1,
+		            double* LLdiff_CEDAR2,
+		            double* LLdiff_CEDARs
+		            ):
+				L_pion_CEDAR1_(*L_pion_CEDAR1),
+				L_kaon_CEDAR1_(*L_kaon_CEDAR1),
+				L_proton_CEDAR1_(*L_proton_CEDAR1),
+				L_pion_CEDAR2_(*L_pion_CEDAR2),
+				L_kaon_CEDAR2_(*L_kaon_CEDAR2),
+				L_proton_CEDAR2_(*L_proton_CEDAR2),
+				threshold_kaon_DeltaLogLike_(*threshold_kaon_DeltaLogLike),
+				threshold_pion_DeltaLogLike_(*threshold_pion_DeltaLogLike),
+				CEDARPid_(*CEDARPid),
+				LLdiff_CEDAR1_( *((LLdiff_CEDAR1)? LLdiff_CEDAR1 : new double())),
+				LLdiff_CEDAR2_( *((LLdiff_CEDAR2)? LLdiff_CEDAR2 : new double())),
+				LLdiff_CEDARs_( *((LLdiff_CEDARs)? LLdiff_CEDARs : new double()))
+		{
+		}
+
+		bool operator()() {
+
+			LLdiff_CEDAR1_ = getLogLikeDiff(L_kaon_CEDAR1_, L_pion_CEDAR1_);
+			LLdiff_CEDAR2_ = getLogLikeDiff(L_kaon_CEDAR2_, L_pion_CEDAR2_);
+			LLdiff_CEDARs_ = getLogLikeDiff(L_kaon_CEDAR2_*L_kaon_CEDAR1_, L_pion_CEDAR2_*L_pion_CEDAR1_);
+
+
+			if      (LLdiff_CEDARs_ > threshold_kaon_DeltaLogLike_ )  CEDARPid_ = pidKaon;
+			else if (LLdiff_CEDARs_ < threshold_pion_DeltaLogLike_ )  CEDARPid_ = pidPion;
+			else                                                      CEDARPid_ = pidNo;
+			return true;
+		}
+
+	protected:
+		double const& L_pion_CEDAR1_;
+		double const& L_kaon_CEDAR1_;
+		double const& L_proton_CEDAR1_;
+		double const& L_pion_CEDAR2_;
+		double const& L_kaon_CEDAR2_;
+		double const& L_proton_CEDAR2_;
+		double const& threshold_kaon_DeltaLogLike_;
+		double const& threshold_pion_DeltaLogLike_;
+		int& CEDARPid_;
+		double& LLdiff_CEDAR1_;
+		double& LLdiff_CEDAR2_;
+		double& LLdiff_CEDARs_;
+
+
+	private:
+
+		double getLogLikeDiff(const double L_kaon, const double L_pion) {
+			double LogLikeDiff = std::numeric_limits<double>::quiet_NaN();
+			if(L_kaon <= 0.0 and L_pion > 0.0){
+				LogLikeDiff = -15.0;
+			} else if (L_pion <= 0.0 and L_kaon > 0.0){
+				LogLikeDiff = 15.0;
+			} else if (L_kaon > 0.0 and L_pion > 0.0) {
+				LogLikeDiff = log10(L_kaon) - log10(L_pion);
+			}
+
+			return LogLikeDiff;
 		}
 	};
 }
