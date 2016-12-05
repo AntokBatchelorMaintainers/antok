@@ -716,7 +716,7 @@ bool antok::Initializer::initializePlotter() {
 		}
 		std::string plotName = antok::YAMLUtils::getString(plot["Name"]);
 
-        if( plotName.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_ ") != std::string::npos )
+        if( plotName.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_ ") != std::string::npos )
         {
             std::cerr<<"Invalid character in name for \"Plot\" \""<<plotName<<std::endl;
             return false;
