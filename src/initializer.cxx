@@ -716,6 +716,11 @@ bool antok::Initializer::initializePlotter() {
 		}
 		std::string plotName = antok::YAMLUtils::getString(plot["Name"]);
 
+        if( plotName.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_ ") != std::string::npos )
+        {
+            std::cerr<<"Invalid character in name for \"Plot\" \""<<plotName<<"\"."<<std::endl;
+            return false;
+        }
 		if((not((hasNodeKey(plot, "Variable") and hasNodeKey(plot, "LowerBound") and hasNodeKey(plot, "UpperBound")) or
 		       (hasNodeKey(plot, "Variables") and hasNodeKey(plot, "LowerBounds") and hasNodeKey(plot, "UpperBounds")))) or
 			not hasNodeKey(plot, "NBins"))
