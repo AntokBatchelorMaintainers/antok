@@ -39,6 +39,7 @@ namespace antok {
 
 	namespace cuts {
 
+		template< typename T>
 		class RangeCut : public Cut {
 
 		  public:
@@ -47,13 +48,13 @@ namespace antok {
 			         const std::string& longname,
 			         const std::string& abbreviation,
 			         bool* outAddr,
-			         double* lowerBoundAddr,
-			         double* upperBoundAddr,
-			         double* valueAddr,
+			         T* lowerBoundOrCentralValueAddr,
+			         T* upperBoundOrRangeAddr,
+			         T* valueAddr,
 			         int mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
-				  _lowerBoundAddr(lowerBoundAddr),
-				  _upperBoundAddr(upperBoundAddr),
+				  _lowerBoundOrCentralValueAddr(lowerBoundOrCentralValueAddr),
+				  _upperBoundOrRangeAddr(upperBoundOrRangeAddr),
 				  _valueAddr(valueAddr),
 				  _mode(mode) { }
 
@@ -62,27 +63,37 @@ namespace antok {
 				{
 					case 0:
 						// range exclusive
-						(*_outAddr) = ((*_valueAddr) > (*_lowerBoundAddr)) and ((*_valueAddr) < (*_upperBoundAddr));
+						(*_outAddr) = ((*_valueAddr) > (*_lowerBoundOrCentralValueAddr)) and ((*_valueAddr) < (*_upperBoundOrRangeAddr));
 						return true;
 					case 1:
 						// range inclusive
-						(*_outAddr) = ((*_valueAddr) >= (*_lowerBoundAddr)) and ((*_valueAddr) <= (*_upperBoundAddr));
+						(*_outAddr) = ((*_valueAddr) >= (*_lowerBoundOrCentralValueAddr)) and ((*_valueAddr) <= (*_upperBoundOrRangeAddr));
 						return true;
 					case 2:
 						// range open low exclusive
-						(*_outAddr) = (*_valueAddr) < (*_upperBoundAddr);
+						(*_outAddr) = (*_valueAddr) < (*_upperBoundOrRangeAddr);
 						return true;
 					case 3:
 						// range open low inclusive
-						(*_outAddr) = (*_valueAddr) <= (*_upperBoundAddr);
+						(*_outAddr) = (*_valueAddr) <= (*_upperBoundOrRangeAddr);
 						return true;
 					case 4:
 						// range open high exclusive
-						(*_outAddr) = (*_valueAddr) > (*_lowerBoundAddr);
+						(*_outAddr) = (*_valueAddr) > (*_lowerBoundOrCentralValueAddr);
 						return true;
 					case 5:
 						// range open high inclusive
-						(*_outAddr) = (*_valueAddr) >= (*_lowerBoundAddr);
+						(*_outAddr) = (*_valueAddr) >= (*_lowerBoundOrCentralValueAddr);
+						return true;
+					case 6:
+						// central value and range exclusive
+						(*_outAddr) = ((*_valueAddr) > (*_lowerBoundOrCentralValueAddr - *_upperBoundOrRangeAddr)) and
+						              ((*_valueAddr) < (*_lowerBoundOrCentralValueAddr + *_upperBoundOrRangeAddr));
+						return true;
+					case 7:
+						// central value and range inclusive
+						(*_outAddr) = ((*_valueAddr) >= (*_lowerBoundOrCentralValueAddr - *_upperBoundOrRangeAddr)) and
+						              ((*_valueAddr) <= (*_lowerBoundOrCentralValueAddr + *_upperBoundOrRangeAddr));
 						return true;
 				}
 				return false;
@@ -93,16 +104,16 @@ namespace antok {
 				if(not rhs) {
 					return false;
 				}
-				if((this->_lowerBoundAddr and not rhs->_lowerBoundAddr) or (not this->_lowerBoundAddr and rhs->_lowerBoundAddr)) {
+				if((this->_lowerBoundOrCentralValueAddr and not rhs->_lowerBoundOrCentralValueAddr) or (not this->_lowerBoundOrCentralValueAddr and rhs->_lowerBoundOrCentralValueAddr)) {
 					return false;
 				}
-				if((this->_lowerBoundAddr and rhs->_lowerBoundAddr) and (*this->_lowerBoundAddr != *rhs->_lowerBoundAddr)) {
+				if((this->_lowerBoundOrCentralValueAddr and rhs->_lowerBoundOrCentralValueAddr) and (*this->_lowerBoundOrCentralValueAddr != *rhs->_lowerBoundOrCentralValueAddr)) {
 					return false;
 				}
-				if((this->_upperBoundAddr and not rhs->_upperBoundAddr) or (not this->_upperBoundAddr and rhs->_upperBoundAddr)) {
+				if((this->_upperBoundOrRangeAddr and not rhs->_upperBoundOrRangeAddr) or (not this->_upperBoundOrRangeAddr and rhs->_upperBoundOrRangeAddr)) {
 					return false;
 				}
-				if((this->_upperBoundAddr and rhs->_upperBoundAddr) and (*this->_upperBoundAddr != *rhs->_upperBoundAddr)) {
+				if((this->_upperBoundOrRangeAddr and rhs->_upperBoundOrRangeAddr) and (*this->_upperBoundOrRangeAddr != *rhs->_upperBoundOrRangeAddr)) {
 					return false;
 				}
 				return (*this->_valueAddr == *rhs->_valueAddr) and
@@ -111,9 +122,9 @@ namespace antok {
 
 		  private:
 
-			double* _lowerBoundAddr;
-			double* _upperBoundAddr;
-			double* _valueAddr;
+			T* _lowerBoundOrCentralValueAddr;
+			T* _upperBoundOrRangeAddr;
+			T* _valueAddr;
 			int _mode;
 
 		};
@@ -343,7 +354,7 @@ namespace antok {
 					return false;
 				}
 				for(unsigned int i = 0; i < this->_cuts.size(); ++i) {
-					if(not (this->_cuts[i] == rhs->_cuts[i])) {
+					if(not ( *(this->_cuts[i]) == *(rhs->_cuts[i]) )) {
 						return false;
 					}
 				}

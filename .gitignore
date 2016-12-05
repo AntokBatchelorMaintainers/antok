@@ -7,3 +7,6 @@
 *.d
 *.so
 *.png
+.cproject
+.pydevproject
+.settings

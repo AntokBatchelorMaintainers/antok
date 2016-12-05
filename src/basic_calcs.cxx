@@ -7,26 +7,27 @@
 
 #include<constants.h>
 
-TLorentzVector antok::getBeamEnergy(TVector3 p3_beam, const TLorentzVector& pX) {
+TLorentzVector antok::getBeamEnergy(TVector3 p3_beam, const TLorentzVector& pX, const double mass_beam) {
 
-	const double& PION_MASS = antok::Constants::chargedPionMass();
 	const double& PROTON_MASS = antok::Constants::protonMass();
 
-	TVector3 p3_Tot(pX.Vect());
-	double theta = p3_Tot.Angle(p3_beam);
-	double E_tot = pX.E();
-	double p3_Tot_Mag = p3_Tot.Mag();
-	double a0 = (PION_MASS * PION_MASS) * p3_Tot_Mag * TMath::Cos(theta);
-	double a1 = (PROTON_MASS * E_tot) - 0.5 * (pX.M2() + (PION_MASS * PION_MASS));
-	double a2 = PROTON_MASS - E_tot + (p3_Tot_Mag * TMath::Cos(theta));
-	double E_beam = (a1/(2*a2)) * (1 + std::sqrt(1 + ((2*a2*a0)/(a1*a1))));
-	double p_beam = std::sqrt((E_beam * E_beam) - (PION_MASS * PION_MASS));
+	const TVector3 p3_Tot(pX.Vect());
+	const double E_X = pX.E();
+	const double theta = p3_Tot.Angle(p3_beam);
+	const double p3_Tot_Mag = p3_Tot.Mag();
+	const double p3_cosTheta = p3_Tot_Mag * TMath::Cos(theta);
+	const double a0 = (mass_beam * mass_beam) * p3_cosTheta;
+	const double a1 = (PROTON_MASS * E_X) - 0.5 * (pX.M2() + (mass_beam * mass_beam));
+	const double a2 = PROTON_MASS - E_X + (p3_cosTheta);
+	const double E_beam = (a1/(2*a2)) * (1 + std::sqrt(1 + ((2*a2*a0)/(a1*a1))));
+	const double p_beam = std::sqrt((E_beam * E_beam) - (mass_beam * mass_beam));
 	p3_beam.SetMag(p_beam);
 	TLorentzVector pBeam;
-	pBeam.SetXYZM(p3_beam.X(), p3_beam.Y(), p3_beam.Z(), PION_MASS);
+	pBeam.SetXYZM(p3_beam.X(), p3_beam.Y(), p3_beam.Z(), mass_beam);
 	return pBeam;
 
 };
+TLorentzVector antok::getBeamEnergy(TVector3 p3_beam, const TLorentzVector& LV_X){ return getBeamEnergy(p3_beam, LV_X, antok::Constants::chargedPionMass()); }
 
 void antok::getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,
                                          double& centerOfMassEnergy,

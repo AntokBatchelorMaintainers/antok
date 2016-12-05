@@ -1,5 +1,6 @@
 
 #include<iostream>
+#include<vector>
 #include<signal.h>
 
 #include <boost/progress.hpp>
@@ -24,25 +25,13 @@ void signal_handler(int signum) {
 	ABORT = true;
 }
 
-void treereader(char* infilename=0, char* outfilename=0, std::string configfilename = "../config/default.yaml") {
+int treereader(std::vector<const char*> infilenames, char* outfilename=0, std::string configfilename = "../config/default.yaml") {
 
 	new TApplication("app", 0, 0);
 
 	gStyle->SetPalette(1);
 	gStyle->SetCanvasColor(10);
 	gStyle->SetPadColor(10);
-
-	TFile* infile;
-	if(infilename != 0) {
-		infile = TFile::Open(infilename, "READ");
-	} else {
-		infile = TFile::Open("/afs/cern.ch/user/k/kbicker/w0/analysis/phast/5Pi_fhaasUE_10chunks.root", "READ");
-// 		infile = TFile::Open("/afs/cern.ch/user/k/kbicker/scratch0/prefiltering_run1_merged/files_H_2008_26.root");
-	}
-	if(infile == 0) {
-		std::cerr<<"Could not open input file. Aborting..."<<std::endl;
-		return;
-	}
 
 	TFile* outfile;
 	if(outfilename != 0) {
@@ -51,11 +40,10 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 		outfile = TFile::Open("out_tree.root", "RECREATE");
 	}
 	if(outfile == 0) {
-		return;
+		return 1;
 	}
 
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
-	assert(objectManager->setInFile(infile));
 	assert(objectManager->setOutFile(outfile));
 
 	antok::Initializer* initializer = antok::Initializer::instance();
@@ -64,38 +52,74 @@ void treereader(char* infilename=0, char* outfilename=0, std::string configfilen
 		exit(1);
 	}
 
-	if(not initializer->initAll()) {
-		std::cerr<<"Error while initializing. Aborting..."<<std::endl;
-		exit(1);
-	}
-	TTree* inTree = objectManager->getInTree();
+	for(std::vector<const char*>::const_iterator infilename = infilenames.begin(); infilename != infilenames.end(); ++infilename ){
+		if(ABORT) break;
 
-	boost::progress_display* progressIndicator = new boost::progress_display(inTree->GetEntries(), std::cout, "");
-
-	for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
-
-		if(ABORT) {
-			double percent = 100. * ((double)i / (double)(inTree->GetEntries()));
-			std::cout<<"At event "<<i<<" of "<<inTree->GetEntries()<<" ("<<percent<<"%)."<<std::endl;
-			std::cout<<"Caught CTRL-C, aborting..."<<std::endl;
-			break;
+		TFile* infile;
+		if(*infilename != 0) {
+			infile = TFile::Open(*infilename, "READ");
+		} else {
+			infile = TFile::Open("/afs/cern.ch/user/k/kbicker/w0/analysis/phast/5Pi_fhaasUE_10chunks.root", "READ");
+		}
+		if(infile == 0) {
+			std::cerr<<"Could not open input file. Aborting..."<<std::endl;
+			return 1;
 		}
 
-		inTree->GetEntry(i);
 
-		if(not objectManager->magic()) {
-			std::cerr<<"Could not process event "<<i<<". Aborting..."<<std::endl;
-			exit(1);
+		if( infilename == infilenames.begin() ){ // first initialization
+			assert(objectManager->setInFile(infile));
+			if(not initializer->initAll()) {
+				std::cerr<<"Error while initializing. Aborting..."<<std::endl;
+				exit(1);
+			}
+		} else {
+			assert( objectManager->changeInFile(infile) );
+			if(not initializer->updateInput()) {
+				std::cerr<<"Error while initializing input tree. Aborting..."<<std::endl;
+				exit(1);
+			}
 		}
 
-		++(*progressIndicator);
+		std::cout << "Processing input file '" << *infilename << "'" << std::endl;
+		TTree* inTree = objectManager->getInTree();
+
+		boost::progress_display* progressIndicator = new boost::progress_display(inTree->GetEntries(), std::cout, "");
+
+		for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
+
+			if(ABORT) {
+				double percent = 100. * ((double)i / (double)(inTree->GetEntries()));
+				std::cout<<"At event "<<i<<" of "<<inTree->GetEntries()<<" ("<<percent<<"%)."<<std::endl;
+				std::cout<<"Caught CTRL-C, aborting..."<<std::endl;
+				break;
+			}
+
+			inTree->GetEntry(i);
+
+			if(not objectManager->magic()) {
+				std::cerr<<"Could not process event "<<i<<". Aborting..."<<std::endl;
+				exit(1);
+			}
+
+			++(*progressIndicator);
+
+		}
+
 
 	}
+
 
 	if(not objectManager->finish()) {
 		std::cerr<<"Problem when writing TObjects and/or closing output file."<<std::endl;
+		return 1;
 	}
+	return 0;
 
+}
+int treereader(char* infilename=0, char* outfilename=0, std::string configfilename = "../config/default.yaml") {
+	std::vector<const char*> inputfiles(1, infilename);
+	return treereader(inputfiles, outfilename, configfilename);
 }
 
 int main(int argc, char* argv[]) {
@@ -103,12 +127,15 @@ int main(int argc, char* argv[]) {
 	signal(SIGINT, signal_handler);
 
 	if(argc == 1) {
-		treereader();
+		return treereader();
 	} else if (argc == 3) {
-		treereader(argv[1], argv[2]);
+		return treereader(argv[1], argv[2]);
 	} else if (argc == 4) {
-		treereader(argv[1], argv[2], argv[3]);
-	} else {
-		std::cerr<<"Wrong number of arguments, is "<<argc<<", should be in [0, 2, 3]."<<std::endl;
+		return treereader(argv[1], argv[2], argv[3]);
+	} else { // multiple input files
+		std::vector<const char*> input_files( argc - 3 );
+		for( int i = 1; i < argc - 2; ++i ) // loop over input files
+			input_files[i-1] = argv[i];
+		return treereader(input_files, argv[argc-2], argv[argc-1]);
 	}
 }

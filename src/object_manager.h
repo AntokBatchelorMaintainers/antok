@@ -39,6 +39,10 @@ namespace antok {
 
 		bool setInFile(TFile* inFile);
 		bool setOutFile(TFile* outFile);
+		/**
+		 * Close old input file and set the new one
+		 */
+		bool changeInFile(TFile* inFile);
 
 		bool registerObjectToWrite(TDirectory* path, TObject* object);
 		bool registerHistogramToCopy(TH1* histogram,

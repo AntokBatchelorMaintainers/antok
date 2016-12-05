@@ -60,6 +60,8 @@ namespace antok {
 
 		};
 
+
+
 		class Mass: public Function
 		{
 
@@ -92,16 +94,19 @@ namespace antok {
 				: _xAddr(xAddr),
 				  _yAddr(yAddr),
 				  _zAddr(zAddr),
+                  _vec3Addr( nullptr ),
 				  _mAddr(mAddr),
 				  _outAddr(outAddr),
 				  _pType(pType) { }
 
 			GetLorentzVec(TVector3* vec3Addr, double* mAddr, TLorentzVector* outAddr, int pType)
-				: _vec3Addr(vec3Addr),
+				: _xAddr(NULL),
+				  _yAddr(NULL),
+				  _zAddr(NULL),
+				  _vec3Addr(vec3Addr),
 				  _mAddr(mAddr),
 				  _outAddr(outAddr),
-				  _pType(pType) { }
-
+				  _pType(pType) {}
 
 			virtual ~GetLorentzVec() { }
 
@@ -141,17 +146,18 @@ namespace antok {
 
 		  public:
 
-			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr)
+			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr, const double* mass_beam)
 				: _gradxAddr(gradxAddr),
 				  _gradyAddr(gradyAddr),
 				  _xLorentzVec(xLorentzVec),
+				  _mass_beam( mass_beam ),
 				  _outAddr(outAddr) { }
 
 			virtual ~GetBeamLorentzVec() { }
 
 			bool operator() () {
 				TVector3 p3Beam((*_gradxAddr), (*_gradyAddr), 1.);
-				(*_outAddr) = antok::getBeamEnergy(p3Beam, (*_xLorentzVec));
+				(*_outAddr) = antok::getBeamEnergy(p3Beam, (*_xLorentzVec), (*_mass_beam));
 				return true;
 			}
 
@@ -160,6 +166,7 @@ namespace antok {
 			double* _gradxAddr;
 			double* _gradyAddr;
 			TLorentzVector* _xLorentzVec;
+			const double* _mass_beam;
 			TLorentzVector* _outAddr;
 
 		};
@@ -247,28 +254,88 @@ namespace antok {
 
 		};
 
+		template < typename T >
+		class Quotient: public Function
+		{
+
+		  public:
+
+			Quotient(T* inAddr1, T* inAddr2, T* outAddr)
+				: _inAddr1(inAddr1),
+				  _inAddr2(inAddr2),
+				  _outAddr(outAddr) { }
+
+			virtual ~Quotient() { }
+
+			bool operator() () {
+				(*_outAddr) = (*_inAddr1) / (*_inAddr2);
+				return true;
+			}
+
+		  private:
+
+			T* _inAddr1;
+			T* _inAddr2;
+			T* _outAddr;
+
+		};
+
+		template < typename T >
+		class Mul: public Function
+		{
+
+		  public:
+
+			Mul(T* inAddr1, T* inAddr2, T* outAddr)
+				: _inAddr1(inAddr1),
+				  _inAddr2(inAddr2),
+				  _outAddr(outAddr) { }
+
+			virtual ~Mul() { }
+
+			bool operator() () {
+				(*_outAddr) = (*_inAddr1) * (*_inAddr2);
+				return true;
+			}
+
+		  private:
+
+			T* _inAddr1;
+			T* _inAddr2;
+			T* _outAddr;
+
+		};
+
+
+
+		template< typename T>
 		class Abs : public Function
 		{
 
 		  public:
 
-			Abs(double* inAddr, double* outAddr)
+			Abs(T* inAddr, double* outAddr)
 				: _inAddr(inAddr),
 				  _outAddr(outAddr) { }
 
 			virtual ~Abs() { }
 
 			bool operator() () {
-				(*_outAddr) = std::fabs(*_inAddr);
+				(*_outAddr) = __abs(*_inAddr);
 				return true;
 			}
 
 		  private:
 
-			double* _inAddr;
+			T const*const _inAddr;
 			double* _outAddr;
 
+			double __abs (const TVector3 & x){ return x.Mag(); }
+			template <typename Q, class Dummy=int>
+			double __abs(Q const& x){ return std::fabs( x ); }
+
 		};
+
 
 		class Energy : public Function
 		{

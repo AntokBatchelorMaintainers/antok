@@ -9,7 +9,7 @@ double antok::Constants::_charged_kaon_mass = -1.;
 double antok::Constants::_charged_pion_mass = -1.;
 double antok::Constants::_proton_mass = -1.;
 
-unsigned int antok::Constants::_n_particles = -1;
+unsigned int antok::Constants::_n_particles = 0;
 
 bool antok::Constants::_initialized = false;
 
