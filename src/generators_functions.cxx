@@ -228,6 +228,49 @@ antok::Function* antok::generators::generateAbs(const YAML::Node& function, std:
 
 };
 
+antok::Function* antok::generators::generateLog(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	using antok::YAMLUtils::hasNodeKey;
+	std::string typeNameArg1;
+	if( hasNodeKey(function, "Arg") )	typeNameArg1 = data.getType( antok::generators::mergeNameIndex( antok::YAMLUtils::getString( function["Arg"] ), index ) );
+	else {
+		std::cerr<<"Argument \"Arg\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+		return 0;
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Arg", typeNameArg1));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+
+
+	if(not data.insert<double>(quantityName)) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	if      ( typeNameArg1 == "double" )
+		return (new antok::functions::Log<double>(data.getAddr<double>(args[0].first), data.getAddr<double>(quantityName)));
+	else if ( typeNameArg1 == "int" )
+		return (new antok::functions::Log<int>(data.getAddr<int>(args[0].first), data.getAddr<double>(quantityName)));
+	else
+		std::cerr<<"abs is not (yet) implemented for input type '" << typeNameArg1 << "'."<<std::endl;
+	return 0;
+
+};
+
 antok::Function* antok::generators::generateConvertIntToDouble(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 

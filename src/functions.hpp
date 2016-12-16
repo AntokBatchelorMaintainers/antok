@@ -336,6 +336,28 @@ namespace antok {
 
 		};
 
+		template< typename T>
+		class Log : public Function
+		{
+
+		  public:
+
+			Log(T* inAddr, double* outAddr)
+				: _inAddr(inAddr),
+				  _outAddr(outAddr) { }
+
+			virtual ~Log() { }
+
+			bool operator() () {
+				(*_outAddr) = std::log(*_inAddr);
+				return true;
+			}
+
+		  private:
+
+			T const*const _inAddr;
+			double* _outAddr;
+		};
 
 		class Energy : public Function
 		{
