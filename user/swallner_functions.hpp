@@ -253,7 +253,7 @@ namespace functions{
 	};
 
 	/***
-	 * is_kp_pk = -2 -> no decision possible
+	 * is_kp_pk = -1 -> no decision possible
 	 * is_kp_pk = 1  -> no first particle is kaon, second particle is pion
 	 * is_kp_pk = 2  -> no first particle is pion, second particle is kaon
 	 */
@@ -362,6 +362,89 @@ namespace functions{
 
 	};
 
+
+	/***
+	 * is_kp_pk = -1 -> no decision possible
+	 * is_kp_pk = 1  -> no first particle is kaon, second particle is pion
+	 * is_kp_pk = 2  -> no first particle is pion, second particle is kaon
+	 */
+	class DetermineKaonPionLVLikelihood: public Function {
+	public:
+
+	DetermineKaonPionLVLikelihood(TVector3* mom_1, double const* l_pion_1, double const* l_kaon_1, int const* pid_1,
+	                              TVector3* mom_2, double const* l_pion_2, double const* l_kaon_2, int const* pid_2,
+	                              double const* mass_charged_kaon, double const* mass_charged_pion,
+	                              double const* threshold_kpi, double const* threshold_pik,
+	                              TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk, int* pid_kaon, int* pid_pion) :
+			mom_1_(*mom_1),
+			l_pion_1_(*l_pion_1),
+			l_kaon_1_(*l_kaon_1),
+			pid_1_(*pid_1),
+			mom_2_(*mom_2),
+			l_pion_2_(*l_pion_2),
+			l_kaon_2_(*l_kaon_2),
+			pid_2_(*pid_2),
+			mass_charged_kaon_(*mass_charged_kaon),
+			mass_charged_pion_(*mass_charged_pion),
+			threshold_kpi_(*threshold_kpi),
+			threshold_pik_(*threshold_pik),
+			kaon_lv_(*kaon_lv),
+			pion_lv_(*pion_lv),
+			is_kp_pk_(*is_kp_pk),
+			pid_kaon_(*pid_kaon),
+			pid_pion_(*pid_pion){
+	}
+
+
+
+	bool operator()() {
+		is_kp_pk_ = -1;
+		kaon_lv_ = TLorentzVector(-4444.0, -4444.0, -4444.0, -4444.0);
+		pion_lv_ = TLorentzVector(-4444.0, -4444.0, -4444.0, -4444.0);
+
+		const double l_kpi = l_kaon_1_ * l_pion_2_;
+		const double l_pik = l_pion_1_ * l_kaon_2_;
+		const double log_l_ratio_kpi_piK = log(l_kpi / l_pik);
+
+		if (log_l_ratio_kpi_piK > threshold_kpi_) {
+			is_kp_pk_ = 1;
+			kaon_lv_ = TLorentzVector(mom_1_, sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_1_.Mag2()));
+			pion_lv_ = TLorentzVector(mom_2_, sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_2_.Mag2()));
+			pid_kaon_ = pid_1_;
+			pid_pion_ = pid_2_;
+		} else if (log_l_ratio_kpi_piK < threshold_pik_) {
+			is_kp_pk_ = 2;
+			kaon_lv_ = TLorentzVector(mom_2_, sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
+			pion_lv_ = TLorentzVector(mom_1_, sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_1_.Mag2()));
+			pid_kaon_ = pid_2_;
+			pid_pion_ = pid_1_;
+		}
+		return true;
+	}
+
+
+
+	private:
+		TVector3 const& mom_1_;
+		double const& l_pion_1_;
+		double const& l_kaon_1_;
+		int const& pid_1_;
+		TVector3 const& mom_2_;
+		double const& l_pion_2_;
+		double const& l_kaon_2_;
+		int const& pid_2_;
+		double const& mass_charged_kaon_;
+		double const& mass_charged_pion_;
+		double const& threshold_kpi_;
+		double const& threshold_pik_;
+		TLorentzVector& kaon_lv_;
+		TLorentzVector& pion_lv_;
+		int& is_kp_pk_;
+		int& pid_kaon_;
+		int& pid_pion_;
+
+	};
+
 	class CalcCEDARPID: public Function {
 	public:
 
@@ -408,13 +491,13 @@ namespace functions{
 				n_hits_CEDAR1_(*n_hits_CEDAR1),
 				thresholds_kaon_DeltaLogLike_CEDAR1_(thresholds_kaon_DeltaLogLike_CEDAR1),
 				thresholds_pion_DeltaLogLike_CEDAR1_(thresholds_pion_DeltaLogLike_CEDAR1),
+				CEDARPid_CEDAR1_(*CEDARPid_CEDAR1),
 				L_pion_CEDAR2_(*L_pion_CEDAR2),
 				L_kaon_CEDAR2_(*L_kaon_CEDAR2),
 				L_proton_CEDAR2_(*L_proton_CEDAR2),
 				n_hits_CEDAR2_(*n_hits_CEDAR2),
 				thresholds_kaon_DeltaLogLike_CEDAR2_(thresholds_kaon_DeltaLogLike_CEDAR2),
 				thresholds_pion_DeltaLogLike_CEDAR2_(thresholds_pion_DeltaLogLike_CEDAR2),
-				CEDARPid_CEDAR1_(*CEDARPid_CEDAR1),
 				CEDARPid_CEDAR2_(*CEDARPid_CEDAR2),
 				CEDARPid_(*CEDARPid),
 				LLdiff_CEDAR1_( *((LLdiff_CEDAR1)? LLdiff_CEDAR1 : new double())),
