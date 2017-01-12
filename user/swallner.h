@@ -18,7 +18,10 @@ namespace antok {
 		antok::Function* getCalcArmenterosAlpha(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* getCalcRICHPID(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* getDetermineKaonPionLV(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+		antok::Function* getDetermineKaonPionLVLikelihood(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* getCalcCEDARPID(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+		antok::Function* getCalcCEDARPIDMulitL(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+		antok::Function* getCalcCEDARPIDOneL(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 
 		}
 

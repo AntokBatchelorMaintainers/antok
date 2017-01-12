@@ -582,6 +582,8 @@ bool antok::Initializer::initializeEvent() {
 			antok::Function* antokFunctionPtr = 0;
 			if(functionName == "abs") {
 				antokFunctionPtr = antok::generators::generateAbs(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "log") {
+				antokFunctionPtr = antok::generators::generateLog(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "convertIntToDouble") {
 				antokFunctionPtr = antok::generators::generateConvertIntToDouble(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "diff") {
@@ -741,14 +743,13 @@ bool antok::Initializer::initializePlotter() {
 					std::cerr<<"\"Variables\", \"LowerBounds\", \"UpperBounds\" and \"NBins\" all need to be sequences (in \"Plot\" \""<<plotName<<"\")."<<std::endl;
 					return false;
 				}
-				if(plot["Variables"].size() > 2) {
+				if(plot["Variables"].size() > 3) {
 					std::cerr<<"Cannot have \"Plot\" \""<<plotName<<"\" with more than 2 \"Variables\""<<std::endl;
 					return false;
 				}
 				if((plot["Variables"].size() != plot["LowerBounds"].size()) or
 				   (plot["Variables"].size() != plot["UpperBounds"].size()) or
-				   (plot["Variables"].size() != plot["NBins"].size()))
-				{
+				   (plot["Variables"].size() != plot["NBins"].size())) {
 					std::cerr<<"\"Variables\", \"LowerBounds\", \"UpperBounds\" and \"NBins\" need to have the same number of entries (in \"Plot\" \""<<plotName<<"\")."<<std::endl;
 					return false;
 				}
@@ -756,12 +757,14 @@ bool antok::Initializer::initializePlotter() {
 					antokPlot = antok::generators::generate2DPlot(plot, plotOptions);
 				} else if (plot["Variables"].size() == 1) {
 					antokPlot = antok::generators::generate1DPlot(plot, plotOptions);
+				} else if(plot["Variables"].size() == 3) {
+					antokPlot = antok::generators::generate3DPlot(plot, plotOptions);
 				} else {
 					std::cerr<<"Empty \"Variables\" sequence found in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 					return false;
 				}
 			} else {
-				std::cerr<<"\"Variables\" implies 2D plot and needs to be a list (in \"Plot\" \""<<plotName<<"\")."<<std::endl;
+				std::cerr<<"\"Variables\" implies 2D/3D plot and needs to be a list (in \"Plot\" \""<<plotName<<"\")."<<std::endl;
 				return false;
 			}
 		} else if(hasNodeKey(plot, "Variable")) {

@@ -18,6 +18,7 @@ namespace antok {
 		std::string getFunctionArgumentHandlerErrorMsg(std::vector<std::string> quantityNames);
 
 		antok::Function* generateAbs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+		antok::Function* generateLog(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateConvertIntToDouble(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateDiff(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateQuotient(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);

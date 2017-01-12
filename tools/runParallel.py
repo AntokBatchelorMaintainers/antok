@@ -7,7 +7,7 @@ Created on Sat 09 Jan 2016 12:05:35 AM CET
 @author: Stefan Wallner
 '''
 
-program_description = ''' 
+program_description = '''
     <description>
 '''
 
@@ -22,6 +22,7 @@ import multiprocessing
 import tempfile
 import math
 import copy
+import time
 
 # root includes
 
@@ -34,9 +35,9 @@ def getRunNumber(filename):
 	@return: run number, extracted from mDST filename
 	'''
 	runnbr = None;
-	parsed = re.findall("-([0-9]+)-[0-9]-[0-9]\.root", filename) 
+	parsed = re.findall("-([0-9]+)-[0-9]-[0-9]\.root", filename)
 	if(parsed):
-		runnbr = int( parsed[0]) 
+		runnbr = int( parsed[0])
 	else:
 		msg = "Can not get run number from file name '{0}'".format( filename )
 		print msg
@@ -48,7 +49,7 @@ def getSlot(filename):
 	@return: run number, extracted from mDST filename
 	'''
 	slot = None;
-	parsed = re.findall("-[0-9]+-([0-9]-[0-9])\.root", filename) 
+	parsed = re.findall("-[0-9]+-([0-9]-[0-9])\.root", filename)
 	if(parsed):
 		slot = parsed[0]
 	else:
@@ -60,16 +61,16 @@ def getSlot(filename):
 
 
 def mergeRootFiles(output_file, input_files, merge_trees, parallel = True, n_jobs_max = None):
-	
+
 	n_files = len( input_files )
 
 	n_jobs = max( 1, min( n_files/2, int(math.sqrt(n_files)), multiprocessing.cpu_count() ) ) if parallel else 1
 	if n_jobs_max:
 		n_jobs = min(n_jobs, n_jobs_max)
-	
+
 	q = n_files / n_jobs;
 	r = n_files % n_jobs;
-	
+
 	output_files = []
 	input_subfiles_list = []
 	processes = []
@@ -79,7 +80,7 @@ def mergeRootFiles(output_file, input_files, merge_trees, parallel = True, n_job
 		output_files.append( output_subfile );
 		input_subfiles_list.append( input_subfiles );
 		processes.append( sp.Popen("hadd {opts} {outfile} {infiles} ".format( opts = "" if merge_trees else "-T",
-		                                                                      outfile = output_subfile, 
+		                                                                      outfile = output_subfile,
 		                                                                      infiles = "'" + "' '".join(input_subfiles) + "'" )
 		                           ,shell=True, stdout=sp.PIPE, stderr = sp.STDOUT  )
 		                 )
@@ -95,15 +96,15 @@ def mergeRootFiles(output_file, input_files, merge_trees, parallel = True, n_job
 			for l in pout.split('\n'):
 				print '\t', l
 			ok = False;
-			
+
 	if ok and n_jobs > 1:
 		# merge subfiles
 		ok = mergeRootFiles(output_file, output_files, merge_trees, parallel = False)
-		
+
 	if n_jobs > 1: # delete temporary files
 		for f in output_files:
 			os.remove(f)
-	
+
 	return ok
 
 def pfunc(args):
@@ -113,27 +114,27 @@ def mergeSubfolders(output_files, merge_trees):
 	subfolders = defaultdict(list)
 	for f in output_files:
 		subfolders[ os.path.basename(os.path.dirname(f))].append( f )
-		
-		
+
+
 	output_files = []
-	
+
 
 	n_cores = multiprocessing.cpu_count()
 	n_subfolders = len( subfolders.keys() )
 	n_parallel_subfolders = max(1, n_cores/6)
 	pool = multiprocessing.Pool( n_parallel_subfolders )
-	
+
 	args = []
 	for subname, subfiles in subfolders.iteritems():
 		outfile = os.path.join( os.path.dirname( subfiles[0] ), "{0}.root".format(subname) )
 		output_files.append( outfile )
-		args.append( {'output_file': outfile, "input_files": subfiles, "merge_trees": merge_trees, 
+		args.append( {'output_file': outfile, "input_files": subfiles, "merge_trees": merge_trees,
 		              "n_jobs_max": max( 1, multiprocessing.cpu_count() / n_parallel_subfolders  )} )
 
 	oks = pool.map(pfunc, iterable = args)
 	ok = not (False in oks );
-		
-	
+
+
 	return output_files if ok else [];
 
 
@@ -151,9 +152,9 @@ def filterExcludes( fileslist, excludes_file):
 					line = line.rstrip('\n').strip().strip("'").strip('"')
 					if line:
 						exclude_filelist.append( line );
-			
+
 			print exclude_filelist
-				
+
 			for filename in fileslist:
 				filename_real = os.path.realpath( os.path.abspath(filename) )
 				print filename_real
@@ -166,8 +167,8 @@ def filterExcludes( fileslist, excludes_file):
 	else:
 		out_fileslist = copy.copy( fileslist )
 	return out_fileslist;
-   
-  
+
+
 def splitFilesToJobs(all_files, n_files_per_job, doNotMixRuns):
 	# group input files to jobs
 	# do no nix files from different folders in one job
@@ -175,7 +176,7 @@ def splitFilesToJobs(all_files, n_files_per_job, doNotMixRuns):
 	for arg in all_files:
 		dir = os.path.dirname( os.path.realpath(arg))
 		grouped_inputfiles[dir].append( arg )
-		
+
 	if doNotMixRuns:
 		grouped_inputfiles_byrun = defaultdict(list)
 		for g, files in grouped_inputfiles.iteritems():
@@ -213,37 +214,41 @@ def main():
 		print optparser.usage
 		exit( 100 );
 
-	if not os.path.isfile( options.configfile ): 
+	if not os.path.isfile( options.configfile ):
 		print "Config file '{0}' not found!".format(options.configfile)
 		print optparser.usage
 		exit( 100 );
 
 
-	if options.outfile and os.path.isfile( options.outfile ): 
+	if options.outfile and os.path.isfile( options.outfile ):
 		print "Output file '{0}' exists found!".format(options.outfile)
 		print optparser.usage
 		exit( 100 );
 	options.outfile = os.path.realpath(options.outfile)
-	
-	args = filterExcludes( args, options.excludes_file)
-		
-	options.n_files_job = min( int(options.n_files_job), len(args))
-	
-	files = splitFilesToJobs(args, options.n_files_job, doNotMixRuns = options.not_mix_runs) 
 
-	antok = os.path.join( os.path.dirname( __file__), "treereader" )
-	handler = batchelor.BatchelorHandler(configfile="~/.batchelorrc", 
-	                                     systemOverride="local" if options.local else "", 
+	args = filterExcludes( args, options.excludes_file)
+
+	options.n_files_job = min( int(options.n_files_job), len(args))
+
+	files = splitFilesToJobs(args, options.n_files_job, doNotMixRuns = options.not_mix_runs)
+
+	antok = os.path.join(os.path.dirname(os.path.realpath(__file__)), "treereader" )
+	handler = batchelor.BatchelorHandler(configfile="~/.batchelorrc",
+	                                     systemOverride="local" if options.local else "",
 	                                     memory='2.6G',
 	                                     n_threads=3)
 
 
 	log_files = [];
 	out_files = [];
-	
+
 	log_dir = os.path.join( os.path.dirname(options.outfile), 'log' )
 	if not os.path.isdir(log_dir):
 		os.makedirs( log_dir )
+		if not options.local:
+			# wait 3 seconds such that the log folder is appearing 
+			# I know it is stupid!
+			time.sleep(3) 
 
 
 	# make my own copy of the config file and use it to be protected from changes during the execution
@@ -265,7 +270,7 @@ def main():
 			out_folder = os.path.join( out_folder, os.path.basename( os.path.dirname( in_files[0] ) ) );
 		if not os.path.isdir(out_folder):
 			os.makedirs( out_folder );
-		out_file = os.path.join( out_folder, "mDST-{0}-{1}-{2}.root.{3:03d}".format(run_first_file, run_last_file, slot, i_job) ) 
+		out_file = os.path.join( out_folder, "mDST-{0}-{1}-{2}.root.{3:03d}".format(run_first_file, run_last_file, slot, i_job) )
 		out_files.append( out_file );
 
 		cmd = "echo \"Start: $(date)\""
@@ -276,17 +281,21 @@ def main():
 				handler.shutdown();
 				exit(1)
 			in_filenames += " '{0}'".format( in_file );
-		cmd += " && {antok} {in_files} {out_file} {config_file}".format( antok = antok, 
-		                                                                out_file = out_file, 
-    	                                                                in_files = in_filenames, 
-    	                                                                config_file = options.configfile ) 
-        
-        
-        
+		cmd += " && {antok} {in_files} {out_file} {config_file}".format( antok = antok,
+		                                                                out_file = out_file,
+    	                                                                in_files = in_filenames,
+    	                                                                config_file = options.configfile )
+
+
+
 		cmd += " && echo \"STATUS: OK\" || echo \"STATUS: ERROR\""
 
 		log_file = os.path.join( log_dir , os.path.basename(out_file));
 		log_files.append( log_file )
+		if os.path.isfile(log_file):
+			with open(log_file + '.old', 'a') as fout:
+				with open(log_file) as fin:
+					fout.write(fin.read())
 
 		if os.path.isfile( out_file ) :
 			print "File '{0}' already exists!".format(out_file);
@@ -318,17 +327,32 @@ def main():
 
 	errors = [];
 	for l in log_files:
-		with open(l) as fin:
-			log_content = fin.read()
-			if not "STATUS: OK\n" in log_content:
-				errors.append(l)
-				print "***************************************************************************"
-				print "ERROR in this process: "
-				print "***************************************************************************"
-				print log_content
-				print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+		for i in xrange(10):
+			if os.path.exists(l):
+				break
+			time.sleep(1)
+		if os.path.exists(l):
+			with open(l) as fin:
+				log_content = fin.read()
+				if not "STATUS: OK\n" in log_content:
+					errors.append(l)
+					print "***************************************************************************"
+					print "ERROR in this process: "
+					print "***************************************************************************"
+					print log_content
+					print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+		else:
+			errors.append(l)
+			print "***************************************************************************"
+			print "ERROR in this process: "
+			print "***************************************************************************"
+			print "Can not open logfile"
+			print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+			
 
 	if options.outfile:
+		if errors:
+			options.outfile = os.path.join(os.path.dirname(options.outfile), 'error_{0}'.format(os.path.basename(options.outfile)))
 		print "==========================================================================="
 		print "========================  MERGING  ========================================"
 		print "==========================================================================="
@@ -338,18 +362,18 @@ def main():
 			mergeRootFiles(options.outfile, files_to_merge, merge_trees = options.merge_trees, parallel = False)
 		else:
 			mergeRootFiles(options.outfile, out_files, merge_trees = options.merge_trees)
-			
-		
-			
-		
+
+
+
+
 #	 if options.clear and not errors:
 #		 sp.check_call( "rm -f {0}".format(" ".join(out_files)), shell=True )
-		
+
 	for error in errors:
 		print "***************************************************************************"
 		print "ERROR in logfile '{0}' ".format(error)
 		print "***************************************************************************"
-		
+
 
 
 	exit(0)
