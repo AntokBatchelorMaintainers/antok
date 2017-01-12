@@ -23,7 +23,8 @@ namespace antok {
 		TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
 		             TH1* hist_template,
 		             T* data1,
-		             T* data2 = 0);
+		             T* data2 = 0,
+		             T* data3 = 0);
 
 		TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
 		             TH1* hist_template,
@@ -65,6 +66,7 @@ namespace antok {
 
 		T* _data1;
 		T* _data2;
+		T* _data3;
 
 	};
 
@@ -102,14 +104,16 @@ template<typename T>
 antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
                                      TH1* histTemplate,
                                      T* data1,
-                                     T* data2)
+                                     T* data2,
+                                     T* data3)
 	: Plot(),
 	  _vecDataVector1(0),
 	  _vecDataVector2(0),
 	  _multipleVecDataVectors1(0),
 	  _multipleVecDataVectors2(0),
 	  _data1(data1),
-	  _data2(data2)
+	  _data2(data2),
+	  _data3(data3)
 {
 
 	assert(histTemplate != 0);
@@ -132,7 +136,8 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
 	  _multipleVecDataVectors1(0),
 	  _multipleVecDataVectors2(0),
 	  _data1(0),
-	  _data2(0)
+	  _data2(0),
+	  _data3(0)
 {
 
 	assert(histTemplate != 0);
@@ -159,7 +164,8 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
 	  _multipleVecDataVectors1(0),
 	  _multipleVecDataVectors2(0),
 	  _data1(0),
-	  _data2(0)
+	  _data2(0),
+	  _data3(0)
 {
 
 	assert(histTemplate != 0);
@@ -186,7 +192,8 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
 	  _multipleVecDataVectors1(vecData1),
 	  _multipleVecDataVectors2(vecData2),
 	  _data1(0),
-	  _data2(0)
+	  _data2(0),
+	  _data3(0)
 {
 
 	assert(histTemplate != 0);
@@ -211,8 +218,10 @@ void antok::TemplatePlot<T>::fill(long cutPattern) {
 				case 0: // Pointers to single variables
 					if(_data2 == 0) {
 						hist->Fill(*_data1);
-					} else {
+					} else if(_data3 == 0){
 						hist->Fill(*_data1, *_data2);
+					} else{
+						static_cast<TH3D*>(hist)->Fill(*_data1, *_data2, *_data3);
 					}
 					break;
 				case 1: // Multiple values, 1 variable
