@@ -198,6 +198,7 @@ def splitFilesToJobs(all_files, n_files_per_job, doNotMixRuns):
 
 def main():
 	optparser = OptionParser( usage="Usage:%prog <args> [<options>]", description = program_description );
+	optparser.add_option('-b', '--batchelorconfigfile', dest='batchelorconfigfile', action='store', type='str', default="", help="Config file for batchelor.")
 	optparser.add_option('-c', '--configfile', dest='configfile', action='store', type='str', default="", help="Config file for antok.")
 	optparser.add_option('-o', '--outfile', dest='outfile', action='store', type='str', default="hist.root", help="Merge files to the given output file.")
 	optparser.add_option('-t', '--merge-trees', dest='merge_trees', action='store_true', help="Merge not only histograms but also all trees in one file.")
@@ -219,12 +220,16 @@ def main():
 		print optparser.usage
 		exit( 100 );
 
-
 	if options.outfile and os.path.isfile( options.outfile ):
 		print "Output file '{0}' exists found!".format(options.outfile)
 		print optparser.usage
 		exit( 100 );
 	options.outfile = os.path.realpath(options.outfile)
+
+	if options.batchelorconfigfile and not os.path.isfile( options.batchelorconfigfile ):
+		print "Batchelor configfile '{0}' not found!".format(options.batchelorconfigfile)
+		print optparser.usage
+		exit( 100 );
 
 	args = filterExcludes( args, options.excludes_file)
 
@@ -232,12 +237,15 @@ def main():
 
 	files = splitFilesToJobs(args, options.n_files_job, doNotMixRuns = options.not_mix_runs)
 
-	antok = os.path.join(os.path.dirname(os.path.realpath(__file__)), "treereader" )
-	handler = batchelor.BatchelorHandler(configfile="~/.batchelorrc",
-	                                     systemOverride="local" if options.local else "",
-	                                     memory='2.6G',
-	                                     n_threads=3)
+	defaultBatchelorConfig = os.path.expanduser( "~/.batchelorrc");
+	if not os.path.isfile( defaultBatchelorConfig ):
+		print "Could not find default config file '{0}' for batchelor!".format(defaultBatchelorConfig)
+		print optparser.usage
+		exit( 100 );
 
+	antok = os.path.join(os.path.dirname(os.path.realpath(__file__)), "treereader" )
+	handler = batchelor.BatchelorHandler(configfile=defaultBatchelorConfig if not options.batchelorconfigfile else options.batchelorconfigfile,
+	                                     systemOverride="local" if options.local else "")
 
 	log_files = [];
 	out_files = [];
