@@ -238,7 +238,6 @@ def main():
 	files = splitFilesToJobs(args, options.n_files_job, doNotMixRuns = options.not_mix_runs)
 
 	defaultBatchelorConfig = os.path.expanduser( "~/.batchelorrc");
-	configfile=defaultBatchelorConfig if not options.batchelorconfigfile else options.batchelorconfigfile
 	if not os.path.isfile( defaultBatchelorConfig ):
 		print "Could not find default config file '{0}' for batchelor!".format(defaultBatchelorConfig)
 		print optparser.usage
