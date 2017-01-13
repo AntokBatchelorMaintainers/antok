@@ -67,7 +67,7 @@ namespace {
 			return 0;
 		}
 		double* cutY = antok::YAMLUtils::getAddress<double>(cut["cutY"]);
-		if(cutX == 0) {
+		if(cutY == 0) {
 			std::cerr<<"Problem processing \"cutY\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
 			return 0;
 		}
@@ -77,7 +77,7 @@ namespace {
 			return 0;
 		}
 		double* Y = antok::YAMLUtils::getAddress<double>(cut["Y"]);
-		if(X == 0) {
+		if(Y == 0) {
 			std::cerr<<"Problem processing \"Y\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
 			return 0;
 		}
