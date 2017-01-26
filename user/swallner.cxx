@@ -15,63 +15,6 @@ namespace {
 	std::vector<double> getCalcCEDARPIDGetThresholds(const char* name, const YAML::Node& function);
 }
 
-namespace antok{
-namespace user{
-namespace stefan{
-
-/**
- * Sets the data pointers in the args vector to the address of the variable or to an constant if no variable name, but a number is given
- * @param args Vector of pairs where first: node/variable name, second: data pointet (will be set in this function)
- * @param function: Node of the function
- * @param index: Index of the function call (0 if this arguments have no index)
- * @return true if everything was ok
- */
-template< typename T>
-bool functionrgumentHandlerPossibleConst( std::vector< std::pair< std::string, T* > >& args,
-		                                  const YAML::Node& function,
-		                                  int index) {
-
-	using antok::YAMLUtils::hasNodeKey;
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-
-	std::vector< std::pair< std::string, std::string > > given_args;
-	std::map< int, int > map_args_given_args;
-
-	// find all arguments which are given in the function node
-	for( size_t i = 0; i < args.size(); ++i ){
-		auto& arg = args[i];
-		if( hasNodeKey(function, arg.first) ){
-			const YAML::Node& node = function[arg.first];
-			try {
-				const T val = node.as<T>();
-				arg.second = new T(val);
-			} catch (const YAML::TypedBadConversion<T>& e) { // test if variable is a variable name
-				std::string variable_name = antok::YAMLUtils::getString( node );
-				if(variable_name == "") {
-					std::cerr<<"Entry has to be either a variable name or a convertible type."<<std::endl;
-					return false;
-				}
-				variable_name = antok::generators::mergeNameIndex(variable_name, index);
-				arg.second = data.getAddr<T>(variable_name);
-				if( arg.second == nullptr ){
-					std::cerr<<"Can not find variable << \"" << variable_name << "\" (required for function \""<<function["Name"]<<"\")."<<std::endl;
-					return false;
-				}
-			}
-
-		} else {
-			std::cerr<<"Argument \""<<arg.first<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
-			return false;
-		}
-	}
-
-
-	return true;
-}
-
-}
-}
-}
 
 antok::Function* antok::user::stefan::getCalcLTProjections(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
 	if(quantityNames.size() != 2) {
@@ -187,7 +130,7 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 		possible_const.push_back(std::pair<std::string, double* >("MomMuonMin", nullptr));
 		possible_const.push_back(std::pair<std::string, double* >("MomMuonMax", nullptr));
 
-		if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0 ) ){
+		if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0 ) ){
 			std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 			return 0;
 		}
@@ -203,7 +146,7 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 		return 0;
 	}
 
-	if(not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const_per_index, function, index ) ){
+	if(not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const_per_index, function, index ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -308,11 +251,11 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 		return 0;
 	}
 
-	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
+	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
-	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0) ){
+	if( not antok::generators::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -381,11 +324,11 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLVLikelihood(const YAM
 		return 0;
 	}
 
-	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
+	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
-	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0) ){
+	if( not antok::generators::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -455,12 +398,12 @@ antok::Function* antok::user::stefan::getCalcCEDARPIDMulitL(const YAML::Node& fu
 	possible_const_int.push_back(std::pair<std::string, int* >("NHitsCedar1", nullptr));
 	possible_const_int.push_back(std::pair<std::string, int* >("NHitsCedar2", nullptr));
 
-	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
+	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
-	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
+	if( not antok::generators::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -545,12 +488,12 @@ antok::Function* antok::user::stefan::getCalcCEDARPIDOneL(const YAML::Node& func
 	possible_const_double.push_back(std::pair<std::string, double* >("ThresholdKaonDeltaLogLike", nullptr));
 	possible_const_double.push_back(std::pair<std::string, double* >("ThresholdPionDeltaLogLike", nullptr));
 
-	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
+	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
-	if( not antok::user::stefan::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
+	if( not antok::generators::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
