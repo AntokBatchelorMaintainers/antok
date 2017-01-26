@@ -7,7 +7,10 @@ class TVector3;
 
 namespace antok {
 
-	TLorentzVector getBeamEnergy(TVector3 p3_beam, const TLorentzVector& LV_X, const double beam_mass);
+	TLorentzVector getBeamEnergy(TVector3 p3_beam, const TLorentzVector& LV_X, const double beam_mass, const double target_mass);
+	/***
+	 * Uses pion mass for the beam and proton mass for the target.
+	 */
 	TLorentzVector getBeamEnergy(TVector3 p3_beam, const TLorentzVector& LV_X);
 
 	void getBoostToCenterOfMassSystem(const TLorentzVector& pBeam,

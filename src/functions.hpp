@@ -7,6 +7,7 @@
 #include<TLorentzVector.h>
 
 #include<basic_calcs.h>
+#include<constants.h>
 
 namespace antok {
 
@@ -146,28 +147,39 @@ namespace antok {
 
 		  public:
 
-			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr, const double* mass_beam)
-				: _gradxAddr(gradxAddr),
-				  _gradyAddr(gradyAddr),
-				  _xLorentzVec(xLorentzVec),
-				  _mass_beam( mass_beam ),
-				  _outAddr(outAddr) { }
+			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr, const double* mass_beam, const double* massTarget)
+				: _gradx(*gradxAddr),
+				  _grady(*gradyAddr),
+				  _xLorentzVec(*xLorentzVec),
+				  _massBeamAddr( mass_beam ),
+				  _out(*outAddr),
+				  _massTargetAddr(massTarget){
+				if(_massTargetAddr == nullptr){
+					std::cout << "INFO: No target mass is given to reconstruct the beam energy -> using proton mass" << std::endl;
+					_massTargetAddr = &antok::Constants::protonMass();
+				}
+				if(_massBeamAddr== nullptr){
+					std::cout << "INFO: No beam mass is given to reconstruct the beam energy -> using pion mass" << std::endl;
+					_massBeamAddr= &antok::Constants::chargedPionMass();
+				}
+			}
 
 			virtual ~GetBeamLorentzVec() { }
 
 			bool operator() () {
-				TVector3 p3Beam((*_gradxAddr), (*_gradyAddr), 1.);
-				(*_outAddr) = antok::getBeamEnergy(p3Beam, (*_xLorentzVec), (*_mass_beam));
+				TVector3 p3Beam(_gradx, _grady, 1.);
+				_out = antok::getBeamEnergy(p3Beam, _xLorentzVec, (*_massBeamAddr), (*_massTargetAddr));
 				return true;
 			}
 
 		  private:
 
-			double* _gradxAddr;
-			double* _gradyAddr;
-			TLorentzVector* _xLorentzVec;
-			const double* _mass_beam;
-			TLorentzVector* _outAddr;
+			const double& _gradx;
+			const double& _grady;
+			const TLorentzVector& _xLorentzVec;
+			const double* _massBeamAddr;
+			TLorentzVector& _out;
+			const double* _massTargetAddr;
 
 		};
 

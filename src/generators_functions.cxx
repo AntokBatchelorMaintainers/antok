@@ -565,6 +565,7 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
 	std::vector<std::pair<std::string, std::string> > args;
+	std::vector<std::pair<std::string, double*>> possible_const_args;
 
 	args.push_back(std::pair<std::string, std::string>("dX", "double"));
 	args.push_back(std::pair<std::string, std::string>("dY", "double"));
@@ -575,15 +576,26 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 		return 0;
 	}
 
-	const double* beam_mass;
+	const double* beam_mass = nullptr;
+	const double* target_mass = nullptr;
+	if( antok::YAMLUtils::hasNodeKey( function, "BeamMass") )
+		possible_const_args.push_back(std::pair<std::string, double*>("BeamMass", 0));
+	if( antok::YAMLUtils::hasNodeKey( function, "TargetMass") )
+		possible_const_args.push_back(std::pair<std::string, double*>("TargetMass", 0));
+
+	if(not antok::generators::functionrgumentHandlerPossibleConst(possible_const_args, function, 0)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	// keep this order!!!
+	if( antok::YAMLUtils::hasNodeKey( function, "TargetMass") ){
+		target_mass = possible_const_args.back().second;
+		possible_const_args.pop_back();
+	}
 	if( antok::YAMLUtils::hasNodeKey( function, "BeamMass") ){
-		beam_mass = antok::YAMLUtils::getAddress<double>( function["BeamMass"] );
-		if( beam_mass == NULL ){
-			std::cerr << "Variable \"" << antok::YAMLUtils::getString(function["BeamMass"]) << "\" not found for BeamMass in function \"" << quantityName << "\"" << std::endl;
-			return 0;
-		}
-	} else {
-		beam_mass = &antok::Constants::chargedPionMass();
+		beam_mass = possible_const_args.back().second;
+		possible_const_args.pop_back();
 	}
 
 	double* dXaddr = data.getAddr<double>(args[0].first);
@@ -595,7 +607,7 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 		return 0;
 	}
 
-	return (new antok::functions::GetBeamLorentzVec(dXaddr, dYaddr, xLorentzVecAddr, data.getAddr<TLorentzVector>(quantityName), beam_mass));
+	return (new antok::functions::GetBeamLorentzVec(dXaddr, dYaddr, xLorentzVecAddr, data.getAddr<TLorentzVector>(quantityName), beam_mass, target_mass));
 
 };
 
