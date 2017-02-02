@@ -439,12 +439,22 @@ bool antok::Initializer::initializeInput(){
 			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
 	}
 	for(std::map<std::string, std::vector<double>* >::iterator it = data.doubleVectors.begin(); it != data.doubleVectors.end(); ++it) {
+		std::vector<double>* const oldPtr  = it->second; // SetBranchAddress is not allowed to change when opening a (new) file
 		if( data.isInputVariable(it->first))
 			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+		if(it->second != oldPtr){
+			std::cout << "Pointer address of vector<double> '" << it->first << "' has changed while opening a new file." << std::endl;
+			return false;
+		}
 	}
-	for(std::map<std::string, TLorentzVector>::iterator it = data.lorentzVectors.begin(); it != data.lorentzVectors.end(); ++it) {
+	for(std::map<std::string, TLorentzVector*>::iterator it = data.lorentzVectors.begin(); it != data.lorentzVectors.end(); ++it) {
+		TLorentzVector* const oldPtr  = it->second; // SetBranchAddress is not allowed to change when opening a (new) file
 		if( data.isInputVariable(it->first))
 			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+		if(it->second != oldPtr){
+			std::cout << "Pointer address of TLorentzVector '" << it->first << "' has changed while opening a new file." << std::endl;
+			return false;
+		}
 	}
 	for(std::map<std::string, TVector3>::iterator it = data.vectors.begin(); it != data.vectors.end(); ++it) {
 		if( data.isInputVariable(it->first))
