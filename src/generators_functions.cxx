@@ -2,6 +2,7 @@
 
 #include<assert.h>
 
+#include<TVector3.h>
 #include<TLorentzVector.h>
 
 #include<data.h>
@@ -57,6 +58,60 @@ bool antok::generators::functionArgumentHandler(std::vector<std::pair<std::strin
 	return true;
 
 };
+
+
+/**
+ * Sets the data pointers in the args vector to the address of the variable or to an constant if no variable name, but a number is given
+ * @param args Vector of pairs where first: node/variable name, second: data pointer (will be set in this function)
+ * @param function: Node of the function
+ * @param index: Index of the function call (0 if this arguments have no index)
+ * @return true if everything was ok
+ */
+template< typename T>
+bool antok::generators::functionrgumentHandlerPossibleConst( std::vector< std::pair< std::string, T* > >& args,
+		                                  const YAML::Node& function,
+		                                  int index) {
+
+	using antok::YAMLUtils::hasNodeKey;
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector< std::pair< std::string, std::string > > given_args;
+	std::map< int, int > map_args_given_args;
+
+	// find all arguments which are given in the function node
+	for( size_t i = 0; i < args.size(); ++i ){
+		auto& arg = args[i];
+		if( hasNodeKey(function, arg.first) ){
+			const YAML::Node& node = function[arg.first];
+			try {
+				const T val = node.as<T>();
+				arg.second = new T(val);
+			} catch (const YAML::TypedBadConversion<T>& e) { // test if variable is a variable name
+				std::string variable_name = antok::YAMLUtils::getString( node );
+				if(variable_name == "") {
+					std::cerr<<"Entry has to be either a variable name or a convertible type."<<std::endl;
+					return false;
+				}
+				variable_name = antok::generators::mergeNameIndex(variable_name, index);
+				arg.second = data.getAddr<T>(variable_name);
+				if( arg.second == nullptr ){
+					std::cerr<<"Can not find variable << \"" << variable_name << "\" (required for function \""<<function["Name"]<<"\")."<<std::endl;
+					return false;
+				}
+			}
+
+		} else {
+			std::cerr<<"Argument \""<<arg.first<<"\" not found (required for function \""<<function["Name"]<<"\")."<<std::endl;
+			return false;
+		}
+	}
+
+
+	return true;
+}
+// initialize for a bunch of data types, add more if needed
+template bool antok::generators::functionrgumentHandlerPossibleConst<double>( std::vector< std::pair< std::string, double* > >& args, const YAML::Node& function, int index);
+template bool antok::generators::functionrgumentHandlerPossibleConst<int>( std::vector< std::pair< std::string, int* > >& args, const YAML::Node& function, int index);
 
 std::string antok::generators::getFunctionArgumentHandlerErrorMsg(std::vector<std::string> quantityNames) {
 	std::stringstream msgStream;
@@ -510,6 +565,7 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
 	std::vector<std::pair<std::string, std::string> > args;
+	std::vector<std::pair<std::string, double*>> possible_const_args;
 
 	args.push_back(std::pair<std::string, std::string>("dX", "double"));
 	args.push_back(std::pair<std::string, std::string>("dY", "double"));
@@ -520,15 +576,26 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 		return 0;
 	}
 
-	const double* beam_mass;
+	const double* beam_mass = nullptr;
+	const double* target_mass = nullptr;
+	if( antok::YAMLUtils::hasNodeKey( function, "BeamMass") )
+		possible_const_args.push_back(std::pair<std::string, double*>("BeamMass", 0));
+	if( antok::YAMLUtils::hasNodeKey( function, "TargetMass") )
+		possible_const_args.push_back(std::pair<std::string, double*>("TargetMass", 0));
+
+	if(not antok::generators::functionrgumentHandlerPossibleConst(possible_const_args, function, 0)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	// keep this order!!!
+	if( antok::YAMLUtils::hasNodeKey( function, "TargetMass") ){
+		target_mass = possible_const_args.back().second;
+		possible_const_args.pop_back();
+	}
 	if( antok::YAMLUtils::hasNodeKey( function, "BeamMass") ){
-		beam_mass = antok::YAMLUtils::getAddress<double>( function["BeamMass"] );
-		if( beam_mass == NULL ){
-			std::cerr << "Variable \"" << antok::YAMLUtils::getString(function["BeamMass"]) << "\" not found for BeamMass in function \"" << quantityName << "\"" << std::endl;
-			return 0;
-		}
-	} else {
-		beam_mass = &antok::Constants::chargedPionMass();
+		beam_mass = possible_const_args.back().second;
+		possible_const_args.pop_back();
 	}
 
 	double* dXaddr = data.getAddr<double>(args[0].first);
@@ -540,7 +607,7 @@ antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Nod
 		return 0;
 	}
 
-	return (new antok::functions::GetBeamLorentzVec(dXaddr, dYaddr, xLorentzVecAddr, data.getAddr<TLorentzVector>(quantityName), beam_mass));
+	return (new antok::functions::GetBeamLorentzVec(dXaddr, dYaddr, xLorentzVecAddr, data.getAddr<TLorentzVector>(quantityName), beam_mass, target_mass));
 
 };
 
@@ -736,6 +803,7 @@ antok::Function* antok::generators::generateGetLorentzVec(const YAML::Node& func
 antok::Function* antok::generators::generateGetTs(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
+	using antok::YAMLUtils::hasNodeKey;
 	if(quantityNames.size() != 3) {
 		std::cerr<<"Need 3 names for function \"getTs\""<<std::endl;
 		return 0;
@@ -748,13 +816,28 @@ antok::Function* antok::generators::generateGetTs(const YAML::Node& function, st
 	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
 	args.push_back(std::pair<std::string, std::string>("XLorentzVec", "TLorentzVector"));
 
+
+	std::vector<std::pair<std::string, double*> > possible_const;
+	possible_const.push_back(std::pair<std::string, double*>("TargetMass", nullptr));
+
 	if(not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
+
 	TLorentzVector* beamLVAddr = data.getAddr<TLorentzVector>(args[0].first);
 	TLorentzVector* xLVAddr = data.getAddr<TLorentzVector>(args[1].first);
+
+
+	const double* targetMassAddr = NULL;
+	if( hasNodeKey(function, "TargetMass") ){
+		if(not antok::generators::functionrgumentHandlerPossibleConst(possible_const, function, 0)) {
+			std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+			return 0;
+		}
+		targetMassAddr = possible_const[0].second;
+	}
 
 	std::vector<double*> quantityAddrs;
 	for(unsigned int i = 0; i < quantityNames.size(); ++i) {
@@ -765,7 +848,7 @@ antok::Function* antok::generators::generateGetTs(const YAML::Node& function, st
 		quantityAddrs.push_back(data.getAddr<double>(quantityNames[i]));
 	}
 
-	return (new antok::functions::GetTs(xLVAddr, beamLVAddr, quantityAddrs[0], quantityAddrs[1], quantityAddrs[2]));
+	return (new antok::functions::GetTs(xLVAddr, beamLVAddr, quantityAddrs[0], quantityAddrs[1], quantityAddrs[2], targetMassAddr));
 
 };
 

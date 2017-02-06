@@ -344,8 +344,11 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			                                            new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                            data.getAddr<double >(variable1Name),
 			                                            data.getAddr<int>(variable2Name));
-		} else if(variableType == "" || variable2Type == "") {
+		} else if(variableType == "") {
 			std::cerr<<"Could not find \"Variable\" \""<<variable1Name<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+			return 0;
+		} else if(variable2Type == "") {
+			std::cerr<<"Could not find \"Variable\" \""<<variable2Name<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 			return 0;
 		} else {
 			std::cerr<<"\"Variable\" types \""<<variableType<<"\" and \""<<variable2Type<<"\" not supported by \"Plot\" (in \""<<plotName<<"\")."<<std::endl;
@@ -405,8 +408,11 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			                                         new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                         vec1Data,
 			                                         vec2Data);
-		} else if(variableType == "" || variable2Type == "") {
+		} else if(variableType == "") {
 			std::cerr<<"Could not find \"Variable\" \""<<variable1Name<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
+			return 0;
+		} else if(variable2Type == "") {
+			std::cerr<<"Could not find \"Variable\" \""<<variable2Name<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 			return 0;
 		} else {
 			std::cerr<<"\"Variable\" types \""<<variableType<<"\" and \""<<variable2Type<<"\" not supported by \"Plot\" (in \""<<plotName<<"\")."<<std::endl;

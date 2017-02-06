@@ -7,6 +7,7 @@
 #include<TLorentzVector.h>
 
 #include<basic_calcs.h>
+#include<constants.h>
 
 namespace antok {
 
@@ -146,28 +147,39 @@ namespace antok {
 
 		  public:
 
-			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr, const double* mass_beam)
-				: _gradxAddr(gradxAddr),
-				  _gradyAddr(gradyAddr),
-				  _xLorentzVec(xLorentzVec),
-				  _mass_beam( mass_beam ),
-				  _outAddr(outAddr) { }
+			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr, const double* mass_beam, const double* massTarget)
+				: _gradx(*gradxAddr),
+				  _grady(*gradyAddr),
+				  _xLorentzVec(*xLorentzVec),
+				  _massBeamAddr( mass_beam ),
+				  _out(*outAddr),
+				  _massTargetAddr(massTarget){
+				if(_massTargetAddr == nullptr){
+					std::cout << "INFO: No target mass is given to reconstruct the beam energy -> using proton mass" << std::endl;
+					_massTargetAddr = &antok::Constants::protonMass();
+				}
+				if(_massBeamAddr== nullptr){
+					std::cout << "INFO: No beam mass is given to reconstruct the beam energy -> using pion mass" << std::endl;
+					_massBeamAddr= &antok::Constants::chargedPionMass();
+				}
+			}
 
 			virtual ~GetBeamLorentzVec() { }
 
 			bool operator() () {
-				TVector3 p3Beam((*_gradxAddr), (*_gradyAddr), 1.);
-				(*_outAddr) = antok::getBeamEnergy(p3Beam, (*_xLorentzVec), (*_mass_beam));
+				TVector3 p3Beam(_gradx, _grady, 1.);
+				_out = antok::getBeamEnergy(p3Beam, _xLorentzVec, (*_massBeamAddr), (*_massTargetAddr));
 				return true;
 			}
 
 		  private:
 
-			double* _gradxAddr;
-			double* _gradyAddr;
-			TLorentzVector* _xLorentzVec;
-			const double* _mass_beam;
-			TLorentzVector* _outAddr;
+			const double& _gradx;
+			const double& _grady;
+			const TLorentzVector& _xLorentzVec;
+			const double* _massBeamAddr;
+			TLorentzVector& _out;
+			const double* _massTargetAddr;
 
 		};
 
@@ -176,29 +188,54 @@ namespace antok {
 
 		  public:
 
-			GetTs(TLorentzVector* xLorentzVec, TLorentzVector* beamLorentzVec, double* tAddr, double* tMinAddr, double* tPrimeAddr)
-				: _xLorentzVec(xLorentzVec),
-				  _beamLorentzVec(beamLorentzVec),
-				  _tAddr(tAddr),
-				  _tMinAddr(tMinAddr),
-				  _tPrimeAddr(tPrimeAddr) { }
+			GetTs(TLorentzVector* xLorentzVec, TLorentzVector* beamLorentzVec, double* tAddr, double* tMinAddr, double* tPrimeAddr, const double* targetMassAddr)
+				: _xLorentzVec(*xLorentzVec),
+				  _beamLorentzVec(*beamLorentzVec),
+				  _t(*tAddr),
+				  _tMin(*tMinAddr),
+				  _tPrime(*tPrimeAddr),
+				  _targetMassAddr(targetMassAddr){
+				if(_targetMassAddr == nullptr){
+					std::cout << "INFO: No target mass given to calculate t' -> Using approximation." << std::endl;
+				}
+			}
 
 			virtual ~GetTs() { }
 
 			bool operator() () {
-			    (*_tAddr) = std::fabs(((*_beamLorentzVec) - (*_xLorentzVec)).Mag2());
-			    (*_tMinAddr) = std::fabs((std::pow((*_xLorentzVec).M2() - (*_beamLorentzVec).M2(), 2)) / (4. * (_beamLorentzVec->Vect()).Mag2()));
-			    (*_tPrimeAddr) = (*_tAddr) - (*_tMinAddr);
+			    _t = std::fabs((_beamLorentzVec - _xLorentzVec).Mag2());
+
+
+			    if(_targetMassAddr != NULL){
+			    	const double EB_Lab = _beamLorentzVec.E();
+			    	// calculate center of mass system quantities to calculate tmin
+					const double mT2 = (*_targetMassAddr) * (*_targetMassAddr); // target mass
+					const double mX2 = _xLorentzVec.M2(); // X-state mass
+					const double mB2 = _beamLorentzVec.M2(); // beam mass
+					const double s = mB2 + mT2 + 2.0*EB_Lab*sqrt(mT2);
+					const double EB_CM = (s - mT2 + mB2)/(2.0*sqrt(s));
+					const double EX_CM = (s + mX2 - mT2)/(2.0*sqrt(s));
+					const double pB_CM = sqrt(EB_CM*EB_CM - mB2);
+					const double pX_CM = sqrt(EX_CM*EX_CM - mX2);
+
+					_tMin = -mB2 - mX2 + 2.0*( EB_CM*EX_CM - pB_CM*pX_CM );
+			    } else {
+			    	// use approximation
+			    	_tMin = std::fabs((std::pow(_xLorentzVec.M2() - _beamLorentzVec.M2(), 2)) / (4. * _beamLorentzVec.Vect().Mag2()));
+			    }
+
+			    _tPrime = _t - _tMin;
 				return true;
 			}
 
 		  private:
 
-			TLorentzVector* _xLorentzVec;
-			TLorentzVector* _beamLorentzVec;
-			double* _tAddr;
-			double* _tMinAddr;
-			double* _tPrimeAddr;
+			const TLorentzVector& _xLorentzVec;
+			const TLorentzVector& _beamLorentzVec;
+			double& _t;
+			double& _tMin;
+			double& _tPrime;
+			const double* _targetMassAddr;
 
 		};
 

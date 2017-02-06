@@ -48,7 +48,7 @@ namespace antok {
 		std::map<std::string, std::vector<int>* > intVectors;
 		std::map<std::string, std::vector<double>* > doubleVectors;
 
-		std::map<std::string, TLorentzVector> lorentzVectors;
+		std::map<std::string, TLorentzVector*> lorentzVectors;
 		std::map<std::string, TVector3> vectors;
 
 

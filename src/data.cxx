@@ -75,7 +75,7 @@ namespace antok {
 			return false;
 		}
 		global_map[name] = "TLorentzVector";
-		lorentzVectors[name] = *(new TLorentzVector);
+		lorentzVectors[name] = (new TLorentzVector);
 		return true;
 	}
 
@@ -134,7 +134,7 @@ namespace antok {
 		if(lorentzVectors.count(name) < 1) {
 			return 0;
 		}
-		return &lorentzVectors[name];
+		return lorentzVectors[name];
 	}
 
 	template<>
