@@ -80,6 +80,16 @@ namespace antok {
 	}
 
 	template<>
+	bool antok::Data::insert<std::vector<TLorentzVector> >(std::string name) {
+		if(lorentzVectorVectors.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "std::vector<TLorentzVector>";
+		lorentzVectorVectors[name] = (new std::vector<TLorentzVector>);
+		return true;
+	}
+
+	template<>
 	bool antok::Data::insert<TVector3>(std::string name) {
 		if(lorentzVectors.count(name) > 0) {
 			return false;
@@ -135,6 +145,14 @@ namespace antok {
 			return 0;
 		}
 		return lorentzVectors[name];
+	}
+
+	template<>
+	std::vector<TLorentzVector>* antok::Data::getAddr<std::vector<TLorentzVector> >(std::string name) {
+		if(lorentzVectorVectors.count(name) < 1) {
+			return 0;
+		}
+		return lorentzVectorVectors[name];
 	}
 
 	template<>
