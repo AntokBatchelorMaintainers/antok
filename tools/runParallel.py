@@ -39,9 +39,9 @@ def getRunNumber(filename):
 	if(parsed):
 		runnbr = int( parsed[0])
 	else:
-		msg = "Can not get run number from file name '{0}'".format( filename )
+		msg = "Can not get run number from file name '{0}'. Using run number 0.".format( filename )
 		print msg
-		raise Exception(msg)
+		runnbr = 0
 	return runnbr
 
 def getSlot(filename):
@@ -53,9 +53,9 @@ def getSlot(filename):
 	if(parsed):
 		slot = parsed[0]
 	else:
-		msg = "Can not get slot from file name '{0}'".format( filename )
+		msg = "Can not get slot from file name '{0}'. Using slot '0-0'".format( filename )
 		print msg
-		raise Exception(msg)
+		slot='0-0'
 	return slot
 
 
