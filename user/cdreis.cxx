@@ -25,6 +25,8 @@ antok::Function *antok::user::cdreis::getUserFunction(const YAML::Node &function
 		antokFunctionPtr = antok::user::cdreis::generateGetCleanedEcalClusters(function, quantityNames, index);
 	else if (functionName == "getPi0Pair")
 		antokFunctionPtr = antok::user::cdreis::generateGetPi0Pair(function, quantityNames, index);
+	else if(functionName == "getOmega")
+		antokFunctionPtr = antok::user::cdreis::generateGetOmega(function, quantityNames, index);
 
 	return antokFunctionPtr;
 }
@@ -331,5 +333,64 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node &function, std::vector<
 	                                                       data.getAddr<TLorentzVector>(resultVecLV0),
 	                                                       data.getAddr<TLorentzVector>(resultVecLV1),
 	                                                       data.getAddr<int>(resultGoodPair))
+	);
+};
+
+antok::Function* antok::user::cdreis::generateGetOmega(const YAML::Node& function, std::vector<std::string>& quantityNames, int index){
+	if(quantityNames.size() > 2) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Pi0_0", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Pi0_1", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Scattered0", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Scattered1", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Scattered2", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Charge0", "int"));
+	args.push_back(std::pair<std::string, std::string>("Charge1", "int"));
+	args.push_back(std::pair<std::string, std::string>("Charge2", "int"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	TLorentzVector* Pi0_0Addr = data.getAddr<TLorentzVector>(args[0].first);
+	TLorentzVector* Pi0_1Addr = data.getAddr<TLorentzVector>(args[1].first);
+	TLorentzVector* Scattered0Addr = data.getAddr<TLorentzVector>(args[2].first);
+	TLorentzVector* Scattered1Addr = data.getAddr<TLorentzVector>(args[3].first);
+	TLorentzVector* Scattered2Addr = data.getAddr<TLorentzVector>(args[4].first);
+
+	int* Charged0Addr = data.getAddr<int>(args[5].first);
+	int* Charged1Addr = data.getAddr<int>(args[6].first);
+	int* Charged2Addr = data.getAddr<int>(args[7].first);
+
+	std::string resultOmegaLV = quantityNames[0];
+	std::string resultAccepted = quantityNames[1];
+
+	if(not data.insert<TLorentzVector>(quantityNames[0])) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[0]);
+		return 0;
+	}
+
+	if(not data.insert<int>(quantityNames[1])) {
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[1]);
+		return 0;
+	}
+
+	return (new antok::user::cdreis::functions::GetOmega( Pi0_0Addr,
+	                                                      Pi0_1Addr,
+	                                                      Scattered0Addr,
+	                                                      Scattered1Addr,
+	                                                      Scattered2Addr,
+	                                                      Charged0Addr,
+	                                                      Charged1Addr,
+	                                                      Charged2Addr,
+	                                                      data.getAddr<TLorentzVector>(quantityNames[0]),
+	                                                      data.getAddr<int>(quantityNames[1]) )
 	);
 };

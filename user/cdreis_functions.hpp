@@ -388,6 +388,103 @@ namespace antok {
 					int *_resultGoodPair;
 				};
 
+				class GetOmega : public Function
+				{
+				public:
+					GetOmega( TLorentzVector* Pi0_OAddr,
+					          TLorentzVector* Pi0_1Addr,
+					          TLorentzVector* Scattered0Addr,
+					          TLorentzVector* Scattered1Addr,
+					          TLorentzVector* Scattered2Addr,
+					          int* Charge0Addr,
+					          int* Charge1Addr,
+					          int* Charge2Addr,
+					          TLorentzVector* resultOmega,
+					          int* resultAccepted)
+							: _Pi0_OAddr(Pi0_OAddr),
+							  _Pi0_1Addr(Pi0_1Addr),
+							  _Scattered0Addr(Scattered0Addr),
+							  _Scattered1Addr(Scattered1Addr),
+							  _Scattered2Addr(Scattered2Addr),
+							  _Charge0Addr(Charge0Addr),
+							  _Charge1Addr(Charge1Addr),
+							  _Charge2Addr(Charge2Addr),
+							  _resultOmega(resultOmega),
+							  _resultAccepted(resultAccepted) {}
+
+					virtual ~GetOmega() {}
+
+					bool operator() () {
+						(*_resultAccepted) = 0;
+
+						std::vector<TLorentzVector*> pi0s;
+						pi0s.resize(2);
+						pi0s.clear();
+						pi0s.push_back(_Pi0_OAddr);
+						pi0s.push_back(_Pi0_1Addr);
+
+						std::vector<TLorentzVector*> chargedLV;
+						chargedLV.resize(3);
+						chargedLV.clear();
+						chargedLV.push_back(_Scattered0Addr);
+						chargedLV.push_back(_Scattered1Addr);
+						chargedLV.push_back(_Scattered2Addr);
+
+						std::vector<int*> charge;
+						charge.resize(3);
+						charge.clear();
+						charge.push_back(_Charge0Addr);
+						charge.push_back(_Charge1Addr);
+						charge.push_back(_Charge2Addr);
+
+						unsigned int numberCandidates = 0;
+
+						// Loop over available pi0s
+						for( unsigned int i = 0; i < pi0s.size(); i++ )
+						{
+							// Find suitable pi+/pi- pair
+							for(unsigned int j = 0; j < chargedLV.size(); j++ )
+							{
+								for(unsigned int k = j + 1; k < chargedLV.size(); k++ )
+								{
+									// Check if charge is consistent with zero
+									if( (*charge[j]) + (*charge[k]) == 0 )
+									{
+										// Check if mass fits
+										const TLorentzVector temp = (*pi0s[i]) + (*chargedLV[j]) + (*chargedLV[k]);
+										if( std::fabs( temp.Mag() - 0.78265 ) < 3 * 0.1 )
+										{
+											// Count candidates
+											numberCandidates++;
+											(*_resultOmega) = (*pi0s[i]) + (*chargedLV[j]) + (*chargedLV[k]);
+										}
+									}
+								}
+							}
+						}
+
+						// Only accepted if one omega per event
+						if( numberCandidates ==  1 )
+						{
+							(*_resultAccepted) = 1;
+						}
+
+						return true;
+					}
+
+				private:
+					TLorentzVector* _Pi0_OAddr;
+					TLorentzVector* _Pi0_1Addr;
+					TLorentzVector* _Scattered0Addr;
+					TLorentzVector* _Scattered1Addr;
+					TLorentzVector* _Scattered2Addr;
+					int* _Charge0Addr;
+					int* _Charge1Addr;
+					int* _Charge2Addr;
+					TLorentzVector* _resultOmega;
+					int* _resultAccepted;
+				};
+
 			}
 
 		}
