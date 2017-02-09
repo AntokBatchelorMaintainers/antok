@@ -83,6 +83,10 @@ namespace antok {
 		             T1* data1,
 		             T2* data2 );
 		TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
+		                  TH1* hist_template,
+		                  T1* data1,
+		                  std::vector<T2*>* data2);
+		TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
 		             TH1* hist_template,
 		             std::vector<T1*>* data1,
 		             std::vector<T2*>* data2);
@@ -362,6 +366,20 @@ antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::ve
 						 _vecData2InT2( 0 ),
 						 _templateplot( new  TemplatePlot<T1>(cutmasks, hist_template, data1, &_data2InT1) )
 					{}
+
+template< typename T1, typename T2>
+antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
+                                                   TH1* hist_template,
+                                                   T1* data1,
+                                                   std::vector<T2*>* data2):
+		Plot(),
+		_copymode(1),
+		_data2InT1(),
+		_data2InT2( 0 ),
+		_vecData2InT1(),
+		_vecData2InT2( data2 ),
+		_templateplot( new  TemplatePlot<T1>(cutmasks, hist_template, data1, &_vecData2InT1) )
+{}
 
 template< typename T1, typename T2>
 antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
