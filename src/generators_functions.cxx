@@ -163,6 +163,30 @@ namespace {
 
 	};
 
+	template<typename T>
+	antok::Function* __getVectorFunction(std::vector<std::pair<std::string, std::string> >& itemNames,
+	                                     std::string quantityName) {
+
+		std::vector<T*> inputAddrsItems;
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+
+		// Now do type checking and get all the addresses
+		for(unsigned int itemNames_i = 0; itemNames_i < itemNames.size(); ++itemNames_i) {
+			std::string variableName = itemNames[itemNames_i].first;
+			inputAddrsItems.push_back(data.getAddr<T>(variableName));
+		}
+
+		// And produce the function
+		if(not data.insert<T>(quantityName)) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityName);
+			return 0;
+		}
+		// Vector<double>( inputAddrsItems, vector<double>* )
+		return (new antok::functions::Vector<T>(inputAddrsItems, data.getAddr<std::vector<T>>(quantityName)));
+
+	};
+
+
 	std::vector<std::pair<std::string, std::string> >* __getSummandNames(const YAML::Node& function, std::string& quantityName, int index, std::string type) {
 
 		using antok::YAMLUtils::hasNodeKey;
@@ -1048,3 +1072,49 @@ antok::Function* antok::generators::generateSum2(const YAML::Node& function, std
 
 };
 
+antok::Function* antok::generators::generateGetVector(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+{
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> >* itemsNamesPtr = __getSummandNames(function, quantityName, index, "Items");
+	if(itemsNamesPtr == 0) {
+		std::cerr<<"Could not generate items for function \"Sum\" when trying to register calculation of \""<<quantityName<<"\"."<<std::endl;
+		return 0;
+	}
+	std::vector<std::pair<std::string, std::string> > itemNames;
+	if(itemsNamesPtr != 0)
+		itemNames = (*itemsNamesPtr);
+
+	if(not antok::generators::functionArgumentHandler(itemNames, function, index, true)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	std::string typeName = itemNames[0].second;
+
+	antok::Function* antokFunction = 0;
+	if(typeName == "double") {
+		antokFunction = __getVectorFunction<double>(itemNames, quantityName);
+	} else if (typeName == "int") {
+		antokFunction = __getVectorFunction<int>(itemNames, quantityName);
+	} else if (typeName == "Long64_t") {
+		antokFunction = __getVectorFunction<Long64_t>(itemNames, quantityName);
+	} else if (typeName == "TLorentzVector") {
+		antokFunction = __getVectorFunction<TLorentzVector>(itemNames, quantityName);
+	} else if (typeName == "TVector3") {
+		antokFunction = __getVectorFunction<TVector3>(itemNames, quantityName);
+	} else {
+		std::cerr<<"Type \""<<typeName<<"\" not supported by \"vector\" (registering calculation of \""<<quantityName<<"\")."<<std::endl;
+		return 0;
+	}
+
+	delete itemsNamesPtr;
+
+	return (antokFunction);
+
+};

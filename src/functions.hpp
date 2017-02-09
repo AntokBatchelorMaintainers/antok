@@ -61,7 +61,39 @@ namespace antok {
 
 		};
 
+		template<typename T>
+		class Vector : public Function
+		{
 
+		public:
+
+			Vector(std::vector<T*> inputAddrsItems, std::vector<T>* outAddr) {
+				_inputAddrsItems = inputAddrsItems;
+				_outAddr = outAddr;
+				std::cout << "Size " << inputAddrsItems.size() << std::endl;
+				if(inputAddrsItems.size() < 1) {
+					std::cerr<<"Got empty address vector as input for a sum."<<std::endl;
+					throw 1;
+				}
+			};
+
+			virtual ~Vector() { }
+
+			bool operator() () {
+				_outAddr->clear();
+				_outAddr->reserve(_inputAddrsItems.size());
+				for(unsigned int i = 0; i < _inputAddrsItems.size(); ++i) {
+					_outAddr->push_back( *(_inputAddrsItems[i]) );
+				}
+				return true;
+			};
+
+		private:
+
+			std::vector<T*> _inputAddrsItems;
+			std::vector<T>* _outAddr;
+
+		};
 
 		class Mass: public Function
 		{

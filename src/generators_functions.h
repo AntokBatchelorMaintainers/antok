@@ -45,6 +45,7 @@ namespace antok {
 		antok::Function* generateRadToDegree(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateSum(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		antok::Function* generateSum2(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+		antok::Function* generateGetVector(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 
 	}
 

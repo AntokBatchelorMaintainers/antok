@@ -624,6 +624,8 @@ bool antok::Initializer::initializeEvent() {
 				antokFunctionPtr = antok::generators::generateSum(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "sum2") {
 				antokFunctionPtr= antok::generators::generateSum2(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "getVector") {
+				antokFunctionPtr= antok::generators::generateGetVector(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "") {
 				std::cerr<<"Could not convert function name to std::string for CalculatedQuantity \""<<quantityNames[0]<<"\"."<<std::endl;
 				return false;
