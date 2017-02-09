@@ -177,11 +177,10 @@ namespace {
 		}
 
 		// And produce the function
-		if(not data.insert<T>(quantityName)) {
+		if(not data.insert<std::vector<T>>(quantityName)) {
 			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityName);
 			return 0;
 		}
-		// Vector<double>( inputAddrsItems, vector<double>* )
 		return (new antok::functions::Vector<T>(inputAddrsItems, data.getAddr<std::vector<T>>(quantityName)));
 
 	};
