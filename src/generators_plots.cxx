@@ -339,6 +339,11 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			                                            new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                            data.getAddr<std::vector<double> >(variable1Name),
 			                                            data.getAddr<std::vector<double> >(variable2Name));
+		} else if (variableType == "std::vector<int>" && variable2Type == "std::vector<int>") {
+			antokPlot = new antok::TemplatePlot<int>(cutmasks,
+			                                            new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                            data.getAddr<std::vector<int> >(variable1Name),
+			                                            data.getAddr<std::vector<int> >(variable2Name));
 		} else if (variableType == "int" && variable2Type == "std::vector<double>") {
 			antokPlot = new antok::TemplateMixedPlot<int, double>(cutmasks,
 			                                                      new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
