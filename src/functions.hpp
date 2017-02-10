@@ -68,10 +68,10 @@ namespace antok {
 		public:
 
 			Vector(std::vector<T*> inputAddrsItems, std::vector<T>* outAddr)
-				: _inputAddrsItems(inputAddrsItems),
-				  _outAddr(outAddr) {
+			: _inputAddrsItems(inputAddrsItems),
+			  _outAddr(outAddr) {
 				if(inputAddrsItems.size() < 1) {
-					std::cerr<<"Got empty address vector as input for a sum."<<std::endl;
+					std::cerr << "Got empty address vector as input for a new vector." << std::endl;
 					throw 1;
 				}
 			};
@@ -83,7 +83,7 @@ namespace antok {
 				_outAddr->clear();
 
 				for(unsigned int i = 0; i < _inputAddrsItems.size(); ++i) {
-					_outAddr->push_back( *(_inputAddrsItems[i]) );
+					(*_outAddr).push_back( *(_inputAddrsItems[i]) );
 				}
 
 				return true;

@@ -26,12 +26,12 @@ namespace antok {
 		             T* data2 = 0,
 		             T* data3 = 0);
 
-        TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
-                     TH1* hist_template,
-                     T* data1,
-                     std::vector<T>* data2);
+		TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
+		             TH1* hist_template,
+		             T* data1,
+		             std::vector<T>* data2);
 
-        TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
+		TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
 		             TH1* hist_template,
 		             std::vector<T*>* data1,
 		             std::vector<T*>* data2 = 0);
@@ -84,21 +84,17 @@ namespace antok {
 	public:
 
 		TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
-		             TH1* hist_template,
-		             T1* data1,
-		             T2* data2 );
-        TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
-                          TH1* hist_template,
-                          T1* data1,
-                          std::vector<T2*>* data2);
-        TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
-                          TH1* hist_template,
-                          T1* data1,
-                          std::vector<T2>* data2);
-        TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
-		             TH1* hist_template,
-		             std::vector<T1*>* data1,
-		             std::vector<T2*>* data2);
+		                  TH1* hist_template,
+		                  T1* data1,
+		                  T2* data2 );
+		TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
+		                  TH1* hist_template,
+		                  T1* data1,
+		                  std::vector<T2>* data2);
+		TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
+		                  TH1* hist_template,
+		                  std::vector<T1*>* data1,
+		                  std::vector<T2*>* data2);
 
 		virtual ~TemplateMixedPlot();
 
@@ -112,10 +108,10 @@ namespace antok {
 		std::vector<T1*> _vecData2InT1;
 		std::vector<T2*>* _vecData2InT2;
 
-        std::vector<T1> _vecDataVector2InT1;
-        std::vector<T2>* _vecDataVector2InT2;
+		std::vector<T1> _vecDataVector2InT1;
+		std::vector<T2>* _vecDataVector2InT2;
 
-        TemplatePlot<T1>* _templateplot;
+		TemplatePlot<T1>* _templateplot;
 	};
 }
 
@@ -126,8 +122,8 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
                                      T* data2,
                                      T* data3)
 	: Plot(),
-      _vecData1(0),
-      _vecData2(0),
+	  _vecData1(0),
+	  _vecData2(0),
 	  _vecDataVector1(0),
 	  _vecDataVector2(0),
 	  _multipleVecDataVectors1(0),
@@ -149,22 +145,20 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
                                      TH1* histTemplate,
                                      T* data1,
                                      std::vector<T>* vecData2)
-        : Plot(),
-          _mode(7),
-          _vecData1(0),
-          _vecData2(0),
-          _vecDataVector1( nullptr ),
-          _vecDataVector2(vecData2),
-          _multipleVecDataVectors1(0),
-          _multipleVecDataVectors2(0),
-          _data1(data1),
-          _data2(0),
-          _data3(0)
+	: Plot(),
+	  _mode(7),
+	  _vecData1(0),
+	  _vecData2(0),
+	  _vecDataVector1( nullptr ),
+	  _vecDataVector2(vecData2),
+	  _multipleVecDataVectors1(0),
+	  _multipleVecDataVectors2(0),
+	  _data1(data1),
+	  _data2(0),
+	  _data3(0)
 {
-
-    assert(histTemplate != 0);
-    makePlot(cutmasks, histTemplate);
-
+	assert(histTemplate != 0);
+	makePlot(cutmasks, histTemplate);
 };
 
 template<typename T>
@@ -316,11 +310,11 @@ void antok::TemplatePlot<T>::fill(long cutPattern) {
 						}
 					}
 					break;
-                case 7:
-                    for(unsigned int j = 0; j < _vecDataVector2->size(); ++j) {
-                        hist->Fill((*_data1), (*_vecDataVector2)[j]);
-                    }
-                    break;
+				case 7:
+					for(unsigned int j = 0; j < _vecDataVector2->size(); ++j) {
+						hist->Fill((*_data1), (*_vecDataVector2)[j]);
+					}
+				break;
 				default:
 					throw 1;
 			}
@@ -400,72 +394,53 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 
 template< typename T1, typename T2>
 antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
-		             TH1* hist_template,
-		             T1* data1,
-		             T2* data2 ):
+                                                   TH1* hist_template,
+                                                   T1* data1,
+                                                   T2* data2 ):
 					 	 Plot(),
 					 	 _copymode(0),
 						 _data2InT1(),
 						 _data2InT2( data2 ),
 						 _vecData2InT1(),
 						 _vecData2InT2( 0 ),
-                         _vecDataVector2InT1(),
-                         _vecDataVector2InT2( 0 ),
+						_vecDataVector2InT1(),
+						_vecDataVector2InT2( 0 ),
 						 _templateplot( new  TemplatePlot<T1>(cutmasks, hist_template, data1, &_data2InT1) )
 
 					{}
 
-template< typename T1, typename T2>
-antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
-                                                   TH1* hist_template,
-                                                   T1* data1,
-                                                   std::vector<T2*>* data2):
-        Plot(),
-        _copymode(1),
-        _data2InT1(),
-        _data2InT2( 0 ),
-        _vecData2InT1(),
-        _vecData2InT2( data2 ),
-        _vecDataVector2InT1(),
-        _vecDataVector2InT2( nullptr ),
-        _templateplot(0)
-{
-    for( size_t i = 0; i < data2->size(); ++i) _vecData2InT1.push_back( new T1() );
-    _templateplot = new TemplatePlot<T1>(cutmasks, hist_template, data1, &_vecData2InT1 );
-}
 
 template< typename T1, typename T2>
 antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
                                                    TH1* hist_template,
                                                    T1* data1,
                                                    std::vector<T2>* data2):
-        Plot(),
-        _copymode(2),
-        _data2InT1(),
-        _data2InT2( 0 ),
-        _vecData2InT1(),
-        _vecData2InT2( nullptr ),
-        _vecDataVector2InT1(),
-        _vecDataVector2InT2( data2 ),
-        _templateplot(0)
+						 Plot(),
+						 _copymode(2),
+						 _data2InT1(),
+						 _data2InT2( 0 ),
+						 _vecData2InT1(),
+						 _vecData2InT2( nullptr ),
+						 _vecDataVector2InT1(),
+						 _vecDataVector2InT2( data2 ),
+						 _templateplot(0)
 {
-    _vecDataVector2InT1.resize( data2->size(), T1() );
-    _templateplot = new TemplatePlot<T1>(cutmasks, hist_template, data1, &_vecDataVector2InT1 );
+	_templateplot = new TemplatePlot<T1>(cutmasks, hist_template, data1, &_vecDataVector2InT1 );
 }
 
 template< typename T1, typename T2>
 antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
-		             TH1* hist_template,
-		             std::vector<T1*>* data1,
-		             std::vector<T2*>* data2):
-					 	 Plot(),
-					 	 _copymode(1),
+		                                           TH1* hist_template,
+		                                           std::vector<T1*>* data1,
+		                                           std::vector<T2*>* data2):
+						 Plot(),
+						 _copymode(1),
 						 _data2InT1(),
 						 _data2InT2( 0 ),
 						 _vecData2InT1(),
 						 _vecData2InT2( data2 ),
-                         _vecDataVector2InT1(),
-                         _vecDataVector2InT2( nullptr ),
+						_vecDataVector2InT1(),
+						_vecDataVector2InT2( nullptr ),
 						 _templateplot(0)
 {
 	for( size_t i = 0; i < data2->size(); ++i) _vecData2InT1.push_back( new T1() );
@@ -487,9 +462,10 @@ void antok::TemplateMixedPlot<T1,T2>::fill(long cutPattern){
 	case 1:
 		for( size_t i = 0; i < _vecData2InT1.size(); ++i) *_vecData2InT1[i] = static_cast<T1>( *((*_vecData2InT2)[i]) );
 		break;
-    case 2:
-        for( size_t i = 0; i < _vecDataVector2InT1.size(); ++i) _vecDataVector2InT1[i] = static_cast<T1>( (*_vecDataVector2InT2)[i] );
-        break;
+	case 2:
+		_vecDataVector2InT1.resize( (*_vecDataVector2InT2).size(), T1() );
+		for( size_t i = 0; i < _vecDataVector2InT1.size(); ++i) _vecDataVector2InT1[i] = static_cast<T1>( (*_vecDataVector2InT2)[i] );
+		break;
 	default:
 		throw 1;
 	}
