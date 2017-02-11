@@ -345,9 +345,12 @@ void antok::TemplatePlot<T>::fill(long cutPattern) {
 					}
 					break;
 				case 7:
+					//std::cout << (*_data1) << std::endl;
 					for(unsigned int j = 0; j < _vecDataVector2->size(); ++j) {
 						hist->Fill((*_data1), (*_vecDataVector2)[j]);
+						//std::cout << (*_vecDataVector2)[j] << std::endl;
 					}
+					break;
 				case 8:
 					for(unsigned int j = 0; j < _vecDataVector1->size(); ++j) {
 						hist->Fill((*_vecDataVector1)[j], (*_data2) );
