@@ -524,17 +524,15 @@ void antok::TemplateMixedPlot<T1,T2>::fill(long cutPattern){
 	switch(_copymode){
 	case 0:
 		_data2InT1 = static_cast<T1>( *_data2InT2 );
-			_templateplotT1->fill(cutPattern);
+		_templateplotT1->fill(cutPattern);
 		break;
 	case 1:
 		for( size_t i = 0; i < _vecData2InT1.size(); ++i) *_vecData2InT1[i] = static_cast<T1>( *((*_vecData2InT2)[i]) );
-			_templateplotT1->fill(cutPattern);
+		_templateplotT1->fill(cutPattern);
 		break;
 	case 2:
 		_vecDataVector2InT1.resize( (*_vecDataVector2InT2).size(), T1() );
-		for( size_t i = 0; i < _vecDataVector2InT1.size(); ++i) {
-			_vecDataVector2InT1[i] = static_cast<T1>( (*_vecDataVector2InT2)[i] );
-		}
+		for( size_t i = 0; i < _vecDataVector2InT1.size(); ++i) _vecDataVector2InT1[i] = static_cast<T1>( (*_vecDataVector2InT2)[i] );
 		_templateplotT1->fill(cutPattern);
 		break;
 	case 3:
