@@ -374,7 +374,8 @@ namespace antok {
 
 						if (_resultVecLV->size() == 2) {
 							(*_resultGoodPair) = 1;
-							TLorentzVector both = pi0Candidate0 + pi0Candidate1;
+							(*_resultVecLV0) = pi0Candidate0;
+							(*_resultVecLV1) = pi0Candidate1;
 						}
 
 						return true;

@@ -345,10 +345,8 @@ void antok::TemplatePlot<T>::fill(long cutPattern) {
 					}
 					break;
 				case 7:
-					//std::cout << (*_data1) << std::endl;
 					for(unsigned int j = 0; j < _vecDataVector2->size(); ++j) {
 						hist->Fill((*_data1), (*_vecDataVector2)[j]);
-						//std::cout << (*_vecDataVector2)[j] << std::endl;
 					}
 					break;
 				case 8:
@@ -534,8 +532,10 @@ void antok::TemplateMixedPlot<T1,T2>::fill(long cutPattern){
 		break;
 	case 2:
 		_vecDataVector2InT1.resize( (*_vecDataVector2InT2).size(), T1() );
-		for( size_t i = 0; i < _vecDataVector2InT1.size(); ++i) _vecDataVector2InT1[i] = static_cast<T1>( (*_vecDataVector2InT2)[i] );
-			_templateplotT1->fill(cutPattern);
+		for( size_t i = 0; i < _vecDataVector2InT1.size(); ++i) {
+			_vecDataVector2InT1[i] = static_cast<T1>( (*_vecDataVector2InT2)[i] );
+		}
+		_templateplotT1->fill(cutPattern);
 		break;
 	case 3:
 		_vecDataVector1InT2.resize( (*_vecDataVector1InT1).size(), T2() );
