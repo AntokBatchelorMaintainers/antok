@@ -84,7 +84,7 @@ namespace antok {
 	/**
 	 * Implements plotting for histograms of mixed types by an internal cast of data2 of type T2 to type T1
 	 */
-	template< typename T1, typename T2>
+	template< typename T1, typename T2, typename T3>
 	class TemplateMixedPlot: public Plot{
 	public:
 
@@ -431,7 +431,7 @@ void antok::TemplatePlot<T>::makePlot(std::map<std::string, std::vector<long> >&
 }
 
 
-template< typename T1, typename T2>
+template< typename T1, typename T2, typename T3>
 antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
                                                    TH1* hist_template,
                                                    T1* data1,
@@ -451,7 +451,7 @@ antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::ve
 					{}
 
 
-template< typename T1, typename T2>
+template< typename T1, typename T2, typename T3>
 antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
                                                    TH1* hist_template,
                                                    T1* data1,
@@ -471,7 +471,7 @@ antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::ve
 	_templateplotT1 = new TemplatePlot<T1>(cutmasks, hist_template, data1, &_vecDataVector2InT1 );
 }
 
-template< typename T1, typename T2>
+template< typename T1, typename T2, typename T3>
 antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
                                                    TH1* hist_template,
                                                    std::vector<T1>* data1,
@@ -491,7 +491,7 @@ antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::ve
 	_templateplotT2 = new TemplatePlot<T2>(cutmasks, hist_template, &_vecDataVector1InT2, data2 );
 }
 
-template< typename T1, typename T2>
+template< typename T1, typename T2, typename T3>
 antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
 		                                           TH1* hist_template,
 		                                           std::vector<T1*>* data1,
@@ -512,13 +512,13 @@ antok::TemplateMixedPlot<T1,T2>::TemplateMixedPlot(std::map<std::string, std::ve
 	_templateplotT1 = new TemplatePlot<T1>(cutmasks, hist_template, data1, &_vecData2InT1 );
 }
 
-template< typename T1, typename T2>
+template< typename T1, typename T2, typename T3>
 antok::TemplateMixedPlot<T1,T2>::~TemplateMixedPlot(){
 	delete _templateplotT1;
 	delete _templateplotT2;
 }
 
-template< typename T1, typename T2>
+template< typename T1, typename T2, typename T3>
 void antok::TemplateMixedPlot<T1,T2>::fill(long cutPattern){
 	// cast external variable to internal one, which is used in the filling
 	switch(_copymode){
