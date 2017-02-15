@@ -127,6 +127,7 @@ namespace antok {
 
 		TemplatePlot<T1>* _templateplotT1;
 		TemplatePlot<T2>* _templateplotT2;
+        TemplatePlot<T3>* _templateplotT3;
 	};
 }
 
@@ -348,6 +349,7 @@ void antok::TemplatePlot<T>::fill(long cutPattern) {
 					break;
 				case 7:
 					for(unsigned int j = 0; j < _vecDataVector2->size(); ++j) {
+						std::cout << (*_data1) << std::endl;
 						hist->Fill((*_data1), (*_vecDataVector2)[j]);
 					}
 					break;
@@ -466,11 +468,14 @@ antok::TemplateMixedPlot<T1,T2,T3>::TemplateMixedPlot(std::map<std::string, std:
 						 _vecData2InT2( nullptr ),
 						 _vecDataVector1InT1( nullptr ),
 						 _vecDataVector1InT2(),
+                         _vecDataVector1InT3(),
 						 _vecDataVector2InT1(),
 						 _vecDataVector2InT2( data2 ),
-						 _templateplotT1(0)
+                         _vecDataVector2InT3(),
+						 _templateplotT3(0)
 {
-	_templateplotT1 = new TemplatePlot<T1>(cutmasks, hist_template, data1, &_vecDataVector2InT1 );
+    T3 data1T3 = static_cast<T3>(*data1);
+	_templateplotT3 = new TemplatePlot<T3>(cutmasks, hist_template, &data1T3, &_vecDataVector2InT3 );
 }
 
 template< typename T1, typename T2, typename T3 >
@@ -486,11 +491,13 @@ antok::TemplateMixedPlot<T1,T2,T3>::TemplateMixedPlot(std::map<std::string, std:
 		_vecData2InT2( nullptr ),
 		_vecDataVector1InT1( data1 ),
 		_vecDataVector1InT2(),
+        _vecDataVector1InT3(),
 		_vecDataVector2InT1(),
 		_vecDataVector2InT2( nullptr ),
-		_templateplotT2(0)
+		_templateplotT3(0)
 {
-	_templateplotT2 = new TemplatePlot<T2>(cutmasks, hist_template, &_vecDataVector1InT2, data2 );
+    T3 data2T3 = static_cast<T3>(*data2);
+	_templateplotT3 = new TemplatePlot<T3>(cutmasks, hist_template, &_vecDataVector1InT3, &data2T3 );
 }
 
 template< typename T1, typename T2, typename T3 >
@@ -535,18 +542,16 @@ void antok::TemplateMixedPlot<T1,T2,T3>::fill(long cutPattern){
 	case 2:
 		_vecDataVector2InT3.resize( (*_vecDataVector2InT2).size(), T3() );
 		for( size_t i = 0; i < _vecDataVector2InT3.size(); ++i) _vecDataVector2InT3[i] = static_cast<T3>( (*_vecDataVector2InT2)[i] );
-		_templateplotT1->fill(cutPattern);
+		_templateplotT3->fill(cutPattern);
 		break;
 	case 3:
 		_vecDataVector1InT3.resize( (*_vecDataVector1InT1).size(), T3() );
 		for( size_t i = 0; i < _vecDataVector1InT3.size(); ++i) _vecDataVector1InT3[i] = static_cast<T3>( (*_vecDataVector1InT1)[i] );
-		_templateplotT2->fill(cutPattern);
+		_templateplotT3->fill(cutPattern);
 		break;
 	default:
 		throw 1;
 	}
-
-
 }
 #endif
 
