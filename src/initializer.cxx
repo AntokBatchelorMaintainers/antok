@@ -262,7 +262,6 @@ bool antok::Initializer::initializeData() {
 
 	// Get all the branches in the tree and fill the data maps
 	YAML::Node perEventTreeBranches= config["TreeBranches"]["onePerEvent"];
-	YAML::Node perParticleTreeBranches= config["TreeBranches"]["onePerParticle"];
 	for(YAML::const_iterator typeIt = perEventTreeBranches.begin(); typeIt != perEventTreeBranches.end(); ++typeIt) {
 		for(YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
 			std::string type = antok::YAMLUtils::getString(typeIt->first);
@@ -283,6 +282,11 @@ bool antok::Initializer::initializeData() {
 				}
 			} else if(type == "Long64_t") {
 				if(not data.insertInputVariable<Long64_t>(name)) {
+					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
+			} else if(type == "std::vector<int>") {
+				if(not data.insertInputVariable<std::vector<double> >(name)) {
 					std::cerr<<antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
@@ -318,6 +322,7 @@ bool antok::Initializer::initializeData() {
 			return false;
 		}
 
+		YAML::Node perParticleTreeBranches= config["TreeBranches"]["onePerParticle"];
 		for (YAML::const_iterator typeIt = perParticleTreeBranches.begin(); typeIt != perParticleTreeBranches.end(); ++typeIt) {
 			for (YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
 				std::string type = antok::YAMLUtils::getString(typeIt->first);
@@ -350,6 +355,15 @@ bool antok::Initializer::initializeData() {
 						std::stringstream strStr;
 						strStr << baseName << (i + 1);
 						if (not data.insertInputVariable<Long64_t>(strStr.str())) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+							return false;
+						}
+					}
+				} else if (type == "std::vector<int>") {
+					for (unsigned int i = 0; i < N_PARTICLES; ++i) {
+						std::stringstream strStr;
+						strStr << baseName << (i + 1);
+						if (not data.insertInputVariable<std::vector<int> >(strStr.str())) {
 							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
 							return false;
 						}
@@ -437,6 +451,15 @@ bool antok::Initializer::initializeInput(){
 	for(std::map<std::string, Long64_t>::iterator it = data.long64_ts.begin(); it != data.long64_ts.end(); ++it) {
 		if( data.isInputVariable(it->first))
 			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+	}
+	for(std::map<std::string, std::vector<int>* >::iterator it = data.intVectors.begin(); it != data.intVectors.end(); ++it) {
+		std::vector<int>* const oldPtr  = it->second; // SetBranchAddress is not allowed to change when opening a (new) file
+		if( data.isInputVariable(it->first))
+			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+		if(it->second != oldPtr){
+			std::cout << "Pointer address of vector<int> '" << it->first << "' has changed while opening a new file." << std::endl;
+			return false;
+		}
 	}
 	for(std::map<std::string, std::vector<double>* >::iterator it = data.doubleVectors.begin(); it != data.doubleVectors.end(); ++it) {
 		std::vector<double>* const oldPtr  = it->second; // SetBranchAddress is not allowed to change when opening a (new) file

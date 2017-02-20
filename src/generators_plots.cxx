@@ -43,46 +43,6 @@ namespace {
 		return returnMap;
 	}
 
-	template<typename T>
-	std::pair< std::vector<T*>*, std::vector<T*>*> __adjustVectors( std::vector<std::vector<T>*>*  vectorFirst,
-	                                                                std::vector<T*>*  vectorSecond )
-	{
-		// Calculate required size
-		std::vector<T*>* vectorFirstAdjusted(nullptr);
-		unsigned long mergedSize = 0;
-		for( unsigned int i = 0; i < vectorFirst->size(); ++i ) {
-			mergedSize += ((*vectorFirst)[i])->size();
-		}
-		vectorFirstAdjusted->resize( mergedSize, T() );
-
-		// Merge vectors into single vector
-		for( unsigned int i = 0; i < vectorFirst->size(); ++i ) {
-			for( unsigned int j = 0; j < (vectorFirst[i]).size(); ++j ) {
-				vectorFirstAdjusted->push_back( &((*(*vectorFirst)[i])[j]) );
-			};
-		}
-
-		if( mergedSize != vectorSecond->size() ) {
-			std::cerr<<"Invalid size of given vector quantities: "<<mergedSize<<" and "<<vectorSecond->size()<<" should be equal."<< std::endl;
-			throw 1;
-		}
-
-		// Fill vector with correct amount of numbers
-		std::vector<T*>* vectorSecondAdjusted(nullptr);
-		vectorSecondAdjusted->resize( mergedSize, T() );
-		for( unsigned int i = 0; i < vectorFirst->size(); ++i ) {
-			for( unsigned int j = 0; j < (vectorFirst[i]).size(); ++j ) {
-				vectorSecondAdjusted->push_back( (*vectorSecond)[i] );
-			}
-		}
-
-		std::pair<std::vector<T*>*,std::vector<T*>* > result;
-		result.first = vectorFirstAdjusted;
-		result.second = vectorSecondAdjusted;
-
-		return result;
-	}
-
 	void __getCutmasks(const antok::plotUtils::GlobalPlotOptions& plotOptions,
 	                   std::map<std::string, std::vector<long> >& cutmasks)
 	{
@@ -514,21 +474,10 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			if((not vec1Data) or (not vec2Data)) {
 				return 0;
 			}
-			std::pair<std::vector<int*>*, std::vector<int*>* > adjustedData = __adjustVectors<int>( vec2Data, vec1Data );
-			antokPlot = new antok::TemplateMixedPlot<std::vector<int*>*,std::vector<int*>*,int>(cutmasks,
-			                                                                                    new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
-			                                                                                    &(adjustedData.second),
-			                                                                                    &(adjustedData.first));
-//		} else if (variableType == "std::vector<int>" && variable2Type == "int") {
-//			std::vector<std::vector<int>*>* vec1Data = __getDataVector<std::vector<int>>(plot, plotName, variable1Name, indices);
-//			std::vector<int*>* vec2Data = __getDataVector<int>(plot, plotName, variable2Name, indices);
-//			if((not vec1Data) or (not vec2Data)) {
-//				return 0;
-//			}
-//			antokPlot = new antok::TemplateMixedPlot<std::vector<int>,int,int>(cutmasks,
-//			                                                                   new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
-//			                                                                   vec1Data,
-//			                                                                   vec2Data);
+			antokPlot = new antok::TemplateMixedPlot<int,int,int>(cutmasks,
+			                                                      new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                                      vec1Data,
+			                                                      vec2Data);
 		} else if (variableType == "int" && variable2Type == "double") {
 			std::vector<int*>* vec1Data = __getDataVector<int>(plot, plotName, variable1Name, indices);
 			std::vector<double*>* vec2Data = __getDataVector<double>(plot, plotName, variable2Name, indices);
