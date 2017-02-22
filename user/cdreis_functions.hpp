@@ -511,7 +511,7 @@ namespace antok {
 								                                     - 2.32607412774166322e+00 / ((*_Energy)[i] * (*_Energy)[i])                 - 1.93619661173087841e-04 * ((*_Energy)[i] * (*_Energy)[i])
 								                                     + 1.49078112452376610e+00 / ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]) + 5.64013549903698752e-07 * ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]);
 							}
-							(*_resultTiming)[i] = (*_Timing) - correction;
+							(*_resultTiming)[i] = (*_Timing)[i] - correction;
 						}
 						return true;
 					}
