@@ -187,7 +187,7 @@ namespace antok {
 						}
 						for (unsigned int i = 0; i < _VectorLV->size(); i++) {
 							TLorentzVector comparator = _VectorLV->back();
-							int ECALIndexComparator = (*_ECALIndex)[i];
+							int ECALIndexComparator = _ECALIndex->back();
 							double massResolution;
 							_VectorLV->pop_back();
 							_ECALIndex->pop_back();
