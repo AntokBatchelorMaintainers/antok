@@ -170,12 +170,12 @@ namespace antok {
 				public:
 					GetPi0s(std::vector<TLorentzVector> *VectorLV,
 					        std::vector<int> *ECALIndex,
-					        double *mass,
-					        std::vector<TLorentzVector> *resultVecLV)
+					        std::vector<TLorentzVector> *resultVecLV,
+					        int* hasPi0s)
 							: _VectorLV(VectorLV),
 							  _ECALIndex(ECALIndex),
-							  _mass(mass),
-							  _resultVecLV(resultVecLV) {}
+							  _resultVecLV(resultVecLV),
+							  _hasPi0s(hasPi0s) {}
 
 					virtual ~GetPi0s() {}
 
@@ -207,7 +207,7 @@ namespace antok {
 								else {
 									massResolution = 3. * 0.0197151;
 								}
-								if (std::fabs(pi0Candidate.Mag() - *_mass) < massResolution) {
+								if (std::fabs(pi0Candidate.Mag() - 0.1349766) < massResolution) {
 
 									_resultVecLV->push_back(pi0Candidate);
 								}
@@ -219,8 +219,8 @@ namespace antok {
 				private:
 					std::vector<TLorentzVector> *_VectorLV;
 					std::vector<int> *_ECALIndex;
-					double *_mass;
 					std::vector<TLorentzVector> *_resultVecLV;
+					int* _hasPi0s;
 				};
 
 				class GetCleanedEcalClusters : public Function {
