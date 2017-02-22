@@ -488,6 +488,46 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			                                                      new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                      vec1Data,
 			                                                      vec2Data);
+		} else if (variableType == "int" && variable2Type == "std::vector<double>") {
+			std::vector<int*>* vec1Data = __getDataVector<int>(plot, plotName, variable1Name, indices);
+			std::vector<std::vector<double>*>* vec2Data = __getDataVector<std::vector<double>>(plot, plotName, variable2Name, indices);
+			if((not vec1Data) or (not vec2Data)) {
+				return 0;
+			}
+			antokPlot = new antok::TemplateMixedPlot<int,double,double>(cutmasks,
+			                                                            new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                                            vec1Data,
+			                                                            vec2Data);
+		} else if (variableType == "std::vector<double>" && variable2Type == "int") {
+			std::vector<std::vector<double>*>* vec1Data = __getDataVector<std::vector<double>>(plot, plotName, variable1Name, indices);
+			std::vector<int*>* vec2Data = __getDataVector<int>(plot, plotName, variable2Name, indices);
+			if((not vec1Data) or (not vec2Data)) {
+				return 0;
+			}
+			antokPlot = new antok::TemplateMixedPlot<double,int,double>(cutmasks,
+			                                                            new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                                            vec1Data,
+			                                                            vec2Data);
+		} else if (variableType == "double" && variable2Type == "std::vector<int>") {
+			std::vector<double*>* vec1Data = __getDataVector<double>(plot, plotName, variable1Name, indices);
+			std::vector<std::vector<int>*>* vec2Data = __getDataVector<std::vector<int>>(plot, plotName, variable2Name, indices);
+			if((not vec1Data) or (not vec2Data)) {
+				return 0;
+			}
+			antokPlot = new antok::TemplateMixedPlot<double,int,double>(cutmasks,
+			                                                            new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                                            vec1Data,
+			                                                            vec2Data);
+		} else if (variableType == "std::vector<int>" && variable2Type == "double") {
+			std::vector<std::vector<int>*>* vec1Data = __getDataVector<std::vector<int>>(plot, plotName, variable1Name, indices);
+			std::vector<double*>* vec2Data = __getDataVector<double>(plot, plotName, variable2Name, indices);
+			if((not vec1Data) or (not vec2Data)) {
+				return 0;
+			}
+			antokPlot = new antok::TemplateMixedPlot<int,double,double>(cutmasks,
+			                                                            new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
+			                                                            vec1Data,
+			                                                            vec2Data);
 		} else if (variableType == "int" && variable2Type == "double") {
 			std::vector<int*>* vec1Data = __getDataVector<int>(plot, plotName, variable1Name, indices);
 			std::vector<double*>* vec2Data = __getDataVector<double>(plot, plotName, variable2Name, indices);
