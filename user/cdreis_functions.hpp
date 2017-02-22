@@ -375,7 +375,7 @@ namespace antok {
 										}
 										else if( (*_ECALIndex)[m] == 2 && (*_ECALIndex)[n] == 2 )
 										{
-											resolution = 3 * 0.00408290;
+											resolution = 3 * 0.00388425;
 										}
 										else if( (*_ECALIndex)[m] != (*_ECALIndex)[n] )
 										{
