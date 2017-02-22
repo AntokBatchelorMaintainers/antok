@@ -293,6 +293,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node &function, std::vector<
 
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("VectorLV", "std::vector<TLorentzVector>"));
+	args.push_back(std::pair<std::string, std::string>("ECALIndex", "std::vector<int>"));
 
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -302,6 +303,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node &function, std::vector<
 	antok::Data &data = antok::ObjectManager::instance()->getData();
 
 	std::vector<TLorentzVector> *VectorLVAddr = data.getAddr<std::vector<TLorentzVector> >(args[0].first);
+	std::vector<int> *ECALIndexAddr = data.getAddr<std::vector<int> >(args[1].first);
 
 	std::string resultVecLV = quantityNames[0];
 	std::string resultVecLV0 = quantityNames[1];
@@ -329,6 +331,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node &function, std::vector<
 	}
 
 	return (new antok::user::cdreis::functions::GetPi0Pair(VectorLVAddr,
+	                                                       ECALIndexAddr,
 	                                                       data.getAddr<std::vector<TLorentzVector> >(resultVecLV),
 	                                                       data.getAddr<TLorentzVector>(resultVecLV0),
 	                                                       data.getAddr<TLorentzVector>(resultVecLV1),
