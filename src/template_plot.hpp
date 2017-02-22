@@ -356,7 +356,7 @@ antok::TemplatePlot<T>::TemplatePlot(std::map<std::string, std::vector<long> >& 
 		  _data3(nullptr)
 {
 	assert(histTemplate != 0);
-	assert( _vecDataVector1->size() == _multipleVecDataVectors2->size() );
+	assert( _vecDataVector2->size() == _multipleVecDataVectors1->size() );
 	makePlot(cutmasks, histTemplate);
 };
 
