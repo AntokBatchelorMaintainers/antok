@@ -56,6 +56,11 @@ namespace antok {
 		             std::vector<T>* data1,
 		             std::vector<std::vector<T>*>* data2 );
 
+		TemplatePlot(std::map<std::string, std::vector<long> >& cutmasks,
+		             TH1* hist_template,
+		             std::vector<std::vector<T>*>* data1,
+		             std::vector<T>* data2 );
+
 		virtual void fill(long cutmask);
 
 		~TemplatePlot() { };
@@ -121,11 +126,11 @@ namespace antok {
 		unsigned int _copymode;
 
 		T1* _data1InT1;
-		T3 _data1InT3;
+		T3  _data1InT3;
 
-		T1 _data2InT1;
+		T1  _data2InT1;
 		T2* _data2InT2;
-		T3 _data2InT3;
+		T3  _data2InT3;
 
 		std::vector<T1*>* _vecData1InT1;
 		std::vector<T2*>* _vecData1InT2;
@@ -143,6 +148,10 @@ namespace antok {
 		std::vector<T2>* _vecDataVector2InT2;
 		std::vector<T3>  _vecDataVector2InT3;
 
+		std::vector<std::vector<T1>*>* _vecDataVecVector1InT1;
+		std::vector<std::vector<T3>*>  _vecDataVecVector1InT3;
+
+		std::vector<std::vector<T1>*>* _vecDataVecVector2InT1;
 		std::vector<std::vector<T2>*>* _vecDataVecVector2InT2;
 		std::vector<std::vector<T3>*>  _vecDataVecVector2InT3;
 
@@ -496,16 +505,23 @@ antok::TemplateMixedPlot<T1,T2,T3>::TemplateMixedPlot(std::map<std::string, std:
 						 _data2InT1(),
 						 _data2InT2( data2 ),
 						 _data2InT3(),
+						 _vecData1InT1(nullptr),
+						 _vecData1InT2(nullptr),
+						 _vecData1InT3(),
 						 _vecData2InT1(),
 						 _vecData2InT2(nullptr),
+						 _vecData2InT3(),
 						 _vecDataVector1InT1(nullptr),
 						 _vecDataVector1InT2(),
 						 _vecDataVector1InT3(),
 						 _vecDataVector2InT1(),
 						 _vecDataVector2InT2(nullptr),
 						 _vecDataVector2InT3(),
-					     _vecDataVecVector2InT2( nullptr ),
-					     _vecDataVecVector2InT3(),
+						 _vecDataVecVector1InT1(nullptr),
+						 _vecDataVecVector1InT3(),
+						 _vecDataVecVector2InT1(nullptr),
+						 _vecDataVecVector2InT2(nullptr),
+						 _vecDataVecVector2InT3(),
 						 _templateplotT3(nullptr)
 {
 	_templateplotT3 = new TemplatePlot<T3>(cutmasks, hist_template, &_data1InT3, &_data2InT3);
@@ -524,15 +540,22 @@ antok::TemplateMixedPlot<T1,T2,T3>::TemplateMixedPlot(std::map<std::string, std:
 						 _data2InT1(),
 						 _data2InT2(nullptr),
 						 _data2InT3(),
+						 _vecData1InT1(nullptr),
+						 _vecData1InT2(nullptr),
+						 _vecData1InT3(),
 						 _vecData2InT1(),
 						 _vecData2InT2(nullptr),
+						 _vecData2InT3(),
 						 _vecDataVector1InT1(nullptr),
 						 _vecDataVector1InT2(),
 						 _vecDataVector1InT3(),
 						 _vecDataVector2InT1(),
 						 _vecDataVector2InT2( data2 ),
 						 _vecDataVector2InT3(),
-						 _vecDataVecVector2InT2( nullptr ),
+						 _vecDataVecVector1InT1(nullptr),
+						 _vecDataVecVector1InT3(),
+						 _vecDataVecVector2InT1(nullptr),
+						 _vecDataVecVector2InT2(nullptr),
 						 _vecDataVecVector2InT3(),
 						 _templateplotT3(nullptr)
 {
@@ -553,13 +576,17 @@ antok::TemplateMixedPlot<T1,T2,T3>::TemplateMixedPlot(std::map<std::string, std:
 						_data2InT3(),
 						_vecData2InT1(),
 						_vecData2InT2(nullptr),
+						_vecData2InT3(),
 						_vecDataVector1InT1( data1 ),
 						_vecDataVector1InT2(),
 						_vecDataVector1InT3(),
 						_vecDataVector2InT1(),
 						_vecDataVector2InT2(nullptr),
 						_vecDataVector2InT3(),
-						_vecDataVecVector2InT2( nullptr ),
+						_vecDataVecVector1InT1(nullptr),
+						_vecDataVecVector1InT3(nullptr),
+						_vecDataVecVector2InT1(nullptr),
+						_vecDataVecVector2InT2(nullptr),
 						_vecDataVecVector2InT3(),
 						_templateplotT3(nullptr)
 {
@@ -579,6 +606,7 @@ antok::TemplateMixedPlot<T1,T2,T3>::TemplateMixedPlot(std::map<std::string, std:
 						 _data2InT2(nullptr),
 						 _data2InT3(),
 						 _vecData1InT1( data1 ),
+						 _vecData1InT2(nullptr),
 						 _vecData1InT3(),
 						 _vecData2InT1(),
 						 _vecData2InT2( data2 ),
@@ -589,6 +617,9 @@ antok::TemplateMixedPlot<T1,T2,T3>::TemplateMixedPlot(std::map<std::string, std:
 						 _vecDataVector2InT1(),
 						 _vecDataVector2InT2( nullptr ),
 						 _vecDataVector2InT3(),
+						 _vecDataVecVector1InT1( nullptr ),
+						 _vecDataVecVector1InT3(),
+						 _vecDataVecVector2InT1( nullptr ),
 						 _vecDataVecVector2InT2( nullptr ),
 						 _vecDataVecVector2InT3(),
 
@@ -602,27 +633,65 @@ antok::TemplateMixedPlot<T1,T2,T3>::TemplateMixedPlot(std::map<std::string, std:
                                                       TH1* hist_template,
                                                       std::vector<T1*>* data1,
                                                       std::vector<std::vector<T2>*>* data2):
-		Plot(),
-		_copymode(4),
-		_data1InT1(),
-		_data1InT3(),
-		_data2InT1(),
-		_data2InT2(nullptr),
-		_data2InT3(),
-		_vecData1InT1( data1 ),
-		_vecData1InT3(),
-		_vecData2InT1(),
-		_vecData2InT2( nullptr ),
-		_vecData2InT3(),
-		_vecDataVector1InT1(nullptr),
-		_vecDataVector1InT2(),
-		_vecDataVector1InT3(),
-		_vecDataVector2InT1(),
-		_vecDataVector2InT2( nullptr ),
-		_vecDataVector2InT3(),
-		_vecDataVecVector2InT2( data2 ),
-		_vecDataVecVector2InT3(),
-		_templateplotT3(nullptr)
+							Plot(),
+							_copymode(4),
+							_data1InT1(),
+							_data1InT3(),
+							_data2InT1(),
+							_data2InT2(nullptr),
+							_data2InT3(),
+							_vecData1InT1( data1 ),
+							_vecData1InT2(nullptr),
+							_vecData1InT3(),
+							_vecData2InT1(),
+							_vecData2InT2( nullptr ),
+							_vecData2InT3(),
+							_vecDataVector1InT1(nullptr),
+							_vecDataVector1InT2(),
+							_vecDataVector1InT3(),
+							_vecDataVector2InT1(),
+							_vecDataVector2InT2( nullptr ),
+							_vecDataVector2InT3(),
+							_vecDataVecVector1InT1(nullptr),
+							_vecDataVecVector1InT3(),
+							_vecDataVecVector2InT1(nullptr),
+							_vecDataVecVector2InT2( data2 ),
+							_vecDataVecVector2InT3(),
+							_templateplotT3(nullptr)
+{
+	_templateplotT3 = new TemplatePlot<T3>(cutmasks, hist_template, &_vecData1InT3, &_vecDataVecVector2InT3 );
+}
+
+template< typename T1, typename T2, typename T3 >
+antok::TemplateMixedPlot<T1,T2,T3>::TemplateMixedPlot(std::map<std::string, std::vector<long> >& cutmasks,
+                                                      TH1* hist_template,
+                                                      std::vector<std::vector<T1>*>* data1,
+                                                      std::vector<T2*>* data2 ):
+							Plot(),
+							_copymode(5),
+							_data1InT1(),
+							_data1InT3(),
+							_data2InT1(),
+							_data2InT2(nullptr),
+							_data2InT3(),
+							_vecData1InT1(nullptr),
+							_vecData1InT2(nullptr),
+							_vecData1InT3(),
+							_vecData2InT1(nullptr),
+							_vecData2InT2( data2 ),
+							_vecData2InT3(),
+							_vecDataVector1InT1(nullptr),
+							_vecDataVector1InT2(),
+							_vecDataVector1InT3(),
+							_vecDataVector2InT1(),
+							_vecDataVector2InT2(nullptr),
+							_vecDataVector2InT3(),
+							_vecDataVecVector1InT1( data1 ),
+							_vecDataVecVector1InT3(),
+							_vecDataVecVector2InT1(nullptr ),
+							_vecDataVecVector2InT2(nullptr),
+							_vecDataVecVector2InT3(),
+							_templateplotT3(nullptr)
 {
 	_templateplotT3 = new TemplatePlot<T3>(cutmasks, hist_template, &_vecData1InT3, &_vecDataVecVector2InT3 );
 }
@@ -661,8 +730,11 @@ void antok::TemplateMixedPlot<T1,T2,T3>::fill(long cutPattern){
 		_templateplotT3->fill(cutPattern);
 		break;
 	case 4:
+		// Prepare new vector with desination type T3 and cast entries
 		_vecData1InT3.resize( _vecData1InT1->size(), T3() );
 		for( unsigned int i = 0; i < _vecData1InT3.size(); ++i ) _vecData1InT3[i] = static_cast<T3>( (*(*_vecData1InT1)[i]) );
+
+
 		for( unsigned  int j = 0; j < _vecDataVecVector2InT3.size(); ++j ) {
 			delete _vecDataVecVector2InT3[j];
 		}
@@ -676,6 +748,8 @@ void antok::TemplateMixedPlot<T1,T2,T3>::fill(long cutPattern){
 		}
 		_templateplotT3->fill(cutPattern);
 		break;
+	case 5:
+		_vecData2InT3.resize( _vecData2InT2->size(), T3() );
 	default:
 		throw 1;
 	}
