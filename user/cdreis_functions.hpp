@@ -342,15 +342,15 @@ namespace antok {
 									break;
 								}
 								pi0Candidate0 = (*_VectorPhotonLV)[i] + (*_VectorPhotonLV)[j];
-								if( _ECALIndex[i] == 1 && _ECALIndex[j] == 1 )
+								if( (*_ECALIndex)[i] == 1 && (*_ECALIndex)[j] == 1 )
 								{
 									resolution = 3 * 0.00884872;
 								}
-								else if( _ECALIndex[i] == 2 && _ECALIndex[j] == 2 )
+								else if( (*_ECALIndex)[i] == 2 && (*_ECALIndex)[j] == 2 )
 								{
 									resolution = 3 * 0.00408290;
 								}
-								else if( _ECALIndex[i] != _ECALIndex[j] )
+								else if( (*_ECALIndex)[i] != (*_ECALIndex)[j] )
 								{
 									resolution = 3 * 0.00831821;
 								}
@@ -369,15 +369,15 @@ namespace antok {
 											continue;
 										}
 										pi0Candidate1 = (*_VectorPhotonLV)[m] + (*_VectorPhotonLV)[n];
-										if( _ECALIndex[m] == 1 && _ECALIndex[n] == 1 )
+										if( (*_ECALIndex)[m] == 1 && (*_ECALIndex)[n] == 1 )
 										{
 											resolution = 3 * 0.00884872;
 										}
-										else if( _ECALIndex[m] == 2 && _ECALIndex[n] == 2 )
+										else if( (*_ECALIndex)[m] == 2 && (*_ECALIndex)[n] == 2 )
 										{
 											resolution = 3 * 0.00408290;
 										}
-										else if( _ECALIndex[m] != _ECALIndex[n] )
+										else if( (*_ECALIndex)[m] != (*_ECALIndex)[n] )
 										{
 											resolution = 3 * 0.00831821;
 										}
