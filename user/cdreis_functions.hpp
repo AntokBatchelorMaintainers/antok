@@ -485,6 +485,54 @@ namespace antok {
 					int* _resultAccepted;
 				};
 
+				class GetECALCorrectedEnergy : public Function
+				{
+				public:
+					GetECALCorrectedEnergy( std::vector<double>* EnergyAddr,
+					                        std::vector<int>* ECALIndexAddr,
+					                        int* RunNumberAddr,
+					                        std::map<int, double> correctionECAL1,
+					                        std::map<int, double> correctionECAL2,
+					                        std::vector<double>* resultEnergy
+					)
+							: _EnergyAddr(EnergyAddr),
+							  _ECALIndexAddr(ECALIndexAddr),
+							  _RunNumberAddr(RunNumberAddr),
+							  _correctionECAL1(correctionECAL1),
+							  _correctionECAL2(correctionECAL2),
+							  _resultEnergy(resultEnergy) {}
+
+					virtual ~GetECALCorrectedEnergy() {}
+
+					bool operator() () {
+						std::vector<double> correctedEnergies;
+						correctedEnergies.resize( (*_EnergyAddr).size() );
+						double correction;
+						for( Size_t i = 0; i < (*_EnergyAddr).size(); ++i ) {
+							if( (*_ECALIndexAddr)[i] == 1 ) {
+								correction = _correctionECAL1[(*_RunNumberAddr)];
+							}
+							else if( (*_ECALIndexAddr)[i] == 2 ) {
+								correction = _correctionECAL2[(*_RunNumberAddr)];
+							}
+							else {
+								correction = 0;
+							}
+							correctedEnergies[i] = (*_EnergyAddr)[i] * correction;
+						}
+						(*_resultEnergy) = correctedEnergies;
+						return true;
+					}
+
+				private:
+					std::vector<double>* _EnergyAddr;
+					std::vector<int>* _ECALIndexAddr;
+					int* _RunNumberAddr;
+					std::map<int, double> _correctionECAL1;
+					std::map<int, double> _correctionECAL2;
+					std::vector<double>* _resultEnergy;
+				};
+
 			}
 
 		}

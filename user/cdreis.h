@@ -22,6 +22,7 @@ namespace antok {
 			antok::Function* generateGetPi0Pair(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetCleanedEcalClusters(const YAML::Node &function, std::vector<std::string> &quantityNames, int index);
 			antok::Function* generateGetOmega(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetECALCorrectedEnergy(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		}
 
 	}
