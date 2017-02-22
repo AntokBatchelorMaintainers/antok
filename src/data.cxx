@@ -59,13 +59,53 @@ namespace antok {
         return true;
     }
 
-    template<>
+	template<>
 	bool antok::Data::insert<std::vector<double> >(std::string name) {
 		if(doubleVectors.count(name) > 0) {
 			return false;
 		}
 		global_map[name] = "std::vector<double>";
 		doubleVectors[name] = (new std::vector<double>);
+		return true;
+	}
+
+	template<>
+	bool antok::Data::insert<std::vector<int*> >(std::string name) {
+		if(intPtrVectors.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "std::vector<int>";
+		intPtrVectors[name] = (new std::vector<int*>);
+		return true;
+	}
+
+	template<>
+	bool antok::Data::insert<std::vector<double*> >(std::string name) {
+		if(doublePtrVectors.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "std::vector<double>";
+		doublePtrVectors[name] = (new std::vector<double*>);
+		return true;
+	}
+
+	template<>
+	bool antok::Data::insert<std::vector<Long64_t> >(std::string name) {
+		if(longVectors.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "std::vector<Long64_t>";
+		longVectors[name] = (new std::vector<Long64_t>);
+		return true;
+	}
+
+	template<>
+	bool antok::Data::insert<std::vector<TVector3> >(std::string name) {
+		if(tVector3Vectors.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "std::vector<TVector3>";
+		tVector3Vectors[name] = (new std::vector<TVector3>);
 		return true;
 	}
 
@@ -137,6 +177,38 @@ namespace antok {
 			return 0;
 		}
 		return doubleVectors[name];
+	}
+
+	template<>
+	std::vector<int*>* antok::Data::getAddr<std::vector<int*> >(std::string name) {
+		if(intPtrVectors.count(name) < 1) {
+			return 0;
+		}
+		return intPtrVectors[name];
+	}
+
+	template<>
+	std::vector<double*>* antok::Data::getAddr<std::vector<double*> >(std::string name) {
+		if(doublePtrVectors.count(name) < 1) {
+			return 0;
+		}
+		return doublePtrVectors[name];
+	}
+
+	template<>
+	std::vector<Long64_t>* antok::Data::getAddr<std::vector<Long64_t> >(std::string name) {
+		if(longVectors.count(name) < 1) {
+			return 0;
+		}
+		return longVectors[name];
+	}
+
+	template<>
+	std::vector<TVector3>* antok::Data::getAddr<std::vector<TVector3> >(std::string name) {
+		if(tVector3Vectors.count(name) < 1) {
+			return 0;
+		}
+		return tVector3Vectors[name];
 	}
 
 	template<>
