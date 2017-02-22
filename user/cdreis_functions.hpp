@@ -485,6 +485,44 @@ namespace antok {
 					int* _resultAccepted;
 				};
 
+				class GetECALCorrectedTiming : public Function
+				{
+				public:
+					GetECALCorrectedTiming( std::vector<double>* Timing,
+					                        std::vector<double>* Energy,
+					                        std::vector<int>* ECALIndex,
+					                        std::vector<double>* resultTiming
+					)
+							: _Timing(Timing),
+							  _Energy(Energy),
+							  _ECALIndex(ECALIndex),
+							  _resultTiming(resultTiming) {}
+
+					virtual ~GetECALCorrectedTiming() {}
+
+					bool operator() () {
+						for( unsigned int i = 0; i < _Timing->size(); ++i ) {
+							double correction;
+							if( (*_ECALIndex)[i] == 1 ) {
+								correction = 6.88657009601456038e-01 + 2.43878020546929308e-01 /  (*_Energy)[i]                  - 2.12664460169421470e-02 *  (*_Energy)[i]
+								                                     - 8.33475234257217146e-02 / ((*_Energy)[i] * (*_Energy)[i]) + 2.44997874575173511e-04 * ((*_Energy)[i] * (*_Energy)[i]);
+							} else if(  (*_ECALIndex)[i] == 2 ) {
+								correction = 1.95194387224751464e-01 + 1.40949894147897314e+00 /  (*_Energy)[i]                                  + 2.38239880696187872e-02 * ( *_Energy)[i]
+								                                     - 2.32607412774166322e+00 / ((*_Energy)[i] * (*_Energy)[i])                 - 1.93619661173087841e-04 * ((*_Energy)[i] * (*_Energy)[i])
+								                                     + 1.49078112452376610e+00 / ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]) + 5.64013549903698752e-07 * ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]);
+							}
+							(*_resultTiming)[i] = (*_Timing) - correction;
+						}
+						return true;
+					}
+
+				private:
+					std::vector<double>* _Timing;
+					std::vector<double>* _Energy;
+					std::vector<int>* _ECALIndex;
+					std::vector<double>* _resultTiming;
+				};
+
 			}
 
 		}
