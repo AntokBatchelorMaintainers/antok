@@ -802,6 +802,7 @@ void antok::TemplateMixedPlot<T1,T2,T3>::fill(long cutPattern){
 		}
 		_vecData2InT3.resize( _vecData2InT2->size(), T3() );
 		for( unsigned int i = 0; i < _vecData2InT3.size(); ++i ) _vecData2InT3[i] = static_cast<T3>( (*(*_vecData2InT2)[i]) );
+		break;
 	default:
 		throw 1;
 	}
