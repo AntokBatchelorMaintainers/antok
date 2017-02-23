@@ -394,3 +394,39 @@ antok::Function* antok::user::cdreis::generateGetOmega(const YAML::Node& functio
 	);
 };
 
+antok::Function * antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node &function, std::vector<std::string> &quantityNames,
+                                                                      int index) {
+
+	if (quantityNames.size() > 1) {
+		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Timing", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("Energy", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("ECALIndex", "std::vector<int>"));
+
+	if (not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data &data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* Timing = data.getAddr<std::vector<double>>(args[0].first);
+	std::vector<double>* Energy = data.getAddr<std::vector<double>>(args[1].first);
+	std::vector<int>* ECALIndex = data.getAddr<std::vector<int>>(args[2].first);
+
+	if (not data.insert<std::vector<double>>(quantityName)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::cdreis::functions::GetECALCorrectedTiming(Timing,
+	                                                                   Energy,
+	                                                                   ECALIndex,
+	                                                                   data.getAddr<std::vector<double>>(quantityName)));
+};
+
