@@ -40,12 +40,6 @@ namespace antok {
 
 		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
 		             TH1 *hist_template,
-		             std::vector<T1> *data1,
-		             std::vector<T2> *data2 = nullptr,
-		             std::vector<T3> *data3 = nullptr);
-
-		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
-		             TH1 *hist_template,
 		             std::vector<std::vector<T1> *> *data1,
 		             std::vector<std::vector<T2> *> *data2 = nullptr,
 		             std::vector<std::vector<T3> *> *data3 = nullptr);
@@ -152,7 +146,7 @@ namespace antok {
 			  _vecData3(nullptr),
 			  _vecDataVector1(vecData1),
 			  _vecDataVector2(vecData2),
-			  _vecDataVector2(vecData3),
+			  _vecDataVector3(vecData3),
 			  _multipleVecDataVectors1(nullptr),
 			  _multipleVecDataVectors2(nullptr),
 			  _multipleVecDataVectors3(nullptr),
@@ -212,7 +206,9 @@ namespace antok {
 						break;
 					case 1:
 						if( _vecData2 == nullptr ) {
-							hist->Fill( *(*_vecData1)[j]);
+							for (unsigned int j = 0; j < _vecData1->size(); ++j) {
+								hist->Fill(*(*_vecData1)[j]);
+							}
 						} else if( _vecData3 == nullptr ) {
 							assert(_vecData1->size() == _vecData2->size());
 							for (unsigned int j = 0; j < _vecData1->size(); ++j) {
@@ -230,7 +226,9 @@ namespace antok {
 						break;
 					case 2:
 						if( _vecDataVector2 == nullptr ) {
-							hist->Fill((*_vecData1)[j]);
+							for (unsigned int j = 0; j < _vecData1->size(); ++j) {
+								hist->Fill((*_vecDataVector1)[j]);
+							}
 						} else if( _vecDataVector3 == nullptr ) {
 							assert(_vecDataVector1->size() == _vecDataVector2->size());
 							for (unsigned int j = 0; j < _vecDataVector1->size(); ++j) {
@@ -268,7 +266,7 @@ namespace antok {
 								assert( (*_multipleVecDataVectors1)[j]->size() == (*_multipleVecDataVectors2)[j]->size() );
 								assert( (*_multipleVecDataVectors1)[j]->size() == (*_multipleVecDataVectors3)[j]->size() );
 								for(unsigned int k = 0; k < (*_multipleVecDataVectors1)[j]->size(); ++k ) {
-									hist->Fill((*(*_multipleVecDataVectors1)[j])[k],(*(*_multipleVecDataVectors2)[j])[k],(*(*_multipleVecDataVectors3)[j])[k]);
+									static_cast<TH3D *>(hist)->Fill((*(*_multipleVecDataVectors1)[j])[k],(*(*_multipleVecDataVectors2)[j])[k],(*(*_multipleVecDataVectors3)[j])[k]);
 								}
 							}
 						}
