@@ -173,7 +173,7 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 
 		std::string variableType = data.getType(variableName);
 		if(variableType == "double") {
-			antokPlot = new antok::TemplatePlot<double,double,double>(cutmasks,
+			antokPlot = new antok::TemplatePlot<double>(cutmasks,
 			                                            new TH1D(plotName.c_str(),
 			                                                     plotNameWithAxisLables.c_str(),
 			                                                     nBins,
@@ -181,7 +181,7 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 			                                                     upperBound),
 			                                            data.getAddr<double>(variableName));
 		} else if (variableType == "int") {
-			antokPlot = new antok::TemplatePlot<int,int,int>(cutmasks,
+			antokPlot = new antok::TemplatePlot<int>(cutmasks,
 			                                         new TH1D(plotName.c_str(),
 			                                                  plotNameWithAxisLables.c_str(),
 			                                                  nBins,
@@ -189,7 +189,7 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 			                                                  upperBound),
 			                                         data.getAddr<int>(variableName));
 		} else if (variableType == "std::vector<double>") {
-			antokPlot = new antok::TemplatePlot<double,double,double>(cutmasks,
+			antokPlot = new antok::TemplatePlot<double>(cutmasks,
 			                                            new TH1D(plotName.c_str(),
 			                                                     plotNameWithAxisLables.c_str(),
 			                                                     nBins,
@@ -218,19 +218,19 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 			if(not vecData) {
 				return 0;
 			}
-			antokPlot = new antok::TemplatePlot<double,double,double>(cutmasks, new TH1D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins, lowerBound, upperBound), vecData);
+			antokPlot = new antok::TemplatePlot<double>(cutmasks, new TH1D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins, lowerBound, upperBound), vecData);
 		} else if(variableType == "int") {
 			std::vector<int*>* vecData = __getDataVector<int>(plot, plotName, variableName, indices);
 			if(not vecData) {
 				return 0;
 			}
-			antokPlot = new antok::TemplatePlot<int,int,int>(cutmasks, new TH1D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins, lowerBound, upperBound), vecData);
+			antokPlot = new antok::TemplatePlot<int>(cutmasks, new TH1D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins, lowerBound, upperBound), vecData);
 		} else if(variableType == "std::vector<double>") {
 			std::vector<std::vector<double>*>* vecData = __getDataVector<std::vector<double> >(plot, plotName, variableName, indices);
 			if(not vecData) {
 				return 0;
 			}
-			antokPlot = new antok::TemplatePlot<double,double,double>(cutmasks, new TH1D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins, lowerBound, upperBound), vecData);
+			antokPlot = new antok::TemplatePlot<double>(cutmasks, new TH1D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins, lowerBound, upperBound), vecData);
 		} else if(variableType == "") {
 			std::cerr<<"Could not find \"Variable\" \""<<variableName<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 			return 0;
@@ -325,27 +325,27 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 		std::string variable2Type = data.getType(variable2Name);
 
 		if(variableType == "double" && variable2Type == "double") {
-			antokPlot = new antok::TemplatePlot<double,double,double>(cutmasks,
+			antokPlot = new antok::TemplatePlot<double,double>(cutmasks,
 			                                                          new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                          data.getAddr<double>(variable1Name),
 			                                                          data.getAddr<double>(variable2Name));
 		} else if (variableType == "int" && variable2Type == "int") {
-			antokPlot = new antok::TemplatePlot<int,int,int>(cutmasks,
+			antokPlot = new antok::TemplatePlot<int,int>(cutmasks,
 			                                                 new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                 data.getAddr<int>(variable1Name),
 			                                                 data.getAddr<int>(variable2Name));
 		} else if (variableType == "std::vector<double>" && variable2Type == "std::vector<double>") {
-			antokPlot = new antok::TemplatePlot<double,double,double>(cutmasks,
+			antokPlot = new antok::TemplatePlot<double,double>(cutmasks,
 			                                                          new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                          data.getAddr<std::vector<double> >(variable1Name),
 			                                                          data.getAddr<std::vector<double> >(variable2Name));
 		} else if (variableType == "double" && variable2Type == "int") {
-			antokPlot = new antok::TemplatePlot<double,int,int>(cutmasks,
+			antokPlot = new antok::TemplatePlot<double,int>(cutmasks,
 			                                                    new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                    data.getAddr<double >(variable1Name),
 			                                                    data.getAddr<int>(variable2Name));
 		} else if (variableType == "int" && variable2Type == "double") {
-			antokPlot = new antok::TemplatePlot<int,double,int>(cutmasks,
+			antokPlot = new antok::TemplatePlot<int,double>(cutmasks,
 			                                                    new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                    data.getAddr<int >(variable1Name),
 			                                                    data.getAddr<double>(variable2Name));
@@ -379,7 +379,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			if((not vec1Data) or (not vec2Data)) {
 				return 0;
 			}
-			antokPlot = new antok::TemplatePlot<double,double,double>(cutmasks,
+			antokPlot = new antok::TemplatePlot<double,double>(cutmasks,
 			                                                          new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                          vec1Data,
 			                                                          vec2Data);
@@ -389,7 +389,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			if((not vec1Data) or (not vec2Data)) {
 				return 0;
 			}
-			antokPlot = new antok::TemplatePlot<int,int,int>(cutmasks,
+			antokPlot = new antok::TemplatePlot<int,int>(cutmasks,
 			                                                 new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                 vec1Data,
 			                                                 vec2Data);
@@ -399,7 +399,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			if((not vec1Data) or (not vec2Data)) {
 				return 0;
 			}
-			antokPlot = new antok::TemplatePlot<double,double,double>(cutmasks,
+			antokPlot = new antok::TemplatePlot<double,double>(cutmasks,
 			                                                          new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                          vec1Data,
 			                                                          vec2Data);
@@ -409,7 +409,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			if((not vec1Data) or (not vec2Data)) {
 				return 0;
 			}
-			antokPlot = new antok::TemplatePlot<double,int,int>(cutmasks,
+			antokPlot = new antok::TemplatePlot<double,int>(cutmasks,
 			                                                    new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                    vec1Data,
 			                                                    vec2Data);
@@ -419,7 +419,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			if((not vec1Data) or (not vec2Data)) {
 				return 0;
 			}
-			antokPlot = new antok::TemplatePlot<int,double,int>(cutmasks,
+			antokPlot = new antok::TemplatePlot<int,double>(cutmasks,
 			                                                    new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
 			                                                    vec1Data,
 			                                                    vec2Data);

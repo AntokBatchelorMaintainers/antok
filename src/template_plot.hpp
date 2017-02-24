@@ -15,7 +15,7 @@
 
 namespace antok {
 
-	template<typename T1, typename T2, typename T3>
+	template<typename T1, typename T2 = T1, typename T3 = T2>
 	class TemplatePlot : public Plot {
 
 	public:
@@ -74,12 +74,6 @@ namespace antok {
 		T2 *_data2;
 		T3 *_data3;
 
-	};
-
-	template<typename T1, typename T2 = T1, typename T3 = T2, typename... P>
-	TemplatePlot<T1, T2, T3>*
-	makeTemplatePlot(P... params) {
-		return new TemplatePlot<T1, T2, T3>(params...);
 	};
 
 	template<typename T1, typename T2, typename T3>
