@@ -188,6 +188,14 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 			                                                  lowerBound,
 			                                                  upperBound),
 			                                         data.getAddr<int>(variableName));
+		} else if (variableType == "std::vector<int>") {
+			antokPlot = new antok::TemplatePlot<int>(cutmasks,
+			                                            new TH1D(plotName.c_str(),
+			                                                     plotNameWithAxisLables.c_str(),
+			                                                     nBins,
+			                                                     lowerBound,
+			                                                     upperBound),
+			                                            data.getAddr<std::vector<int> >(variableName));
 		} else if (variableType == "std::vector<double>") {
 			antokPlot = new antok::TemplatePlot<double>(cutmasks,
 			                                            new TH1D(plotName.c_str(),
