@@ -44,6 +44,16 @@ namespace antok {
 		             std::vector<std::vector<T2> *> *data2 = nullptr,
 		             std::vector<std::vector<T3> *> *data3 = nullptr);
 
+		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		             TH1 *hist_template,
+		             T1 *data1,
+		             std::vector<T2> *data2);
+
+		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		             TH1 *hist_template,
+		             std::vector<T1> *data1,
+		             T2 *data2);
+
 		virtual void fill(long cutmask);
 
 		~TemplatePlot() {};
@@ -182,6 +192,62 @@ namespace antok {
 	};
 
 	template<typename T1, typename T2, typename T3>
+	antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+	                                            TH1 *histTemplate,
+	                                            T1* data1,
+	                                            std::vector<T2> *vecData2)
+
+			: Plot(),
+			  _mode(4),
+			  _vecData1(nullptr),
+			  _vecData2(nullptr),
+			  _vecData3(nullptr),
+			  _vecDataVector1(nullptr),
+			  _vecDataVector2(vecData2),
+			  _vecDataVector3(nullptr),
+			  _multipleVecDataVectors1(nullptr),
+			  _multipleVecDataVectors2(nullptr),
+			  _multipleVecDataVectors3(nullptr),
+			  _data1(data1),
+			  _data2(nullptr),
+			  _data3(nullptr) {
+
+		assert(histTemplate != nullptr);
+		assert(_data1 != nullptr);
+		assert(_vecDataVector2 != nullptr);
+		makePlot(cutmasks, histTemplate);
+
+	};
+
+	template<typename T1, typename T2, typename T3>
+	antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+	                                            TH1 *histTemplate,
+	                                            std::vector<T1> *vecData1,
+	                                            T2* data2)
+
+			: Plot(),
+			  _mode(5),
+			  _vecData1(nullptr),
+			  _vecData2(nullptr),
+			  _vecData3(nullptr),
+			  _vecDataVector1(vecData1),
+			  _vecDataVector2(nullptr),
+			  _vecDataVector3(nullptr),
+			  _multipleVecDataVectors1(nullptr),
+			  _multipleVecDataVectors2(nullptr),
+			  _multipleVecDataVectors3(nullptr),
+			  _data1(nullptr),
+			  _data2(data2),
+			  _data3(nullptr) {
+
+		assert(histTemplate != nullptr);
+		assert(_vecDataVector1 != nullptr);
+		assert(_data2 != nullptr);
+		makePlot(cutmasks, histTemplate);
+
+	};
+
+	template<typename T1, typename T2, typename T3>
 	void antok::TemplatePlot<T1,T2,T3>::fill(long cutPattern) {
 
 		for (unsigned int i = 0; i < _histograms.size(); ++i) {
@@ -265,6 +331,17 @@ namespace antok {
 							}
 						}
 						break;
+					case 4:
+						for( unsigned int j = 0; j < _vecDataVector2->size(); ++j ) {
+							hist->Fill( *_data1, (*_vecDataVector2)[j] );
+						}
+						break;
+					case 5:
+						for( unsigned int j = 0; j < _vecDataVector1->size(); ++j ) {
+							hist->Fill((*_vecDataVector1)[j], *_data2);
+						}
+						break;
+
 					default:
 						throw 1;
 				}
