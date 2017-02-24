@@ -354,7 +354,7 @@ namespace antok {
 								{
 									resolution = 3 * 0.00831821;
 								}
-								if (std::fabs(pi0Candidate0.Mag() - 0.13957018) > resolution) {
+								if (std::fabs(pi0Candidate0.Mag() - 0.1349766) > resolution) {
 									continue;
 								}
 								for (unsigned int m = i + 1; m < _VectorPhotonLV->size(); m++) {
@@ -381,7 +381,7 @@ namespace antok {
 										{
 											resolution = 3 * 0.00831821;
 										}
-										if (std::fabs(pi0Candidate1.Mag() - 0.13957018) > resolution) {
+										if (std::fabs(pi0Candidate1.Mag() - 0.1349766) > resolution) {
 											continue;
 										}
 										if( numberCandidatePairs == 0 )
@@ -510,6 +510,55 @@ namespace antok {
 					int* _resultAccepted;
 				};
 
+				class GetECALCorrectedEnergy : public Function
+				{
+				public:
+					GetECALCorrectedEnergy( std::vector<double>* EnergyAddr,
+					                        std::vector<int>* ECALIndexAddr,
+					                        int* RunNumberAddr,
+					                        std::map<int, double> correctionECAL1,
+					                        std::map<int, double> correctionECAL2,
+					                        std::vector<double>* resultEnergy
+					)
+							: _EnergyAddr(EnergyAddr),
+							  _ECALIndexAddr(ECALIndexAddr),
+							  _RunNumberAddr(RunNumberAddr),
+							  _correctionECAL1(correctionECAL1),
+							  _correctionECAL2(correctionECAL2),
+							  _resultEnergy(resultEnergy) {}
+
+					virtual ~GetECALCorrectedEnergy() {}
+
+					bool operator() () {
+						std::vector<double> correctedEnergies;
+						correctedEnergies.resize( (*_EnergyAddr).size() );
+						double correction;
+						for( Size_t i = 0; i < (*_EnergyAddr).size(); ++i ) {
+							if( (*_ECALIndexAddr)[i] == 1 ) {
+								correction = _correctionECAL1[(*_RunNumberAddr)];
+							}
+							else if( (*_ECALIndexAddr)[i] == 2 ) {
+								correction = _correctionECAL2[(*_RunNumberAddr)];
+							}
+							else {
+								correction = 0;
+							}
+							correctedEnergies[i] = (*_EnergyAddr)[i] * correction;
+						}
+						(*_resultEnergy) = correctedEnergies;
+
+						return true;
+					}
+
+				private:
+					std::vector<double>* _EnergyAddr;
+					std::vector<int>* _ECALIndexAddr;
+					int* _RunNumberAddr;
+					std::map<int, double> _correctionECAL1;
+					std::map<int, double> _correctionECAL2;
+					std::vector<double>* _resultEnergy;
+				};
+
 				class GetECALCorrectedTiming : public Function
 				{
 				public:
@@ -532,9 +581,9 @@ namespace antok {
 								correction = 6.88657009601456038e-01 + 2.43878020546929308e-01 /  (*_Energy)[i]                  - 2.12664460169421470e-02 *  (*_Energy)[i]
 								                                     - 8.33475234257217146e-02 / ((*_Energy)[i] * (*_Energy)[i]) + 2.44997874575173511e-04 * ((*_Energy)[i] * (*_Energy)[i]);
 							} else if(  (*_ECALIndex)[i] == 2 ) {
-								correction = 1.95194387224751464e-01 + 1.40949894147897314e+00 /  (*_Energy)[i]                                  + 2.38239880696187872e-02 * ( *_Energy)[i]
-								                                     - 2.32607412774166322e+00 / ((*_Energy)[i] * (*_Energy)[i])                 - 1.93619661173087841e-04 * ((*_Energy)[i] * (*_Energy)[i])
-								                                     + 1.49078112452376610e+00 / ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]) + 5.64013549903698752e-07 * ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]);
+								correction = 1.95194387224751464e-01 + 1.40949894147897314e+00 /  (*_Energy)[i]          + 2.38239880696187872e-02 * ( *_Energy)[i]
+								             - 2.32607412774166322e+00 / ((*_Energy)[i] * (*_Energy)[i])                 - 1.93619661173087841e-04 * ((*_Energy)[i] * (*_Energy)[i])
+								             + 1.49078112452376610e+00 / ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]) + 5.64013549903698752e-07 * ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]);
 							}
 							(*_resultTiming)[i] = (*_Timing)[i] - correction;
 						}
@@ -547,7 +596,6 @@ namespace antok {
 					std::vector<int>* _ECALIndex;
 					std::vector<double>* _resultTiming;
 				};
-
 			}
 
 		}
