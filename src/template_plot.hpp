@@ -356,7 +356,7 @@ namespace antok {
 						break;
 					case 2:
 						if( _vecDataVector2 == nullptr ) {
-							for (unsigned int j = 0; j < _vecData1->size(); ++j) {
+							for (unsigned int j = 0; j < _vecDataVector1->size(); ++j) {
 								hist->Fill((*_vecDataVector1)[j]);
 							}
 						} else if( _vecDataVector3 == nullptr ) {
