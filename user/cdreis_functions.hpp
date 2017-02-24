@@ -82,7 +82,7 @@ namespace antok {
 							lv.SetXYZT(v3.X(), v3.Y(), v3.Z(), (*_VectorEAddr)[i]);
 							(*_resultVec).push_back(lv);
 							// ECAL 1
-							if ((*_VectorZAddr)[i] < 2500) {
+							if ((*_VectorZAddr)[i] < POSITION_ECAL1) {
 								(*_resultECALIndex).push_back(1);
 							}
 								// ECAL 2
@@ -197,17 +197,17 @@ namespace antok {
 								int ECALIndexLV = (*_ECALIndex)[j];
 								// ECAL 1
 								if (ECALIndexComparator == 1 && ECALIndexLV == 1) {
-									massResolution = 3. * 0.028819;
+									massResolution = RESOLUTION_ECAL1;
 								}
 								// ECAL 2
 								else if (ECALIndexComparator == 2 && ECALIndexLV == 2) {
-									massResolution = 3. * 0.0151949;
+									massResolution = RESOLUTION_ECAL2;
 								}
 								// ECAL 1 + 2 mixed
 								else {
-									massResolution = 3. * 0.0197151;
+									massResolution = RESOLUTION_ECALCOMBINED;
 								}
-								if (std::fabs(pi0Candidate.Mag() - 0.1349766) < massResolution) {
+								if (std::fabs(pi0Candidate.Mag() - MASS_PI0) < massResolution) {
 
 									_resultVecLV->push_back(pi0Candidate);
 								}
@@ -267,15 +267,15 @@ namespace antok {
 						// Energy threshold and timing
 						for (unsigned int i = 0; i < _VectorXAddr->size(); i++) {
 							// ECAL 1
-							if ((*_VectorZAddr)[i] < 2500) {
-								if ((*_VectorEAddr)[i] < 0.6 || fabs((*_VectorTAddr)[i]) > 3.75) {
+							if ((*_VectorZAddr)[i] < POSITION_ECAL1) {
+								if ((*_VectorEAddr)[i] < THRESHOLD_ENERGY_ECAL1 || fabs((*_VectorTAddr)[i]) > THRESHOLD_TIMING_ECAL1) {
 									continue;
 								}
 								(*_resultVectorIndexAddr).push_back(1);
 							}
 								// ECAL 2
 							else {
-								if ((*_VectorEAddr)[i] < 1.2 || fabs((*_VectorTAddr)[i]) > 3.00) {
+								if ((*_VectorEAddr)[i] < THRESHOLD_ENERGY_ECAL2 || fabs((*_VectorTAddr)[i]) > THRESHOLD_TIMING_ECAL2) {
 									continue;
 								}
 								(*_resultVectorIndexAddr).push_back(2);
@@ -330,7 +330,7 @@ namespace antok {
 						}
 
 						unsigned int numberCandidatePairs = 0;
-						double resolution = 1;
+						double resolution;
 						TLorentzVector pi0Candidate0(0, 0, 0, 0);
 						TLorentzVector pi0Candidate1(0, 0, 0, 0);
 						for (unsigned int i = 0; i < _VectorPhotonLV->size(); i++) {
@@ -344,17 +344,17 @@ namespace antok {
 								pi0Candidate0 = (*_VectorPhotonLV)[i] + (*_VectorPhotonLV)[j];
 								if( (*_ECALIndex)[i] == 1 && (*_ECALIndex)[j] == 1 )
 								{
-									resolution = 3 * 0.00884872;
+									resolution = RESOLUTION_ECAL1;
 								}
 								else if( (*_ECALIndex)[i] == 2 && (*_ECALIndex)[j] == 2 )
 								{
-									resolution = 3 * 0.00408290;
+									resolution = RESOLUTION_ECAL2;
 								}
 								else if( (*_ECALIndex)[i] != (*_ECALIndex)[j] )
 								{
-									resolution = 3 * 0.00831821;
+									resolution = RESOLUTION_ECALCOMBINED;
 								}
-								if (std::fabs(pi0Candidate0.Mag() - 0.1349766) > resolution) {
+								if (std::fabs(pi0Candidate0.Mag() - MASS_PI0) > resolution) {
 									continue;
 								}
 								for (unsigned int m = i + 1; m < _VectorPhotonLV->size(); m++) {
@@ -371,17 +371,17 @@ namespace antok {
 										pi0Candidate1 = (*_VectorPhotonLV)[m] + (*_VectorPhotonLV)[n];
 										if( (*_ECALIndex)[m] == 1 && (*_ECALIndex)[n] == 1 )
 										{
-											resolution = 3 * 0.00884872;
+											resolution = RESOLUTION_ECAL1;
 										}
 										else if( (*_ECALIndex)[m] == 2 && (*_ECALIndex)[n] == 2 )
 										{
-											resolution = 3 * 0.00388425;
+											resolution = RESOLUTION_ECAL2;
 										}
 										else if( (*_ECALIndex)[m] != (*_ECALIndex)[n] )
 										{
-											resolution = 3 * 0.00831821;
+											resolution = RESOLUTION_ECALCOMBINED;
 										}
-										if (std::fabs(pi0Candidate1.Mag() - 0.1349766) > resolution) {
+										if (std::fabs(pi0Candidate1.Mag() - MASS_PI0) > resolution) {
 											continue;
 										}
 										if( numberCandidatePairs == 0 )
@@ -477,7 +477,7 @@ namespace antok {
 									{
 										// Check if mass fits
 										const TLorentzVector temp = (*pi0s[i]) + (*chargedLV[j]) + (*chargedLV[k]);
-										if( std::fabs( temp.Mag() - 0.78265 ) < 3 * 0.1 )
+										if( std::fabs( temp.Mag() - MASS_OMEGA ) < RESOLUTION_OMEGA )
 										{
 											// Count candidates
 											numberCandidates++;
