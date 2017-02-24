@@ -15,7 +15,7 @@
 
 namespace antok {
 
-	template<typename T>
+	template<typename T1, typename T2, typename T3>
 	class TemplatePlot : public Plot {
 
 	  public:
