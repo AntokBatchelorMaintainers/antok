@@ -410,7 +410,7 @@ namespace antok {
 						if(sqr(gammaLV.Z()) < 1e-13) {
 							*_resultAddrX = 9e9;
 							*_resultAddrY = 9e9;
-							return;
+							return 1;
 						}
 						*_resultAddrX = gammaLV.X() / gammaLV.Z() * (*_ZAddr) + (*_XAddr);
 						*_resultAddrY = gammaLV.Y() / gammaLV.Z() * (*_ZAddr) + (*_YAddr);

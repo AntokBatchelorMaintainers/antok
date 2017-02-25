@@ -95,7 +95,7 @@ namespace {
 		}
 
 		return (new antok::cuts::EllipticCut(shortName, longName, abbreviation, result,
-		                                        meanX, meanY, cutX, cutY, X, Y, mode));
+		                                        meanX, meanY, cutX, cutY, X, Y, phi, mode));
 
 	}
 
