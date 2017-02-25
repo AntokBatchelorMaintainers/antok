@@ -5,6 +5,7 @@
 #include<sstream>
 
 #include<event.h>
+#include<basic_calcs.h>
 
 namespace antok {
 
@@ -192,6 +193,7 @@ namespace antok {
 			            double* cutY,
 			            double* X,
 			            double* Y,
+			            double* phi,
 			            int mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
 				  _meanX(meanX),
@@ -200,19 +202,23 @@ namespace antok {
 				  _cutY(cutY),
 				  _X(X),
 				  _Y(Y),
+				  _phi(phi),
 				  _mode(mode) { }
 
 			bool operator() () {
+				double Xrot = (*_X - *_meanX) * std::cos(*_phi) - (*_Y - *_meanY) * std::sin(*_phi);
+				double Yrot = (*_Y - *_meanY) * std::cos(*_phi) + (*_X - *_meanX) * std::sin(*_phi);
+
 				switch(_mode) {
 					case 0:
 						// inclusive
-						(*_outAddr) = (  ((*_X-*_meanX)*(*_X-*_meanX)/(*_cutX * *_cutX) +
-						                  (*_Y-*_meanY)*(*_Y-*_meanY)/(*_cutY * *_cutY))  <= 1.  );
+						(*_outAddr) = (  (antok::sqr(Xrot) / antok::sqr(*_cutX) +
+						                  antok::sqr(Yrot) / antok::sqr(*_cutY))  <= 1.  );
 						return true;
 					case 1:
 						// exclusive
-						(*_outAddr) = (  ((*_X-*_meanX)*(*_X-*_meanX)/(*_cutX * *_cutX) +
-						                  (*_Y-*_meanY)*(*_Y-*_meanY)/(*_cutY * *_cutY))  < 1.  );
+						(*_outAddr) = (  (antok::sqr(Xrot) / antok::sqr(*_cutX) +
+						                  antok::sqr(Yrot) / antok::sqr(*_cutY))  < 1.  );
 						return true;
 				}
 				return false;
@@ -240,6 +246,7 @@ namespace antok {
 			double* _cutY;
 			double* _X;
 			double* _Y;
+			double* _phi;
 			int _mode;
 
 		};
