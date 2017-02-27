@@ -262,7 +262,7 @@ namespace functions{
 	public:
 
 	DetermineKaonPionLV(TVector3* mom_1, int const* pid_1, TVector3* mom_2, int const* pid_2, double const* mass_charged_kaon, double const* mass_charged_pion,
-	                    TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk, int* pid_kaon, int* pid_pion, const int* method) :
+	                    TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk, int* pid_kaon, int* pid_pion, int* pid_kaon_mct, int* pid_pion_mct ,const int* method, const int* pid_1_mct, const int* pid_2_mct) :
 			mom_1_(*mom_1),
 			pid_1_(*pid_1),
 			mom_2_(*mom_2),
@@ -274,7 +274,11 @@ namespace functions{
 			is_kp_pk_(*is_kp_pk),
 			pid_kaon_(*pid_kaon),
 			pid_pion_(*pid_pion),
-			method_(*method) {
+			pid_kaon_mct_(pid_kaon_mct),
+			pid_pion_mct_(pid_pion_mct),
+			method_(*method),
+			pid_1_mct_(pid_1_mct),
+			pid_2_mct_(pid_2_mct){
 	}
 
 
@@ -292,6 +296,10 @@ namespace functions{
 					is_kp_pk_ = 1;
 					pid_kaon_ = pid_1_;
 					pid_pion_ = pid_2_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_1_mct_;
+						*pid_pion_mct_ = *pid_2_mct_;
+					}
 				} else if ((pid_1_ == 0 && pid_2_ != 0) || (pid_2_ == 1 && pid_1_ != 1)) { // 1 = pion , 2 = kaon
 					kaon_lv_ = TLorentzVector(mom_2_,
 					        sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
@@ -300,6 +308,10 @@ namespace functions{
 					is_kp_pk_ = 2;
 					pid_kaon_ = pid_2_;
 					pid_pion_ = pid_1_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_2_mct_;
+						*pid_pion_mct_ = *pid_1_mct_;
+					}
 				}
 				break;
 			}
@@ -311,12 +323,20 @@ namespace functions{
 					is_kp_pk_ = 1;
 					pid_kaon_ = pid_1_;
 					pid_pion_ = pid_2_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_1_mct_;
+						*pid_pion_mct_ = *pid_2_mct_;
+					}
 				} else if (pid_2_ == 1 && pid_1_ != 1) { // 1 = pion , 2 = kaon
 					kaon_lv_ = TLorentzVector(mom_2_, sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
 					pion_lv_ = TLorentzVector(mom_1_, sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_1_.Mag2()));
 					is_kp_pk_ = 2;
 					pid_kaon_ = pid_2_;
 					pid_pion_ = pid_1_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_2_mct_;
+						*pid_pion_mct_ = *pid_1_mct_;
+					}
 				}
 			break;
 			}
@@ -328,6 +348,10 @@ namespace functions{
 					is_kp_pk_ = 1;
 					pid_kaon_ = pid_1_;
 					pid_pion_ = pid_2_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_1_mct_;
+						*pid_pion_mct_ = *pid_2_mct_;
+					}
 				} else if (pid_1_ == 0 && pid_2_ != 0) { // 1 = pion , 2 = kaon
 					kaon_lv_ = TLorentzVector(mom_2_,
 					        sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
@@ -336,6 +360,10 @@ namespace functions{
 					is_kp_pk_ = 2;
 					pid_kaon_ = pid_2_;
 					pid_pion_ = pid_1_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_2_mct_;
+						*pid_pion_mct_ = *pid_1_mct_;
+					}
 				}
 				break;
 			}
@@ -359,7 +387,11 @@ namespace functions{
 		int& is_kp_pk_;
 		int& pid_kaon_;
 		int& pid_pion_;
+		int* const pid_kaon_mct_;
+		int* const pid_pion_mct_;
 		const int& method_;
+		const int* const pid_1_mct_;
+		const int* const pid_2_mct_;
 
 	};
 

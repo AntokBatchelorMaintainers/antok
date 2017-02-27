@@ -222,10 +222,14 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 }
 
 antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
-	if(quantityNames.size() != 5) {
-		std::cerr<<"Need 5 names for function \""<<function["Name"]<<"\"."<<std::endl;
+	using antok::YAMLUtils::hasNodeKey;
+
+
+	if(quantityNames.size() != 5 and quantityNames.size() != 7) {
+		std::cerr<<"Need 5/7 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
 	}
+
 
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
@@ -241,6 +245,23 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 	possible_const.push_back(std::pair<std::string, double*>("MassChargedPion", nullptr));
 
 	possible_const_int.push_back(std::pair<std::string, int*>("Method", nullptr));
+	if ( hasNodeKey(function, "PidCandidate1Mct")  or hasNodeKey(function, "PidCandidate2Mct")){
+		if ( not (hasNodeKey(function, "PidCandidate1Mct") and hasNodeKey(function, "PidCandidate2Mct") ) ){
+			std::cerr << "Pid MCT value only given for one of both candidates in function " << function["Name"] << std::endl;
+			return 0;
+		}
+		if(quantityNames.size() != 7) {
+			std::cerr << "Pid MCT values given, but no 7 return values given in function " << function["Name"] << std::endl;
+			return 0;
+		}
+		possible_const_int.push_back(std::pair<std::string, int*>("PidCandidate1Mct", nullptr));
+		possible_const_int.push_back(std::pair<std::string, int*>("PidCandidate2Mct", nullptr));
+	} else {
+		if(quantityNames.size() != 5) {
+			std::cerr << "No Pid MCT values given, but no 5 return values given in function " << function["Name"] << std::endl;
+			return 0;
+		}
+	}
 
 	if(not antok::generators::functionArgumentHandler(args, function, 0)) {
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -261,6 +282,12 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 	}
 
 
+	if (possible_const_int.size() == 1){ // add dummy entries if no Mct values are given
+		possible_const_int.push_back(std::pair<std::string, int*>("PidCandidate1Mct", nullptr));
+		possible_const_int.push_back(std::pair<std::string, int*>("PidCandidate2Mct", nullptr));
+	}
+
+
 	data.insert<TLorentzVector>( quantityNames[0] );
 	data.insert<TLorentzVector>( quantityNames[1] );
 	data.insert<int>( quantityNames[2] );
@@ -271,6 +298,15 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 	int* is_kp_pk = data.getAddr<int>(quantityNames[2]);
 	int* pid_kaon = data.getAddr<int>(quantityNames[3]);
 	int* pid_pion = data.getAddr<int>(quantityNames[4]);
+
+	int* pid_kaon_mct = nullptr;
+	int* pid_pion_mct = nullptr;
+	if(quantityNames.size() == 7){
+		data.insert<int>( quantityNames[5] );
+		data.insert<int>( quantityNames[6] );
+		pid_kaon_mct = data.getAddr<int>(quantityNames[5]);
+		pid_pion_mct = data.getAddr<int>(quantityNames[6]);
+	}
 
 
 	return new antok::user::stefan::functions::DetermineKaonPionLV(
@@ -285,7 +321,11 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 																	is_kp_pk,
 																	pid_kaon,
 																	pid_pion,
-																	possible_const_int[0].second
+																	pid_kaon_mct,
+																	pid_pion_mct,
+																	possible_const_int[0].second,
+																	possible_const_int[1].second,
+																	possible_const_int[2].second
 																	);
 }
 
