@@ -304,6 +304,7 @@ def main():
 			with open(log_file + '.old', 'a') as fout:
 				with open(log_file) as fin:
 					fout.write(fin.read())
+			os.remove(log_file)
 
 		if os.path.isfile( out_file ) :
 			print "File '{0}' already exists!".format(out_file);
