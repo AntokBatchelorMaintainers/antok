@@ -385,9 +385,7 @@ namespace antok {
 							assert(_multipleData1->size() == _multipleData2->size());
 							assert(_multipleData1->size() == _multipleData3->size());
 							for (unsigned int j = 0; j < _multipleData1->size(); ++j) {
-								for (unsigned int k = 0; k < _multipleData2->size(); ++k) {
 								fill(hist,(*_multipleData1)[j], (*_multipleData2)[j], (*_multipleData3)[j]);
-								}
 							}
 						}
 						break;
@@ -405,9 +403,7 @@ namespace antok {
 							assert(_dataVector1->size() == _dataVector2->size());
 							assert(_dataVector1->size() == _dataVector3->size());
 							for (unsigned int j = 0; j < _dataVector1->size(); ++j) {
-								for (unsigned int k = 0; k < _dataVector2->size(); ++k) {
-									fill(hist,(*_dataVector1)[j], (*_dataVector2)[j], (*_dataVector3)[j]);
-								}
+								fill(hist,(*_dataVector1)[j], (*_dataVector2)[j], (*_dataVector3)[j]);
 							}
 						}
 						break;
@@ -415,6 +411,7 @@ namespace antok {
 						if( _multipleDataVector2 == nullptr ) {
 							for ( unsigned int j = 0; j < _multipleDataVector1->size(); ++j ) {
 								for(unsigned int k = 0; k < (*_multipleDataVector1)[j]->size(); ++k ) {
+									fill(hist,(*(*_multipleDataVector1)[j])[k]);
 								}
 							}
 						} else if( _multipleDataVector3 == nullptr ) {
