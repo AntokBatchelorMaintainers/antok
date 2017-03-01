@@ -170,12 +170,12 @@ namespace antok {
 				public:
 					GetPi0s(std::vector<TLorentzVector> *VectorLV,
 					        std::vector<int> *ECALIndex,
-					        double *mass,
-					        std::vector<TLorentzVector> *resultVecLV)
+					        std::vector<TLorentzVector> *resultVecLV,
+					        int* hasPi0s)
 							: _VectorLV(VectorLV),
 							  _ECALIndex(ECALIndex),
-							  _mass(mass),
-							  _resultVecLV(resultVecLV) {}
+							  _resultVecLV(resultVecLV),
+							  _hasPi0s(hasPi0s) {}
 
 					virtual ~GetPi0s() {}
 
@@ -187,7 +187,7 @@ namespace antok {
 						}
 						for (unsigned int i = 0; i < _VectorLV->size(); i++) {
 							TLorentzVector comparator = _VectorLV->back();
-							int ECALIndexComparator = (*_ECALIndex)[i];
+							int ECALIndexComparator = _ECALIndex->back();
 							double massResolution;
 							_VectorLV->pop_back();
 							_ECALIndex->pop_back();
@@ -207,7 +207,7 @@ namespace antok {
 								else {
 									massResolution = 3. * 0.0197151;
 								}
-								if (std::fabs(pi0Candidate.Mag() - *_mass) < massResolution) {
+								if (std::fabs(pi0Candidate.Mag() - 0.1349766) < massResolution) {
 
 									_resultVecLV->push_back(pi0Candidate);
 								}
@@ -219,8 +219,8 @@ namespace antok {
 				private:
 					std::vector<TLorentzVector> *_VectorLV;
 					std::vector<int> *_ECALIndex;
-					double *_mass;
 					std::vector<TLorentzVector> *_resultVecLV;
+					int* _hasPi0s;
 				};
 
 				class GetCleanedEcalClusters : public Function {
@@ -307,11 +307,13 @@ namespace antok {
 				class GetPi0Pair : public Function {
 				public:
 					GetPi0Pair(std::vector<TLorentzVector> *VectorPhotonLV,
+					           std::vector<int> *ECALIndex,
 					           std::vector<TLorentzVector> *resultVecLV,
 					           TLorentzVector *resultVecLV0,
 					           TLorentzVector *resultVecLV1,
 					           int *resultGoodPair)
 							: _VectorPhotonLV(VectorPhotonLV),
+							  _ECALIndex(ECALIndex),
 							  _resultVecLV(resultVecLV),
 							  _resultVecLV0(resultVecLV0),
 							  _resultVecLV1(resultVecLV1),
@@ -328,6 +330,7 @@ namespace antok {
 						}
 
 						unsigned int numberCandidatePairs = 0;
+						double resolution = 1;
 						TLorentzVector pi0Candidate0(0, 0, 0, 0);
 						TLorentzVector pi0Candidate1(0, 0, 0, 0);
 						for (unsigned int i = 0; i < _VectorPhotonLV->size(); i++) {
@@ -338,13 +341,22 @@ namespace antok {
 								if (numberCandidatePairs > 1) {
 									break;
 								}
-								TLorentzVector photon0 = (*_VectorPhotonLV)[i];
-								TLorentzVector photon1 = (*_VectorPhotonLV)[j];
-								pi0Candidate0 = photon0 + photon1;
-								if (std::fabs(pi0Candidate0.Mag() - 0.13957018) > 0.06) {
+								pi0Candidate0 = (*_VectorPhotonLV)[i] + (*_VectorPhotonLV)[j];
+								if( (*_ECALIndex)[i] == 1 && (*_ECALIndex)[j] == 1 )
+								{
+									resolution = 3 * 0.00884872;
+								}
+								else if( (*_ECALIndex)[i] == 2 && (*_ECALIndex)[j] == 2 )
+								{
+									resolution = 3 * 0.00408290;
+								}
+								else if( (*_ECALIndex)[i] != (*_ECALIndex)[j] )
+								{
+									resolution = 3 * 0.00831821;
+								}
+								if (std::fabs(pi0Candidate0.Mag() - 0.13957018) > resolution) {
 									continue;
 								}
-
 								for (unsigned int m = i + 1; m < _VectorPhotonLV->size(); m++) {
 									if (numberCandidatePairs > 1) {
 										break;
@@ -356,25 +368,37 @@ namespace antok {
 										if (m == j || n == j) {
 											continue;
 										}
-										TLorentzVector photon2 = (*_VectorPhotonLV)[m];
-										TLorentzVector photon3 = (*_VectorPhotonLV)[n];
-										pi0Candidate1 = photon2 + photon3;
-										if (std::fabs(pi0Candidate1.Mag() - 0.13957018) > 0.06) {
+										pi0Candidate1 = (*_VectorPhotonLV)[m] + (*_VectorPhotonLV)[n];
+										if( (*_ECALIndex)[m] == 1 && (*_ECALIndex)[n] == 1 )
+										{
+											resolution = 3 * 0.00884872;
+										}
+										else if( (*_ECALIndex)[m] == 2 && (*_ECALIndex)[n] == 2 )
+										{
+											resolution = 3 * 0.00388425;
+										}
+										else if( (*_ECALIndex)[m] != (*_ECALIndex)[n] )
+										{
+											resolution = 3 * 0.00831821;
+										}
+										if (std::fabs(pi0Candidate1.Mag() - 0.13957018) > resolution) {
 											continue;
+										}
+										if( numberCandidatePairs == 0 )
+										{
+											(*_resultVecLV).push_back(pi0Candidate0);
+											(*_resultVecLV).push_back(pi0Candidate1);
+											(*_resultVecLV0) = pi0Candidate0;
+											(*_resultVecLV1) = pi0Candidate1;
 										}
 										numberCandidatePairs++;
 									}
 								}
 							}
 						}
-						if (numberCandidatePairs == 1) {
-							(*_resultVecLV).push_back(pi0Candidate0);
-							(*_resultVecLV).push_back(pi0Candidate1);
-						}
 
-						if (_resultVecLV->size() == 2) {
+						if ( numberCandidatePairs == 1) {
 							(*_resultGoodPair) = 1;
-							TLorentzVector both = pi0Candidate0 + pi0Candidate1;
 						}
 
 						return true;
@@ -382,6 +406,7 @@ namespace antok {
 
 				private:
 					std::vector<TLorentzVector> *_VectorPhotonLV;
+					std::vector<int> *_ECALIndex;
 					std::vector<TLorentzVector> *_resultVecLV;
 					TLorentzVector *_resultVecLV0;
 					TLorentzVector *_resultVecLV1;
