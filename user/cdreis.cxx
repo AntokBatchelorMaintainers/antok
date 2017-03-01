@@ -8,6 +8,8 @@
 #include<cdreis_functions.hpp>
 #include<yaml_utils.hpp>
 
+#include "fstream"
+
 antok::Function *antok::user::cdreis::getUserFunction(const YAML::Node &function,
                                                       std::vector<std::string> &quantityNames,
                                                       int index) {
@@ -27,6 +29,8 @@ antok::Function *antok::user::cdreis::getUserFunction(const YAML::Node &function
 		antokFunctionPtr = antok::user::cdreis::generateGetPi0Pair(function, quantityNames, index);
 	else if(functionName == "getOmega")
 		antokFunctionPtr = antok::user::cdreis::generateGetOmega(function, quantityNames, index);
+	else if(functionName == "getECALCorrectedEnergy")
+		antokFunctionPtr = antok::user::cdreis::generateGetECALCorrectedEnergy(function, quantityNames, index);
 
 	return antokFunctionPtr;
 }
@@ -243,7 +247,7 @@ antok::Function *antok::user::cdreis::generateGetVectorLorentzVectorAttributes(c
 
 antok::Function *
 antok::user::cdreis::generateGetPi0s(const YAML::Node &function, std::vector<std::string> &quantityNames, int index) {
-	if (quantityNames.size() > 1) {
+	if (quantityNames.size() > 2) {
 		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
 		return 0;
 	}
@@ -261,26 +265,22 @@ antok::user::cdreis::generateGetPi0s(const YAML::Node &function, std::vector<std
 	std::vector<TLorentzVector> *VectorLVAddr = data.getAddr<std::vector<TLorentzVector> >(args[0].first);
 	std::vector<int> *ECALIndex = data.getAddr<std::vector<int> >(args[1].first);
 
-	if (not antok::YAMLUtils::hasNodeKey(function, "Mass")) {
-		std::cerr << "Argument \"" << "mass" << "\" not found (required for function \"" << function["Name"] << "\")."
-		          << std::endl;
-		return 0;
-	}
-	double *massAddr = antok::YAMLUtils::getAddress<double>(function["Mass"]);
-
 	std::string resultVecLV = quantityNames[0];
+	std::string resultHasPi0s = quantityNames[1];
 
 	if (not data.insert<std::vector<TLorentzVector> >(resultVecLV)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultVecLV);
 		return 0;
 	}
+	if (not data.insert<int>(resultHasPi0s)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultHasPi0s);
+		return 0;
+	}
 
 	return (new antok::user::cdreis::functions::GetPi0s(VectorLVAddr,
 	                                                    ECALIndex,
-	                                                    massAddr,
-	                                                    data.getAddr<std::vector<TLorentzVector> >(resultVecLV))
-
-	);
+	                                                    data.getAddr<std::vector<TLorentzVector> >(resultVecLV),
+	                                                    data.getAddr<int>(resultHasPi0s)));
 };
 
 antok::Function *
@@ -293,6 +293,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node &function, std::vector<
 
 	std::vector<std::pair<std::string, std::string> > args;
 	args.push_back(std::pair<std::string, std::string>("VectorLV", "std::vector<TLorentzVector>"));
+	args.push_back(std::pair<std::string, std::string>("ECALIndex", "std::vector<int>"));
 
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -302,6 +303,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node &function, std::vector<
 	antok::Data &data = antok::ObjectManager::instance()->getData();
 
 	std::vector<TLorentzVector> *VectorLVAddr = data.getAddr<std::vector<TLorentzVector> >(args[0].first);
+	std::vector<int> *ECALIndexAddr = data.getAddr<std::vector<int> >(args[1].first);
 
 	std::string resultVecLV = quantityNames[0];
 	std::string resultVecLV0 = quantityNames[1];
@@ -329,6 +331,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node &function, std::vector<
 	}
 
 	return (new antok::user::cdreis::functions::GetPi0Pair(VectorLVAddr,
+	                                                       ECALIndexAddr,
 	                                                       data.getAddr<std::vector<TLorentzVector> >(resultVecLV),
 	                                                       data.getAddr<TLorentzVector>(resultVecLV0),
 	                                                       data.getAddr<TLorentzVector>(resultVecLV1),
@@ -393,4 +396,89 @@ antok::Function* antok::user::cdreis::generateGetOmega(const YAML::Node& functio
 	                                                      data.getAddr<TLorentzVector>(quantityNames[0]),
 	                                                      data.getAddr<int>(quantityNames[1]) )
 	);
+};
+
+antok::Function * antok::user::cdreis::generateGetECALCorrectedEnergy(const YAML::Node &function, std::vector<std::string> &quantityNames,
+                                                    int index) {
+	if (quantityNames.size() > 1) {
+		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Energy", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("ECALIndex", "std::vector<int>"));
+	args.push_back(std::pair<std::string, std::string>("RunNumber", "int"));
+
+	if (not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data &data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* Energy = data.getAddr<std::vector<double>>(args[0].first);
+	std::vector<int>* ECALIndex = data.getAddr<std::vector<int>>(args[1].first);
+	int* RunNumber = data.getAddr<int>(args[2].first);
+
+	if (not data.insert<std::vector<double>>(quantityName)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	std::map<int, double> correctionECAL1;
+	std::map<int, double> correctionECAL2;
+	std::ifstream configFile;
+	configFile.open("../../user/ECALEnergyCalibration.txt");
+	if( !configFile.is_open() ) {
+		return 0;
+	}
+	int runNumber;
+	double a, b;
+	while( configFile >> runNumber >> a >> b ) {
+		correctionECAL1[runNumber] = a;
+		correctionECAL2[runNumber] = b;
+	}
+	configFile.close();
+
+	return (new antok::user::cdreis::functions::GetECALCorrectedEnergy(Energy, ECALIndex, RunNumber, correctionECAL1, correctionECAL2,
+	                                                                   data.getAddr<std::vector<double>>(quantityName)));
+};
+
+antok::Function * antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node &function, std::vector<std::string> &quantityNames,
+                                                                      int index) {
+	if (quantityNames.size() > 1) {
+		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
+		return 0;
+	}
+	std::string quantityName = quantityNames[0];
+
+	std::vector<std::pair<std::string, std::string> > args;
+
+	args.push_back(std::pair<std::string, std::string>("Timing", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("Energy", "std::vector<double>"));
+	args.push_back(std::pair<std::string, std::string>("ECALIndex", "std::vector<int>"));
+
+
+	if (not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data &data = antok::ObjectManager::instance()->getData();
+
+	std::vector<double>* Timing = data.getAddr<std::vector<double>>(args[0].first);
+	std::vector<double>* Energy = data.getAddr<std::vector<double>>(args[1].first);
+	std::vector<int>* ECALIndex = data.getAddr<std::vector<int>>(args[2].first);
+
+	if (not data.insert<std::vector<double>>(quantityName)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return 0;
+	}
+
+	return (new antok::user::cdreis::functions::GetECALCorrectedTiming(Timing,
+	                                                                   Energy,
+	                                                                   ECALIndex,
+	                                                                   data.getAddr<std::vector<double>>(quantityName)));
 };

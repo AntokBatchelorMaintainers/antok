@@ -82,7 +82,7 @@ namespace antok {
 							lv.SetXYZT(v3.X(), v3.Y(), v3.Z(), (*_VectorEAddr)[i]);
 							(*_resultVec).push_back(lv);
 							// ECAL 1
-							if ((*_VectorZAddr)[i] < 2500) {
+							if ((*_VectorZAddr)[i] < POSITION_ECAL1) {
 								(*_resultECALIndex).push_back(1);
 							}
 								// ECAL 2
@@ -170,12 +170,12 @@ namespace antok {
 				public:
 					GetPi0s(std::vector<TLorentzVector> *VectorLV,
 					        std::vector<int> *ECALIndex,
-					        double *mass,
-					        std::vector<TLorentzVector> *resultVecLV)
+					        std::vector<TLorentzVector> *resultVecLV,
+					        int* hasPi0s)
 							: _VectorLV(VectorLV),
 							  _ECALIndex(ECALIndex),
-							  _mass(mass),
-							  _resultVecLV(resultVecLV) {}
+							  _resultVecLV(resultVecLV),
+							  _hasPi0s(hasPi0s) {}
 
 					virtual ~GetPi0s() {}
 
@@ -187,7 +187,7 @@ namespace antok {
 						}
 						for (unsigned int i = 0; i < _VectorLV->size(); i++) {
 							TLorentzVector comparator = _VectorLV->back();
-							int ECALIndexComparator = (*_ECALIndex)[i];
+							int ECALIndexComparator = _ECALIndex->back();
 							double massResolution;
 							_VectorLV->pop_back();
 							_ECALIndex->pop_back();
@@ -197,17 +197,17 @@ namespace antok {
 								int ECALIndexLV = (*_ECALIndex)[j];
 								// ECAL 1
 								if (ECALIndexComparator == 1 && ECALIndexLV == 1) {
-									massResolution = 3. * 0.028819;
+									massResolution = RESOLUTION_ECAL1;
 								}
 								// ECAL 2
 								else if (ECALIndexComparator == 2 && ECALIndexLV == 2) {
-									massResolution = 3. * 0.0151949;
+									massResolution = RESOLUTION_ECAL2;
 								}
 								// ECAL 1 + 2 mixed
 								else {
-									massResolution = 3. * 0.0197151;
+									massResolution = RESOLUTION_ECALCOMBINED;
 								}
-								if (std::fabs(pi0Candidate.Mag() - *_mass) < massResolution) {
+								if (std::fabs(pi0Candidate.Mag() - MASS_PI0) < massResolution) {
 
 									_resultVecLV->push_back(pi0Candidate);
 								}
@@ -219,8 +219,8 @@ namespace antok {
 				private:
 					std::vector<TLorentzVector> *_VectorLV;
 					std::vector<int> *_ECALIndex;
-					double *_mass;
 					std::vector<TLorentzVector> *_resultVecLV;
+					int* _hasPi0s;
 				};
 
 				class GetCleanedEcalClusters : public Function {
@@ -267,15 +267,15 @@ namespace antok {
 						// Energy threshold and timing
 						for (unsigned int i = 0; i < _VectorXAddr->size(); i++) {
 							// ECAL 1
-							if ((*_VectorZAddr)[i] < 2500) {
-								if ((*_VectorEAddr)[i] < 0.6 || fabs((*_VectorTAddr)[i]) > 3.75) {
+							if ((*_VectorZAddr)[i] < POSITION_ECAL1) {
+								if ((*_VectorEAddr)[i] < THRESHOLD_ENERGY_ECAL1 || fabs((*_VectorTAddr)[i]) > THRESHOLD_TIMING_ECAL1) {
 									continue;
 								}
 								(*_resultVectorIndexAddr).push_back(1);
 							}
 								// ECAL 2
 							else {
-								if ((*_VectorEAddr)[i] < 1.2 || fabs((*_VectorTAddr)[i]) > 3.00) {
+								if ((*_VectorEAddr)[i] < THRESHOLD_ENERGY_ECAL2 || fabs((*_VectorTAddr)[i]) > THRESHOLD_TIMING_ECAL2) {
 									continue;
 								}
 								(*_resultVectorIndexAddr).push_back(2);
@@ -307,11 +307,13 @@ namespace antok {
 				class GetPi0Pair : public Function {
 				public:
 					GetPi0Pair(std::vector<TLorentzVector> *VectorPhotonLV,
+					           std::vector<int> *ECALIndex,
 					           std::vector<TLorentzVector> *resultVecLV,
 					           TLorentzVector *resultVecLV0,
 					           TLorentzVector *resultVecLV1,
 					           int *resultGoodPair)
 							: _VectorPhotonLV(VectorPhotonLV),
+							  _ECALIndex(ECALIndex),
 							  _resultVecLV(resultVecLV),
 							  _resultVecLV0(resultVecLV0),
 							  _resultVecLV1(resultVecLV1),
@@ -328,6 +330,7 @@ namespace antok {
 						}
 
 						unsigned int numberCandidatePairs = 0;
+						double resolution;
 						TLorentzVector pi0Candidate0(0, 0, 0, 0);
 						TLorentzVector pi0Candidate1(0, 0, 0, 0);
 						for (unsigned int i = 0; i < _VectorPhotonLV->size(); i++) {
@@ -338,13 +341,22 @@ namespace antok {
 								if (numberCandidatePairs > 1) {
 									break;
 								}
-								TLorentzVector photon0 = (*_VectorPhotonLV)[i];
-								TLorentzVector photon1 = (*_VectorPhotonLV)[j];
-								pi0Candidate0 = photon0 + photon1;
-								if (std::fabs(pi0Candidate0.Mag() - 0.13957018) > 0.06) {
+								pi0Candidate0 = (*_VectorPhotonLV)[i] + (*_VectorPhotonLV)[j];
+								if( (*_ECALIndex)[i] == 1 && (*_ECALIndex)[j] == 1 )
+								{
+									resolution = RESOLUTION_ECAL1;
+								}
+								else if( (*_ECALIndex)[i] == 2 && (*_ECALIndex)[j] == 2 )
+								{
+									resolution = RESOLUTION_ECAL2;
+								}
+								else if( (*_ECALIndex)[i] != (*_ECALIndex)[j] )
+								{
+									resolution = RESOLUTION_ECALCOMBINED;
+								}
+								if (std::fabs(pi0Candidate0.Mag() - MASS_PI0) > resolution) {
 									continue;
 								}
-
 								for (unsigned int m = i + 1; m < _VectorPhotonLV->size(); m++) {
 									if (numberCandidatePairs > 1) {
 										break;
@@ -356,25 +368,37 @@ namespace antok {
 										if (m == j || n == j) {
 											continue;
 										}
-										TLorentzVector photon2 = (*_VectorPhotonLV)[m];
-										TLorentzVector photon3 = (*_VectorPhotonLV)[n];
-										pi0Candidate1 = photon2 + photon3;
-										if (std::fabs(pi0Candidate1.Mag() - 0.13957018) > 0.06) {
+										pi0Candidate1 = (*_VectorPhotonLV)[m] + (*_VectorPhotonLV)[n];
+										if( (*_ECALIndex)[m] == 1 && (*_ECALIndex)[n] == 1 )
+										{
+											resolution = RESOLUTION_ECAL1;
+										}
+										else if( (*_ECALIndex)[m] == 2 && (*_ECALIndex)[n] == 2 )
+										{
+											resolution = RESOLUTION_ECAL2;
+										}
+										else if( (*_ECALIndex)[m] != (*_ECALIndex)[n] )
+										{
+											resolution = RESOLUTION_ECALCOMBINED;
+										}
+										if (std::fabs(pi0Candidate1.Mag() - MASS_PI0) > resolution) {
 											continue;
+										}
+										if( numberCandidatePairs == 0 )
+										{
+											(*_resultVecLV).push_back(pi0Candidate0);
+											(*_resultVecLV).push_back(pi0Candidate1);
+											(*_resultVecLV0) = pi0Candidate0;
+											(*_resultVecLV1) = pi0Candidate1;
 										}
 										numberCandidatePairs++;
 									}
 								}
 							}
 						}
-						if (numberCandidatePairs == 1) {
-							(*_resultVecLV).push_back(pi0Candidate0);
-							(*_resultVecLV).push_back(pi0Candidate1);
-						}
 
-						if (_resultVecLV->size() == 2) {
+						if ( numberCandidatePairs == 1) {
 							(*_resultGoodPair) = 1;
-							TLorentzVector both = pi0Candidate0 + pi0Candidate1;
 						}
 
 						return true;
@@ -382,6 +406,7 @@ namespace antok {
 
 				private:
 					std::vector<TLorentzVector> *_VectorPhotonLV;
+					std::vector<int> *_ECALIndex;
 					std::vector<TLorentzVector> *_resultVecLV;
 					TLorentzVector *_resultVecLV0;
 					TLorentzVector *_resultVecLV1;
@@ -452,7 +477,7 @@ namespace antok {
 									{
 										// Check if mass fits
 										const TLorentzVector temp = (*pi0s[i]) + (*chargedLV[j]) + (*chargedLV[k]);
-										if( std::fabs( temp.Mag() - 0.78265 ) < 3 * 0.1 )
+										if( std::fabs( temp.Mag() - MASS_OMEGA ) < RESOLUTION_OMEGA )
 										{
 											// Count candidates
 											numberCandidates++;
@@ -485,6 +510,92 @@ namespace antok {
 					int* _resultAccepted;
 				};
 
+				class GetECALCorrectedEnergy : public Function
+				{
+				public:
+					GetECALCorrectedEnergy( std::vector<double>* EnergyAddr,
+					                        std::vector<int>* ECALIndexAddr,
+					                        int* RunNumberAddr,
+					                        std::map<int, double> correctionECAL1,
+					                        std::map<int, double> correctionECAL2,
+					                        std::vector<double>* resultEnergy
+					)
+							: _EnergyAddr(EnergyAddr),
+							  _ECALIndexAddr(ECALIndexAddr),
+							  _RunNumberAddr(RunNumberAddr),
+							  _correctionECAL1(correctionECAL1),
+							  _correctionECAL2(correctionECAL2),
+							  _resultEnergy(resultEnergy) {}
+
+					virtual ~GetECALCorrectedEnergy() {}
+
+					bool operator() () {
+						std::vector<double> correctedEnergies;
+						correctedEnergies.resize( (*_EnergyAddr).size() );
+						double correction;
+						for( Size_t i = 0; i < (*_EnergyAddr).size(); ++i ) {
+							if( (*_ECALIndexAddr)[i] == 1 ) {
+								correction = _correctionECAL1[(*_RunNumberAddr)];
+							}
+							else if( (*_ECALIndexAddr)[i] == 2 ) {
+								correction = _correctionECAL2[(*_RunNumberAddr)];
+							}
+							else {
+								correction = 0;
+							}
+							correctedEnergies[i] = (*_EnergyAddr)[i] * correction;
+						}
+						(*_resultEnergy) = correctedEnergies;
+
+						return true;
+					}
+
+				private:
+					std::vector<double>* _EnergyAddr;
+					std::vector<int>* _ECALIndexAddr;
+					int* _RunNumberAddr;
+					std::map<int, double> _correctionECAL1;
+					std::map<int, double> _correctionECAL2;
+					std::vector<double>* _resultEnergy;
+				};
+
+				class GetECALCorrectedTiming : public Function
+				{
+				public:
+					GetECALCorrectedTiming( std::vector<double>* Timing,
+					                        std::vector<double>* Energy,
+					                        std::vector<int>* ECALIndex,
+					                        std::vector<double>* resultTiming
+					)
+							: _Timing(Timing),
+							  _Energy(Energy),
+							  _ECALIndex(ECALIndex),
+							  _resultTiming(resultTiming) {}
+
+					virtual ~GetECALCorrectedTiming() {}
+
+					bool operator() () {
+						for( unsigned int i = 0; i < _Timing->size(); ++i ) {
+							double correction;
+							if( (*_ECALIndex)[i] == 1 ) {
+								correction = 6.88657009601456038e-01 + 2.43878020546929308e-01 /  (*_Energy)[i]                  - 2.12664460169421470e-02 *  (*_Energy)[i]
+								                                     - 8.33475234257217146e-02 / ((*_Energy)[i] * (*_Energy)[i]) + 2.44997874575173511e-04 * ((*_Energy)[i] * (*_Energy)[i]);
+							} else if(  (*_ECALIndex)[i] == 2 ) {
+								correction = 1.95194387224751464e-01 + 1.40949894147897314e+00 /  (*_Energy)[i]          + 2.38239880696187872e-02 * ( *_Energy)[i]
+								             - 2.32607412774166322e+00 / ((*_Energy)[i] * (*_Energy)[i])                 - 1.93619661173087841e-04 * ((*_Energy)[i] * (*_Energy)[i])
+								             + 1.49078112452376610e+00 / ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]) + 5.64013549903698752e-07 * ((*_Energy)[i] * (*_Energy)[i] * (*_Energy)[i]);
+							}
+							(*_resultTiming)[i] = (*_Timing)[i] - correction;
+						}
+						return true;
+					}
+
+				private:
+					std::vector<double>* _Timing;
+					std::vector<double>* _Energy;
+					std::vector<int>* _ECALIndex;
+					std::vector<double>* _resultTiming;
+				};
 			}
 
 		}
