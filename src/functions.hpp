@@ -558,6 +558,28 @@ namespace antok {
 			TVector3* _outAddr;
 
 		};
+		class GetTVector3FromTLorenzVector: public Function
+		{
+
+		  public:
+
+			GetTVector3FromTLorenzVector(const TLorentzVector* lvAddr, TVector3* vAddr)
+				: _lv(*lvAddr),
+				  _v(*vAddr){}
+
+			virtual ~GetTVector3FromTLorenzVector() { }
+
+			bool operator() () {
+				_v = _lv.Vect();
+				return true;
+			}
+
+		  private:
+
+			const TLorentzVector& _lv;
+			TVector3& _v;
+
+		};
 
 	}
 
