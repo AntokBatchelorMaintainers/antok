@@ -34,13 +34,12 @@ TLorentzVector antok::getBeamEnergy(TVector3 p3_beam, const TLorentzVector& pX, 
 	const double a = 4.0*p_x*p_x*cos_theta*cos_theta - 4.0*beta*beta;
 
 
-	const double E_beam = (-b + std::sqrt(b*b-4.0*a*c))/(2.0*a); // use positive solution
+	const double p_beam = (-b + std::sqrt(b*b-4.0*a*c))/(2.0*a); // use positive solution
 
 
 
 
 
-	const double p_beam = std::sqrt((E_beam * E_beam) - (mass_beam * mass_beam));
 	p3_beam.SetMag(p_beam);
 	TLorentzVector pBeam;
 	pBeam.SetXYZM(p3_beam.X(), p3_beam.Y(), p3_beam.Z(), mass_beam);
