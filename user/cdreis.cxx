@@ -880,6 +880,11 @@ antok::Function * antok::user::cdreis::generateGetECALCorrectedTiming( const YAM
 
 		correctionValues[name] = values;
 	}
+	if( not configFile.eof() )
+	{
+		std::cerr << "ERROR: Invalid input correction for " << name << std::endl;
+		return 0;
+	}
 	configFile.close();
 
 	try
