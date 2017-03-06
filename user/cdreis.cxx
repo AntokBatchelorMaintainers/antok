@@ -771,6 +771,11 @@ antok::Function * antok::user::cdreis::generateGetECALCorrectedEnergy( const YAM
 	{
 		correction[runNumber] = std::pair<double,double>(a,b);
 	}
+	if( not configFile.eof() )
+	{
+		std::cerr << "ERROR: Invalid input correction for run " << runNumber << std::endl;
+		return 0;
+	}
 	configFile.close();
 
 	try
