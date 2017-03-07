@@ -29,8 +29,6 @@ namespace antok {
 
 		  private:
 
-			bool handleOnOffOption(std::string optionName, const YAML::Node& option, std::string location) const;
-
 		};
 
 		struct waterfallHistogramContainer {

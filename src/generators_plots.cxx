@@ -44,19 +44,40 @@ namespace {
 	}
 
 	void __getCutmasks(const antok::plotUtils::GlobalPlotOptions& plotOptions,
+	                   const YAML::Node& plot,
 	                   std::map<std::string, std::vector<long> >& cutmasks)
 	{
 		antok::Cutter& cutter = antok::ObjectManager::instance()->getCutter();
 		cutmasks = __mergeMaps(plotOptions.cutMasks, cutmasks);
-		if(plotOptions.plotsWithSingleCutsOff) {
+
+		if (antok::YAMLUtils::hasNodeKey(plot, "PlotsWithSingleCutsOff")) {
+			const bool plotsWithSingleCutsOff = antok::YAMLUtils::handleOnOffOption("PlotsWithSingleCutsOff", plot, plot["Name"].as<std::string>());
+			if (plotsWithSingleCutsOff) {
+				cutmasks = __mergeMaps(cutter.getCutmasksAllCutsOffSeparately(), cutmasks);
+			}
+		} else if (plotOptions.plotsWithSingleCutsOff) {
 			cutmasks = __mergeMaps(cutter.getCutmasksAllCutsOffSeparately(), cutmasks);
 		}
-		if(plotOptions.plotsWithSingleCutsOn) {
+
+		if (antok::YAMLUtils::hasNodeKey(plot, "PlotsWithSingleCutsOn")) {
+			const bool plotsWithSingleCutsOn = antok::YAMLUtils::handleOnOffOption("PlotsWithSingleCutsOn", plot, plot["Name"].as<std::string>());
+			if (plotsWithSingleCutsOn) {
+				cutmasks = __mergeMaps(cutter.getCutmasksAllCutsOnSeparately(), cutmasks);
+			}
+		} else if (plotOptions.plotsWithSingleCutsOn) {
 			cutmasks = __mergeMaps(cutter.getCutmasksAllCutsOnSeparately(), cutmasks);
 		}
-		if(plotOptions.plotsForSequentialCuts) {
+
+		if (antok::YAMLUtils::hasNodeKey(plot, "PlotsForSequentialCuts")) {
+			const bool plotsForSequentialCuts = antok::YAMLUtils::handleOnOffOption("PlotsForSequentialCuts", plot, plot["Name"].as<std::string>());
+			if (plotsForSequentialCuts) {
+				cutmasks = __mergeMaps(cutter.getWaterfallCutmasks(), cutmasks);
+			}
+
+		} else if (plotOptions.plotsForSequentialCuts) {
 			cutmasks = __mergeMaps(cutter.getWaterfallCutmasks(), cutmasks);
 		}
+
 		__cleanDuplicatesFromMap(cutmasks);
 	}
 
@@ -165,7 +186,7 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 			std::cerr<<"Warning: There was a problem when processing the \"CustomCuts\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		}
 	}
-	__getCutmasks(plotOptions, cutmasks);
+	__getCutmasks(plotOptions, plot, cutmasks);
 
 	antok::Plot* antokPlot = 0;
 
@@ -329,7 +350,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 			std::cerr<<"Warning: There was a problem when processing the \"CustomCuts\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		}
 	}
-	__getCutmasks(plotOptions, cutmasks);
+	__getCutmasks(plotOptions, plot, cutmasks);
 
 	antok::Plot* antokPlot = 0;
 
@@ -715,7 +736,7 @@ antok::Plot* antok::generators::generate3DPlot(const YAML::Node& plot, const ant
 			std::cerr<<"Warning: There was a problem when processing the \"CustomCuts\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		}
 	}
-	__getCutmasks(plotOptions, cutmasks);
+	__getCutmasks(plotOptions, plot, cutmasks);
 
 	antok::Plot* antokPlot = 0;
 

@@ -10,6 +10,7 @@
 #include<plot.hpp>
 #include<yaml_utils.hpp>
 
+using antok::YAMLUtils::handleOnOffOption;
 
 namespace {
 	// Inserts a new bin with the given label at bin i_bos to the given histogram.
@@ -245,25 +246,6 @@ antok::plotUtils::GlobalPlotOptions::GlobalPlotOptions(const YAML::Node& optionN
 
 }
 
-bool antok::plotUtils::GlobalPlotOptions::handleOnOffOption(std::string optionName, const YAML::Node& option, std::string location) const {
-
-	using antok::YAMLUtils::hasNodeKey;
-
-	if(not hasNodeKey(option, optionName)) {
-		std::cerr<<"Warning: \""<<optionName<<"\" not found in \""<<location<<"\", switching it off"<<std::endl;
-	} else {
-		std::string optionValue = antok::YAMLUtils::getString(option[optionName]);
-		if(optionValue == "On") {
-			return true;
-		} else if (optionValue == "Off") {
-			// returning at end of function
-		} else {
-			std::cerr<<"Warning: \""<<location<<"\"'s \""<<optionName<<"\" is \""<<optionValue<<"\" instead of \"On\" or \"Off\", switching it off"<<std::endl;
-		}
-	}
-	return false;
-
-}
 
 
 
