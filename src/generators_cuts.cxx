@@ -81,9 +81,20 @@ namespace {
 			std::cerr<<"Problem processing \"Y\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
 			return 0;
 		}
+		double* phi = 0;
+		if(antok::YAMLUtils::hasNodeKey(cut, "phi")) {
+			phi = antok::YAMLUtils::getAddress<double>(cut["phi"]);
+			if(phi == 0) {
+				std::cerr<<"Problem processing \"phi\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
+				return 0;
+			}
+		}
+		else {
+			phi = new double(0);
+		}
 
 		return (new antok::cuts::EllipticCut(shortName, longName, abbreviation, result,
-		                                        meanX, meanY, cutX, cutY, X, Y, mode));
+		                                        meanX, meanY, cutX, cutY, X, Y, phi, mode));
 
 	}
 
