@@ -55,8 +55,8 @@ void antok::Plotter::addInputfileToWaterfallHistograms(const TH1D* waterfall){
 #if ROOT_VERSION_CODE > ROOT_VERSION(6,0,0)
 				int i_wp_bin = wp->histogram->GetXaxis()->FindFixBin(label);
 #else
-				wp->histogram->SetBit(ROOT.TH1.kCanRebin, false);
-				const int i_wp_bin = wp->histogram->GetXaxis()->FindBin(label);
+				wp->histogram->SetBit(TH1::kCanRebin, false);
+				int i_wp_bin = wp->histogram->GetXaxis()->FindBin(label);
 #endif
 
 				if (i_wp_bin < 1) { // can not find label from new histogram in waterfall plot

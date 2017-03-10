@@ -2,6 +2,7 @@
 
 #include<iostream>
 #include<sstream>
+#include <algorithm>
 
 #include<TLorentzVector.h>
 
@@ -81,9 +82,20 @@ namespace {
 			std::cerr<<"Problem processing \"Y\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
 			return 0;
 		}
+		double* phi = 0;
+		if(antok::YAMLUtils::hasNodeKey(cut, "phi")) {
+			phi = antok::YAMLUtils::getAddress<double>(cut["phi"]);
+			if(phi == 0) {
+				std::cerr<<"Problem processing \"phi\" entry in \"Elliptic\" cut \""<<shortName<<"\"."<<std::endl;
+				return 0;
+			}
+		}
+		else {
+			phi = new double(0);
+		}
 
 		return (new antok::cuts::EllipticCut(shortName, longName, abbreviation, result,
-		                                        meanX, meanY, cutX, cutY, X, Y, mode));
+		                                        meanX, meanY, cutX, cutY, X, Y, phi, mode));
 
 	}
 
@@ -373,12 +385,13 @@ namespace {
 		}
 
 		std::string type = antok::YAMLUtils::getString(cut["Type"]);
+		std::transform(type.begin(), type.end(),type.begin(), ::toupper);
 		int mode;
-		if(type == "And") {
+		if(type == "AND") {
 			mode = 0;
-		} else if (type == "Or") {
+		} else if (type == "OR") {
 			mode = 1;
-		} else if (type == "Nand") {
+		} else if (type == "NAND") {
 			mode = 2;
 		} else if (type == "") {
 			std::cerr<<"Could not convert \"GroupCut\" \""<<shortName<<"\"'s \"Type\" to std::string."<<std::endl;
