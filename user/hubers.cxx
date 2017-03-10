@@ -261,6 +261,7 @@ antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& 
 	double* yAddr  = data.getAddr<double>(args[1].first);
 	double* dxAddr = data.getAddr<double>(args[2].first);
 	double* dyAddr = data.getAddr<double>(args[3].first);
+
 	if(not data.insert<double>(quantityNameD)) {
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
@@ -270,12 +271,96 @@ antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& 
 		return 0;
 	}
 	int* yearAddr;
-	if(antok::YAMLUtils::hasNodeKey(function, "year"))
+	if(antok::YAMLUtils::hasNodeKey(function, "year")) {
 		yearAddr = antok::YAMLUtils::getAddress<int>(function["year"]);
-	else
+	}
+	else {
 		return 0;
+	}
 
-	return (new antok::user::hubers::functions::GetNeuronalBeam(xAddr, yAddr, dxAddr, dyAddr,
+	try
+	{
+		function["beam2009"].as<std::string>();
+	}
+	catch( const YAML::InvalidNode &exception )
+	{
+		std::cerr << "Argument \"beam2009\" in function \"GetNeuronalBeam\" not found" << std::endl;
+		return 0;
+	}
+	catch( const YAML::TypedBadConversion<std::string> &exception )
+	{
+		std::cerr << "Argument \"beam2009\" in function \"GetNeuronalBeam\" should be of type std::string (variable \""
+		          << quantityNames[0] << " and " << quantityNames[1] << "\")." << std::endl;
+		return 0;
+	}
+	std::string *Calibration2009 = new std::string();
+	(*Calibration2009)           = function["beam2009"].as<std::string>();
+
+	std::ifstream      configFile2009;
+	configFile2009.unsetf(std::ios_base::skipws);
+
+	unsigned long int linecount2009 = (unsigned long int)std::count( std::istream_iterator<char>(configFile2009),std::istream_iterator<char>(),'\n');
+	std::vector<double> calibration2009;
+	calibration2009.reserve(linecount2009);
+
+	configFile2009.open(*Calibration2009);
+	if( !configFile2009.is_open() )
+	{
+		return 0;
+	}
+	double a09;
+	while( configFile2009 >> a09 )
+	{
+		calibration2009.push_back(a09);
+	}
+	if( not configFile2009.eof() )
+	{
+		std::cout << "ERROR: Invalid input correction for value " << a09 << std::endl;
+	}
+	configFile2009.close();
+
+	try
+	{
+		function["beam2012"].as<std::string>();
+	}
+	catch( const YAML::InvalidNode &exception )
+	{
+		std::cerr << "Argument \"beam2012\" in function \"GetNeuronalBeam\" not found" << std::endl;
+		return 0;
+	}
+	catch( const YAML::TypedBadConversion<std::string> &exception )
+	{
+		std::cerr << "Argument \"beam2012\" in function \"GetNeuronalBeam\" should be of type std::string (variable \""
+		          << quantityNames[0] << " and " << quantityNames[1] << "\")." << std::endl;
+		return 0;
+	}
+	std::string *Calibration2012 = new std::string();
+	(*Calibration2012)           = function["beam2012"].as<std::string>();
+
+	std::ifstream      configFile2012;
+	configFile2012.unsetf(std::ios_base::skipws);
+
+	unsigned long int linecount2012 = (unsigned long int)std::count( std::istream_iterator<char>(configFile2012),std::istream_iterator<char>(),'\n');
+	std::vector<double> calibration2012;
+	calibration2012.reserve(linecount2012);
+
+	configFile2012.open(*Calibration2012);
+	if( !configFile2012.is_open() )
+	{
+		return 0;
+	}
+	double a12;
+	while( configFile2012 >> a12 )
+	{
+		calibration2012.push_back(a12);
+	}
+	if( not configFile2012.eof() )
+	{
+		std::cout << "ERROR: Invalid input correction for value " << a12 << std::endl;
+	}
+	configFile2012.close();
+
+	return (new antok::user::hubers::functions::GetNeuronalBeam(xAddr, yAddr, dxAddr, calibration2009, calibration2012, dyAddr,
 	                                                            data.getAddr<double>(quantityNameD),
 	                                                            data.getAddr<TLorentzVector>(quantityNameLV),
 	                                                            yearAddr

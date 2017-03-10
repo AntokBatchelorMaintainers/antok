@@ -12,7 +12,6 @@
 #include<basic_calcs.h>
 #include "TF1.h"
 #include "TMath.h"
-#include<NNpoly.h>
 
 namespace antok {
 
@@ -176,10 +175,24 @@ namespace antok {
 				class GetNeuronalBeam : public Function
 				{
 					public:
-						GetNeuronalBeam(double* xAddr, double* yAddr, double* dxAddr,
-						                double* dyAddr, double* eAddr, TLorentzVector* LVAddr, int* yearAddr)
-						               :_xAddr(xAddr), _yAddr(yAddr), _dxAddr(dxAddr), _dyAddr(dyAddr),
-						                _eAddr(eAddr), _LVAddr(LVAddr), _yearAddr(yearAddr){
+						GetNeuronalBeam(double* xAddr,
+						                double* yAddr,
+						                double* dxAddr,
+						                std::vector<double> calibration2009,
+						                std::vector<double> calibration2012,
+						                double* dyAddr,
+						                double* eAddr,
+						                TLorentzVector* LVAddr,
+						                int* yearAddr)
+						               :_xAddr(xAddr),
+						                _yAddr(yAddr),
+						                _dxAddr(dxAddr),
+						                _calibration2009(calibration2009),
+						                _calibration2012(calibration2012),
+						                _dyAddr(dyAddr),
+						                _eAddr(eAddr),
+						                _LVAddr(LVAddr),
+						                _yearAddr(yearAddr){
                             }
 
 						virtual ~GetNeuronalBeam() {}
@@ -187,9 +200,9 @@ namespace antok {
 						bool operator() () {
 							double xarr[4]={*_xAddr,*_yAddr,*_dxAddr,*_dyAddr};
 							if(*_yearAddr == 2012)
-								*_eAddr = NNpoly::Ebeam(xarr,NNpoly::getParams2012());
+								*_eAddr = Ebeam(xarr, _calibration2012);
 							else if(*_yearAddr == 2009)
-								*_eAddr = NNpoly::Ebeam(xarr,NNpoly::getParams2009());
+								*_eAddr = Ebeam(xarr, _calibration2009);
 							else
 								*_eAddr = 190;
 							TVector3 v3(*_dxAddr, *_dyAddr, std::sqrt( 1 - sqr(*_dxAddr) - sqr(*_dyAddr) ));
@@ -198,10 +211,55 @@ namespace antok {
 							return true;
 						}
 
-					private:
+						double Ebeam(double* x, std::vector<double> p) {
+							double X=x[0];
+							double Y=x[1];
+							double dX=x[2]*1000.0;
+							double dY=x[3]*1000.0;
+							double X2=X*X; double XY=X*Y; double Y2=Y*Y;  double X3=X2*X;
+							double X2Y=X2*Y; double XY2=X*Y2; double Y3=Y2*Y; double X4=X2*X2;
+							double X3Y=X3*Y; double X2Y2=X2*Y2; double XY3=X*Y3; double Y4=Y2*Y2;
+							double X5=X3*X2; double X4Y=X4*Y; double X3Y2=X3*Y2; double X2Y3=X2*Y3;
+							double XY4=X*Y4; double Y5=Y3*Y2;
+							double XnYm[21];
+							XnYm[0]=1;  XnYm[1]=X; XnYm[2]=Y;
+							XnYm[3]=X2; XnYm[4]=XY; XnYm[5]=Y2;
+							XnYm[6]=X3; XnYm[7]=X2Y; XnYm[8]=XY2; XnYm[9]=Y3;
+							XnYm[10]=X4; XnYm[11]=X3Y; XnYm[12]=X2Y2; XnYm[13]=XY3;
+							XnYm[14]=Y4;
+							XnYm[15]=X5; XnYm[16]=X4Y; XnYm[17]=X3Y2; XnYm[18]=X2Y3;
+							XnYm[19]=XY4; XnYm[20]=Y5;
+							double dX2=dX*dX; double dXdY=dX*dY; double dY2=dY*dY;
+							double dX3=dX2*dX; double dX2dY=dX2*dY; double dXdY2=dX*dY2;
+							double dY3=dY2*dY;  double dX4=dX2*dX2; double dX3dY=dX3*dY;
+							double dX2dY2=dX2*dY2; double dXdY3=dX*dY3; double dY4=dY2*dY2;
+							double dX5=dX3*dX2; double dX4dY=dX4*dY; double dX3dY2=dX3*dY2;
+							double dX2dY3=dX2*dY3; double dXdY4=dX*dY4; double dY5=dY3*dY2;
+							double dXndYm[21];
+							dXndYm[0]=1;  dXndYm[1]=dX; dXndYm[2]=dY;
+							dXndYm[3]=dX2; dXndYm[4]=dXdY; dXndYm[5]=dY2;
+							dXndYm[6]=dX3; dXndYm[7]=dX2dY; dXndYm[8]=dXdY2; dXndYm[9]=dY3;
+							dXndYm[10]=dX4; dXndYm[11]=dX3dY; dXndYm[12]=dX2dY2; dXndYm[13]=dXdY3;
+							dXndYm[14]=dY4; dXndYm[15]=dX5; dXndYm[16]=dX4dY; dXndYm[17]=dX3dY2;
+							dXndYm[18]=dX2dY3; dXndYm[19]=dXdY4; dXndYm[20]=dY5;
+							double Eb=0;
+							for (int i=0; i<21; i++) {
+								double pp=0;
+								for (int j=0; j<21; j++) {
+									pp += p[i*21+j] * dXndYm[j];
+								}
+								Eb += pp * XnYm[i];
+							}
+
+						return Eb;
+					}
+
+				private:
 						double* _xAddr;
 						double* _yAddr;
 						double* _dxAddr;
+						std::vector<double> _calibration2009;
+						std::vector<double> _calibration2012;
 						double* _dyAddr;
 						double* _eAddr;
 						int* _yearAddr;

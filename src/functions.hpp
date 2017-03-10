@@ -419,35 +419,6 @@ namespace antok {
 
 		};
 
-		class Components : public Function
-		{
-
-		  public:
-
-			Components(TLorentzVector* inAddr, double* outAddrX, double* outAddrY, double* outAddrZ, double* outAddrE )
-				: _inAddr(inAddr),
-				  _outAddrX(outAddrX), _outAddrY(outAddrY), _outAddrZ(outAddrZ), _outAddrE(outAddrE) { }
-
-			virtual ~Components() { }
-
-			bool operator() () {
-				(*_outAddrX) = _inAddr->X();
-				(*_outAddrY) = _inAddr->Y();
-				(*_outAddrZ) = _inAddr->Z();
-				(*_outAddrE) = _inAddr->E();
-				return true;
-			}
-
-		  private:
-
-			TLorentzVector* _inAddr;
-			double* _outAddrX;
-			double* _outAddrY;
-			double* _outAddrZ;
-			double* _outAddrE;
-
-		};
-
 		class RadToDegree : public Function
 		{
 

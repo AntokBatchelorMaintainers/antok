@@ -553,51 +553,6 @@ antok::Function* antok::generators::generateEnergy(const YAML::Node& function, s
 
 };
 
-antok::Function* antok::generators::generateComponents(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
-{
-
-	if(quantityNames.size() > 4) {
-		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
-		return 0;
-	}
-	std::string quantityName0 = quantityNames[0];
-	std::string quantityName1 = quantityNames[1];
-	std::string quantityName2 = quantityNames[2];
-	std::string quantityName3 = quantityNames[3];
-
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
-
-	if(not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
-		return 0;
-	}
-
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-
-	TLorentzVector* arg1Addr = data.getAddr<TLorentzVector>(args[0].first);
-
-	if(not data.insert<double>(quantityName0)) {
-		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-		return 0;
-	}
-	if(not data.insert<double>(quantityName1)) {
-		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-		return 0;
-	}
-	if(not data.insert<double>(quantityName2)) {
-		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-		return 0;
-	}
-	if(not data.insert<double>(quantityName3)) {
-		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-		return 0;
-	}
-
-	return (new antok::functions::Components(arg1Addr, data.getAddr<double>(quantityName0),
-					data.getAddr<double>(quantityName1), data.getAddr<double>(quantityName2), data.getAddr<double>(quantityName3)));
-};
-
 antok::Function* antok::generators::generateGetBeamLorentzVector(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 
