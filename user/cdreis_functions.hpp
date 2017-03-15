@@ -441,7 +441,7 @@ namespace antok {
 							  _resultOmega    ( resultOmega     ),
 							  _resultAccepted ( resultAccepted  ),
 							  _resultPi0      ( resultPi0       ),
-					          _resultPiMinus  ( resultPiMinus   )
+							  _resultPiMinus  ( resultPiMinus   )
 					{}
 
 					virtual ~GetOmega() {}
@@ -490,6 +490,14 @@ namespace antok {
 											// Count candidates
 											numberCandidates++;
 											(*_resultOmega) = (*pi0s[i]) + (*chargedLV[j]) + (*chargedLV[k]);
+											for( unsigned int l = 0; l < pi0s.size(); l++ )
+											{
+												if( i != l ) (*_resultPi0) = (*pi0s)[l];
+											}
+											for( unsigned int m = 0; l < chargedLV.size(); m++ )
+											{
+												if( i != l ) (*_resultPiMinus) = (*chargedLV)[m];
+											}
 										}
 									}
 								}
@@ -514,7 +522,7 @@ namespace antok {
 					int*            _Charge1Addr;
 					int*            _Charge2Addr;
 					double*         _Mass;
-					double*         _ResolutionOme  ga;
+					double*         _ResolutionOmega;
 					TLorentzVector* _resultOmega;
 					int*            _resultAccepted;
 					TLorentzVector* _resultPi0;
