@@ -425,7 +425,7 @@ namespace antok {
 					          double*         Mass,
 					          double*         ResolutionOmega,
 					          TLorentzVector* resultOmega,
-					          int*            resultAccepted
+					          int*            resultAccepted,
 					          TLorentzVector* resultPi0,
 					          TLorentzVector* resultPiMinus )
 							: _Pi0_OAddr      ( Pi0_OAddr       ),
@@ -492,11 +492,11 @@ namespace antok {
 											(*_resultOmega) = (*pi0s[i]) + (*chargedLV[j]) + (*chargedLV[k]);
 											for( unsigned int l = 0; l < pi0s.size(); l++ )
 											{
-												if( i != l ) (*_resultPi0) = (*pi0s)[l];
+												if( i != l ) (*_resultPi0) = (*pi0s[l]);
 											}
-											for( unsigned int m = 0; l < chargedLV.size(); m++ )
+											for( unsigned int m = 0; m < chargedLV.size(); m++ )
 											{
-												if( i != l ) (*_resultPiMinus) = (*chargedLV)[m];
+												if( j != m && k != m ) (*_resultPiMinus) = (*chargedLV[m]);
 											}
 										}
 									}

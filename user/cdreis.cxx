@@ -518,7 +518,7 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
                                                         std::vector<std::string> &quantityNames,
                                                         int index )
 {
-	if(quantityNames.size() > 2)
+	if(quantityNames.size() > 4)
 	{
 		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return 0;
