@@ -425,7 +425,9 @@ namespace antok {
 					          double*         Mass,
 					          double*         ResolutionOmega,
 					          TLorentzVector* resultOmega,
-					          int*            resultAccepted )
+					          int*            resultAccepted
+					          TLorentzVector* resultPi0,
+					          TLorentzVector* resultPiMinus )
 							: _Pi0_OAddr      ( Pi0_OAddr       ),
 							  _Pi0_1Addr      ( Pi0_1Addr       ),
 							  _Scattered0Addr ( Scattered0Addr  ),
@@ -437,7 +439,10 @@ namespace antok {
 							  _Mass           ( Mass            ),
 							  _ResolutionOmega( ResolutionOmega ),
 							  _resultOmega    ( resultOmega     ),
-							  _resultAccepted ( resultAccepted  ) {}
+							  _resultAccepted ( resultAccepted  ),
+							  _resultPi0      ( resultPi0       ),
+					          _resultPiMinus  ( resultPiMinus   )
+					{}
 
 					virtual ~GetOmega() {}
 
@@ -509,9 +514,11 @@ namespace antok {
 					int*            _Charge1Addr;
 					int*            _Charge2Addr;
 					double*         _Mass;
-					double*         _ResolutionOmega;
+					double*         _ResolutionOme  ga;
 					TLorentzVector* _resultOmega;
 					int*            _resultAccepted;
+					TLorentzVector* _resultPi0;
+					TLorentzVector* _resultPiMinus;
 				};
 
 				class GetECALCorrectedEnergy : public Function
