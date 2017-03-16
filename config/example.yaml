@@ -1,0 +1,239 @@
+
+NumberOfParticles: 3
+AllParticles: &allParticles [1, 2, 3]
+
+TreeName: exampleEvents
+
+TreeBranches:
+    onePerEvent:
+        double:
+            - &VertexX VertexX
+            - &VertexY VertexY
+            - &VertexZ VertexZ
+
+            - &RecoilMomentumX RecoilMomentumX
+            - &RecoilMomentumY RecoilMomentumY
+            - &RecoilMomentumZ RecoilMomentumZ
+            - &RecoilEnergy    RecoilEnergy
+
+            - &BeamGradientdXdZ BeamGradientdXdZ
+            - &BeamGradientdYdZ BeamGradientdYdZ
+
+        int:
+            - &RunNumber RunNumber
+
+    onePerParticle:
+
+        double:
+            - &ScatteredMomentumX_ ScatteredMomentumX_
+            - &ScatteredMomentumY_ ScatteredMomentumY_
+            - &ScatteredMomentumZ_ ScatteredMomentumZ_
+
+Constants:
+    ChargedKaonMass: &ChargedKaonMass 0.493677
+    ChargedPionMass: &ChargedPionMass 0.13957018
+    ProtonMass     : &ProtonMass      0.938272046
+
+CalculatedQuantities:
+
+    - Name: &ScatteredParticleLV_ ScatteredParticleLV_
+      Function:
+          Name: getLorentzVec
+          X:   *ScatteredMomentumX_
+          Y:   *ScatteredMomentumY_
+          Z:   *ScatteredMomentumZ_
+          M:   *ChargedPionMass
+      Indices: *allParticles
+
+    - Name: &RecoilParticle RecoilParticle
+      Function:
+          Name: getLorentzVec
+          Px: *RecoilMomentumX
+          Py: *RecoilMomentumY
+          Pz: *RecoilMomentumZ
+          E:  *RecoilEnergy
+
+    - Name: &RecoilParticle RecoilParticle
+      Function:
+          Name: mass
+          Vector: *RecoilParticle
+
+    - Name: &ScatteredFullLV ScatteredFullLV
+      Function:
+          Name: sum
+          Summands:
+              Name: *ScatteredParticleLV_
+              Indices: *allParticles
+
+    - Name: MomSum
+      Function:
+          Name: sum
+          Summands:
+              - *ScatteredMomentumX_
+              - *ScatteredMomentumY_
+              - *ScatteredMomentumZ_
+      Indices:  *allParticles
+
+    - Name: &XMass XMass
+      Function:
+          Name: mass
+          Vector: *ScatteredFullLV
+
+    - Name: &BeamLV BeamLV
+      Function:
+          Name: getBeamLorentzVector
+          dX:          *BeamGradientdXdZ
+          dY:          *BeamGradientdYdZ
+          XLorentzVec: *ScatteredFullLV
+
+    - Name: [ ScatteredFullLV_X, ScatteredFullLV_Y, ScatteredFullLV_Z, ScatteredFullLV_Phi, ScatteredFullLV_Theta ]
+      Function:
+          Name: getLorentzVectorAttributes
+          Vector: *ScatteredFullLV
+
+    - Name: &BeamE BeamE
+      Function:
+          Name: energy
+          Vector: *BeamLV
+
+    - Name: [t, tMin, &tPrime tPrime]
+      Function:
+          Name: getTs
+          BeamLorentzVec: *BeamLV
+          XLorentzVec:    *ScatteredFullLV
+
+    - Name: &VertexR VertexR
+      Function:
+          Name: sum2
+          Summands:
+              - *VertexX
+              - *VertexZ
+
+    - Name: &VertexVec VertexVec
+      Function:
+          Name: getVector3
+          X: VertexX
+          Y: VertexY
+          Z: VertexZ
+
+
+Cuts:
+
+    - &VertexZCut
+      ShortName: -20<VertexZ<20
+      LongName: "Vertex Z in ]-20, +20["
+      Abbreviation: VtxZ
+      Cut:
+          Name: Range
+          Type: Exclusive
+          LowerBound: -20
+          UpperBound:  20
+          Variable: *VertexZ
+
+    - &VertexRCut
+      ShortName: Vtx_R<5
+      LongName: Vertex.R() < 5
+      Abbreviation: VtxR
+      Cut:
+          Name: Range
+          Type: Exclusive
+          UpperBound: 5
+          Variable: *VertexR
+
+    - &TPrimeCut
+      ShortName: t_prim
+      LongName: "t' in ]0.1, 1.["
+      Abbreviation: t'
+      Cut:
+          Name: Range
+          Type: Exclusive
+          LowerBound: 0.1
+          UpperBound: 1.0
+          Variable: *tPrime
+
+    - &ExclusivityCut
+      ShortName: 187.72<X.E()<195.28
+      LongName: "X Energy in ]187.72, 195.28["
+      Abbreviation: Excl
+      Cut:
+          Name: Range
+          Type: Exclusive
+          LowerBound: 200
+          UpperBound: 230
+          Variable: *BeamE
+
+    - &NoCut
+      ShortName: NoCut
+      LongName: No Cut
+      Abbreviation: nCut
+      Cut:
+          Name: NoCut
+
+CutTrains:
+
+    - &StdEvSel
+      Name: Standard Event Selection
+      Cuts:
+          - *VertexZCut
+          - *VertexRCut
+          - *TPrimeCut
+          - *ExclusivityCut
+      Pertinent: Yes
+
+GlobalPlotOptions:
+
+    PlotsForSequentialCuts: On
+    PlotsWithSingleCutsOn:  On
+    PlotsWithSingleCutsOff: On
+    StatisticsHistogram:
+        State: Off
+        InputName: whereIstheHistogram/statistic
+        OutputName: waterfallPlot
+    GlobalCuts:
+        - CutTrain: *StdEvSel
+    HistogramNameAppendix: "_hist"
+
+Plots:
+
+    - Name: "Total Mass"
+      Variable: *XMass
+      LowerBound: 0
+      UpperBound: 10
+      NBins: 250
+
+    - Name: "Beam Energy"
+      Variable: *BeamE
+      LowerBound: 0
+      UpperBound: 250
+      NBins: 250
+
+    - Name: "Vertex X"
+      Variable: *VertexX
+      LowerBound: -10
+      UpperBound: 10
+      NBins: 250
+
+    - Name: "Vertex Y"
+      Variable: *VertexX
+      LowerBound: -10
+      UpperBound: 10
+      NBins: 250
+
+    - Name: "Vertex Z"
+      Variable: *VertexZ
+      LowerBound: -50
+      UpperBound:  50
+      NBins: 250
+
+    - Name: "Vertex XY Distribution"
+      Variables:   [ *VertexX, *VertexY ]
+      LowerBounds: [  -10,  -10 ]
+      UpperBounds: [   10,   10 ]
+      NBins:       [  250,  250 ]
+
+    - Name: "Momentum Plane"
+      Variables:   [ *ScatteredMomentumX_, *ScatteredMomentumY_ ]
+      Indices:     *allParticles
+      LowerBounds: [ -10, -10 ]
+      UpperBounds: [  10,  10 ]
+      NBins:       [ 200, 200 ]
