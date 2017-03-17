@@ -118,7 +118,7 @@ endif()
 # find yaml
 message(STATUS "")
 message(STATUS ">>> Setting up YAML.")
-find_package(YamlCpp 0.5.0 REQUIRED)
+find_package(YamlCpp 0.5.1 REQUIRED)
 
 set(ANTOK_LIB "antok")
 if(USE_PYTHON)
