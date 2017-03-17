@@ -601,7 +601,7 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
                                                         std::vector<std::string> &quantityNames,
                                                         int index )
 {
-	if(quantityNames.size() > 2)
+	if(quantityNames.size() > 4)
 	{
 		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return 0;
@@ -635,8 +635,10 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
 	int* Charged1Addr = data.getAddr<int>(args[6].first);
 	int* Charged2Addr = data.getAddr<int>(args[7].first);
 
-	std::string resultOmegaLV  = quantityNames[0];
-	std::string resultAccepted = quantityNames[1];
+	std::string resultOmegaLV        = quantityNames[0];
+	std::string resultAccepted       = quantityNames[1];
+	std::string resultNotUsedPi0     = quantityNames[2];
+	std::string resultNotUsedPiMinus = quantityNames[3];
 
 	if(not data.insert<TLorentzVector>(quantityNames[0]))
 	{
@@ -647,6 +649,18 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
 	if(not data.insert<int>(quantityNames[1]))
 	{
 		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[1]);
+		return 0;
+	}
+
+	if(not data.insert<TLorentzVector>(quantityNames[2]))
+	{
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[2]);
+		return 0;
+	}
+
+	if(not data.insert<TLorentzVector>(quantityNames[3]))
+	{
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[3]);
 		return 0;
 	}
 
@@ -701,7 +715,9 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
 	                                                      Mass,
 	                                                      ResolutionOmega,
 	                                                      data.getAddr<TLorentzVector>(quantityNames[0]),
-	                                                      data.getAddr<int>           (quantityNames[1]) )
+	                                                      data.getAddr<int>           (quantityNames[1]),
+	                                                      data.getAddr<TLorentzVector>(quantityNames[2]),
+	                                                      data.getAddr<TLorentzVector>(quantityNames[3]) )
 	);
 };
 
