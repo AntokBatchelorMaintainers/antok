@@ -1,10 +1,11 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TRandom.h"
+#include "TH1D.h"
 
 #include <iostream>
 
-const unsigned int numberOfEvents = 10000;
+const unsigned int numberOfEvents = 40000;
 
 double getGaussianData( double mean, double sigma )
 {
@@ -27,12 +28,26 @@ unsigned int getIntegerData( unsigned int from, unsigned int count )
 	return from + gRandom->Integer( from + count );
 }
 
+long genTrigger( )
+{
+	long mask = 0x0;
+	for(int i=0; i<12; ++i){
+		const double r = gRandom->Rndm();
+		const long set = (r<0.5)? 1 : 0;
+		mask |= (set<<i);
+	}
+	return mask;
+}
+
+
+
 void generateExampleFile()
 {
 	TFile* outFile = TFile::Open("example.root", "RECREATE");
 	outFile->cd();
 
 	unsigned int runNumber;
+	long triggerMask;
 
 	double vertexX;
 	double vertexY;
@@ -59,7 +74,8 @@ void generateExampleFile()
 	double scatteredMomentumZ3;
 
 	TTree* outTree = new TTree("exampleEvents", "exampleEvents");
-	outTree->Branch("RunNumber", &runNumber , "RunNumber/I" );
+	outTree->Branch("RunNumber",   &runNumber ,  "RunNumber/I" );
+	outTree->Branch("TriggerMask", &triggerMask, "TriggerMask/I" );
 
 	outTree->Branch("VertexX", &vertexX, "VertexX/D" );
 	outTree->Branch("VertexY", &vertexY, "VertexY/D" );
@@ -85,9 +101,21 @@ void generateExampleFile()
 	outTree->Branch("ScatteredMomentumY_3", &scatteredMomentumY3, "ScatteredMomentumY_3/D" );
 	outTree->Branch("ScatteredMomentumZ_3", &scatteredMomentumZ3, "ScatteredMomentumZ_3/D" );
 
+	TH1D* cutHist = new TH1D("cuts", "Cuts", 21, -0.5, 20.5);
+	cutHist->GetXaxis()->SetBinLabel(1, "No cuts");
+	cutHist->GetXaxis()->SetBinLabel(2, "Three charged particles");
+	cutHist->GetXaxis()->SetBinLabel(3, "Charged conservation");
+
+
 	for( unsigned int i = 0; i < numberOfEvents; ++i )
 	{
-		runNumber = getIntegerData( 10000, numberOfEvents );
+
+		for(int j=0; j<10; ++j) cutHist->Fill(0.0);
+		for(int j=0; j<4; ++j)  cutHist->Fill(1.0);
+		cutHist->Fill(2.0);
+
+		runNumber   = getIntegerData( 10000, numberOfEvents );
+		triggerMask = genTrigger();
 
 		vertexX = getGaussianData(  0.1,  3.32 );
 		vertexY = getGaussianData( -0.2,  2.82 );
@@ -117,6 +145,7 @@ void generateExampleFile()
 	}
 	outTree->Write();
 
+	cutHist->Write();
 	outFile->Close();
 }
 

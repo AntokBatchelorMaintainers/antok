@@ -21,6 +21,7 @@ TreeBranches:
 
         int:
             - &RunNumber RunNumber
+            - &TriggerMask TriggerMask
 
     onePerParticle:
 
@@ -85,6 +86,9 @@ CalculatedQuantities:
           dX:          *BeamGradientdXdZ
           dY:          *BeamGradientdYdZ
           XLorentzVec: *ScatteredFullLV
+          TargetMass:  *ProtonMass
+          BeamMass:    *ChargedPionMass
+
 
     - Name: [ ScatteredFullLV_X, ScatteredFullLV_Y, ScatteredFullLV_Z, ScatteredFullLV_Phi, ScatteredFullLV_Theta ]
       Function:
@@ -101,6 +105,7 @@ CalculatedQuantities:
           Name: getTs
           BeamLorentzVec: *BeamLV
           XLorentzVec:    *ScatteredFullLV
+          TargetMass:     *ProtonMass
 
     - Name: &VertexR VertexR
       Function:
@@ -118,6 +123,15 @@ CalculatedQuantities:
 
 
 Cuts:
+    - &KaonTriggerCut
+      ShortName: KaonT
+      LongName: "Kaon Trigger"
+      Abbreviation: KaonT
+      Cut:
+        Name: TriggerMask
+        Type: Inclusive # all events where the bits of the given mask and other bits are set
+        Mask: 4         # the second trigger git has to be set
+        Variable: *TriggerMask
 
     - &VertexZCut
       ShortName: -20<VertexZ<20
@@ -173,12 +187,13 @@ CutTrains:
 
     - &StdEvSel
       Name: Standard Event Selection
-      Cuts:
+      Cuts: &StdEvCuts
+          - *KaonTriggerCut
           - *VertexZCut
           - *VertexRCut
           - *TPrimeCut
           - *ExclusivityCut
-      Pertinent: Yes
+      Pertinent: Yes # Store events that survived all cut into the output tree
 
 GlobalPlotOptions:
 
@@ -186,11 +201,13 @@ GlobalPlotOptions:
     PlotsWithSingleCutsOn:  On
     PlotsWithSingleCutsOff: On
     StatisticsHistogram:
-        State: Off
-        InputName: whereIstheHistogram/statistic
+        State: On
+        InputName: cuts
         OutputName: waterfallPlot
     GlobalCuts:
-        - CutTrain: *StdEvSel
+        - CutTrain: *StdEvSel                         # define a special compination of cuts
+          WithCuts: [ [*TPrimeCut, *ExclusivityCut] ] # for a cut trian, for which all histograms
+          WithoutCuts: [ [*VertexZCut, *TPrimeCut] ]  # will be generated
     HistogramNameAppendix: "_hist"
 
 Plots:
@@ -237,3 +254,23 @@ Plots:
       LowerBounds: [ -10, -10 ]
       UpperBounds: [  10,  10 ]
       NBins:       [ 200, 200 ]
+      PlotsForSequentialCuts: Off # Here, the global plot options for seqential cuts,
+      PlotsWithSingleCutsOn:  Off # single cuts on and single cuts off are overwritten
+      PlotsWithSingleCutsOff: Off # You can use 'On' or 'Off' as above
+      CustomCuts:
+        - CutTrain: *StdEvSel                             # define a special compination of cuts
+          WithCuts: [ *StdEvCuts ]                        # for a cut trian, for which this histogram
+          WithoutCuts: [ [*VertexZCut, *ExclusivityCut] ] # will be generated
+
+
+######################################################
+########### Output Tree ##############################
+######################################################
+# Define variables stored into the output tree.
+# Can be variables from the input tree or variables calculated within antok.
+# If not given, all variables from the input tree are stored into the output tree.
+OutputTree:
+    - *RunNumber
+    - ScatteredParticleLV_1
+    - ScatteredParticleLV_2
+    - ScatteredParticleLV_3
