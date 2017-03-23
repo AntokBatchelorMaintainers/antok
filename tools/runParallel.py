@@ -186,14 +186,22 @@ def splitFilesToJobs(all_files, n_files_per_job, doNotMixRuns):
 		grouped_inputfiles = grouped_inputfiles_byrun;
 
 	files = []
-	for group in sorted(grouped_inputfiles.keys()):
-		group_files = grouped_inputfiles[group]
-		n_files = len(group_files);
+        if doNotMixRuns:
+		for group in sorted(grouped_inputfiles.keys()):
+			group_files = grouped_inputfiles[group]
+			n_files = len(group_files);
+			n_files_job = min(n_files_per_job, n_files);
+			n_jobs = n_files / n_files_job;
+			q = n_files / n_jobs
+			m = n_files % n_jobs
+			files += [ group_files[i*q + min(m,i): (i+1)*q + min(m, i+1)] for i in xrange(n_jobs)]
+	else:
+		n_files = len(all_files);
 		n_files_job = min(n_files_per_job, n_files);
 		n_jobs = n_files / n_files_job;
 		q = n_files / n_jobs
 		m = n_files % n_jobs
-		files += [ group_files[i*q + min(m,i): (i+1)*q + min(m, i+1)] for i in xrange(n_jobs)]
+		files += [ all_files[i*q + min(m,i): (i+1)*q + min(m, i+1)] for i in xrange(n_jobs)]
 	return files
 
 def main():
