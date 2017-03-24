@@ -1059,7 +1059,7 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
                                                                        std::vector<std::string>& quantityNames,
                                                                        int                       index )
 {
-	if (quantityNames.size() > 3)
+	if (quantityNames.size() > 1)
 	{
 		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
 		return 0;
@@ -1086,24 +1086,10 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 	std::vector<double>*              ClusterEnergiesError  = data.getAddr<std::vector<double>>             (args[4].first);
 
 	std::string resultLorentzVectors = quantityNames[0];
-	std::string resultChi2s          = quantityNames[1];
-	std::string resultPulls          = quantityNames[2];
 
 	if( not data.insert<std::vector<TLorentzVector> >(resultLorentzVectors) )
 	{
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultLorentzVectors);
-		return 0;
-	}
-
-	if( not data.insert<std::vector<double> >(resultChi2s) )
-	{
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultChi2s);
-		return 0;
-	}
-
-	if( not data.insert<std::vector<TVector3> >(resultPulls) )
-	{
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultPulls);
 		return 0;
 	}
 
@@ -1140,23 +1126,6 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 	}
 	double* PrecisionGoal = new double();
 	(*PrecisionGoal)      = function["PrecisionGoal"].as<double>();
-
-	try
-	{
-		function["MaxIterations"].as<int>();
-	}
-	catch( const YAML::InvalidNode &exception )
-	{
-		std::cerr << "Argument \"MaxIterations\" in function \"GetKinematicFittingMass\" not found for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
-		return 0;
-	}
-	catch( const YAML::TypedBadConversion<int> &exception )
-	{
-		std::cerr << "Argument \"MaxIterations\" in function \"GetKinematicFittingMass\" should be type of int for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
-		return 0;
-	}
-	int* maxIterations = new int();
-	(*maxIterations)   = function["MaxIterations"].as<int>();
 
 	try
 	{
