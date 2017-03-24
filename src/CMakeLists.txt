@@ -24,6 +24,9 @@ set(SOURCES
 	object_manager.cxx
 	plotter.cxx
 	rpd_helper_helper.cxx
+	KinematicFit.cxx
+	NeutralProblem.cxx
+	NeutralFit.cxx
 	${USER_SOURCES}
    )
 
