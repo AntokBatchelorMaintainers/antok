@@ -100,6 +100,16 @@ namespace antok {
 	}
 
 	template<>
+	bool antok::Data::insert<std::vector<TVector3> >(std::string name) {
+		if(vectorVectors.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "std::vector<TVector3>";
+		vectorVectors[name] = (new std::vector<TVector3>);
+		return true;
+	}
+
+	template<>
 	double* antok::Data::getAddr<double>(std::string name) {
 		if(doubles.count(name) < 1) {
 			return 0;
@@ -161,6 +171,14 @@ namespace antok {
 			return 0;
 		}
 		return &vectors[name];
+	}
+
+	template<>
+	std::vector<TVector3>* antok::Data::getAddr<std::vector<TVector3> >(std::string name) {
+		if(vectorVectors.count(name) < 1) {
+			return 0;
+		}
+		return vectorVectors[name];
 	}
 
 }
