@@ -4,10 +4,11 @@
 #include<iostream>
 #include<vector>
 
-
 #include<TLorentzVector.h>
 #include<TRotation.h>
 #include<TLorentzRotation.h>
+
+#include "NeutralFit.h"
 
 namespace antok {
 
@@ -714,6 +715,71 @@ namespace antok {
 					std::vector<int>            *_ECALIndex;
 					std::vector<TLorentzVector> *_resultParticles;
 					int                         *_resultHasParticles;
+				};
+
+				class GetKinematicFittingMass : public Function
+				{
+				public:
+					GetKinematicFittingMass( TVector3*                    VertexPosition,
+					                         std::vector<TVector3>*       ClusterPositions,
+					                         std::vector<TVector3>*       ClusterPositionsError,
+					                         std::vector<double>*         ClusterEnergies,
+					                         std::vector<double>*         ClusterEnergiesError,
+					                         double*                      Mass,
+					                         double*                      Window,
+					                         int*                         EnergyErrorType,
+					                         std::vector<TLorentzVector>* ResultLorentzVectors
+					                       )
+							: _vertexPosition       ( VertexPosition        ),
+							  _clusterPositions     ( ClusterPositions      ),
+							  _clusterPositionsError( ClusterPositionsError ),
+							  _clusterEnergies      ( ClusterEnergies       ),
+							  _clusterEnergiesError ( ClusterEnergiesError  ),
+							  _mass                 ( Mass                  ),
+							  _window               ( Window                ),
+							  _energyErrorType      ( EnergyErrorType       ),
+							  _resultLorentzVectors ( ResultLorentzVectors  ) {}
+
+					virtual ~GetKinematicFittingMass() {}
+
+					bool operator() ()
+					{
+						_resultLorentzVectors->reserve(TMath::Power(_clusterPositions->size(),2));
+						for( unsigned int i = 0; i < _clusterPositions->size(); i++ )
+						{
+							for( unsigned int j = i + 1; j < _clusterPositions->size(); j++ )
+							{
+								NeutralFit neutralFit( (*_vertexPosition),
+								                       (*_clusterPositions)[i],
+								                       (*_clusterPositions)[j],
+								                       (*_clusterPositionsError)[i],
+								                       (*_clusterPositionsError)[j],
+								                       (*_clusterEnergies)[i],
+								                       (*_clusterEnergies)[j],
+								                       (*_clusterEnergiesError)[i],
+								                       (*_clusterEnergiesError)[j],
+								                       (*_mass),
+								                       (*_window),
+								                       (*_energyErrorType) );
+								bool success = neutralFit.doFit();
+								TLorentzVector resultLorentzVector = neutralFit.getLVSum();
+								_resultLorentzVectors->push_back( resultLorentzVector );
+							}
+						}
+						return true;
+
+					}
+
+				private:
+					TVector3*                    _vertexPosition;
+					std::vector<TVector3>*       _clusterPositions;
+					std::vector<TVector3>*       _clusterPositionsError;
+					std::vector<double>*         _clusterEnergies;
+					std::vector<double>*         _clusterEnergiesError;
+					double*                      _mass;
+					double*                      _window;
+					int*                         _energyErrorType;
+					std::vector<TLorentzVector>* _resultLorentzVectors;
 				};
 
 			}
