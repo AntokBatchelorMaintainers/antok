@@ -794,6 +794,8 @@ namespace functions{
 
 			HF_costheta_ = lv21_Hel.CosTheta();
 			HF_phi_ = lv21_Hel.Phi();
+
+			return true;
 		}
 
 	protected:
