@@ -720,15 +720,18 @@ namespace antok {
 				class GetKinematicFittingMass : public Function
 				{
 				public:
-					GetKinematicFittingMass( TVector3*                    VertexPosition,
-					                         std::vector<TVector3>*       ClusterPositions,
-					                         std::vector<TVector3>*       ClusterPositionsError,
-					                         std::vector<double>*         ClusterEnergies,
-					                         std::vector<double>*         ClusterEnergiesError,
-					                         double*                      Mass,
-					                         double*                      Window,
-					                         int*                         EnergyErrorType,
-					                         std::vector<TLorentzVector>* ResultLorentzVectors
+					GetKinematicFittingMass( TVector3*                         VertexPosition,
+					                         std::vector<TVector3>*            ClusterPositions,
+					                         std::vector<TVector3>*            ClusterPositionsError,
+					                         std::vector<double>*              ClusterEnergies,
+					                         std::vector<double>*              ClusterEnergiesError,
+					                         double*                           Mass,
+					                         double*                           Window,
+					                         int*                              EnergyErrorType,
+					                         std::vector<TLorentzVector>*      ResultLorentzVectors,
+					                         std::vector<double>*              ResultChi2s,
+					                         std::vector<std::vector<double>>* ResultPulls,
+					                         std::vector<double>*              ResultCL
 					                       )
 							: _vertexPosition       ( VertexPosition        ),
 							  _clusterPositions     ( ClusterPositions      ),
@@ -738,13 +741,20 @@ namespace antok {
 							  _mass                 ( Mass                  ),
 							  _window               ( Window                ),
 							  _energyErrorType      ( EnergyErrorType       ),
-							  _resultLorentzVectors ( ResultLorentzVectors  ) {}
+							  _resultLorentzVectors ( ResultLorentzVectors  ),
+							  _resultChi2s          ( ResultChi2s           ),
+							  _resultPulls          ( ResultPulls           ),
+							  _resultCL             ( ResultCL              ) {}
 
 					virtual ~GetKinematicFittingMass() {}
 
 					bool operator() ()
 					{
 						_resultLorentzVectors->reserve(TMath::Power(_clusterPositions->size(),2));
+						_resultPulls->reserve(TMath::Power(_clusterPositions->size(),2));
+						_resultChi2s->reserve(TMath::Power(_clusterPositions->size(),2));
+						_resultCL->reserve(TMath::Power(_clusterPositions->size(),2));
+						bool success(false);
 						for( unsigned int i = 0; i < _clusterPositions->size(); i++ )
 						{
 							for( unsigned int j = i + 1; j < _clusterPositions->size(); j++ )
@@ -761,9 +771,14 @@ namespace antok {
 								                       (*_mass),
 								                       (*_window),
 								                       (*_energyErrorType) );
-								bool success = neutralFit.doFit();
+								success = neutralFit.doFit();
+								if( !success ) continue;
 								TLorentzVector resultLorentzVector = neutralFit.getLVSum();
-								_resultLorentzVectors->push_back( resultLorentzVector );
+
+								_resultLorentzVectors->push_back( resultLorentzVector   );
+								_resultPulls->push_back         ( neutralFit.getPulls() );
+								_resultChi2s->push_back         ( neutralFit.getChi2()  );
+								_resultCL->push_back            ( neutralFit.getCL()    );
 							}
 						}
 						return true;
@@ -771,15 +786,18 @@ namespace antok {
 					}
 
 				private:
-					TVector3*                    _vertexPosition;
-					std::vector<TVector3>*       _clusterPositions;
-					std::vector<TVector3>*       _clusterPositionsError;
-					std::vector<double>*         _clusterEnergies;
-					std::vector<double>*         _clusterEnergiesError;
-					double*                      _mass;
-					double*                      _window;
-					int*                         _energyErrorType;
-					std::vector<TLorentzVector>* _resultLorentzVectors;
+					TVector3*                         _vertexPosition;
+					std::vector<TVector3>*            _clusterPositions;
+					std::vector<TVector3>*            _clusterPositionsError;
+					std::vector<double>*              _clusterEnergies;
+					std::vector<double>*              _clusterEnergiesError;
+					double*                           _mass;
+					double*                           _window;
+					int*                              _energyErrorType;
+					std::vector<TLorentzVector>*      _resultLorentzVectors;
+					std::vector<double>*              _resultChi2s;
+					std::vector<std::vector<double>>* _resultPulls;
+					std::vector<double>*              _resultCL;
 				};
 
 			}

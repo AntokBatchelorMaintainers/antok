@@ -7,9 +7,9 @@
 
 
 antok::KinematicFit::KinematicFit(problem &prob,
-                           const TVectorD &x_,
-                           const TVectorD &eta_,
-                           const TMatrixDSym &coveta_)
+                                  const TVectorD &x_,
+                                  const TVectorD &eta_,
+                                  const TMatrixDSym &coveta_)
 		: nSteps(0),
 		  maxSteps(10),
 		  x(x_),
@@ -25,8 +25,8 @@ antok::KinematicFit::KinematicFit(problem &prob,
 }
 
 antok::KinematicFit::KinematicFit(problem &prob,
-                           const TVectorD &eta_,
-                           const TMatrixDSym &coveta_)
+                                  const TVectorD &eta_,
+                                  const TMatrixDSym &coveta_)
 		: nSteps(0),
 		  maxSteps(10),
 		  eta(eta_),

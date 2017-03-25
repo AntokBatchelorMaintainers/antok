@@ -1059,7 +1059,7 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
                                                                        std::vector<std::string>& quantityNames,
                                                                        int                       index )
 {
-	if (quantityNames.size() > 1)
+	if (quantityNames.size() > 4)
 	{
 		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
 		return 0;
@@ -1086,10 +1086,31 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 	std::vector<double>*              ClusterEnergiesError  = data.getAddr<std::vector<double>>             (args[4].first);
 
 	std::string resultLorentzVectors = quantityNames[0];
+	std::string resultChi2s          = quantityNames[1];
+	std::string resultPulls          = quantityNames[2];
+	std::string resultCL             = quantityNames[3];
 
 	if( not data.insert<std::vector<TLorentzVector> >(resultLorentzVectors) )
 	{
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultLorentzVectors);
+		return 0;
+	}
+
+	if( not data.insert<std::vector<double> >(resultChi2s) )
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultChi2s);
+		return 0;
+	}
+
+	if( not data.insert<std::vector<std::vector<double>> >(resultPulls) )
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultPulls);
+		return 0;
+	}
+
+	if( not data.insert<std::vector<double> >(resultCL) )
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultCL);
 		return 0;
 	}
 
@@ -1152,6 +1173,10 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 	                                                                     Mass,
 	                                                                     PrecisionGoal,
 	                                                                     EnergyErrorType,
-	                                                                     data.getAddr<std::vector<TLorentzVector> >(resultLorentzVectors)
+	                                                                     data.getAddr<std::vector<TLorentzVector> >(resultLorentzVectors),
+	                                                                     data.getAddr<std::vector<double> >(resultChi2s),
+	                                                                     data.getAddr<std::vector<std::vector<double>> >(resultPulls),
+	                                                                     data.getAddr<std::vector<double> >(resultCL)
+
 	));
 };

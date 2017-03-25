@@ -39,9 +39,12 @@ namespace antok {
 
 			TH1 *gethPull(size_t i) { return hPulls[i]; }
 
+			std::vector<double> getPulls() { return pulls; }
+
 		private:
 			static bool first;
 			static std::vector<TH1 *> hPulls;
+			std::vector<double> pulls;
 
 			const TVector3 &vertexPosition;
 			const TVector3 &cluster1Position;
@@ -70,7 +73,7 @@ namespace antok {
 			KinematicFit *myFitter;
 
 			void initPulls();
-
+			void fillPulls( TVectorD enhanced );
 			TMatrixDSym covMatForCluster(const TVector3 &clusterPosition,
 			                             const TVector3 &clusterPositionError,
 			                             const double clusterEnergy,

@@ -53,9 +53,9 @@ antok::NeutralFit::NeutralFit(const TVector3 &vertexPosition_,
 	const double z1 = cluster1Position.Z() - vertexPosition.Z();
 	const double r1 = hypot(hypot(x1, y1), z1);
 
-	const double x2 = cluster1Position.X() - vertexPosition.X();
-	const double y2 = cluster1Position.Y() - vertexPosition.Y();
-	const double z2 = cluster1Position.Z() - vertexPosition.Z();
+	const double x2 = cluster2Position.X() - vertexPosition.X();
+	const double y2 = cluster2Position.Y() - vertexPosition.Y();
+	const double z2 = cluster2Position.Z() - vertexPosition.Z();
 	const double r2 = hypot(hypot(x2, y2), z2);
 
 	startingValues.ResizeTo(NUMVARS);
@@ -146,13 +146,23 @@ TMatrixDSym antok::NeutralFit::covMatForCluster(const TVector3 &clusterPosition,
 	return C;
 }
 
+void antok::NeutralFit::fillPulls( TVectorD enhanced ) {
+	TMatrixDSym covEnh(myFitter->getCovEnhanced());
+	pulls.resize(NUMVARS);
+	for (int i = 0; i < NUMVARS; i++) {
+		pulls[i] = (startingValues[i] - enhanced[i])
+		           / sqrt(covMat[i][i] - covEnh[i][i]);
+		hPulls[i]->Fill(pulls[i]);
+	}
+}
 
 bool antok::NeutralFit::doFit() {
 	// Do the fit, returning early if it fails.
 	if (!myFitter->doFit())
+	{
 		return false;
+	}
 
-	// Get the enhanced values and store them.
 	TVectorD enhanced(myFitter->getEnhanced());
 
 	const double newx1 = enhanced[0];
@@ -172,10 +182,7 @@ bool antok::NeutralFit::doFit() {
 	lv2 = TLorentzVector(p2 * newE2, newE2);
 	lvSum = lv1 + lv2;
 
-	TMatrixDSym covEnh(myFitter->getCovEnhanced());
-	for (int i = 0; i < NUMVARS; i++)
-		hPulls[i]->Fill((startingValues[i] - enhanced[i])
-		                / sqrt(covMat[i][i] - covEnh[i][i]));
+	fillPulls(enhanced);
 
 	return true;
 }
