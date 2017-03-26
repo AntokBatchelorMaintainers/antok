@@ -444,7 +444,7 @@ antok::Function *antok::user::cdreis::generateGetPi0Pair( const YAML::Node      
                                                           std::vector<std::string> &quantityNames,
                                                           int                       index )
 {
-	if (quantityNames.size() > 4)
+	if (quantityNames.size() > 5)
 	{
 		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
 		return 0;
@@ -469,6 +469,7 @@ antok::Function *antok::user::cdreis::generateGetPi0Pair( const YAML::Node      
 	std::string resultVecLV0   = quantityNames[1];
 	std::string resultVecLV1   = quantityNames[2];
 	std::string resultGoodPair = quantityNames[3];
+	std::string resultIndices  = quantityNames[4];
 
 	if (not data.insert<std::vector<TLorentzVector> >(resultVecLV))
 	{
@@ -491,6 +492,12 @@ antok::Function *antok::user::cdreis::generateGetPi0Pair( const YAML::Node      
 	if (not data.insert<int>(resultGoodPair))
 	{
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultGoodPair);
+		return 0;
+	}
+
+	if (not data.insert<std::vector<int>>(resultIndices))
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultIndices);
 		return 0;
 	}
 
@@ -595,8 +602,9 @@ antok::Function *antok::user::cdreis::generateGetPi0Pair( const YAML::Node      
 	                                                       data.getAddr<std::vector<TLorentzVector> >(resultVecLV),
 	                                                       data.getAddr<TLorentzVector>(resultVecLV0),
 	                                                       data.getAddr<TLorentzVector>(resultVecLV1),
-	                                                       data.getAddr<int>(resultGoodPair))
-	);
+	                                                       data.getAddr<int>(resultGoodPair),
+	                                                       data.getAddr<std::vector<int>>(resultIndices)
+	));
 };
 
 antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node         &function,
@@ -1059,17 +1067,18 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
                                                                        std::vector<std::string>& quantityNames,
                                                                        int                       index )
 {
-	if (quantityNames.size() > 4)
+	if (quantityNames.size() > 5)
 	{
 		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
 		return 0;
 	}
 	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>( "ClusterPositions"     , "std::vector<TVector3>"            ));
-	args.push_back(std::pair<std::string, std::string>( "ClusterPositionsError", "std::vector<TVector3>"            ));
-	args.push_back(std::pair<std::string, std::string>( "VertexPosition"       , "TVector3"                         ));
-	args.push_back(std::pair<std::string, std::string>( "ClusterEnergies"      , "std::vector<double>"              ));
-	args.push_back(std::pair<std::string, std::string>( "ClusterEnergiesError" , "std::vector<double>"              ));
+	args.push_back(std::pair<std::string, std::string>( "ClusterPositions"     , "std::vector<TVector3>" ));
+	args.push_back(std::pair<std::string, std::string>( "ClusterPositionsError", "std::vector<TVector3>" ));
+	args.push_back(std::pair<std::string, std::string>( "VertexPosition"       , "TVector3"              ));
+	args.push_back(std::pair<std::string, std::string>( "ClusterEnergies"      , "std::vector<double>"   ));
+	args.push_back(std::pair<std::string, std::string>( "ClusterEnergiesError" , "std::vector<double>"   ));
+	args.push_back(std::pair<std::string, std::string>( "ClusterIndices"       , "std::vector<int>"      ));
 
 	if( not antok::generators::functionArgumentHandler(args, function, index) )
 	{
@@ -1079,16 +1088,18 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 
 	antok::Data &data = antok::ObjectManager::instance()->getData();
 
-	std::vector<TVector3>*            ClusterPositions      = data.getAddr<std::vector<TVector3>>           (args[0].first);
-	std::vector<TVector3>*            ClusterPositionsError = data.getAddr<std::vector<TVector3>>           (args[1].first);
-	TVector3*                         VertexPosition        = data.getAddr<TVector3>                        (args[2].first);
-	std::vector<double>*              ClusterEnergies       = data.getAddr<std::vector<double>>             (args[3].first);
-	std::vector<double>*              ClusterEnergiesError  = data.getAddr<std::vector<double>>             (args[4].first);
+	std::vector<TVector3>*            ClusterPositions      = data.getAddr<std::vector<TVector3>>(args[0].first);
+	std::vector<TVector3>*            ClusterPositionsError = data.getAddr<std::vector<TVector3>>(args[1].first);
+	TVector3*                         VertexPosition        = data.getAddr<TVector3>             (args[2].first);
+	std::vector<double>*              ClusterEnergies       = data.getAddr<std::vector<double>>  (args[3].first);
+	std::vector<double>*              ClusterEnergiesError  = data.getAddr<std::vector<double>>  (args[4].first);
+	std::vector<int>*                 ClusterIndices        = data.getAddr<std::vector<int>>     (args[5].first);
 
 	std::string resultLorentzVectors = quantityNames[0];
 	std::string resultChi2s          = quantityNames[1];
 	std::string resultPulls          = quantityNames[2];
 	std::string resultCL             = quantityNames[3];
+	std::string resultSuccess        = quantityNames[4];
 
 	if( not data.insert<std::vector<TLorentzVector> >(resultLorentzVectors) )
 	{
@@ -1111,6 +1122,12 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 	if( not data.insert<std::vector<double> >(resultCL) )
 	{
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultCL);
+		return 0;
+	}
+
+	if( not data.insert<int>(resultSuccess) )
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultSuccess);
 		return 0;
 	}
 
@@ -1170,13 +1187,15 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 	                                                                     ClusterPositionsError,
 	                                                                     ClusterEnergies,
 	                                                                     ClusterEnergiesError,
+	                                                                     ClusterIndices,
 	                                                                     Mass,
 	                                                                     PrecisionGoal,
 	                                                                     EnergyErrorType,
 	                                                                     data.getAddr<std::vector<TLorentzVector> >(resultLorentzVectors),
 	                                                                     data.getAddr<std::vector<double> >(resultChi2s),
 	                                                                     data.getAddr<std::vector<std::vector<double>> >(resultPulls),
-	                                                                     data.getAddr<std::vector<double> >(resultCL)
+	                                                                     data.getAddr<std::vector<double> >(resultCL),
+	                                                                     data.getAddr<int>(resultSuccess)
 
 	));
 };
