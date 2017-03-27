@@ -64,7 +64,7 @@ antok::NeutralFit::NeutralFit(const TVector3 &vertexPosition_,
 	startingValues[2] = cluster1Energy;
 	startingValues[3] = x2 / r2;
 	startingValues[4] = y2 / r2;
-	startingValues[5] = cluster1Energy;
+	startingValues[5] = cluster2Energy;
 
 	// Setup the worker objects.
 	myProblem = new NeutralProblem(mass);

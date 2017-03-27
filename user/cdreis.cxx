@@ -1067,7 +1067,7 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
                                                                        std::vector<std::string>& quantityNames,
                                                                        int                       index )
 {
-	if (quantityNames.size() > 5)
+	if (quantityNames.size() > 10)
 	{
 		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
 		return 0;
@@ -1097,9 +1097,15 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 
 	std::string resultLorentzVectors = quantityNames[0];
 	std::string resultChi2s          = quantityNames[1];
-	std::string resultPulls          = quantityNames[2];
-	std::string resultCL             = quantityNames[3];
-	std::string resultSuccess        = quantityNames[4];
+	std::string resultCL             = quantityNames[2];
+	std::string resultSuccess        = quantityNames[3];
+	std::string resultPullsX0        = quantityNames[4];
+	std::string resultPullsY0        = quantityNames[5];
+	std::string resultPullsZ0        = quantityNames[6];
+	std::string resultPullsX1        = quantityNames[7];
+	std::string resultPullsY1        = quantityNames[8];
+	std::string resultPullsZ1        = quantityNames[9];
+
 
 	if( not data.insert<std::vector<TLorentzVector> >(resultLorentzVectors) )
 	{
@@ -1113,10 +1119,12 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 		return 0;
 	}
 
-	if( not data.insert<std::vector<std::vector<double>> >(resultPulls) )
-	{
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultPulls);
-		return 0;
+	for( unsigned int i = 4; i < 10; i++ ) {
+		if( not data.insert<std::vector<double> >(quantityNames[i]) )
+		{
+			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			return 0;
+		}
 	}
 
 	if( not data.insert<std::vector<double> >(resultCL) )
@@ -1193,7 +1201,12 @@ antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAM
 	                                                                     EnergyErrorType,
 	                                                                     data.getAddr<std::vector<TLorentzVector> >(resultLorentzVectors),
 	                                                                     data.getAddr<std::vector<double> >(resultChi2s),
-	                                                                     data.getAddr<std::vector<std::vector<double>> >(resultPulls),
+	                                                                     data.getAddr<std::vector<double> >(resultPullsX0),
+	                                                                     data.getAddr<std::vector<double> >(resultPullsY0),
+	                                                                     data.getAddr<std::vector<double> >(resultPullsZ0),
+	                                                                     data.getAddr<std::vector<double> >(resultPullsX1),
+	                                                                     data.getAddr<std::vector<double> >(resultPullsY1),
+	                                                                     data.getAddr<std::vector<double> >(resultPullsZ1),
 	                                                                     data.getAddr<std::vector<double> >(resultCL),
 	                                                                     data.getAddr<int>(resultSuccess)
 
