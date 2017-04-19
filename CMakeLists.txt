@@ -76,6 +76,12 @@ endif()
 message(STATUS "")
 message(STATUS ">>> Setting up ROOT.")
 find_package(ROOT 5.34.04 REQUIRED)
+# ROOT version 6.00.X and 6.03.X have to be excluded, as they have no FindFixBin implementation
+if( (ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION EQUAL 00) OR 
+	(ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION EQUAL 02 AND ROOT_VERSION VERSION_LESS 6.02.05) OR
+	(ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION EQUAL 03 AND ROOT_VERSION VERSION_LESS 6.03.04) )
+	message(FATAL_ERROR "ROOT version ${ROOT_VERSION} cannot be used!")
+endif()
 
 # setup Python
 message(STATUS "")
