@@ -8,7 +8,9 @@ namespace antok {
 
 	namespace beamfileGenerator {
 
-		struct fiveDimCoord {
+		class fiveDimCoord {
+
+		public:
 
 			fiveDimCoord();
 
