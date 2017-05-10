@@ -1,5 +1,7 @@
 
 cmake_minimum_required(VERSION 2.8.0 FATAL_ERROR)
+cmake_policy(SET CMP0042 NEW) # can be removed once required CMake version is
+                              # increased to or beyond version 3.0
 
 set(CMAKE_VERBOSE_MAKEFILE 0)
 
