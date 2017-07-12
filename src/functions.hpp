@@ -203,7 +203,7 @@ namespace antok {
 			virtual ~GetTs() { }
 
 			bool operator() () {
-			    _t = std::fabs((_beamLorentzVec - _xLorentzVec).Mag2());
+			    _t = (_beamLorentzVec - _xLorentzVec).Mag2();
 
 
 			    if(_targetMassAddr != NULL){
@@ -224,7 +224,7 @@ namespace antok {
 			    	_tMin = std::fabs((std::pow(_xLorentzVec.M2() - _beamLorentzVec.M2(), 2)) / (4. * _beamLorentzVec.Vect().Mag2()));
 			    }
 
-			    _tPrime = _t - _tMin;
+			    _tPrime = std::fabs(_t) - _tMin;
 				return true;
 			}
 
