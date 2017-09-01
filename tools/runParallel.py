@@ -204,6 +204,7 @@ def main():
 	optparser.add_option('-t', '--merge-trees', dest='merge_trees', action='store_true', help="Merge not only histograms but also all trees in one file.")
 	optparser.add_option('-l', '--local', dest='local', action='store_true', help="Run local.")
 	optparser.add_option('-n', '--n-files-per-job', dest='n_files_job', action='store', default=1, help="Number of input files per parallel job [default: %default].")
+	optparser.add_option('-j', '--n-jobs', dest='n_jobs', action='store', type='int', default=0, help="Number of parallel jobs [default: %default].")
 	optparser.add_option('-s', '--subfolders', dest='subfolders' , action='store_true', help="Distribute output files to different folders, according to the input folders.")
 	optparser.add_option('',   '--not-mix-runs', dest='not_mix_runs', action='store_true', help="Do not mix phast files from different runs in one job (base on filename).")
 	optparser.add_option('-e', '--excludes-file', dest='excludes_file' , action='store', default="", help='''File which contains a list of files which should be excluded from the processing (One line for each excluded file / Real paths have to be used ). Also full folders can be excluded by giving the folder path.''')
@@ -231,9 +232,15 @@ def main():
 		print optparser.usage
 		exit( 100 );
 
+	if options.n_jobs != 0 and options.n_files_job != 1:
+		print "Cannot set number of files per job and number of jobs at the same time"
+		exit( 100 )
+
 	args = filterExcludes( args, options.excludes_file)
 
 	options.n_files_job = min( int(options.n_files_job), len(args))
+	if options.n_jobs != 0:
+		options.n_files_job = max( int( float(len(args)) / options.n_jobs ), 1)
 
 	files = splitFilesToJobs(args, options.n_files_job, doNotMixRuns = options.not_mix_runs)
 
@@ -254,9 +261,9 @@ def main():
 	if not os.path.isdir(log_dir):
 		os.makedirs( log_dir )
 		if not options.local:
-			# wait 3 seconds such that the log folder is appearing 
+			# wait 3 seconds such that the log folder is appearing
 			# I know it is stupid!
-			time.sleep(3) 
+			time.sleep(3)
 
 
 	# make my own copy of the config file and use it to be protected from changes during the execution
@@ -357,7 +364,7 @@ def main():
 			print "***************************************************************************"
 			print "Can not open logfile"
 			print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-			
+
 
 	if options.outfile:
 		if errors:
