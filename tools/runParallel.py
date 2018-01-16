@@ -200,7 +200,8 @@ def main():
 	optparser = OptionParser( usage="Usage:%prog <args> [<options>]", description = program_description );
 	optparser.add_option('-b', '--batchelorconfigfile', dest='batchelorconfigfile', action='store', type='str', default="", help="Config file for batchelor.")
 	optparser.add_option('-c', '--configfile', dest='configfile', action='store', type='str', default="", help="Config file for antok.")
-	optparser.add_option('-o', '--outfile', dest='outfile', action='store', type='str', default="hist.root", help="Merge files to the given output file.")
+	optparser.add_option('-o', '--outfile', dest='outfile', action='store', type='str', default="hist.root",
+	                     help="Merge files to the given output file. If given, all sub-files will be stored in a folder named according to the output file.")
 	optparser.add_option('-t', '--merge-trees', dest='merge_trees', action='store_true', help="Merge not only histograms but also all trees in one file.")
 	optparser.add_option('-l', '--local', dest='local', action='store_true', help="Run local.")
 	optparser.add_option('-n', '--n-files-per-job', dest='n_files_job', action='store', default=1, help="Number of input files per parallel job [default: %default].")
@@ -225,7 +226,13 @@ def main():
 		print "Output file '{0}' exists found!".format(options.outfile)
 		print optparser.usage
 		exit( 100 );
-	options.outfile = os.path.realpath(options.outfile)
+
+	outfilePath = os.path.realpath(options.outfile)
+	if options.outfile == 'hist.root':
+		outfolder = os.path.dirname(outfilePath)
+	else:
+		outfolder = os.path.join(os.path.dirname(outfilePath), os.path.splitext(os.path.basename(outfilePath))[0])
+	options.outfile = outfilePath
 
 	if options.batchelorconfigfile and not os.path.isfile( options.batchelorconfigfile ):
 		print "Batchelor configfile '{0}' not found!".format(options.batchelorconfigfile)
@@ -257,7 +264,7 @@ def main():
 	log_files = [];
 	out_files = [];
 
-	log_dir = os.path.join( os.path.dirname(options.outfile), 'log' )
+	log_dir = os.path.join( outfolder, 'log' )
 	if not os.path.isdir(log_dir):
 		os.makedirs( log_dir )
 		if not options.local:
@@ -280,12 +287,12 @@ def main():
 			handler.shutdown();
 			exit(1)
 
-		out_folder = os.path.dirname( options.outfile );
+		out_folder_root = outfolder
 		if options.subfolders:
-			out_folder = os.path.join( out_folder, os.path.basename( os.path.dirname( in_files[0] ) ) );
-		if not os.path.isdir(out_folder):
-			os.makedirs( out_folder );
-		out_file = os.path.join( out_folder, "mDST-{0}-{1}-{2}.root.{3:03d}".format(run_first_file, run_last_file, slot, i_job) )
+			out_folder_root = os.path.join( out_folder_root, os.path.basename( os.path.dirname( in_files[0] ) ) );
+		if not os.path.isdir(out_folder_root):
+			os.makedirs( out_folder_root );
+		out_file = os.path.join( out_folder_root, "mDST-{0}-{1}-{2}.root.{3:03d}".format(run_first_file, run_last_file, slot, i_job) )
 		out_files.append( out_file );
 
 		cmd = "echo \"Start: $(date)\""
