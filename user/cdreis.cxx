@@ -62,10 +62,14 @@ antok::Function *antok::user::cdreis::generateGetRecoilLorentzVec( const YAML::N
 	{
 		function["RecoilMass"].as<double>();
 	}
+	catch( const YAML::InvalidNode &exception )
+	{
+		std::cerr << "Argument \"RecoilMass\" in function \"GetRecoilLorentzVec\" not found for calculation of variable \"" << quantityName << "\"" << std::endl;
+		return 0;
+	}
 	catch (const YAML::TypedBadConversion<double> &e)
 	{
-		std::cerr << "Argument \"RecoilMass\" in function \"GetRecoilLorentzVec\" should be of type double (variable \""
-		          << quantityName << "\")." << std::endl;
+		std::cerr << "Argument \"RecoilMass\" in function \"GetRecoilLorentzVec\" should be of type double variable for calculation of variable \"" << quantityName << "\"" << std::endl;
 		return 0;
 	}
 	double *RecoilMass = new double();
@@ -144,9 +148,16 @@ antok::Function *antok::user::cdreis::generateGetPhotonLorentzVecs( const YAML::
 	{
 		function["RangeECAL1"].as<double>();
 	}
+	catch( const YAML::InvalidNode &exception )
+	{
+		std::cerr << "Argument \"RangeECAL1\" in function \"GetPhotonLorentzVecs\" not found for calculation of variables \"" << quantityNames[0] << "\" and \""
+		                                                                                                                      << quantityNames[1] << "\"" << std::endl;
+		return 0;
+	}
 	catch (const YAML::TypedBadConversion<double> &e)
 	{
-		std::cerr << "Argument \"RangeECAL1\" in function \"GetPhotonLorentzVecs\" should be of type double" << std::endl;
+		std::cerr << "Argument \"RangeECAL1\" in function \"GetPhotonLorentzVecs\" should be of type double for calculation of variables \"" << quantityNames[0] << "\" and \""
+		                                                                                                                                     << quantityNames[1] << "\"" << std::endl;
 		return 0;
 	}
 	double *RangeECAL1 = new double();
@@ -225,12 +236,22 @@ antok::Function *antok::user::cdreis::generateGetCleanedEcalClusters( const YAML
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"RangeECAL1\" in function \"GetCleanedEcalClusters\" not found" << std::endl;
+		std::cerr << "Argument \"RangeECAL1\" in function \"GetCleanedEcalClusters\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                        << quantityNames[1] << "\", "    << "\""
+		                                                                                                                        << quantityNames[2] << "\", "    << "\""
+		                                                                                                                        << quantityNames[3] << "\", "    << "\""
+		                                                                                                                        << quantityNames[4] << "\" and " << "\""
+		                                                                                                                        << quantityNames[5] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"RangeECAL1\" in function \"GetCleanedEcalClusters\" should be of type std::double" << std::endl;
+		std::cerr << "Argument \"RangeECAL1\" in function \"GetCleanedEcalClusters\" should be type of double for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                                       << quantityNames[1] << "\", "    << "\""
+		                                                                                                                                       << quantityNames[2] << "\", "    << "\""
+		                                                                                                                                       << quantityNames[3] << "\", "    << "\""
+		                                                                                                                                       << quantityNames[4] << "\" and " << "\""
+		                                                                                                                                       << quantityNames[5] << "\""      << std::endl;
 		return 0;
 	}
 	double *RangeECAL1 = new double();
@@ -242,12 +263,22 @@ antok::Function *antok::user::cdreis::generateGetCleanedEcalClusters( const YAML
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ThresholdEnergyECAL1\" in function \"GetCleanedEcalClusters\" not found" << std::endl;
+		std::cerr << "Argument \"ThresholdEnergyECAL1\" in function \"GetCleanedEcalClusters\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[1] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[2] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[3] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[4] << "\" and " << "\""
+		                                                                                                                                  << quantityNames[5] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"ThresholdEnergyECAL1\" in function \"GetCleanedEcalClusters\" should be of type std::double" << std::endl;
+		std::cerr << "Argument \"ThresholdEnergyECAL1\" in function \"GetCleanedEcalClusters\" should be type of double for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[1] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[2] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[3] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[4] << "\" and " << "\""
+		                                                                                                                                                 << quantityNames[5] << "\""      << std::endl;;
 		return 0;
 	}
 	double *ThresholdEnergyECAL1 = new double();
@@ -259,12 +290,22 @@ antok::Function *antok::user::cdreis::generateGetCleanedEcalClusters( const YAML
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ThresholdTimingECAL1\" in function \"GetCleanedEcalClusters\" not found" << std::endl;
+		std::cerr << "Argument \"ThresholdTimingECAL1\" in function \"GetCleanedEcalClusters\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[1] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[2] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[3] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[4] << "\" and " << "\""
+		                                                                                                                                  << quantityNames[5] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"ThresholdTimingECAL1\" in function \"GetCleanedEcalClusters\" should be of type std::double" << std::endl;
+		std::cerr << "Argument \"ThresholdTimingECAL1\" in function \"GetCleanedEcalClusters\" should be type of double for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[1] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[2] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[3] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[4] << "\" and " << "\""
+		                                                                                                                                                 << quantityNames[5] << "\""      << std::endl;;
 		return 0;
 	}
 	double *ThresholdTimingECAL1 = new double();
@@ -276,12 +317,22 @@ antok::Function *antok::user::cdreis::generateGetCleanedEcalClusters( const YAML
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ThresholdEnergyECAL2\" in function \"GetCleanedEcalClusters\" not found" << std::endl;
+		std::cerr << "Argument \"ThresholdEnergyECAL2\" in function \"GetCleanedEcalClusters\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[1] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[2] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[3] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[4] << "\" and " << "\""
+		                                                                                                                                  << quantityNames[5] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"ThresholdEnergyECAL2\" in function \"GetCleanedEcalClusters\" should be of type std::double" << std::endl;
+		std::cerr << "Argument \"ThresholdEnergyECAL2\" in function \"GetCleanedEcalClusters\" should be type of double for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[1] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[2] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[3] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[4] << "\" and " << "\""
+		                                                                                                                                                 << quantityNames[5] << "\""      << std::endl;;
 		return 0;
 	}
 	double *ThresholdEnergyECAL2 = new double();
@@ -293,12 +344,23 @@ antok::Function *antok::user::cdreis::generateGetCleanedEcalClusters( const YAML
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ThresholdTimingECAL2\" in function \"GetCleanedEcalClusters\" not found" << std::endl;
+		std::cerr << "Argument \"ThresholdTimingECAL2\" in function \"GetCleanedEcalClusters\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[1] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[2] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[3] << "\", "    << "\""
+		                                                                                                                                  << quantityNames[4] << "\" and " << "\""
+		                                                                                                                                  << quantityNames[5] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"ThresholdTimingECAL2\" in function \"GetCleanedEcalClusters\" should be of type std::double" << std::endl;
+		std::cerr << "Argument \"ThresholdTimingECAL2\" in function \"GetCleanedEcalClusters\" should be type of double for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[1] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[2] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[3] << "\", "    << "\""
+		                                                                                                                                                 << quantityNames[4] << "\" and " << "\""
+		                                                                                                                                                 << quantityNames[5] << "\""      << std::endl;;
+		return 0;
 		return 0;
 	}
 	double *ThresholdTimingECAL2 = new double();
@@ -436,12 +498,18 @@ antok::Function *antok::user::cdreis::generateGetPi0Pair( const YAML::Node      
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"Mass\" in function \"GetPi0Pair\" not found" << std::endl;
+		std::cerr << "Argument \"Mass\" in function \"GetPi0Pair\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                      << quantityNames[1] << "\", "    << "\""
+		                                                                                                      << quantityNames[2] << "\" and " << "\""
+		                                                                                                      << quantityNames[3] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"Mass\" in function \"GetPi0Pair\" should be of type std::double" << std::endl;
+		std::cerr << "Argument \"ECALResolution\" in function \"GetRecoilLorentzVec\" should be of type double for calculation of variables \"" << quantityNames[0] << "\", "    <<  "\""
+		                                                                                                                                        << quantityNames[1] << "\", "    <<  "\""
+		                                                                                                                                        << quantityNames[2] << "\" and " <<  "\""
+		                                                                                                                                        << quantityNames[3] << "\""      << std::endl;
 		return 0;
 	}
 	double *Mass = new double();
@@ -453,13 +521,18 @@ antok::Function *antok::user::cdreis::generateGetPi0Pair( const YAML::Node      
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ECALResolution\" in function \"GetPi0Pair\" not found" << std::endl;
+		std::cerr << "Argument \"ECALResolution\" in function \"GetPi0Pair\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                << quantityNames[1] << "\", "    << "\""
+		                                                                                                                << quantityNames[2] << "\" and " << "\""
+		                                                                                                                << quantityNames[3] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<double> &exception )
 	{
-		std::cerr << "Argument \"ECALResolution\" in function \"GetRecoilLorentzVec\" should be of type double (variable \""
-		          << quantityNames[0] << "," << quantityNames[1] << "\")." << std::endl;
+		std::cerr << "Argument \"ECALResolution\" in function \"GetRecoilLorentzVec\" should be of type double for calculatiom of variables \"" << quantityNames[0] << "\", "    <<  "\""
+		                                                                                                                                        << quantityNames[1] << "\", "    <<  "\""
+		                                                                                                                                        << quantityNames[2] << "\" and " <<  "\""
+		                                                                                                                                        << quantityNames[3] << "\""      << std::endl;
 		return 0;
 	}
 	double* ECALResolution = new double();
@@ -471,13 +544,18 @@ antok::Function *antok::user::cdreis::generateGetPi0Pair( const YAML::Node      
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ECAL1Resolution\" in function \"GetPi0Pair\" not found" << std::endl;
+		std::cerr << "Argument \"ECAL1Resolution\" in function \"GetPi0Pair\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                 << quantityNames[1] << "\", "    << "\""
+		                                                                                                                 << quantityNames[2] << "\" and " << "\""
+		                                                                                                                 << quantityNames[3] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<double> &exception )
 	{
-		std::cerr << "Argument \"ECAL1Resolution\" in function \"GetRecoilLorentzVec\" should be of type double (variable \""
-		          << quantityNames[0] << "," << quantityNames[1] << "\")." << std::endl;
+		std::cerr << "Argument \"ECAL1Resolution\" in function \"GetRecoilLorentzVec\" should be of type double for calculatiom of variables \"" << quantityNames[0] << "\", "    <<  "\""
+		                                                                                                                                         << quantityNames[1] << "\", "    <<  "\""
+		                                                                                                                                         << quantityNames[2] << "\" and " <<  "\""
+		                                                                                                                                         << quantityNames[3] << "\""      << std::endl;
 		return 0;
 	}
 	double* ECAL1Resolution = new double();
@@ -489,13 +567,18 @@ antok::Function *antok::user::cdreis::generateGetPi0Pair( const YAML::Node      
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ECAL2Resolution\" in function \"GetPi0Pair\" not found" << std::endl;
+		std::cerr << "Argument \"ECAL2Resolution\" in function \"GetPi0Pair\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                 << quantityNames[1] << "\", "    << "\""
+		                                                                                                                 << quantityNames[2] << "\" and " << "\""
+		                                                                                                                 << quantityNames[3] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<double> &exception )
 	{
-		std::cerr << "Argument \"ECAL2Resolution\" in function \"GetRecoilLorentzVec\" should be of type double (variable \""
-		          << quantityNames[0] << "," << quantityNames[1] << "\")." << std::endl;
+		std::cerr << "Argument \"ECAL2Resolution\" in function \"GetPi0Pair\" not found for calculation of variables \"" << quantityNames[0] << "\", "    << "\""
+		                                                                                                                 << quantityNames[1] << "\", "    << "\""
+		                                                                                                                 << quantityNames[2] << "\" and " << "\""
+		                                                                                                                 << quantityNames[3] << "\""      << std::endl;
 		return 0;
 	}
 	double* ECAL2Resolution = new double();
@@ -518,7 +601,7 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
                                                         std::vector<std::string> &quantityNames,
                                                         int index )
 {
-	if(quantityNames.size() > 2)
+	if(quantityNames.size() > 4)
 	{
 		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return 0;
@@ -552,8 +635,10 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
 	int* Charged1Addr = data.getAddr<int>(args[6].first);
 	int* Charged2Addr = data.getAddr<int>(args[7].first);
 
-	std::string resultOmegaLV  = quantityNames[0];
-	std::string resultAccepted = quantityNames[1];
+	std::string resultOmegaLV        = quantityNames[0];
+	std::string resultAccepted       = quantityNames[1];
+	std::string resultNotUsedPi0     = quantityNames[2];
+	std::string resultNotUsedPiMinus = quantityNames[3];
 
 	if(not data.insert<TLorentzVector>(quantityNames[0]))
 	{
@@ -567,18 +652,32 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
 		return 0;
 	}
 
+	if(not data.insert<TLorentzVector>(quantityNames[2]))
+	{
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[2]);
+		return 0;
+	}
+
+	if(not data.insert<TLorentzVector>(quantityNames[3]))
+	{
+		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames[3]);
+		return 0;
+	}
+
 	try
 	{
 		function["Mass"].as<double>();
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"Mass\" in function \"GetOmega\" not found" << std::endl;
+		std::cerr << "Argument \"Mass\" in function \"GetOmega\" not found for calculation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                    << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"Mass\" in function \"GetOmega\" should be of type std::double" << std::endl;
+		std::cerr << "Argument \"Mass\" in function \"GetOmega\" should be type of double for calculation of variables" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	double *Mass = new double();
@@ -590,12 +689,15 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ResolutionOmega\" in function \"GetOmega\" not found" << std::endl;
+		std::cerr << "Argument \"ResolutionOmega\" in function \"GetOmega\" not found for calculation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                               << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<double> &exception )
 	{
-		std::cerr << "Argument \"ResolutionOmega\" in function \"GetOmega\" should be of type double (variable)" << std::endl;
+		std::cerr << "Argument \"ResolutionOmega\" in function \"GetOmega\" should be type of double for calculation of variables" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                           << quantityNames[1] << "\""      << std::endl;
+
 		return 0;
 	}
 	double* ResolutionOmega = new double();
@@ -613,7 +715,9 @@ antok::Function* antok::user::cdreis::generateGetOmega( const YAML::Node        
 	                                                      Mass,
 	                                                      ResolutionOmega,
 	                                                      data.getAddr<TLorentzVector>(quantityNames[0]),
-	                                                      data.getAddr<int>           (quantityNames[1]) )
+	                                                      data.getAddr<int>           (quantityNames[1]),
+	                                                      data.getAddr<TLorentzVector>(quantityNames[2]),
+	                                                      data.getAddr<TLorentzVector>(quantityNames[3]) )
 	);
 };
 
@@ -657,13 +761,14 @@ antok::Function * antok::user::cdreis::generateGetECALCorrectedEnergy( const YAM
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"Calibration\" in function \"GetECALCorrectedEnergy\" not found" << std::endl;
+		std::cerr << "Argument \"Calibration\" in function \"GetECALCorrectedEnergy\" not found for calculation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                         << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"Calibration\" in function \"GetECALCorrectedEnergy\" should be of type std::string (variable \""
-		          << quantityName << "\")." << std::endl;
+		std::cerr << "Argument \"Calibration\" in function \"GetECALCorrectedEnergy\" should be type of double for calculation of variables " << quantityNames[0] << "\" and " << "\""
+		                                                                                                                                      << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	std::string *Calibration = new std::string();
@@ -682,6 +787,11 @@ antok::Function * antok::user::cdreis::generateGetECALCorrectedEnergy( const YAM
 	{
 		correction[runNumber] = std::pair<double,double>(a,b);
 	}
+	if( not configFile.eof() )
+	{
+		std::cerr << "ERROR: Invalid input correction for run " << runNumber << std::endl;
+		return 0;
+	}
 	configFile.close();
 
 	try
@@ -690,12 +800,14 @@ antok::Function * antok::user::cdreis::generateGetECALCorrectedEnergy( const YAM
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"RangeECAL1\" in function \"GetECALCorrectedEnergy\" not found" << std::endl;
+		std::cerr << "Argument \"RangeECAL1\" in function \"GetECALCorrectedEnergy\" not found for caluclation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                        << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"RangeECAL1\" in function \"GetECALCorrectedEnergy\" should be of type std::double" << std::endl;
+		std::cerr << "Argument \"RangeECAL1\" in function \"GetECALCorrectedEnergy\" should be type of double for calculation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                                       << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	double *RangeECAL1 = new double();
@@ -732,24 +844,6 @@ antok::Function * antok::user::cdreis::generateGetECALCorrectedTiming( const YAM
 		return 0;
 	}
 
-	try
-	{
-		function["Calibration"].as<std::string>();
-	}
-	catch( const YAML::InvalidNode &exception )
-	{
-		std::cerr << "Argument \"Calibration\" in function \"GetECALCorrectedTiming\" not found" << std::endl;
-		return 0;
-	}
-	catch( const YAML::TypedBadConversion<std::string> &exception )
-	{
-		std::cerr << "Argument \"Calibration\" in function \"GetECALCorrectedTiming\" should be of type std::string (variable \""
-		          << quantityName << "\")." << std::endl;
-		return 0;
-	}
-	std::string* Calibration = new std::string();
-	(*Calibration)           = function["Calibration"].as<std::string>();
-
 	antok::Data &data = antok::ObjectManager::instance()->getData();
 
 	std::vector<double>* Timing   = data.getAddr<std::vector<double>>(args[0].first);
@@ -761,6 +855,23 @@ antok::Function * antok::user::cdreis::generateGetECALCorrectedTiming( const YAM
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return 0;
 	}
+
+	try
+	{
+		function["Calibration"].as<std::string>();
+	}
+	catch( const YAML::InvalidNode &exception )
+	{
+		std::cerr << "Argument \"Calibration\" in function \"GetECALCorrectedTiming\" not found for calculation of variable \"" << quantityName << "\"" << std::endl;
+		return 0;
+	}
+	catch( const YAML::TypedBadConversion<std::string> &exception )
+	{
+		std::cerr << "Argument \"Calibration\" in function \"GetECALCorrectedTiming\" should be type of string for calculation of variable \"" << quantityName << "\"" << std::endl;
+		return 0;
+	}
+	std::string* Calibration = new std::string();
+	(*Calibration)           = function["Calibration"].as<std::string>();
 
 	std::map<std::string, std::vector<double>> correctionValues;
 	std::ifstream configFile;
@@ -785,6 +896,11 @@ antok::Function * antok::user::cdreis::generateGetECALCorrectedTiming( const YAM
 
 		correctionValues[name] = values;
 	}
+	if( not configFile.eof() )
+	{
+		std::cerr << "ERROR: Invalid input correction for " << name << std::endl;
+		return 0;
+	}
 	configFile.close();
 
 	try
@@ -793,12 +909,12 @@ antok::Function * antok::user::cdreis::generateGetECALCorrectedTiming( const YAM
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"RangeECAL1\" in function \"GetECALCorrectedTiming\" not found" << std::endl;
+		std::cerr << "Argument \"RangeECAL1\" in function \"GetECALCorrectedTiming\" not found for calculation of variable \"" << quantityName << "\"" << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<std::string> &exception )
 	{
-		std::cerr << "Argument \"RangeECAL1\" in function \"GetECALCorrectedEnergy\" should be of type std::double" << std::endl;
+		std::cerr << "Argument \"Calibration\" in function \"GetECALCorrectedTiming\" should be type of double for calculation of variable \"" << quantityName << "\"" << std::endl;
 		return 0;
 	}
 	double *RangeECAL1 = new double();
@@ -857,13 +973,14 @@ antok::Function *antok::user::cdreis::generateGetPhotonPairParticles( const YAML
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ECALResolution\" in function \"GetPhotonPairParticles\" not found" << std::endl;
+		std::cerr << "Argument \"ECALResolution\" in function \"GetPhotonPairParticles\" not found for calculation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                            << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<double> &exception )
 	{
-		std::cerr << "Argument \"ECALResolution\" in function \"GetPhotonPairParticles\" should be of type double (variable \""
-		          << quantityNames[0] << "," << quantityNames[1] << "\")." << std::endl;
+		std::cerr << "Argument \"ECALResolution\" in function \"GetPhotonPairParticles\" should be type of double  for calculation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                                            << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	double* ECALResolution = new double();
@@ -875,13 +992,14 @@ antok::Function *antok::user::cdreis::generateGetPhotonPairParticles( const YAML
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ECAL1Resolution\" in function \"GetPhotonPairParticles\" not found" << std::endl;
+		std::cerr << "Argument \"ECAL1Resolution\" in function \"GetPhotonPairParticles\" not found for calculation of variables " << quantityNames[0] << "\" and " << "\""
+		                                                                                                                           << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<double> &exception )
 	{
-		std::cerr << "Argument \"ECAL1Resolution\" in function \"GetPhotonPairParticles\" should be of type double (variable \""
-		          << quantityNames[0] << "," << quantityNames[1] << "\")." << std::endl;
+		std::cerr << "Argument \"ECAL1Resolution\" in function \"GetPhotonPairParticles\" should be type of double  for calculation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                                             << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	double* ECAL1Resolution = new double();
@@ -893,13 +1011,14 @@ antok::Function *antok::user::cdreis::generateGetPhotonPairParticles( const YAML
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"ECAL2Resolution\" in function \"GetPhotonPairParticles\" not found" << std::endl;
+		std::cerr << "Argument \"ECAL2Resolution\" in function \"GetPhotonPairParticles\" not found for calculation of variables  \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                              << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<double> &exception )
 	{
-		std::cerr << "Argument \"ECAL2Resolution\" in function \"GetPhotonPairParticles\" should be of type double (variable \""
-		          << quantityNames[0] << "," << quantityNames[1] << "\")." << std::endl;
+		std::cerr << "Argument \"ECAL2Resolution\" in function \"GetPhotonPairParticles\" should be type of double  for calculation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                                             << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	double* ECAL2Resolution = new double();
@@ -911,13 +1030,14 @@ antok::Function *antok::user::cdreis::generateGetPhotonPairParticles( const YAML
 	}
 	catch( const YAML::InvalidNode &exception )
 	{
-		std::cerr << "Argument \"Mass\" in function \"GetPhotonPairParticles\" not found" << std::endl;
+		std::cerr << "Argument \"Mass\" in function \"GetPhotonPairParticles\" not found for calculation of variables  \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                   << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	catch( const YAML::TypedBadConversion<double> &exception )
 	{
-		std::cerr << "Argument \"Mass\" in function \"GetPhotonPairParticles\" should be of type double (variable \""
-		          << quantityNames[0] << "," << quantityNames[1] << "\")." << std::endl;
+		std::cerr << "Argument \"Mass\" in function \"GetPhotonPairParticles\" should be type of double  for calculation of variables \"" << quantityNames[0] << "\" and " << "\""
+		                                                                                                                                  << quantityNames[1] << "\""      << std::endl;
 		return 0;
 	}
 	double* Mass = new double();

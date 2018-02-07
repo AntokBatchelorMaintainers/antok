@@ -1,5 +1,7 @@
 
 cmake_minimum_required(VERSION 2.8.0 FATAL_ERROR)
+cmake_policy(SET CMP0042 NEW) # can be removed once required CMake version is
+                              # increased to or beyond version 3.0
 
 set(CMAKE_VERBOSE_MAKEFILE 0)
 
@@ -76,6 +78,12 @@ endif()
 message(STATUS "")
 message(STATUS ">>> Setting up ROOT.")
 find_package(ROOT 5.34.04 REQUIRED)
+# ROOT version 6.00.X and 6.03.X have to be excluded, as they have no FindFixBin implementation
+if( (ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION EQUAL 00) OR 
+	(ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION EQUAL 02 AND ROOT_VERSION VERSION_LESS 6.02.05) OR
+	(ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION EQUAL 03 AND ROOT_VERSION VERSION_LESS 6.03.04) )
+	message(FATAL_ERROR "ROOT version ${ROOT_VERSION} cannot be used!")
+endif()
 
 # setup Python
 message(STATUS "")
@@ -118,7 +126,7 @@ endif()
 # find yaml
 message(STATUS "")
 message(STATUS ">>> Setting up YAML.")
-find_package(YamlCpp 0.5.0 REQUIRED)
+find_package(YamlCpp 0.5.1 REQUIRED)
 
 set(ANTOK_LIB "antok")
 if(USE_PYTHON)
