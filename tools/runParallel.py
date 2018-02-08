@@ -8,10 +8,11 @@ Created on Sat 09 Jan 2016 12:05:35 AM CET
 '''
 
 program_description = '''
-    <description>
+    Execute the tree reader in parallel on the compute cluster.
 '''
 
 # std includes
+import sys
 from optparse import OptionParser
 from collections import defaultdict
 import os
@@ -23,11 +24,11 @@ import tempfile
 import math
 import copy
 import time
-
-# root includes
-
-# own includes
 import batchelor
+
+# add path to our own pytok
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),"pyLib"))
+import pytok.yamltok as yaml
 
 
 def getRunNumber(filename):
@@ -274,8 +275,22 @@ def main():
 
 
 	# make my own copy of the config file and use it to be protected from changes during the execution
-	shutil.copy2( options.configfile, log_dir)
-	options.configfile = os.path.join( log_dir, os.path.basename(options.configfile) )
+	# load and store it to handle !include statements in the config file
+	local_configfile = os.path.join( log_dir, os.path.basename(options.configfile) )
+	try:
+		with open(options.configfile, "r") as fin:
+			config = yaml.load(fin, yaml.LoaderTok)
+			with open(local_configfile, "w") as fout:
+				# merge lists
+				yaml.merge_lists(config)
+				yaml.dump(config, fout)
+	except Exception as e:
+		print e
+		print "Cannot read config"
+		sys.exit(1)
+
+		
+	options.configfile = local_configfile
 
 
 	for i_job, in_files in enumerate(files):
