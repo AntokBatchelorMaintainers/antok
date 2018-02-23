@@ -174,7 +174,7 @@ def splitFilesToJobs(all_files, n_files_per_job, doNotMixRuns):
 	# do no nix files from different folders in one job
 	grouped_inputfiles = defaultdict(list)
 	for arg in all_files:
-		dir = os.path.dirname( os.path.realpath(arg))
+		dir = os.path.dirname( os.path.abspath(arg))
 		grouped_inputfiles[dir].append( arg )
 
 	if doNotMixRuns:
