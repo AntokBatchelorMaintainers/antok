@@ -87,6 +87,23 @@ namespace {
 
 	}
 
+
+	template<typename T>
+	antok::Cut* __getIsNotNANCut(const YAML::Node& cut,
+	                             const std::string& shortName,
+	                             const std::string& longName,
+	                             const std::string& abbreviation,
+	                             bool* const result)
+	{
+
+		T* variable = antok::YAMLUtils::getAddress<T>(cut["Variable"]);
+		if(variable == 0) {
+			std::cerr<<"Problem processing \"Variable\" entry in \"IsNotNAN\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		return (new antok::cuts::IsNotNANCut<T>(shortName, longName, abbreviation, result, variable));
+	}
+
 	template< typename T>
 	antok::Cut* __generateRangeCutT(const YAML::Node& cut,
 	                                const std::string& shortName,
@@ -441,6 +458,45 @@ namespace {
 
 	};
 
+
+	antok::Cut* __generateIsNotNANCut(const YAML::Node& cut,
+	                                  const std::string& shortName,
+	                                  const std::string& longName,
+	                                  const std::string& abbreviation,
+	                                  bool* const result)
+	{
+
+		using antok::YAMLUtils::hasNodeKey;
+
+		if(not (hasNodeKey(cut, "Variable"))) {
+			std::cerr<<"One of the required arguments (\"Variable\") for \"IsNotNAN\" cut \""<<shortName<<"\" is missing."<<std::endl;
+			return 0;
+		}
+
+		std::string variableName = antok::YAMLUtils::getString(cut["Variable"]);
+		if(variableName == "") {
+			std::cerr<<"Could not convert \"IsNotNAN\" cut \""<<shortName<<"\"'s \"Variable\" to std::string."<<std::endl;
+			return 0;
+		}
+
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+		std::string typeName = data.getType(variableName);
+
+		antok::Cut* antokCut = 0;
+		if(typeName == "double") {
+			antokCut = __getIsNotNANCut<double>(cut, shortName, longName, abbreviation, result);
+		} else if (typeName == "Long64_t") {
+			antokCut = __getIsNotNANCut<Long64_t>(cut, shortName, longName, abbreviation, result);
+		} else {
+			std::cerr<<"Variable type \""<<typeName<<"\" of variable \"" << variableName << "\" not supported in \"IsNotNAN\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+
+		return antokCut;
+
+	};
+
+
 	antok::Cut* __generateCut(const YAML::Node& cut,
 	                          const std::string& shortName,
 	                          const std::string& longName,
@@ -467,6 +523,8 @@ namespace {
 			antokCut = __generateGroupCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "NoCut") {
 			antokCut = new antok::cuts::NoCut(shortName, longName, abbreviation, result);
+		} else if (cutName == "IsNotNAN") {
+			antokCut = __generateIsNotNANCut(cut, shortName, longName, abbreviation, result);
 		} else {
 			std::cerr<<"Cut \""<<cutName<<"\" not supported."<<std::endl;
 			delete result;
@@ -478,7 +536,6 @@ namespace {
 		}
 		return antokCut;
 	}
-
 }
 
 bool antok::generators::generateCut(const YAML::Node& cutEntry, antok::Cut*& antokCut, bool*& result) {
