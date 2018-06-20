@@ -209,6 +209,14 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 			                                                  lowerBound,
 			                                                  upperBound),
 			                                         data.getAddr<int>(variableName));
+		} else if (variableType == "Long64_t") {
+			antokPlot = new antok::TemplatePlot<Long64_t>(cutmasks,
+			                                         new TH1D(plotName.c_str(),
+			                                                  plotNameWithAxisLables.c_str(),
+			                                                  nBins,
+			                                                  lowerBound,
+			                                                  upperBound),
+			                                         data.getAddr<Long64_t>(variableName));
 		} else if (variableType == "std::vector<int>") {
 			antokPlot = new antok::TemplatePlot<int>(cutmasks,
 			                                            new TH1D(plotName.c_str(),
