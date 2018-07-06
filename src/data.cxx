@@ -90,6 +90,16 @@ namespace antok {
 	}
 
 	template<>
+	bool antok::Data::insert<std::vector<Long64_t> >(std::string name) {
+		if(long64_tVectors.count(name) > 0) {
+			return false;
+		}
+		global_map[name] = "std::vector<Long64_t>";
+		long64_tVectors[name] = (new std::vector<Long64_t>);
+		return true;
+	}
+
+	template<>
 	bool antok::Data::insert<TVector3>(std::string name) {
 		if(lorentzVectors.count(name) > 0) {
 			return false;
@@ -121,6 +131,14 @@ namespace antok {
 			return 0;
 		}
 		return &long64_ts[name];
+	}
+
+	template<>
+	std::vector<Long64_t>* antok::Data::getAddr<std::vector<Long64_t>>(std::string name) {
+		if(long64_tVectors.count(name) < 1) {
+			return 0;
+		}
+		return long64_tVectors[name];
 	}
 
     template<>
