@@ -456,13 +456,13 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 		} else if (variableType == "Long64_t" && variable2Type == "double") {
 			antokPlot = new antok::TemplatePlot<Long64_t,double>(cutmasks,
 			                                                new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
-			                                                data.getAddr<std::vector<Long64_t>>(variable1Name),
-			                                                data.getAddr<std::vector<double>>(variable2Name));
+			                                                data.getAddr<Long64_t>(variable1Name),
+			                                                data.getAddr<double>(variable2Name));
 		} else if (variableType == "double" && variable2Type == "Long64_t") {
 			antokPlot = new antok::TemplatePlot<double,Long64_t>(cutmasks,
 			                                                new TH2D(plotName.c_str(), plotNameWithAxisLables.c_str(), nBins1, lowerBound1, upperBound1, nBins2, lowerBound2, upperBound2),
-			                                                data.getAddr<std::vector<double>>(variable1Name),
-			                                                data.getAddr<std::vector<Long64_t>>(variable2Name));
+			                                                data.getAddr<double>(variable1Name),
+			                                                data.getAddr<Long64_t>(variable2Name));
 		} else if(variableType == "") {
 			std::cerr<<"Could not find \"Variable\" \""<<variable1Name<<"\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 			return 0;
