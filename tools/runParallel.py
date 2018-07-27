@@ -209,6 +209,7 @@ def main():
 	optparser.add_option('-s', '--subfolders', dest='subfolders' , action='store_true', help="Distribute output files to different folders, according to the input folders.")
 	optparser.add_option('',   '--not-mix-runs', dest='not_mix_runs', action='store_true', help="Do not mix phast files from different runs in one job (base on filename).")
 	optparser.add_option('-e', '--excludes-file', dest='excludes_file' , action='store', default="", help='''File which contains a list of files which should be excluded from the processing (One line for each excluded file / Real paths have to be used ). Also full folders can be excluded by giving the folder path.''')
+	optparser.add_option('',   '--memory', dest='memory', default=None, help="Set memory requirements of jobs")
 
 	( options, args ) = optparser.parse_args();
 
@@ -259,7 +260,8 @@ def main():
 
 	antok = os.path.join(os.path.dirname(os.path.realpath(__file__)), "treereader" )
 	handler = batchelor.BatchelorHandler(configfile=defaultBatchelorConfig if not options.batchelorconfigfile else options.batchelorconfigfile,
-	                                     systemOverride="local" if options.local else "")
+	                                     systemOverride="local" if options.local else "",
+	                                     memory=options.memory)
 
 	log_files = [];
 	out_files = [];
