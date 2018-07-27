@@ -171,6 +171,8 @@ namespace functions{
 							 double const* L_background,
 							 TVector3 const* mom,
 							 double const* mom_mag,
+							 double const* radius,
+							 double const* angle,
 							 double const* P_ratio_cut,
 							 double const* Mom_pion_min,
 							 double const* Mom_pion_max,
@@ -182,6 +184,10 @@ namespace functions{
 							 double const* Mom_electron_max,
 							 double const* Mom_muon_min,
 							 double const* Mom_muon_max,
+							 double const* Radius_min,
+							 double const* Radius_max,
+							 double const* Angle_min,
+							 double const* Angle_max,
 		                     double* P_pion,
 							 double* P_kaon,
 							 double* P_proton,
@@ -204,6 +210,8 @@ namespace functions{
 							 P_background ),
 							 mom_(mom),
 							 mom_mag_(mom_mag),
+							 radius_(radius),
+							 angle_(angle),
 							 P_ratio_cut_(*P_ratio_cut),
 							 Mom_pion_min_(*Mom_pion_min),
 							 Mom_pion_max_(*Mom_pion_max),
@@ -215,6 +223,10 @@ namespace functions{
 							 Mom_electron_max_(*Mom_electron_max),
 							 Mom_muon_min_(*Mom_muon_min),
 							 Mom_muon_max_(*Mom_muon_max),
+							 Radius_min_(*Radius_min),
+							 Radius_max_(*Radius_max),
+							 Angle_min_(*Angle_min),
+							 Angle_max_(*Angle_max),
 							 pid_( *pid)
 		{}
 
@@ -223,13 +235,19 @@ namespace functions{
 		bool operator() (){
 			CalcRICHProbabilities::operator ()();
 			const double mom = (mom_)? mom_->Mag() : *mom_mag_;
-            if(      P_pion_       > P_ratio_cut_ && mom > Mom_pion_min_     && mom < Mom_pion_max_)     pid_ = 0;
-            else if( P_kaon_       > P_ratio_cut_ && mom > Mom_kaon_min_     && mom < Mom_kaon_max_)     pid_ = 1;
-            else if( P_proton_     > P_ratio_cut_ && mom > Mom_proton_min_   && mom < Mom_proton_max_)   pid_ = 2;
-            else if( P_electron_   > P_ratio_cut_ && mom > Mom_electron_min_ && mom < Mom_electron_max_) pid_ = 3;
-            else if( P_muon_       > P_ratio_cut_ && mom > Mom_muon_min_     && mom < Mom_muon_max_)     pid_ = 4;
-            else if( P_background_ > P_ratio_cut_ )                                                      pid_ = 5;
-            else                                                                                         pid_ = -1;
+			if(      P_pion_       > P_ratio_cut_ && mom > Mom_pion_min_     && mom < Mom_pion_max_)     pid_ = 0;
+			else if( P_kaon_       > P_ratio_cut_ && mom > Mom_kaon_min_     && mom < Mom_kaon_max_)     pid_ = 1;
+			else if( P_proton_     > P_ratio_cut_ && mom > Mom_proton_min_   && mom < Mom_proton_max_)   pid_ = 2;
+			else if( P_electron_   > P_ratio_cut_ && mom > Mom_electron_min_ && mom < Mom_electron_max_) pid_ = 3;
+			else if( P_muon_       > P_ratio_cut_ && mom > Mom_muon_min_     && mom < Mom_muon_max_)     pid_ = 4;
+			else if( P_background_ > P_ratio_cut_ )                                                      pid_ = 5;
+			else                                                                                         pid_ = -1;
+			if(radius_ != nullptr){
+				if (*radius_ <= Radius_min_ or *radius_ >= Radius_max_) pid_ = -1;
+			}
+			if(angle_ != nullptr){
+				if (*angle_ <= Angle_min_ or *angle_ >= Angle_max_) pid_ = -1;
+			}
 			return true;
 		}
 
@@ -238,6 +256,8 @@ namespace functions{
 	private:
 		TVector3 const* mom_;
 		double const* mom_mag_;
+		double const* radius_;
+		double const* angle_;
 		double const& P_ratio_cut_;
 		double const& Mom_pion_min_;
 		double const& Mom_pion_max_;
@@ -249,6 +269,10 @@ namespace functions{
 		double const& Mom_electron_max_;
 		double const& Mom_muon_min_;
 		double const& Mom_muon_max_;
+		double const& Radius_min_;
+		double const& Radius_max_;
+		double const& Angle_min_;
+		double const& Angle_max_;
 		int& pid_;
 
 	};

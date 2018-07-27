@@ -103,6 +103,12 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 	std::vector<std::pair<std::string, double*> > possible_const;
 	std::vector<std::pair<std::string, double*> > possible_const_per_index;
 	bool is_momv3_given = not hasNodeKey(function, "MomMag");
+	bool is_radius_given = hasNodeKey(function, "Radius");
+	bool is_angle_given = hasNodeKey(function, "Angle");
+	int index_radius = -1;
+	int index_angle = -1;
+	int index_radius_min = -1;
+	int index_angle_min = -1;
 
 	// complete list of arguments
     possible_const_per_index.push_back(std::pair<std::string, double* >("PidLRichPion", nullptr));
@@ -118,6 +124,14 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 			args_per_index.push_back(std::pair<std::string, std::string>("Mom", "TVector3"));
 		else
 			args_per_index.push_back(std::pair<std::string, std::string>("MomMag", "double"));
+		if (is_radius_given){
+			args_per_index.push_back(std::pair<std::string, std::string>("Radius", "double"));
+			index_radius = args_per_index.size()-1;
+		}
+		if (is_angle_given){
+			args_per_index.push_back(std::pair<std::string, std::string>("Angle", "double"));
+			index_angle = args_per_index.size()-1;
+		}
 		possible_const.push_back(std::pair<std::string, double* >("PRatioCut", nullptr));
 		possible_const.push_back(std::pair<std::string, double* >("MomPionMin", nullptr));
 		possible_const.push_back(std::pair<std::string, double* >("MomPionMax", nullptr));
@@ -129,6 +143,16 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 		possible_const.push_back(std::pair<std::string, double* >("MomElectronMax", nullptr));
 		possible_const.push_back(std::pair<std::string, double* >("MomMuonMin", nullptr));
 		possible_const.push_back(std::pair<std::string, double* >("MomMuonMax", nullptr));
+		if (is_radius_given){
+			index_radius_min = possible_const.size();
+			possible_const.push_back(std::pair<std::string, double* >("RadiusMin", nullptr));
+			possible_const.push_back(std::pair<std::string, double* >("RadiusMax", nullptr));
+		}
+		if (is_angle_given){
+			index_angle_min = possible_const.size();
+			possible_const.push_back(std::pair<std::string, double* >("AngleMin", nullptr));
+			possible_const.push_back(std::pair<std::string, double* >("AngleMax", nullptr));
+		}
 
 		if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0 ) ){
 			std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -198,6 +222,8 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 															possible_const_per_index[5].second,
 			                                                (is_momv3_given)? data.getAddr<TVector3>(args_per_index[0].first): NULL,
 			                                                (is_momv3_given)? NULL : data.getAddr<double>(args_per_index[0].first),
+			                                                (is_radius_given)? data.getAddr<double>(args_per_index[index_radius].first) : NULL,
+			                                                (is_angle_given)? data.getAddr<double>(args_per_index[index_angle].first) : NULL,
 															possible_const[0].second,
 															possible_const[1].second,
 															possible_const[2].second,
@@ -209,6 +235,10 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 															possible_const[8].second,
 															possible_const[9].second,
 															possible_const[10].second,
+															(is_radius_given)? possible_const[index_radius_min].second: NULL,
+															(is_radius_given)? possible_const[index_radius_min+1].second: NULL,
+															(is_angle_given)? possible_const[index_angle_min].second: NULL,
+															(is_angle_given)? possible_const[index_angle_min+1].second: NULL,
 															quantityAddrs[0],
 															quantityAddrs[1],
 															quantityAddrs[2],
