@@ -661,6 +661,41 @@ antok::Function* antok::user::stefan::getCalcAngles3P(const YAML::Node& function
 	        );
 }
 
+
+antok::Function* antok::user::stefan::getCalcRapidityXF(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+	using antok::YAMLUtils::hasNodeKey;
+
+
+	if(quantityNames.size() != 2){
+		std::cerr<<"Need 2 names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return nullptr;
+	}
+
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("LV", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("LVBeam"   ,   "TLorentzVector"));
+
+	if(not antok::generators::functionArgumentHandler(args, function, 0)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+
+	data.insert<double>( quantityNames[0] );
+	data.insert<double>( quantityNames[1] );
+
+
+	return new antok::user::stefan::functions::CalcRapidityXF(
+																	data.getAddr<TLorentzVector>( args[0].first ),
+																	data.getAddr<TLorentzVector>( args[1].first ),
+																	data.getAddr<double>( quantityNames[0]),
+																	data.getAddr<double>( quantityNames[1])
+																	);
+}
+
 antok::Function* antok::user::stefan::getUserFunction(const YAML::Node& function,
                                                           std::vector<std::string>& quantityNames,
                                                           int index)
@@ -687,6 +722,9 @@ antok::Function* antok::user::stefan::getUserFunction(const YAML::Node& function
 	}
 	if(functionName == "calcAngles3P") {
 		antokFunctionPtr = stefan::getCalcAngles3P(function, quantityNames, index);
+	}
+	if(functionName == "calcRapidityXF") {
+		antokFunctionPtr = stefan::getCalcRapidityXF(function, quantityNames, index);
 	}
 	return antokFunctionPtr;
 }

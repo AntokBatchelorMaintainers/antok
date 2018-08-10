@@ -849,11 +849,61 @@ namespace functions{
 			return LogLikeDiff;
 		}
 	};
-}
-}
-}
-}
+
+	
+	class CalcRapidityXF: public Function
+	{
+	public:
+		CalcRapidityXF(const TLorentzVector* inAddrLV, const TLorentzVector* inAddrBeamLV,
+		                    double* outAddrRapidity, double* outAddrXF)
+		:
+
+				_inLV(*inAddrLV),
+				_inBeamLV(*inAddrBeamLV),
+				_outRapidity(*outAddrRapidity),
+				_outXF(*outAddrXF) {
+		}
+
+		virtual ~CalcRapidityXF() {
+		}
+
+		bool operator()() {
 
 
+			const TVector3 beamUnitLab = _inBeamLV.Vect().Unit();
+
+			// rapidity batchelor
+			const double inMomzLab = _inLV.Vect() * beamUnitLab;
+			_outRapidity = 0.5*log( (_inLV.E() + inMomzLab) / (_inLV.E() - inMomzLab));
+
+
+			// transformations for the xF calculation into pi-p CM system
+			double beamEnergy = _inBeamLV.E();
+			TLorentzVector cmLV = _inBeamLV;
+			cmLV.SetE(beamEnergy + antok::Constants::protonMass());
+
+			const TVector3 boostLab2CM = -cmLV.BoostVector();
+			TLorentzVector inLVCM = _inLV;
+			inLVCM.Boost(boostLab2CM);
+
+			// xF
+			const double inMomzCM = inLVCM.Vect() * beamUnitLab;
+			_outXF = 2.0*inMomzCM / cmLV.Mag();
+
+			return true;
+		}
+
+	private:
+		const TLorentzVector& _inLV;
+		const TLorentzVector& _inBeamLV;
+
+		double& _outRapidity;
+		double& _outXF;
+	};
+
+}
+}
+}
+}
 
 #endif /* USER_SWALLNER_FUNCTIONS_HPP_ */
