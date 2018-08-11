@@ -315,6 +315,7 @@ def main():
 		cmd = "echo \"Start: $(date)\""
 		in_filenames = ""
 		for i_infile, in_file in enumerate(in_files):
+			in_file = os.path.realpath(in_file)
 			if not os.path.isfile( in_file ):
 				print "File '{0}' not found!".format(in_file);
 				handler.shutdown();
