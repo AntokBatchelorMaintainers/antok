@@ -62,7 +62,7 @@ make_shared_library(
 	"${THIS_LIB}"
 	"${SOURCES}"
 	"${PYTHON_LIBRARIES}"
-	"${Boost_PYTHON_LIBRARY}"
+	"${Boost_PYTHON${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}_LIBRARY}"
 	"${ROOT_LIBS}"
 	"${ANTOK_LIB}"
 	# no idea why this is needed explicitly here and not in rootpwa
