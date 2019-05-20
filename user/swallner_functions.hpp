@@ -171,6 +171,8 @@ namespace functions{
 							 double const* L_background,
 							 TVector3 const* mom,
 							 double const* mom_mag,
+							 double const* radius,
+							 double const* angle,
 							 double const* P_ratio_cut,
 							 double const* Mom_pion_min,
 							 double const* Mom_pion_max,
@@ -182,6 +184,10 @@ namespace functions{
 							 double const* Mom_electron_max,
 							 double const* Mom_muon_min,
 							 double const* Mom_muon_max,
+							 double const* Radius_min,
+							 double const* Radius_max,
+							 double const* Angle_min,
+							 double const* Angle_max,
 		                     double* P_pion,
 							 double* P_kaon,
 							 double* P_proton,
@@ -204,6 +210,8 @@ namespace functions{
 							 P_background ),
 							 mom_(mom),
 							 mom_mag_(mom_mag),
+							 radius_(radius),
+							 angle_(angle),
 							 P_ratio_cut_(*P_ratio_cut),
 							 Mom_pion_min_(*Mom_pion_min),
 							 Mom_pion_max_(*Mom_pion_max),
@@ -215,6 +223,10 @@ namespace functions{
 							 Mom_electron_max_(*Mom_electron_max),
 							 Mom_muon_min_(*Mom_muon_min),
 							 Mom_muon_max_(*Mom_muon_max),
+							 Radius_min_(*Radius_min),
+							 Radius_max_(*Radius_max),
+							 Angle_min_(*Angle_min),
+							 Angle_max_(*Angle_max),
 							 pid_( *pid)
 		{}
 
@@ -223,13 +235,19 @@ namespace functions{
 		bool operator() (){
 			CalcRICHProbabilities::operator ()();
 			const double mom = (mom_)? mom_->Mag() : *mom_mag_;
-            if(      P_pion_       > P_ratio_cut_ && mom > Mom_pion_min_     && mom < Mom_pion_max_)     pid_ = 0;
-            else if( P_kaon_       > P_ratio_cut_ && mom > Mom_kaon_min_     && mom < Mom_kaon_max_)     pid_ = 1;
-            else if( P_proton_     > P_ratio_cut_ && mom > Mom_proton_min_   && mom < Mom_proton_max_)   pid_ = 2;
-            else if( P_electron_   > P_ratio_cut_ && mom > Mom_electron_min_ && mom < Mom_electron_max_) pid_ = 3;
-            else if( P_muon_       > P_ratio_cut_ && mom > Mom_muon_min_     && mom < Mom_muon_max_)     pid_ = 4;
-            else if( P_background_ > P_ratio_cut_ )                                                      pid_ = 5;
-            else                                                                                         pid_ = -1;
+			if(      P_pion_       > P_ratio_cut_ && mom > Mom_pion_min_     && mom < Mom_pion_max_)     pid_ = 0;
+			else if( P_kaon_       > P_ratio_cut_ && mom > Mom_kaon_min_     && mom < Mom_kaon_max_)     pid_ = 1;
+			else if( P_proton_     > P_ratio_cut_ && mom > Mom_proton_min_   && mom < Mom_proton_max_)   pid_ = 2;
+			else if( P_electron_   > P_ratio_cut_ && mom > Mom_electron_min_ && mom < Mom_electron_max_) pid_ = 3;
+			else if( P_muon_       > P_ratio_cut_ && mom > Mom_muon_min_     && mom < Mom_muon_max_)     pid_ = 4;
+			else if( P_background_ > P_ratio_cut_ )                                                      pid_ = 5;
+			else                                                                                         pid_ = -1;
+			if(radius_ != nullptr){
+				if (*radius_ <= Radius_min_ or *radius_ >= Radius_max_) pid_ = -1;
+			}
+			if(angle_ != nullptr){
+				if (*angle_ <= Angle_min_ or *angle_ >= Angle_max_) pid_ = -1;
+			}
 			return true;
 		}
 
@@ -238,6 +256,8 @@ namespace functions{
 	private:
 		TVector3 const* mom_;
 		double const* mom_mag_;
+		double const* radius_;
+		double const* angle_;
 		double const& P_ratio_cut_;
 		double const& Mom_pion_min_;
 		double const& Mom_pion_max_;
@@ -249,6 +269,10 @@ namespace functions{
 		double const& Mom_electron_max_;
 		double const& Mom_muon_min_;
 		double const& Mom_muon_max_;
+		double const& Radius_min_;
+		double const& Radius_max_;
+		double const& Angle_min_;
+		double const& Angle_max_;
 		int& pid_;
 
 	};
@@ -262,7 +286,7 @@ namespace functions{
 	public:
 
 	DetermineKaonPionLV(TVector3* mom_1, int const* pid_1, TVector3* mom_2, int const* pid_2, double const* mass_charged_kaon, double const* mass_charged_pion,
-	                    TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk, int* pid_kaon, int* pid_pion, const int* method) :
+	                    TLorentzVector* kaon_lv, TLorentzVector* pion_lv, int* is_kp_pk, int* pid_kaon, int* pid_pion, int* pid_kaon_mct, int* pid_pion_mct ,const int* method, const int* pid_1_mct, const int* pid_2_mct) :
 			mom_1_(*mom_1),
 			pid_1_(*pid_1),
 			mom_2_(*mom_2),
@@ -274,7 +298,11 @@ namespace functions{
 			is_kp_pk_(*is_kp_pk),
 			pid_kaon_(*pid_kaon),
 			pid_pion_(*pid_pion),
-			method_(*method) {
+			pid_kaon_mct_(pid_kaon_mct),
+			pid_pion_mct_(pid_pion_mct),
+			method_(*method),
+			pid_1_mct_(pid_1_mct),
+			pid_2_mct_(pid_2_mct){
 	}
 
 
@@ -292,6 +320,10 @@ namespace functions{
 					is_kp_pk_ = 1;
 					pid_kaon_ = pid_1_;
 					pid_pion_ = pid_2_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_1_mct_;
+						*pid_pion_mct_ = *pid_2_mct_;
+					}
 				} else if ((pid_1_ == 0 && pid_2_ != 0) || (pid_2_ == 1 && pid_1_ != 1)) { // 1 = pion , 2 = kaon
 					kaon_lv_ = TLorentzVector(mom_2_,
 					        sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
@@ -300,6 +332,10 @@ namespace functions{
 					is_kp_pk_ = 2;
 					pid_kaon_ = pid_2_;
 					pid_pion_ = pid_1_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_2_mct_;
+						*pid_pion_mct_ = *pid_1_mct_;
+					}
 				}
 				break;
 			}
@@ -311,12 +347,20 @@ namespace functions{
 					is_kp_pk_ = 1;
 					pid_kaon_ = pid_1_;
 					pid_pion_ = pid_2_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_1_mct_;
+						*pid_pion_mct_ = *pid_2_mct_;
+					}
 				} else if (pid_2_ == 1 && pid_1_ != 1) { // 1 = pion , 2 = kaon
 					kaon_lv_ = TLorentzVector(mom_2_, sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
 					pion_lv_ = TLorentzVector(mom_1_, sqrt(mass_charged_pion_ * mass_charged_pion_ + mom_1_.Mag2()));
 					is_kp_pk_ = 2;
 					pid_kaon_ = pid_2_;
 					pid_pion_ = pid_1_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_2_mct_;
+						*pid_pion_mct_ = *pid_1_mct_;
+					}
 				}
 			break;
 			}
@@ -328,6 +372,10 @@ namespace functions{
 					is_kp_pk_ = 1;
 					pid_kaon_ = pid_1_;
 					pid_pion_ = pid_2_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_1_mct_;
+						*pid_pion_mct_ = *pid_2_mct_;
+					}
 				} else if (pid_1_ == 0 && pid_2_ != 0) { // 1 = pion , 2 = kaon
 					kaon_lv_ = TLorentzVector(mom_2_,
 					        sqrt(mass_charged_kaon_ * mass_charged_kaon_ + mom_2_.Mag2()));
@@ -336,6 +384,10 @@ namespace functions{
 					is_kp_pk_ = 2;
 					pid_kaon_ = pid_2_;
 					pid_pion_ = pid_1_;
+					if(pid_kaon_mct_ != nullptr){
+						*pid_kaon_mct_ = *pid_2_mct_;
+						*pid_pion_mct_ = *pid_1_mct_;
+					}
 				}
 				break;
 			}
@@ -359,7 +411,11 @@ namespace functions{
 		int& is_kp_pk_;
 		int& pid_kaon_;
 		int& pid_pion_;
+		int* const pid_kaon_mct_;
+		int* const pid_pion_mct_;
 		const int& method_;
+		const int* const pid_1_mct_;
+		const int* const pid_2_mct_;
 
 	};
 
@@ -762,6 +818,8 @@ namespace functions{
 
 			HF_costheta_ = lv21_Hel.CosTheta();
 			HF_phi_ = lv21_Hel.Phi();
+
+			return true;
 		}
 
 	protected:
@@ -791,11 +849,61 @@ namespace functions{
 			return LogLikeDiff;
 		}
 	};
-}
-}
-}
-}
+
+	
+	class CalcRapidityXF: public Function
+	{
+	public:
+		CalcRapidityXF(const TLorentzVector* inAddrLV, const TLorentzVector* inAddrBeamLV,
+		                    double* outAddrRapidity, double* outAddrXF)
+		:
+
+				_inLV(*inAddrLV),
+				_inBeamLV(*inAddrBeamLV),
+				_outRapidity(*outAddrRapidity),
+				_outXF(*outAddrXF) {
+		}
+
+		virtual ~CalcRapidityXF() {
+		}
+
+		bool operator()() {
 
 
+			const TVector3 beamUnitLab = _inBeamLV.Vect().Unit();
+
+			// rapidity batchelor
+			const double inMomzLab = _inLV.Vect() * beamUnitLab;
+			_outRapidity = 0.5*log( (_inLV.E() + inMomzLab) / (_inLV.E() - inMomzLab));
+
+
+			// transformations for the xF calculation into pi-p CM system
+			double beamEnergy = _inBeamLV.E();
+			TLorentzVector cmLV = _inBeamLV;
+			cmLV.SetE(beamEnergy + antok::Constants::protonMass());
+
+			const TVector3 boostLab2CM = -cmLV.BoostVector();
+			TLorentzVector inLVCM = _inLV;
+			inLVCM.Boost(boostLab2CM);
+
+			// xF
+			const double inMomzCM = inLVCM.Vect() * beamUnitLab;
+			_outXF = 2.0*inMomzCM / cmLV.Mag();
+
+			return true;
+		}
+
+	private:
+		const TLorentzVector& _inLV;
+		const TLorentzVector& _inBeamLV;
+
+		double& _outRapidity;
+		double& _outXF;
+	};
+
+}
+}
+}
+}
 
 #endif /* USER_SWALLNER_FUNCTIONS_HPP_ */

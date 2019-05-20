@@ -18,3 +18,7 @@ file( COPY runParallel.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/runParallel )
 add_custom_target( runParallel ALL
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/runParallel.py ${EXECUTABLE_OUTPUT_PATH}/runParallel
     )
+file( COPY run.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/run)
+add_custom_target( run ALL
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/run.py ${EXECUTABLE_OUTPUT_PATH}/run
+    )
