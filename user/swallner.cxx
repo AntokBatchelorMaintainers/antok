@@ -539,6 +539,58 @@ antok::Function* antok::user::stefan::getCalcCEDARPIDOneL(const YAML::Node& func
 	        );
 }
 
+antok::Function* antok::user::stefan::getCalcAngles3P(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+	if(quantityNames.size() != 4) {
+		std::cerr<<"Need 4 names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return nullptr;
+	}
+	using antok::YAMLUtils::hasNodeKey;
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<std::pair<std::string, std::string> > args;
+	std::vector<std::pair<std::string, double*> > possible_const;
+	args.push_back(std::pair<std::string, std::string>("LVBachelor", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("LVIsoDaughter1", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("LVIsoDaughter2", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("LVBeam", "TLorentzVector"));
+
+	possible_const.push_back(std::pair<std::string, double*>("TargetMass", nullptr));
+
+
+	if(not antok::generators::functionArgumentHandler(args, function, 0)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0 ) ){
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	std::vector<double*> quantityAddrs_double;
+	for(unsigned int i = 0; i < 4; ++i) {
+		if(not data.insert<double>(quantityNames[i])) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames, quantityNames[i]);
+			return 0;
+		}
+		quantityAddrs_double.push_back(data.getAddr<double>(quantityNames[i]));
+
+	}
+
+	return new antok::user::stefan::functions::CalcAngles3P(
+	        data.getAddr<TLorentzVector>(args[0].first),
+	        data.getAddr<TLorentzVector>(args[1].first),
+	        data.getAddr<TLorentzVector>(args[2].first),
+	        data.getAddr<TLorentzVector>(args[3].first),
+	        possible_const[0].second,
+	        quantityAddrs_double[0],
+	        quantityAddrs_double[1],
+	        quantityAddrs_double[2],
+	        quantityAddrs_double[3]
+	        );
+}
+
 antok::Function* antok::user::stefan::getUserFunction(const YAML::Node& function,
                                                           std::vector<std::string>& quantityNames,
                                                           int index)
@@ -563,8 +615,12 @@ antok::Function* antok::user::stefan::getUserFunction(const YAML::Node& function
 	if(functionName == "calcCEDARPID") {
 		antokFunctionPtr = stefan::getCalcCEDARPID(function, quantityNames, index);
 	}
+	if(functionName == "calcAngles3P") {
+		antokFunctionPtr = stefan::getCalcAngles3P(function, quantityNames, index);
+	}
 	return antokFunctionPtr;
 }
+
 
 namespace {
 std::vector<double> getCalcCEDARPIDGetThresholds(const char* name, const YAML::Node& function) {

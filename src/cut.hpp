@@ -3,6 +3,7 @@
 
 #include<string>
 #include<sstream>
+#include<iostream>
 
 #include<event.h>
 
@@ -392,6 +393,36 @@ namespace antok {
 				return true;
 			}
 
+		};
+
+
+		template<typename T>
+		class IsNotNANCut: public Cut {
+
+		  public:
+
+			IsNotNANCut(const std::string& shortname,
+			            const std::string& longname,
+			            const std::string& abbreviation,
+			            bool* outAddr,
+			            T* varAddr)
+				: Cut(shortname, longname, abbreviation, outAddr),
+				  _var(*varAddr)
+		  {}
+
+			bool operator() () {
+				(*_outAddr) = not std::isnan(_var);
+				return true;
+			}
+
+			bool operator==(const Cut& arhs) {
+				const IsNotNANCut* rhs = dynamic_cast<const IsNotNANCut*>(&arhs);
+				if(not rhs) return false;
+				return (this->_var== rhs->_var);
+			}
+
+		  private:
+			T& _var;
 		};
 
 	}

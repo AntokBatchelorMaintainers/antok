@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <limits>
+#include <iostream>
 //#include "swallner.h"
 
 
@@ -639,6 +640,140 @@ namespace functions{
 		double& LLdiff_CEDAR1_;
 		double& LLdiff_CEDAR2_;
 		double& LLdiff_CEDARs_;
+
+
+	private:
+
+		double getLogLikeDiff(const double L_kaon, const double L_pion) {
+			double LogLikeDiff = std::numeric_limits<double>::quiet_NaN();
+			if(L_kaon <= 0.0 and L_pion > 0.0){
+				LogLikeDiff = -15.0;
+			} else if (L_pion <= 0.0 and L_kaon > 0.0){
+				LogLikeDiff = 15.0;
+			} else if (L_kaon > 0.0 and L_pion > 0.0) {
+				LogLikeDiff = log10(L_kaon) - log10(L_pion);
+			}
+
+			return LogLikeDiff;
+		}
+	};
+
+
+	class CalcAngles3P: public Function {
+	public:
+
+		/**
+		 * Calculates the Gottfried-Jackson and Helicity frame angles from the four-momenta (without symmetrization).
+		 * Does only for for 3-particle final states
+		 *
+		 * @param lv11Addr Four momentum of the batchelor
+		 * @param lv21Addr Four momentum of the first isobar daughter
+		 * @param lv22Addr Four momentum of the second isobar daughter
+		 * @param lvBeam Four momentum of the beam particle
+		 * @param targetMassAddr Target mass
+		 * @param GJ_costhetaAddr Gottfried-Jackson frame costheta angle
+		 * @param GJ_phiAddr Gottfried-Jackson frame phi angle
+		 * @param HF_costhetaAddr Helicity frame costheta angle of the isobar decay
+		 * @param HF_phiAddr Helicity frame  phi angle of the isobar decay
+		 */
+		CalcAngles3P(const TLorentzVector* lv11Addr, const TLorentzVector* lv21Addr, const TLorentzVector* lv22Addr,
+		             const TLorentzVector* lvBeamAddr, const double* targetMassAddr,
+		             double* GJ_costhetaAddr, double* GJ_phiAddr, double* HF_costhetaAddr, double* HF_phiAddr):
+			lv11_(*lv11Addr),
+			lv21_(*lv21Addr),
+			lv22_(*lv22Addr),
+			lvBeam_(*lvBeamAddr),
+			targetMass_(*targetMassAddr),
+			GJ_costheta_(*GJ_costhetaAddr),
+			GJ_phi_(*GJ_phiAddr),
+			HF_costheta_(*HF_costhetaAddr),
+			HF_phi_(*HF_phiAddr)
+			{}
+
+
+
+		bool operator()() {
+
+			const TLorentzVector lvIsobar = lv21_ + lv22_; // LV of isobar
+			const TLorentzVector lvX = lv11_ + lv21_ + lv22_; // LV of X
+			const TLorentzVector lvTarget(0,0,0,targetMass_);
+
+			const TVector3 boostLab2X(-lvX.BoostVector());
+
+			// boost in X rest frame
+			TLorentzVector lvX_X(lvX);                          lvX_X.Boost(boostLab2X);
+			TLorentzVector lvBeam_X(lvBeam_);                   lvBeam_X.Boost(boostLab2X);
+			TLorentzVector lvTarget_X(lvTarget);                lvTarget_X.Boost(boostLab2X);
+			TLorentzVector lvRecoil_X(lvBeam_ - lvX+ lvTarget);	lvRecoil_X.Boost(boostLab2X);
+			TLorentzVector lvIsobar_X(lvIsobar);                lvIsobar_X.Boost(boostLab2X);
+			TLorentzVector lv11_X(lv11_);                       lv11_X.Boost(boostLab2X);
+			TLorentzVector lv21_X(lv21_);                       lv21_X.Boost(boostLab2X);
+			TLorentzVector lv22_X(lv22_);                       lv22_X.Boost(boostLab2X);
+
+
+
+			// get z-, y-,x- axis of GJ frame in X rest frame
+			const TVector3 gjAxisZ(lvBeam_X.Vect().Unit());
+			const TVector3 gjAxisY(lvTarget_X.Vect().Cross(lvRecoil_X.Vect()).Unit());
+			const TVector3 gjAxisX(gjAxisY.Cross(gjAxisZ).Unit());
+
+			// get rotation from GJ to lab frame and vice versa
+			TRotation GJ2X;
+			GJ2X = GJ2X.RotateAxes(gjAxisX, gjAxisY, gjAxisZ);
+			TRotation X2GJ(GJ2X);
+			X2GJ.Invert();
+			assert(!X2GJ.IsIdentity());
+
+			// rotate in GJ frame
+			TLorentzVector lvX_GJ(lvX_X);            lvX_GJ *= X2GJ;
+			TLorentzVector lvBeam_GJ(lvBeam_X);      lvBeam_GJ *= X2GJ;
+			TLorentzVector lvTarget_GJ(lvTarget_X);  lvTarget_GJ *= X2GJ;
+			TLorentzVector lvRecoil_GJ(lvRecoil_X);  lvRecoil_GJ *= X2GJ;
+			TLorentzVector lvIsobar_GJ(lvIsobar_X);  lvIsobar_GJ *= X2GJ;
+			TLorentzVector lv11_GJ(lv11_X);          lv11_GJ *= X2GJ;
+			TLorentzVector lv21_GJ(lv21_X);          lv21_GJ *= X2GJ;
+			TLorentzVector lv22_GJ(lv22_X);          lv22_GJ *= X2GJ;
+
+			// calculate theta, phi in GJ frame
+			GJ_costheta_ = lvIsobar_GJ.CosTheta();
+			GJ_phi_ = lvIsobar_GJ.Phi();
+
+			// boost in isobar rest frame
+			const TVector3 boostX2I(-lvIsobar_X.BoostVector());
+			TLorentzVector lvIsobar_I(lvIsobar_X);     lvIsobar_I.Boost(boostX2I);
+			TLorentzVector lv21_I(lv21_X);             lv21_I.Boost(boostX2I);
+			TLorentzVector lv22_I(lv22_X);             lv22_I.Boost(boostX2I);
+
+			// get z-, y-, x-axis in helicity frame
+			const TVector3 axisZ_Hel(lvIsobar_X.Vect().Unit());
+			const TVector3 axisY_Hel(lvBeam_X.Vect().Cross(axisZ_Hel).Unit());
+			const TVector3 axisX_Hel(axisY_Hel.Cross(axisZ_Hel));
+
+			// get rotation in helicity frame
+			TRotation Hel2I;
+			Hel2I = Hel2I.RotateAxes(axisX_Hel, axisY_Hel, axisZ_Hel);
+			TRotation I2Hel(Hel2I);
+			I2Hel.Invert();
+			assert(!I2Hel.IsIdentity());
+
+			TLorentzVector lvIsobar_Hel(lvIsobar_I);      lvIsobar_Hel *= I2Hel;
+			TLorentzVector lv21_Hel(lv21_I);              lv21_Hel *= I2Hel;
+			TLorentzVector lv22_Hel(lv22_I);              lv22_Hel *= I2Hel;
+
+			HF_costheta_ = lv21_Hel.CosTheta();
+			HF_phi_ = lv21_Hel.Phi();
+		}
+
+	protected:
+		const TLorentzVector& lv11_;
+		const TLorentzVector& lv21_;
+		const TLorentzVector& lv22_;
+		const TLorentzVector& lvBeam_;
+		const double& targetMass_;
+		double& GJ_costheta_;
+		double& GJ_phi_;
+		double& HF_costheta_;
+		double& HF_phi_;
 
 
 	private:

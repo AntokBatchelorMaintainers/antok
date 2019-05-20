@@ -174,7 +174,7 @@ def splitFilesToJobs(all_files, n_files_per_job, doNotMixRuns):
 	# do no nix files from different folders in one job
 	grouped_inputfiles = defaultdict(list)
 	for arg in all_files:
-		dir = os.path.dirname( os.path.realpath(arg))
+		dir = os.path.dirname( os.path.abspath(arg))
 		grouped_inputfiles[dir].append( arg )
 
 	if doNotMixRuns:
@@ -200,13 +200,16 @@ def main():
 	optparser = OptionParser( usage="Usage:%prog <args> [<options>]", description = program_description );
 	optparser.add_option('-b', '--batchelorconfigfile', dest='batchelorconfigfile', action='store', type='str', default="", help="Config file for batchelor.")
 	optparser.add_option('-c', '--configfile', dest='configfile', action='store', type='str', default="", help="Config file for antok.")
-	optparser.add_option('-o', '--outfile', dest='outfile', action='store', type='str', default="hist.root", help="Merge files to the given output file.")
+	optparser.add_option('-o', '--outfile', dest='outfile', action='store', type='str', default="hist.root",
+	                     help="Merge files to the given output file. If given, all sub-files will be stored in a folder named according to the output file.")
 	optparser.add_option('-t', '--merge-trees', dest='merge_trees', action='store_true', help="Merge not only histograms but also all trees in one file.")
 	optparser.add_option('-l', '--local', dest='local', action='store_true', help="Run local.")
 	optparser.add_option('-n', '--n-files-per-job', dest='n_files_job', action='store', default=1, help="Number of input files per parallel job [default: %default].")
+	optparser.add_option('-j', '--n-jobs', dest='n_jobs', action='store', type='int', default=0, help="Number of parallel jobs [default: %default].")
 	optparser.add_option('-s', '--subfolders', dest='subfolders' , action='store_true', help="Distribute output files to different folders, according to the input folders.")
 	optparser.add_option('',   '--not-mix-runs', dest='not_mix_runs', action='store_true', help="Do not mix phast files from different runs in one job (base on filename).")
 	optparser.add_option('-e', '--excludes-file', dest='excludes_file' , action='store', default="", help='''File which contains a list of files which should be excluded from the processing (One line for each excluded file / Real paths have to be used ). Also full folders can be excluded by giving the folder path.''')
+	optparser.add_option('',   '--memory', dest='memory', default=None, help="Set memory requirements of jobs")
 
 	( options, args ) = optparser.parse_args();
 
@@ -224,16 +227,28 @@ def main():
 		print "Output file '{0}' exists found!".format(options.outfile)
 		print optparser.usage
 		exit( 100 );
-	options.outfile = os.path.realpath(options.outfile)
+
+	outfilePath = os.path.realpath(options.outfile)
+	if options.outfile == 'hist.root':
+		outfolder = os.path.dirname(outfilePath)
+	else:
+		outfolder = os.path.join(os.path.dirname(outfilePath), os.path.splitext(os.path.basename(outfilePath))[0])
+	options.outfile = outfilePath
 
 	if options.batchelorconfigfile and not os.path.isfile( options.batchelorconfigfile ):
 		print "Batchelor configfile '{0}' not found!".format(options.batchelorconfigfile)
 		print optparser.usage
 		exit( 100 );
 
+	if options.n_jobs != 0 and options.n_files_job != 1:
+		print "Cannot set number of files per job and number of jobs at the same time"
+		exit( 100 )
+
 	args = filterExcludes( args, options.excludes_file)
 
 	options.n_files_job = min( int(options.n_files_job), len(args))
+	if options.n_jobs != 0:
+		options.n_files_job = max( int( float(len(args)) / options.n_jobs ), 1)
 
 	files = splitFilesToJobs(args, options.n_files_job, doNotMixRuns = options.not_mix_runs)
 
@@ -245,18 +260,19 @@ def main():
 
 	antok = os.path.join(os.path.dirname(os.path.realpath(__file__)), "treereader" )
 	handler = batchelor.BatchelorHandler(configfile=defaultBatchelorConfig if not options.batchelorconfigfile else options.batchelorconfigfile,
-	                                     systemOverride="local" if options.local else "")
+	                                     systemOverride="local" if options.local else "",
+	                                     memory=options.memory)
 
 	log_files = [];
 	out_files = [];
 
-	log_dir = os.path.join( os.path.dirname(options.outfile), 'log' )
+	log_dir = os.path.join( outfolder, 'log' )
 	if not os.path.isdir(log_dir):
 		os.makedirs( log_dir )
 		if not options.local:
-			# wait 3 seconds such that the log folder is appearing 
+			# wait 3 seconds such that the log folder is appearing
 			# I know it is stupid!
-			time.sleep(3) 
+			time.sleep(3)
 
 
 	# make my own copy of the config file and use it to be protected from changes during the execution
@@ -273,12 +289,12 @@ def main():
 			handler.shutdown();
 			exit(1)
 
-		out_folder = os.path.dirname( options.outfile );
+		out_folder_root = outfolder
 		if options.subfolders:
-			out_folder = os.path.join( out_folder, os.path.basename( os.path.dirname( in_files[0] ) ) );
-		if not os.path.isdir(out_folder):
-			os.makedirs( out_folder );
-		out_file = os.path.join( out_folder, "mDST-{0}-{1}-{2}.root.{3:03d}".format(run_first_file, run_last_file, slot, i_job) )
+			out_folder_root = os.path.join( out_folder_root, os.path.basename( os.path.dirname( in_files[0] ) ) );
+		if not os.path.isdir(out_folder_root):
+			os.makedirs( out_folder_root );
+		out_file = os.path.join( out_folder_root, "mDST-{0}-{1}-{2}.root.{3:03d}".format(run_first_file, run_last_file, slot, i_job) )
 		out_files.append( out_file );
 
 		cmd = "echo \"Start: $(date)\""
@@ -357,7 +373,7 @@ def main():
 			print "***************************************************************************"
 			print "Can not open logfile"
 			print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-			
+
 
 	if options.outfile:
 		if errors:

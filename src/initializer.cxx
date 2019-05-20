@@ -180,6 +180,7 @@ bool antok::Initializer::initializeCutter() {
 		if(pertinent) {
 			outFile->cd(cutTrainName.c_str());
 			TTree* outTree = createOutTree( inTree, config );
+			if (outTree == nullptr) return false;
 			cutter._outTreeMap[cutTrainName] = outTree;
 			assert(objectManager->registerObjectToWrite(TDirectory::CurrentDirectory(), outTree));
 		}
@@ -818,6 +819,7 @@ TTree* createOutTree( TTree* const inTree, const YAML::Node& config ){
 				else if( variable_type == "int" )	        addToOutputBranch<int>(            outTree, data, variable_name );
 				else if( variable_type == "TVector3" )       addToOutputBranch<TVector3>(       outTree, data, variable_name );
 				else if( variable_type == "TLorentzVector" ) addToOutputBranch<TLorentzVector>( outTree, data, variable_name );
+				else if( variable_type == "std::vector<double>" ) addToOutputBranch<std::vector<double>>( outTree, data, variable_name );
 				else {
 					std::cerr << "Variable type \"" << variable_type << "\" of variable \"" << variable_name << "\" not implemented for own output tree." << std::endl;
 					return nullptr;
