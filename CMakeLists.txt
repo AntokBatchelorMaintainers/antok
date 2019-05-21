@@ -88,7 +88,7 @@ endif()
 # find yaml
 message(STATUS "")
 message(STATUS ">>> Setting up YAML.")
-find_package(YamlCpp 0.5.1 REQUIRED)
+find_package(YamlCpp 0.6.0 REQUIRED)
 
 if(USE_PYTHON)
 	message(STATUS "Using Boost.Python libraries '${Boost_PYTHON_LIBS}'.")
