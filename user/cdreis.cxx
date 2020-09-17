@@ -35,7 +35,8 @@ antok::Function *antok::user::cdreis::getUserFunction(const YAML::Node &function
 		antokFunctionPtr = antok::user::cdreis::generateGetPhotonPairParticles(function, quantityNames, index);
 	else if( functionName == "getThreePionCombinationMass" )
 		antokFunctionPtr = antok::user::cdreis::generateGetThreePionCombinationMass(function, quantityNames, index);
-
+	else if( functionName == "getKinematicFittingMass" )
+		antokFunctionPtr = antok::user::cdreis::generateGetKinematicFittingMass(function, quantityNames, index);
 	return antokFunctionPtr;
 }
 
@@ -1108,3 +1109,156 @@ antok::Function *antok::user::cdreis::generateGetThreePionCombinationMass( const
 	                                                                        Charge2,
 	                                                                        data.getAddr<std::vector<double> >(result)));
 };
+
+antok::Function *antok::user::cdreis::generateGetKinematicFittingMass( const YAML::Node&         function,
+                                                                       std::vector<std::string>& quantityNames,
+                                                                       int                       index )
+{
+	if (quantityNames.size() > 10)
+	{
+		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
+		return 0;
+	}
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Pi0_0"     , "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Pi0_1"     , "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Scattered0", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Scattered1", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Scattered2", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Charge0"   , "int"           ));
+	args.push_back(std::pair<std::string, std::string>("Charge1"   , "int"           ));
+	args.push_back(std::pair<std::string, std::string>("Charge2"   , "int"           ));
+
+	if (not antok::generators::functionArgumentHandler(args, function, index))
+	{
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data &data = antok::ObjectManager::instance()->getData();
+
+	std::vector<TVector3>*            ClusterPositions      = data.getAddr<std::vector<TVector3>>(args[0].first);
+	std::vector<TVector3>*            ClusterPositionsError = data.getAddr<std::vector<TVector3>>(args[1].first);
+	TVector3*                         VertexPosition        = data.getAddr<TVector3>             (args[2].first);
+	std::vector<double>*              ClusterEnergies       = data.getAddr<std::vector<double>>  (args[3].first);
+	std::vector<double>*              ClusterEnergiesError  = data.getAddr<std::vector<double>>  (args[4].first);
+	std::vector<int>*                 ClusterIndices        = data.getAddr<std::vector<int>>     (args[5].first);
+
+	std::string resultLorentzVectors = quantityNames[0];
+	std::string resultChi2s          = quantityNames[1];
+	std::string resultCL             = quantityNames[2];
+	std::string resultSuccess        = quantityNames[3];
+	std::string resultPullsX0        = quantityNames[4];
+	std::string resultPullsY0        = quantityNames[5];
+	std::string resultPullsZ0        = quantityNames[6];
+	std::string resultPullsX1        = quantityNames[7];
+	std::string resultPullsY1        = quantityNames[8];
+	std::string resultPullsZ1        = quantityNames[9];
+
+
+	if( not data.insert<std::vector<TLorentzVector> >(resultLorentzVectors) )
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultLorentzVectors);
+		return 0;
+	}
+
+	if( not data.insert<std::vector<double> >(resultChi2s) )
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultChi2s);
+		return 0;
+	}
+
+	for( unsigned int i = 4; i < 10; i++ ) {
+		if( not data.insert<std::vector<double> >(quantityNames[i]) )
+		{
+			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			return 0;
+		}
+	}
+
+	if( not data.insert<std::vector<double> >(resultCL) )
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultCL);
+		return 0;
+	}
+
+	if( not data.insert<int>(resultSuccess) )
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(resultSuccess);
+		return 0;
+	}
+
+	try
+	{
+		function["ErrorEstimateType"].as<int>();
+	}
+	catch( const YAML::InvalidNode &exception )
+	{
+		std::cerr << "Argument \"ErrorEstimateType\" in function \"GetKinematicFittingMass\" not found for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
+		return 0;
+	}
+	catch( const YAML::TypedBadConversion<int> &exception )
+	{
+		std::cerr << "Argument \"ErrorEstimateType\" in function \"GetKinematicFittingMass\" should be type of int for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
+		return 0;
+	}
+	int* EnergyErrorType = new int();
+	(*EnergyErrorType)      = function["ErrorEstimateType"].as<int>();
+
+	try
+	{
+		function["PrecisionGoal"].as<double>();
+	}
+	catch( const YAML::InvalidNode &exception )
+	{
+		std::cerr << "Argument \"PrecisionGoal\" in function \"GetKinematicFittingMass\" not found for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
+		return 0;
+	}
+	catch( const YAML::TypedBadConversion<int> &exception )
+	{
+		std::cerr << "Argument \"PrecisionGoal\" in function \"GetKinematicFittingMass\" should be type of int for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
+		return 0;
+	}
+	double* PrecisionGoal = new double();
+	(*PrecisionGoal)      = function["PrecisionGoal"].as<double>();
+
+	try
+	{
+		function["Mass"].as<double>();
+	}
+	catch( const YAML::InvalidNode &exception )
+	{
+		std::cerr << "Argument \"Mass\" in function \"GetKinematicFittingMass\" not found for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
+		return 0;
+	}
+	catch( const YAML::TypedBadConversion<int> &exception )
+	{
+		std::cerr << "Argument \"Mass\" in function \"GetKinematicFittingMass\" should be type of int for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
+		return 0;
+	}
+	double* Mass = new double();
+	(*Mass)      = function["Mass"].as<double>();
+
+	return (new antok::user::cdreis::functions::GetKinematicFittingMass( VertexPosition,
+			ClusterPositions,
+			ClusterPositionsError,
+			ClusterEnergies,
+			ClusterEnergiesError,
+			ClusterIndices,
+			Mass,
+			PrecisionGoal,
+			EnergyErrorType,
+			data.getAddr<std::vector<TLorentzVector> >(resultLorentzVectors),
+			data.getAddr<std::vector<double> >(resultChi2s),
+			data.getAddr<std::vector<double> >(resultPullsX0),
+			data.getAddr<std::vector<double> >(resultPullsY0),
+			data.getAddr<std::vector<double> >(resultPullsZ0),
+			data.getAddr<std::vector<double> >(resultPullsX1),
+			data.getAddr<std::vector<double> >(resultPullsY1),
+			data.getAddr<std::vector<double> >(resultPullsZ1),
+			data.getAddr<std::vector<double> >(resultCL),
+			data.getAddr<int>(resultSuccess)
+	                                                                   ));
+
+};
+

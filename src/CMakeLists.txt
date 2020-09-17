@@ -8,24 +8,7 @@ set(INCLUDE_DIRECTORIES
    )
 include_directories(${INCLUDE_DIRECTORIES})
 
-set(SOURCES
-	basic_calcs.cxx
-	beamfile_generator_helpers.cxx
-	beamfile_generator_5dBin.cxx
-	beamfile_generator_5dCoord.cxx
-	constants.cxx
-	cutter.cxx
-	data.cxx
-	event.cxx
-	generators_cuts.cxx
-	generators_functions.cxx
-	generators_plots.cxx
-	initializer.cxx
-	object_manager.cxx
-	plotter.cxx
-	rpd_helper_helper.cxx
-	${USER_SOURCES}
-   )
+file(GLOB SOURCES *.cxx ${USER_SOURCES})
 
 make_shared_library("antok" "${SOURCES}" "${ROOT_LIBS}" "${YamlCpp_LIBS}")
 

@@ -25,6 +25,7 @@ namespace antok {
 			antok::Function* generateGetECALCorrectedEnergy          (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetPhotonPairParticles          (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 			antok::Function* generateGetThreePionCombinationMass     (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetKinematicFittingMass         (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
 		}
 
 	}
