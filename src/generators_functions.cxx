@@ -920,6 +920,100 @@ antok::Function* antok::generators::generateGetVector3(const YAML::Node& functio
 	}
 }
 
+antok::Function* antok::generators::generateGetVectorEntry(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+	using antok::YAMLUtils::hasNodeKey;
+
+	if(quantityNames.size() > 1) {
+		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+	const std::string& quantityName = quantityNames[0];
+
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	std::vector<std::pair<std::string, std::string> > args;
+	try
+	{
+		function["Entry"].as<int>();
+	}
+	catch( const YAML::InvalidNode &exception )
+	{
+		std::cerr << "Argument \"Entry\" in function \"GetVectorEntry\" not found for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
+		return 0;
+	}
+	catch( const YAML::TypedBadConversion<int> &exception )
+	{
+		std::cerr << "Argument \"Entry\" in function \"GetVectorEntry\" not found for calculation of variables \"" << quantityNames[0] << "\"" << std::endl;
+		return 0;
+	}
+	int* entry = new int();
+	(*entry)   = function["Entry"].as<int>();
+
+	int type;
+	if(hasNodeKey(function, "VectorInt")) {
+		type = 0;
+		args.push_back(std::pair<std::string, std::string>("VectorInt", "std::vector<int>"));
+	} else if(hasNodeKey(function, "VectorDouble") ) {
+		type = 1;
+		args.push_back(std::pair<std::string, std::string>("VectorDouble", "std::vector<double>"));
+	} else if(hasNodeKey(function, "VectorTVector3") ) {
+		type = 2;
+		args.push_back(std::pair<std::string, std::string>("VectorTVector3", "std::vector<TVector3>"));
+	} else if(hasNodeKey(function, "VectorTLorentzVector") ) {
+		type = 3;
+		args.push_back(std::pair<std::string, std::string>("VectorTLorentzVector", "std::vector<TLorentzVector>"));
+	} else {
+		std::cerr<<"Unknown properties for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
+	}
+
+	if(not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	switch(type) {
+		case 0: {
+			if(not data.insert<int>(quantityName)) {
+				std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+				return 0;
+			}
+			int* resultInt = data.getAddr<int>(quantityName);
+			std::vector<int>* vectorInt = data.getAddr<std::vector<int>>(args[0].first);
+			return new antok::functions::GetVectorEntry<int>(vectorInt, entry, resultInt);
+		}
+		case 1: {
+			if(not data.insert<double>(quantityName)) {
+				std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+				return 0;
+			}
+			double* resultDouble = data.getAddr<double>(quantityName);
+			std::vector<double>* vectorDouble = data.getAddr<std::vector<double>>(args[0].first);
+			return new antok::functions::GetVectorEntry<double>(vectorDouble, entry, resultDouble);
+		}
+		case 2:
+		{
+			if(not data.insert<TVector3>(quantityName)) {
+				std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+				return 0;
+			}
+			TVector3* resultTVector3 = data.getAddr<TVector3>(quantityName);
+			std::vector<TVector3>* vectorTVector3 = data.getAddr<std::vector<TVector3>>(args[0].first);
+			return new antok::functions::GetVectorEntry<TVector3>(vectorTVector3, entry, resultTVector3);
+		}
+		case 3: {
+			if(not data.insert<TLorentzVector>(quantityName)) {
+				std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+				return 0;
+			}
+			TLorentzVector* resultTLorentzVector = data.getAddr<TLorentzVector>(quantityName);
+			std::vector<TLorentzVector>* vectorTLorentzVector = data.getAddr<std::vector<TLorentzVector>>(args[0].first);
+			return new antok::functions::GetVectorEntry<TLorentzVector>(vectorTLorentzVector, entry, resultTLorentzVector);
+		}
+	}
+	return 0;
+}
+
 antok::Function* antok::generators::generateMass(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
 {
 

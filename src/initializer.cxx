@@ -617,6 +617,8 @@ bool antok::Initializer::initializeEvent() {
 				antokFunctionPtr = antok::generators::generateGetTs(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "getVector3") {
 				antokFunctionPtr = antok::generators::generateGetVector3(function, quantityNames, indices[indices_i]);
+			} else if(functionName == "getVectorEntry") {
+				antokFunctionPtr = antok::generators::generateGetVectorEntry(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "mass") {
 				antokFunctionPtr = antok::generators::generateMass(function, quantityNames, indices[indices_i]);
 			} else if(functionName == "radToDegree") {

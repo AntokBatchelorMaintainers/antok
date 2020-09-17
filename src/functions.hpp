@@ -595,6 +595,39 @@ namespace antok {
 			TVector3* _outAddr;
 
 		};
+
+		template<typename T>
+		class GetVectorEntry : public Function
+		{
+
+		public:
+
+			GetVectorEntry( std::vector<T>* vector,
+			                int*            entry,
+			                T*              result ) {
+				_vector = vector;
+				_entry  = entry;
+				_result = result;
+				if( (*_entry) < 0 ) {
+					std::cerr<<"Got invalid entry position for a vector entry."<<std::endl;
+					throw 1;
+				}
+			};
+
+			virtual ~GetVectorEntry() { }
+
+			bool operator() () {
+				if( _vector->size() < 1 ) return true;
+				(*_result) = (*_vector)[(*_entry)];
+				return true;
+			};
+
+		private:
+			std::vector<T>* _vector;
+			int*            _entry;
+			T*              _result;
+		};
+
 		class GetTVector3FromTLorenzVector: public Function
 		{
 
