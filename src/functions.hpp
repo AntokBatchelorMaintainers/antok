@@ -555,6 +555,43 @@ namespace antok {
 
 		};
 
+		class GetVectorTVector3: public Function
+		{
+
+		  public:
+
+			GetVectorTVector3(const std::vector<double>* xAddr,
+			                  const std::vector<double>* yAddr,
+			                  const std::vector<double>* zAddr,
+			                  std::vector<TVector3>* vAddr)
+					: _xAddr(xAddr),
+					  _yAddr(yAddr),
+					  _zAddr(zAddr),
+					  _vAddr(vAddr){}
+
+			virtual ~GetVectorTVector3() { }
+
+			bool operator() () {
+				if(_xAddr->size() != _yAddr->size() && _xAddr->size() != _zAddr->size()) {
+					return false;
+				}
+				_vAddr->resize(_xAddr->size());
+				for(unsigned int i = 0; i < _xAddr->size(); i++) {
+					TVector3 vector((*_xAddr)[i], (*_yAddr)[i], (*_zAddr )[i]);
+					(*_vAddr)[i] = vector;
+				}
+				return true;
+			}
+
+		  private:
+
+			const std::vector<double>* _xAddr;
+			const std::vector<double>* _yAddr;
+			const std::vector<double>* _zAddr;
+			std::vector<TVector3>* _vAddr;
+
+		};
+
 		class GetTVector3: public Function
 		{
 

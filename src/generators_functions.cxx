@@ -870,9 +870,19 @@ antok::Function* antok::generators::generateGetVector3(const YAML::Node& functio
 		args.push_back(std::pair<std::string, std::string>("X", "double"));
 		args.push_back(std::pair<std::string, std::string>("Y", "double"));
 		args.push_back(std::pair<std::string, std::string>("Z", "double"));
-	} else {
+	} else if(hasNodeKey(function,"VectorX")){
+		fromTLorentzVector = false;
+		fromVectors = true;
+		args.push_back(std::pair<std::string, std::string>("VectorX", "std::vector<double>"));
+		args.push_back(std::pair<std::string, std::string>("VectorY", "std::vector<double>"));
+		args.push_back(std::pair<std::string, std::string>("VectorZ", "std::vector<double>"));
+	} else if (hasNodeKey(function,"LVector")){
 		fromTLorentzVector = true;
+		fromVectors = false;
 		args.push_back(std::pair<std::string, std::string>("LVector", "TLorentzVector"));
+	} else {
+		std::cerr<<"Unknown properties for function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
 	}
 
 	if(not antok::generators::functionArgumentHandler(args, function, index)) {
@@ -880,22 +890,33 @@ antok::Function* antok::generators::generateGetVector3(const YAML::Node& functio
 		return 0;
 	}
 
-
-	if(not data.insert<TVector3>(quantityName)) {
-		std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
-		return 0;
-	}
-
-	TVector3* outVec = data.getAddr<TVector3>(quantityName);
-	if(not fromTLorentzVector){
+	if(not fromTLorentzVector && not fromVectors){
+		if(not data.insert<TVector3>(quantityName)) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+			return 0;
+		}
+		TVector3* outVec = data.getAddr<TVector3>(quantityName);
 		double* xAddr = data.getAddr<double>(args[0].first);
 		double* yAddr = data.getAddr<double>(args[1].first);
 		double* zAddr = data.getAddr<double>(args[2].first);
 		return (new antok::functions::GetTVector3(xAddr, yAddr, zAddr, outVec));
+	} else if(not fromTLorentzVector && fromVectors){
+		if(not data.insert<std::vector<TVector3>>(quantityName)) {
+			std::cerr<<antok::Data::getVariableInsertionErrorMsg(quantityNames);
+			return 0;
+		}
+		std::vector<TVector3>* outVecs = data.getAddr<std::vector<TVector3>>(quantityName);
+		std::vector<double>* xAddr = data.getAddr<std::vector<double>>(args[0].first);
+		std::vector<double>* yAddr = data.getAddr<std::vector<double>>(args[1].first);
+		std::vector<double>* zAddr = data.getAddr<std::vector<double>>(args[2].first);
+		return (new antok::functions::GetVectorTVector3(xAddr, yAddr, zAddr, outVecs));
+	} else if(fromTLorentzVector && not fromVectors){
+		TVector3* outVec = data.getAddr<TVector3>(quantityName);
+		return (new antok::functions::GetTVector3FromTLorenzVector(data.getAddr<TLorentzVector>(args[0].first), outVec));
 	} else {
-		return new antok::functions::GetTVector3FromTLorenzVector(data.getAddr<TLorentzVector>(args[0].first), outVec);
+		std::cerr<<"Unclear what to do in function \""<<function["Name"]<<"\"."<<std::endl;
+		return 0;
 	}
-
 }
 
 antok::Function* antok::generators::generateGetVectorEntry(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
