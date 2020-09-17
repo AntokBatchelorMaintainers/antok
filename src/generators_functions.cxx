@@ -864,6 +864,7 @@ antok::Function* antok::generators::generateGetVector3(const YAML::Node& functio
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
 	bool fromTLorentzVector;
+	bool fromVectors;
 	std::vector<std::pair<std::string, std::string> > args;
 	if(hasNodeKey(function, "X")){
 		fromTLorentzVector = false;

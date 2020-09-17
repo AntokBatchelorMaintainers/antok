@@ -9,6 +9,8 @@
 #include<TRotation.h>
 #include<TLorentzRotation.h>
 
+#include "NeutralFit.h"
+
 namespace antok {
 
 	namespace user {
@@ -715,6 +717,180 @@ namespace antok {
 					std::vector<TLorentzVector> *_resultParticles;
 					int                         *_resultHasParticles;
 				};
+
+				class GetKinematicFittingMass : public Function
+				{
+				public:
+					GetKinematicFittingMass( TVector3*                         VertexPosition,
+					                         std::vector<TVector3>*            ClusterPositions,
+					                         std::vector<TVector3>*            ClusterPositionsError,
+					                         std::vector<double>*              ClusterEnergies,
+					                         std::vector<double>*              ClusterEnergiesError,
+					                         std::vector<int>*                 ClusterIndices,
+					                         double*                           Mass,
+					                         double*                           Window,
+					                         int*                              EnergyErrorType,
+					                         std::vector<TLorentzVector>*      ResultLorentzVectors,
+					                         std::vector<double>*              ResultChi2s,
+					                         std::vector<double>*              ResultPullsX0,
+					                         std::vector<double>*              ResultPullsY0,
+					                         std::vector<double>*              ResultPullsE0,
+					                         std::vector<double>*              ResultPullsX1,
+					                         std::vector<double>*              ResultPullsY1,
+					                         std::vector<double>*              ResultPullsE1,
+					                         std::vector<double>*              ResultCL,
+					                         int*                              ResultSuccess
+					                       )
+							: _vertexPosition       ( VertexPosition        ),
+							  _clusterPositions     ( ClusterPositions      ),
+							  _clusterPositionsError( ClusterPositionsError ),
+							  _clusterEnergies      ( ClusterEnergies       ),
+							  _clusterEnergiesError ( ClusterEnergiesError  ),
+							  _clusterIndices       ( ClusterIndices        ),
+							  _mass                 ( Mass                  ),
+							  _window               ( Window                ),
+							  _energyErrorType      ( EnergyErrorType       ),
+							  _resultLorentzVectors ( ResultLorentzVectors  ),
+							  _resultChi2s          ( ResultChi2s           ),
+							  _resultPullsY0        ( ResultPullsX0         ),
+							  _resultPullsX0        ( ResultPullsY0         ),
+							  _resultPullsE0        ( ResultPullsE0         ),
+							  _resultPullsY1        ( ResultPullsX1         ),
+							  _resultPullsX1        ( ResultPullsY1         ),
+							  _resultPullsE1        ( ResultPullsE1         ),
+							  _resultCL             ( ResultCL              ),
+							  _resultSuccess        ( ResultSuccess         ) {}
+
+					virtual ~GetKinematicFittingMass() {}
+
+					bool operator() ()
+					{
+						_resultLorentzVectors->reserve(2);
+						_resultLorentzVectors->clear();
+						_resultPullsX0->reserve(2);
+						_resultPullsX0->clear();
+						_resultPullsY0->reserve(2);
+						_resultPullsY0->clear();
+						_resultPullsE0->reserve(2);
+						_resultPullsE0->clear();
+						_resultPullsX1->reserve(2);
+						_resultPullsX1->clear();
+						_resultPullsY1->reserve(2);
+						_resultPullsY1->clear();
+						_resultPullsE1->reserve(2);
+						_resultPullsE1->clear();
+						_resultChi2s->reserve(2);
+						_resultChi2s->clear();
+						_resultCL->reserve(2);
+						_resultCL->clear();
+
+						if( (*_clusterIndices)[0] == -1 ||
+						    (*_clusterIndices)[1] == -1 ||
+						    (*_clusterIndices)[2] == -1 ||
+						    (*_clusterIndices)[3] == -1 )
+						{
+							(*_resultSuccess) = 0;
+							return true;
+						}
+
+						for( unsigned int i = 0; i < 4; i++ )
+						{
+							if( (*_clusterPositionsError)[(*_clusterIndices)[i]].X() > 1e3 ||
+							    (*_clusterPositionsError)[(*_clusterIndices)[i]].Y() > 1e3 ||
+							    (*_clusterPositionsError)[(*_clusterIndices)[i]].Z() > 1e3 )
+							{
+								(*_resultSuccess) = 0;
+								return true;
+							}
+						}
+
+						NeutralFit neutralFit0( (*_vertexPosition),
+								(*_clusterPositions)     [(*_clusterIndices)[0]],
+								(*_clusterPositions)     [(*_clusterIndices)[1]],
+								(*_clusterPositionsError)[(*_clusterIndices)[0]],
+								(*_clusterPositionsError)[(*_clusterIndices)[1]],
+								(*_clusterEnergies)      [(*_clusterIndices)[0]],
+								(*_clusterEnergies)      [(*_clusterIndices)[1]],
+								(*_clusterEnergiesError) [(*_clusterIndices)[0]],
+								(*_clusterEnergiesError) [(*_clusterIndices)[1]],
+								(*_mass),
+								(*_window),
+								(*_energyErrorType) );
+						bool success0 = neutralFit0.doFit();
+						if( success0 )
+						{
+							_resultLorentzVectors->push_back( neutralFit0.getLVSum() );
+
+							_resultPullsX0->push_back( neutralFit0.getPulls()[0] );
+							_resultPullsY0->push_back( neutralFit0.getPulls()[1] );
+							_resultPullsE0->push_back( neutralFit0.getPulls()[2] );
+							_resultPullsX1->push_back( neutralFit0.getPulls()[3] );
+							_resultPullsY1->push_back( neutralFit0.getPulls()[4] );
+							_resultPullsE1->push_back( neutralFit0.getPulls()[5] );
+							_resultChi2s->push_back  ( neutralFit0.getChi2()     );
+							_resultCL->push_back     ( neutralFit0.getCL()       );
+						}
+
+						NeutralFit neutralFit1( (*_vertexPosition),
+								(*_clusterPositions)     [(*_clusterIndices)[2]],
+								(*_clusterPositions)     [(*_clusterIndices)[3]],
+								(*_clusterPositionsError)[(*_clusterIndices)[2]],
+								(*_clusterPositionsError)[(*_clusterIndices)[3]],
+								(*_clusterEnergies)      [(*_clusterIndices)[2]],
+								(*_clusterEnergies)      [(*_clusterIndices)[3]],
+								(*_clusterEnergiesError) [(*_clusterIndices)[2]],
+								(*_clusterEnergiesError) [(*_clusterIndices)[3]],
+								(*_mass),
+								(*_window),
+								(*_energyErrorType) );
+						bool success1 = neutralFit1.doFit();
+						if( success1 )
+						{
+							_resultLorentzVectors->push_back( neutralFit1.getLVSum() );
+
+							_resultPullsX0->push_back( neutralFit1.getPulls()[0] );
+							_resultPullsY0->push_back( neutralFit1.getPulls()[1] );
+							_resultPullsE0->push_back( neutralFit1.getPulls()[2] );
+							_resultPullsX1->push_back( neutralFit1.getPulls()[3] );
+							_resultPullsY1->push_back( neutralFit1.getPulls()[4] );
+							_resultPullsE1->push_back( neutralFit1.getPulls()[5] );
+							_resultChi2s->push_back  ( neutralFit1.getChi2()     );
+							_resultCL->push_back     ( neutralFit1.getCL()       );
+						}
+						if( success0 && success1 )
+						{
+							(*_resultSuccess) = 1;
+						}
+						else
+						{
+							(*_resultSuccess) = 0;
+						}
+						return true;
+
+					}
+
+				private:
+					TVector3*                    _vertexPosition;
+					std::vector<TVector3>*       _clusterPositions;
+					std::vector<TVector3>*       _clusterPositionsError;
+					std::vector<double>*         _clusterEnergies;
+					std::vector<double>*         _clusterEnergiesError;
+					std::vector<int>*            _clusterIndices;
+					double*                      _mass;
+					double*                      _window;
+					int*                         _energyErrorType;
+					std::vector<TLorentzVector>* _resultLorentzVectors;
+					std::vector<double>*         _resultChi2s;
+					std::vector<double>*         _resultPullsX0;
+					std::vector<double>*         _resultPullsY0;
+					std::vector<double>*         _resultPullsE0;
+					std::vector<double>*         _resultPullsX1;
+					std::vector<double>*         _resultPullsY1;
+					std::vector<double>*         _resultPullsE1;
+					std::vector<double>*         _resultCL;
+					int*                         _resultSuccess;
+				};
+
 
 			}
 
