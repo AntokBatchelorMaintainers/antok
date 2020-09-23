@@ -3,7 +3,21 @@
 #include<vector>
 #include<signal.h>
 
+#include <boost/version.hpp>
+// progress_display was moved to different header file and name space in version 1.72.0
+// in 1.71.0 deprecation message is printed but there is no progress_display in <boost/timer/timer.hpp> (sigh)
+// see https://github.com/boostorg/timer/issues/12
+#if (BOOST_VERSION >= 107200)
+#include <boost/timer/progress_display.hpp>
+using boost::timer::progress_display;
+#else
+#if (BOOST_VERSION == 107100)
+// suppress deprecation message
+#define BOOST_ALLOW_DEPRECATED_HEADERS
+#endif
 #include <boost/progress.hpp>
+using boost::progress_display;
+#endif
 
 #include<TApplication.h>
 #include<TFile.h>
@@ -84,7 +98,7 @@ int treereader(std::vector<const char*> infilenames, char* outfilename=0, std::s
 		std::cout << "Processing input file '" << *infilename << "'" << std::endl;
 		TTree* inTree = objectManager->getInTree();
 
-		boost::progress_display* progressIndicator = new boost::progress_display(inTree->GetEntries(), std::cout, "");
+		progress_display* progressIndicator = new progress_display(inTree->GetEntries(), std::cout, "");
 
 		for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
 
