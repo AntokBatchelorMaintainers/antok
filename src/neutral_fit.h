@@ -10,75 +10,83 @@
 class TH1;
 
 namespace antok {
+
 	class NeutralFit {
-		public:
-			NeutralFit(const TVector3 &vertexPosition_,
-			           const TVector3 &cluster1Position_,
-			           const TVector3 &cluster2Position_,
-			           const TVector3 &cluster1PositionError_,
-			           const TVector3 &cluster2PositionError_,
-			           double cluster1Energy_,
-			           double cluster2Energy_,
-			           double cluster1EnergyError_,
-			           double cluster2EnergyError_,
-			           double mass_,
-			           double window_ = 0.1,
-			           int whichDeltaE_ = 0);
 
-			~NeutralFit() { delete myFitter; delete myProblem; }
+	public:
 
-			bool isInWindow() const;
-			bool doFit();
+		NeutralFit(const TVector3& vertexPosition,
+		           const TVector3& cluster1Position,
+		           const TVector3& cluster2Position,
+		           const TVector3& cluster1PositionError,
+		           const TVector3& cluster2PositionError,
+		           const double    cluster1Energy,
+		           const double    cluster2Energy,
+		           const double    cluster1EnergyError,
+		           const double    cluster2EnergyError,
+		           const double    mass,
+		           const double    window = 0.1,
+		           const int       whichDeltaE = 0);
+		~NeutralFit()
+		{
+			delete _myFitter;
+			delete _myProblem;
+		}
 
-			double getChi2() { return myFitter->getChi2(); }
-			double getCL()   { return myFitter->getCL();   }
+		bool isInWindow() const;
+		bool doFit();
 
-			const TLorentzVector &getLV1() { return lv1; }
-			const TLorentzVector &getLV2() { return lv2; }
-			const TLorentzVector &getLVSum() { return lvSum; }
+		double getChi2() const { return _myFitter->getChi2(); }
+		double getCL()   const { return _myFitter->getCL();   }
 
-			TH1 *gethPull(size_t i) { return hPulls[i]; }
+		const TLorentzVector& getLV1()   const { return _lv1;   }
+		const TLorentzVector& getLV2()   const { return _lv2;   }
+		const TLorentzVector& getLVSum() const { return _lvSum; }
 
-			std::vector<double> getPulls() { return pulls; }
+		TH1* gethPull(const size_t i) { return _hPulls[i]; }
 
-		private:
-			static bool first;
-			static std::vector<TH1 *> hPulls;
-			std::vector<double> pulls;
+		std::vector<double> getPulls() const { return _pulls; }
 
-			const TVector3 &vertexPosition;
-			const TVector3 &cluster1Position;
-			const TVector3 &cluster2Position;
-			const TVector3 &cluster1PositionError;
-			const TVector3 &cluster2PositionError;
+	private:
 
-			double cluster1Energy;
-			double cluster2Energy;
-			double cluster1EnergyError;
-			double cluster2EnergyError;
+		void initPulls();
+		void fillPulls(const TVectorD& enhanced);
+		TMatrixDSym covMatForCluster(const TVector3& clusterPosition,
+		                             const TVector3& clusterPositionError,
+		                             const double    clusterEnergy,
+		                             const double    clusterEnergyError);
 
-			TLorentzVector lv1;
-			TLorentzVector lv2;
-			TLorentzVector lvSum;
+		static bool              _first;
+		static std::vector<TH1*> _hPulls;
+		std::vector<double>      _pulls;
 
-			double mass;
-			double window;
+		const TVector3& _vertexPosition;
+		const TVector3& _cluster1Position;
+		const TVector3& _cluster2Position;
+		const TVector3& _cluster1PositionError;
+		const TVector3& _cluster2PositionError;
 
-			int whichDeltaE;
+		const double _cluster1Energy;
+		const double _cluster2Energy;
+		const double _cluster1EnergyError;
+		const double _cluster2EnergyError;
 
-			TVectorD startingValues;
-			TMatrixDSym covMat;
+		TLorentzVector _lv1;
+		TLorentzVector _lv2;
+		TLorentzVector _lvSum;
 
-			NeutralProblem *myProblem;
-			KinematicFit *myFitter;
+		const double _mass;
+		const double _window;
+		const int    _whichDeltaE;
 
-			void initPulls();
-			void fillPulls( TVectorD enhanced );
-			TMatrixDSym covMatForCluster(const TVector3 &clusterPosition,
-			                             const TVector3 &clusterPositionError,
-			                             const double clusterEnergy,
-			                             const double clusterEnergyError);
+		TVectorD    _startingValues;
+		TMatrixDSym _covMat;
+
+		antok::NeutralProblem* _myProblem;
+		antok::KinematicFit*   _myFitter;
+
 	};
-}
 
-#endif
+}  // antok namespace
+
+#endif  // NEUTRALFIT_H

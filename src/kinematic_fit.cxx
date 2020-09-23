@@ -1,69 +1,70 @@
-#include "assert.h"
-
-#include "TVectorD.h"
 #include "TDecompChol.h"
 
 #include "kinematic_fit.h"
 
 
-antok::KinematicFit::KinematicFit(problem &prob,
-                                  const TVectorD &x_,
-                                  const TVectorD &eta_,
-                                  const TMatrixDSym &coveta_)
-		: nSteps(0),
-		  maxSteps(10),
-		  x(x_),
-		  eta(eta_),
-		  coveta(coveta_),
-		  myProblem(prob) {
-	dx.ResizeTo(x);
-	dx = 0;
-	numParams = dx.GetNrows();
-
-	deta.ResizeTo(eta);
-	deta = 0;
-}
-
-antok::KinematicFit::KinematicFit(problem &prob,
-                                  const TVectorD &eta_,
-                                  const TMatrixDSym &coveta_)
-		: nSteps(0),
-		  maxSteps(10),
-		  eta(eta_),
-		  coveta(coveta_),
-		  myProblem(prob) {
-	x.ResizeTo(0);
-	dx.ResizeTo(0);
-	numParams = 0;
-
-	deta.ResizeTo(eta);
-	deta = 0;
+antok::KinematicFit::KinematicFit(problem&           prob,
+                                  const TVectorD&    x,
+                                  const TVectorD&    eta,
+                                  const TMatrixDSym& coveta)
+	: _nSteps(0),
+	  _maxSteps(10),
+	  _x(x),
+	  _eta(eta),
+	  _coveta(coveta),
+	  _myProblem(prob)
+{
+	_dx.ResizeTo(_x);
+	_dx = 0;
+	_nParams = _dx.GetNrows();
+	_deta.ResizeTo(_eta);
+	_deta = 0;
 }
 
 
-void antok::KinematicFit::step() {
-	const TVectorD *pc;
-	if (numParams == 0) {
-		pc = &myProblem.constraint(eta + deta);
+antok::KinematicFit::KinematicFit(problem&           prob,
+                                  const TVectorD&    eta,
+                                  const TMatrixDSym& coveta)
+	: _nSteps(0),
+	  _maxSteps(10),
+	  _eta(eta),
+	  _coveta(coveta),
+	  _myProblem(prob)
+{
+	_nParams = 0;
+	_x.ResizeTo(0);
+	_dx.ResizeTo(0);
+	_deta.ResizeTo(_eta);
+	_deta = 0;
+}
+
+
+void
+antok::KinematicFit::step()
+{
+	//TODO this block could be simplified using conditional assignment
+	const TVectorD* pc;
+	if (_nParams == 0) {
+		pc = &_myProblem.constraint(_eta + _deta);
 	} else {
-		pc = &myProblem.constraint(x + dx, eta + deta);
+		pc = &_myProblem.constraint(_x + _dx, _eta + _deta);
 	}
-	const TVectorD &c(*pc);
+	const TVectorD& c(*pc);
 
 	TMatrixD A, B;
-	if (numParams == 0) {
-		myProblem.dConstraint(eta + deta, B);
+	if (_nParams == 0) {
+		_myProblem.dConstraint(_eta + _deta, B);
 	} else {
-		myProblem.dConstraint(x + dx, eta + deta, A, B);
+		_myProblem.dConstraint(_x + _dx, _eta + _deta, A, B);
 	}
 
-	TMatrixDSym covB(coveta);
+	TMatrixDSym covB(_coveta);
 	covB.Similarity(B);
 
 	TMatrixDSym GB(TDecompChol(covB).Invert());
 	TVectorD delta(c);
 
-	if (numParams != 0) {
+	if (_nParams != 0) {
 		TVectorD xi(c);
 		TMatrixDSym ATGBA(GB);
 		ATGBA.SimilarityT(A);
@@ -73,34 +74,37 @@ void antok::KinematicFit::step() {
 		xi *= TMatrixD(ATGBAinv, TMatrixD::kMult, TMatrixD(A, TMatrixD::kTransposeMult, GB));
 		xi *= -1;
 
-		dx += xi;
+		_dx += xi;
 		TVectorD Axi(xi);
 		Axi *= A;
 
 		delta += Axi;
 	}
 
-	delta *= TMatrixD(coveta, TMatrixD::kMult, TMatrixD(B, TMatrixD::kTransposeMult, GB));
-	deta -= delta;
+	delta *= TMatrixD(_coveta, TMatrixD::kMult, TMatrixD(B, TMatrixD::kTransposeMult, GB));
+	_deta -= delta;
 }
 
 
-bool antok::KinematicFit::doFit() {
+bool
+antok::KinematicFit::doFit()
+{
 	do {
 		step();
-	} while (!myProblem.converged() && ++nSteps < maxSteps);
-
-	return myProblem.converged();
+	} while ((not _myProblem.converged()) and (++_nSteps < _maxSteps));
+	return _myProblem.converged();  //TODO isn't this always true?
 }
 
 
-TMatrixDSym antok::KinematicFit::getCovParams() {
-	assert (numParams > 0);
+TMatrixDSym
+antok::KinematicFit::getCovParams()
+{
+	assert(_nParams > 0);
 
 	TMatrixD A, B;
-	myProblem.dConstraint(x + dx, eta + deta, A, B);
+	_myProblem.dConstraint(_x + _dx, _eta + _deta, A, B);
 
-	TMatrixDSym covB(coveta);
+	TMatrixDSym covB(_coveta);
 	covB.Similarity(B);
 
 	TMatrixDSym ATGBA(TDecompChol(covB).Invert());
@@ -110,21 +114,23 @@ TMatrixDSym antok::KinematicFit::getCovParams() {
 }
 
 
-TMatrixDSym antok::KinematicFit::getCovEnhanced() {
+TMatrixDSym
+antok::KinematicFit::getCovEnhanced()
+{
 	TMatrixD A, B;
-	if (numParams == 0) {
-		myProblem.dConstraint(eta + deta, B);
+	if (_nParams == 0) {
+		_myProblem.dConstraint(_eta + _deta, B);
 	} else {
-		myProblem.dConstraint(x + dx, eta + deta, A, B);
+		_myProblem.dConstraint(_x + _dx, _eta + _deta, A, B);
 	}
 
-	TMatrixDSym covB(coveta);
+	TMatrixDSym covB(_coveta);
 	covB.Similarity(B);
 	TMatrixDSym GB(TDecompChol(covB).Invert());
 
 	TMatrixDSym shift(GB);
 
-	if (numParams != 0) {
+	if (_nParams != 0) {
 		TMatrixDSym ATGBA(GB);
 		ATGBA.SimilarityT(A);
 
@@ -136,18 +142,20 @@ TMatrixDSym antok::KinematicFit::getCovEnhanced() {
 	}
 
 	shift.SimilarityT(B);
-	shift.Similarity(coveta);
+	shift.Similarity(_coveta);
 
-	TMatrixDSym ret(coveta);
+	TMatrixDSym ret(_coveta);
 	ret -= shift;
 
 	return ret;
 }
 
 
-Double_t antok::KinematicFit::getChi2() {
-	TMatrixDSym G(coveta);
+Double_t
+antok::KinematicFit::getChi2() const
+{
+	TMatrixDSym G(_coveta);
 	G.Invert();
 
-	return G.Similarity(deta);
+	return G.Similarity(_deta);
 }

@@ -2,26 +2,31 @@
 #define NEUTRALPROBLEM_H
 
 #include "TVectorD.h"
+
 #include "kinematic_fit.h"
 
 namespace antok {
+
 	class NeutralProblem : public KinematicFit::problem {
-		public:
-			NeutralProblem(double mass_);
 
-			~NeutralProblem() {}
+	public:
 
-			const TVectorD& constraint(const TVectorD& eta);
-			void dConstraint(const TVectorD& eta, TMatrixD& B);
-			bool converged() { return c.NormInf() / mass2 < 1e-10; }
+		NeutralProblem(const double mass);
+		~NeutralProblem() {}
 
-			unsigned int getNConstraints() { return 1; }
+		const TVectorD& constraint(const TVectorD& eta);
+		void dConstraint(const TVectorD& eta, TMatrixD& B);
+		bool converged() { return _c.NormInf() / _mass2 < 1e-10; }
 
-		private:
-			const double mass2;
+		size_t getNConstraints() { return 1; }
 
-			TVectorD c;
+	private:
+
+		const double _mass2;
+		TVectorD     _c;
+
 	};
+
 }
 
-#endif
+#endif  // NEUTRALPROBLEM_H
