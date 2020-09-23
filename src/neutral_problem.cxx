@@ -1,4 +1,4 @@
-#include "NeutralProblem.h"
+#include "neutral_problem.h"
 
 antok::NeutralProblem::NeutralProblem(double mass_)
 		: mass2(mass_*mass_) {

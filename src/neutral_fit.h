@@ -5,7 +5,7 @@
 
 #include "TMatrixDSym.h"
 
-#include "NeutralProblem.h"
+#include "neutral_problem.h"
 
 class TH1;
 

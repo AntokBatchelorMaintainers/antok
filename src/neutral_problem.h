@@ -2,7 +2,7 @@
 #define NEUTRALPROBLEM_H
 
 #include "TVectorD.h"
-#include "KinematicFit.h"
+#include "kinematic_fit.h"
 
 namespace antok {
 	class NeutralProblem : public KinematicFit::problem {

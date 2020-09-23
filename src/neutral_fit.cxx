@@ -4,7 +4,7 @@
 #include "TH1I.h"
 #include "TDirectory.h"
 
-#include "NeutralFit.h"
+#include "neutral_fit.h"
 
 #define NUMVARS 6
 

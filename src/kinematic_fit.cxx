@@ -3,7 +3,7 @@
 #include "TVectorD.h"
 #include "TDecompChol.h"
 
-#include "KinematicFit.h"
+#include "kinematic_fit.h"
 
 
 antok::KinematicFit::KinematicFit(problem &prob,
