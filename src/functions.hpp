@@ -1,20 +1,20 @@
 #ifndef ANTOK_FUNCTIONS_HPP
 #define ANTOK_FUNCTIONS_HPP
 
-#include<iostream>
-#include<vector>
+#include <iostream>
+#include <vector>
 
-#include<TLorentzVector.h>
+#include "TLorentzVector.h"
 
-#include<basic_calcs.h>
-#include<constants.h>
+#include "basic_calcs.h"
+#include "constants.h"
 
 namespace antok {
 
 	class Function
 	{
 
-	  public:
+	public:
 
 		virtual bool operator() () = 0;
 		virtual ~Function() { }
@@ -23,142 +23,169 @@ namespace antok {
 
 	namespace functions {
 
-		template<typename T>
+		template <typename T>
 		class Sum : public Function
 		{
 
-		  public:
+		public:
 
-			Sum(std::vector<T*> inputAddrsSummands, std::vector<T*> inputAddrsSubtrahends, T* outAddr) {
-				_inputAddrsSummands = inputAddrsSummands;
-				_inputAddrsSubtrahends = inputAddrsSubtrahends;
-				_outAddr = outAddr;
-				if( (_inputAddrsSummands.size() < 1) and (_inputAddrsSubtrahends.size() < 1) ) {
-					std::cerr<<"Got empty address vector as input for a sum."<<std::endl;
+			Sum(const std::vector<T*>& inputAddrsSummands,
+			    const std::vector<T*>& inputAddrsSubtrahends,
+			    T&                     out)
+				: _inputAddrsSummands   (inputAddrsSummands),
+				  _inputAddrsSubtrahends(inputAddrsSubtrahends),
+				  _out                  (out)
+			{
+				if ((_inputAddrsSummands.size() < 1) and (_inputAddrsSubtrahends.size() < 1)) {
+					std::cerr << "Got empty address vectors as input for a sum." << std::endl;
 					throw 1;
 				}
-			};
+			}
 
 			virtual ~Sum() { }
 
-			bool operator() () {
-				(*_outAddr) = T();
-				for(unsigned int i = 0; i < _inputAddrsSummands.size(); ++i) {
-					*_outAddr = *_outAddr + *(_inputAddrsSummands[i]);
+			bool
+			operator() ()
+			{
+				_out = T();
+				for (size_t i = 0; i < _inputAddrsSummands.size(); ++i) {
+					_out += *(_inputAddrsSummands[i]);
 				}
-				for(unsigned int i = 0; i < _inputAddrsSubtrahends.size(); ++i) {
-					*_outAddr = *_outAddr - *(_inputAddrsSubtrahends[i]);
+				for (size_t i = 0; i < _inputAddrsSubtrahends.size(); ++i) {
+					_out -= *(_inputAddrsSubtrahends[i]);
 				}
 				return true;
-			};
+			}
 
 
-		  private:
+		private:
 
-			std::vector<T*> _inputAddrsSummands;
-			std::vector<T*> _inputAddrsSubtrahends;
-			T* _outAddr;
+			const std::vector<T*> _inputAddrsSummands;     // need to copy input pointers, because vector in constructor is a temporary variable
+			const std::vector<T*> _inputAddrsSubtrahends;  // need to copy input pointers, because vector in constructor is a temporary variable
+			T&                    _out;
 
 		};
-
 
 
 		class Mass: public Function
 		{
 
-		  public:
+		public:
 
-			Mass(TLorentzVector* inputAddr, double* outAddr)
-				: _inputAddr(inputAddr),
-				  _outAddr(outAddr) { }
+			Mass(const TLorentzVector& inputLV,
+			     double&               out)
+				: _inputLV(inputLV),
+				  _out    (out)
+			{ }
 
 			virtual ~Mass() { }
 
-			bool operator() () {
-				(*_outAddr) = _inputAddr->M();
+			bool
+			operator() ()
+			{
+				_out = _inputLV.M();
 				return true;
 			}
 
-		  private:
+		private:
 
-			TLorentzVector* _inputAddr;
-			double* _outAddr;
+			const TLorentzVector& _inputLV;
+			double&               _out;
 
 		};
+
 
 		class GetLorentzVec: public Function
 		{
 
-		  public:
+		public:
 
-			GetLorentzVec(double* xAddr, double* yAddr, double* zAddr, double* mAddr, TLorentzVector* outAddr, int pType)
-				: _xAddr(xAddr),
-				  _yAddr(yAddr),
-				  _zAddr(zAddr),
-                  _vec3Addr( nullptr ),
-				  _mAddr(mAddr),
-				  _outAddr(outAddr),
-				  _pType(pType) { }
+			GetLorentzVec(const double&   x,
+			              const double&   y,
+			              const double&   z,
+			              const double&   m,
+			              TLorentzVector& out,
+			              const int       pType)
+				: _xAddr   (&x),
+				  _yAddr   (&y),
+				  _zAddr   (&z),
+				  _vec3Addr(nullptr),
+				  _mAddr   (&m),
+				  _out     (out),
+				  _pType   (pType)
+			{ }
 
-			GetLorentzVec(TVector3* vec3Addr, double* mAddr, TLorentzVector* outAddr, int pType)
-				: _xAddr(NULL),
-				  _yAddr(NULL),
-				  _zAddr(NULL),
-				  _vec3Addr(vec3Addr),
-				  _mAddr(mAddr),
-				  _outAddr(outAddr),
-				  _pType(pType) {}
+			GetLorentzVec(const TVector3& vec3,
+			              const double&   m,
+			              TLorentzVector& out,
+			              const int       pType)
+				: _xAddr   (nullptr),
+				  _yAddr   (nullptr),
+				  _zAddr   (nullptr),
+				  _vec3Addr(&vec3),
+				  _mAddr   (&m),
+				  _out     (out),
+				  _pType   (pType)
+			{ }
 
 			virtual ~GetLorentzVec() { }
 
-			bool operator() () {
-				switch( _pType )
-				{
+			bool
+			operator() ()
+			{
+				switch(_pType) {
 					case 0:
-						_outAddr->SetXYZM(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
+						_out.SetXYZM(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
 						break;
 					case 1:
-						_outAddr->SetPxPyPzE(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
+						_out.SetPxPyPzE(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
 						break;
 					case 2:
-						_outAddr->SetXYZM(_vec3Addr->X(),_vec3Addr->Y(),_vec3Addr->Z(),  *_mAddr);
+						_out.SetVectM(*_vec3Addr, *_mAddr);
 						break;
 					case 3:
-						_outAddr->SetPxPyPzE(_vec3Addr->X(),_vec3Addr->Y(),_vec3Addr->Z(), *_mAddr);
+						_out.SetPxPyPzE(_vec3Addr->X(), _vec3Addr->Y(), _vec3Addr->Z(), *_mAddr);
 						break;
 				}
 				return true;
 			}
 
-		  private:
+		private:
 
-			double* _xAddr;
-			double* _yAddr;
-			double* _zAddr;
-			TVector3* _vec3Addr;
-			double* _mAddr;
-			TLorentzVector* _outAddr;
-			int _pType;
+			const double*   _xAddr;
+			const double*   _yAddr;
+			const double*   _zAddr;
+			const TVector3* _vec3Addr;
+			const double*   _mAddr;
+			TLorentzVector& _out;
+			const int       _pType;
 
 		};
+
 
 		class GetBeamLorentzVec : public Function
 		{
 
-		  public:
+		public:
 
-			GetBeamLorentzVec(double* gradxAddr, double* gradyAddr, TLorentzVector* xLorentzVec, TLorentzVector* outAddr, const double* mass_beam, const double* massTarget)
-				: _gradx(*gradxAddr),
-				  _grady(*gradyAddr),
-				  _xLorentzVec(*xLorentzVec),
-				  _massBeamAddr( mass_beam ),
-				  _out(*outAddr),
-				  _massTargetAddr(massTarget){
-				if(_massTargetAddr == nullptr){
+			GetBeamLorentzVec(const double&         gradX,
+			                  const double&         gradY,
+			                  const TLorentzVector& xLorentzVec,
+			                  TLorentzVector&       out,
+			                  const double*         massBeamAddr,
+			                  const double*         massTargetAddr)
+				: _gradX         (gradX),
+				  _gradY         (gradY),
+				  _xLorentzVec   (xLorentzVec),
+				  _out           (out),
+				  _massBeamAddr  (massBeamAddr),
+				  _massTargetAddr(massTargetAddr)
+			{
+				if (_massTargetAddr == nullptr) {
 					std::cout << "INFO: No target mass is given to reconstruct the beam energy -> using proton mass" << std::endl;
 					_massTargetAddr = &antok::Constants::protonMass();
 				}
-				if(_massBeamAddr== nullptr){
+				if (_massBeamAddr == nullptr) {
 					std::cout << "INFO: No beam mass is given to reconstruct the beam energy -> using pion mass" << std::endl;
 					_massBeamAddr= &antok::Constants::chargedPionMass();
 				}
@@ -166,494 +193,588 @@ namespace antok {
 
 			virtual ~GetBeamLorentzVec() { }
 
-			bool operator() () {
-				TVector3 p3Beam(_gradx, _grady, 1.);
-				_out = antok::getBeamEnergy(p3Beam, _xLorentzVec, (*_massBeamAddr), (*_massTargetAddr));
+			bool
+			operator() ()
+			{
+				const TVector3 p3Beam(_gradX, _gradY, 1.0);
+				_out = antok::getBeamEnergy(p3Beam, _xLorentzVec, *_massBeamAddr, *_massTargetAddr);
 				return true;
 			}
 
-		  private:
+		private:
 
-			const double& _gradx;
-			const double& _grady;
+			const double&         _gradX;
+			const double&         _gradY;
 			const TLorentzVector& _xLorentzVec;
-			const double* _massBeamAddr;
-			TLorentzVector& _out;
-			const double* _massTargetAddr;
+			TLorentzVector&       _out;
+			const double*         _massBeamAddr;
+			const double*         _massTargetAddr;
 
 		};
+
 
 		class GetTs : public Function
 		{
 
-		  public:
+		public:
 
-			GetTs(TLorentzVector* xLorentzVec, TLorentzVector* beamLorentzVec, double* tAddr, double* tMinAddr, double* tPrimeAddr, const double* targetMassAddr)
-				: _xLorentzVec(*xLorentzVec),
-				  _beamLorentzVec(*beamLorentzVec),
-				  _t(*tAddr),
-				  _tMin(*tMinAddr),
-				  _tPrime(*tPrimeAddr),
-				  _targetMassAddr(targetMassAddr){
-				if(_targetMassAddr == nullptr){
-					std::cout << "INFO: No target mass given to calculate t' -> Using approximation." << std::endl;
+			GetTs(const TLorentzVector& xLorentzVec,
+			      const TLorentzVector& beamLorentzVec,
+			      double&               t,
+			      double&               tMin,
+			      double&               tPrime,
+			      const double*         targetMassAddr)
+				: _xLorentzVec   (xLorentzVec),
+				  _beamLorentzVec(beamLorentzVec),
+				  _t             (t),
+				  _tMin          (tMin),
+				  _tPrime        (tPrime),
+				  _targetMassAddr(targetMassAddr)
+			{
+				if (_targetMassAddr == nullptr) {
+					std::cout << "INFO: No target mass given to calculate t'. Using approximation." << std::endl;
 				}
 			}
 
 			virtual ~GetTs() { }
 
-			bool operator() () {
-			    _t = (_beamLorentzVec - _xLorentzVec).Mag2();
-
-
-			    if(_targetMassAddr != NULL){
-			    	const double EB_Lab = _beamLorentzVec.E();
-			    	// calculate center of mass system quantities to calculate tmin
-					const double mT2 = (*_targetMassAddr) * (*_targetMassAddr); // target mass
-					const double mX2 = _xLorentzVec.M2(); // X-state mass
-					const double mB2 = _beamLorentzVec.M2(); // beam mass
-					const double s = mB2 + mT2 + 2.0*EB_Lab*sqrt(mT2);
-					const double EB_CM = (s - mT2 + mB2)/(2.0*sqrt(s));
-					const double EX_CM = (s + mX2 - mT2)/(2.0*sqrt(s));
-					const double pB_CM = sqrt(EB_CM*EB_CM - mB2);
-					const double pX_CM = sqrt(EX_CM*EX_CM - mX2);
-
-					_tMin = -mB2 - mX2 + 2.0*( EB_CM*EX_CM - pB_CM*pX_CM );
-			    } else {
-			    	// use approximation
-			    	_tMin = std::fabs((std::pow(_xLorentzVec.M2() - _beamLorentzVec.M2(), 2)) / (4. * _beamLorentzVec.Vect().Mag2()));
-			    }
-
-			    _tPrime = std::fabs(_t) - _tMin;
+			bool
+			operator() ()
+			{
+				_t = (_beamLorentzVec - _xLorentzVec).Mag2();
+				if (_targetMassAddr != nullptr) {
+					const double EB_Lab = _beamLorentzVec.E();
+					// calculate center-of-mass frame quantities to calculate tmin
+					const double mT2   = (*_targetMassAddr) * (*_targetMassAddr);  // target mass squared
+					const double mX2   = _xLorentzVec.M2();  // X-state mass squared
+					const double mB2   = _beamLorentzVec.M2();  // beam mass squared
+					const double s     = mB2 + mT2 + 2.0 * EB_Lab * sqrt(mT2);
+					const double EB_CM = (s - mT2 + mB2) / (2.0 * sqrt(s));
+					const double EX_CM = (s + mX2 - mT2) / (2.0 * sqrt(s));
+					const double pB_CM = sqrt(EB_CM * EB_CM - mB2);
+					const double pX_CM = sqrt(EX_CM * EX_CM - mX2);
+					_tMin = -mB2 - mX2 + 2.0 * (EB_CM * EX_CM - pB_CM * pX_CM);
+				} else {
+					// use approximation
+					_tMin = std::fabs((std::pow(_xLorentzVec.M2() - _beamLorentzVec.M2(), 2)) / (4.0 * _beamLorentzVec.Vect().Mag2()));
+				}
+				_tPrime = std::fabs(_t) - _tMin;
 				return true;
 			}
 
-		  private:
+		private:
 
 			const TLorentzVector& _xLorentzVec;
 			const TLorentzVector& _beamLorentzVec;
-			double& _t;
-			double& _tMin;
-			double& _tPrime;
-			const double* _targetMassAddr;
+			double&               _t;
+			double&               _tMin;
+			double&               _tPrime;
+			const double*         _targetMassAddr;
 
 		};
+
 
 		class Sum2 : public Function
 		{
 
-		  public:
+		public:
 
-			Sum2(std::vector<double*> inAddrs, double* outAddr)
-				: _inAddrs(inAddrs),
-				  _outAddr(outAddr) { }
+			Sum2(const std::vector<double*>& in,
+			     double&                     out)
+				: _in (in),
+				  _out(out)
+			{ }
 
 			virtual ~Sum2() { }
 
-			bool operator() () {
-				(*_outAddr) = 0.;
-				for(unsigned int i = 0; i < _inAddrs.size(); ++i) {
-					(*_outAddr) += ((*_inAddrs[i]) * (*_inAddrs[i]));
+			bool
+			operator() ()
+			{
+				_out = 0.0;
+				for (size_t i = 0; i < _in.size(); ++i) {
+					const double val = *(_in[i]);
+					_out += val * val;
+					;
 				}
-				(*_outAddr) = std::sqrt(*_outAddr);
+				_out = std::sqrt(_out);
 				return true;
 			}
 
-		  private:
+		private:
 
-			std::vector<double*> _inAddrs;
-			double* _outAddr;
+			const std::vector<double*> _in;  // need to copy input pointers, because vector in constructor is a temporary variable
+			double&                    _out;
 
 		};
 
+
+		//TODO template argument and result types as in Quotient below
 		class Diff : public Function
 		{
 
-		  public:
+		public:
 
-			Diff(double* inAddr1, double* inAddr2, double* outAddr)
-				: _inAddr1(inAddr1),
-				  _inAddr2(inAddr2),
-				  _outAddr(outAddr) { }
+			Diff(const double& in1,
+			     const double& in2,
+			     double&       out)
+				: _in1(in1),
+				  _in2(in2),
+				  _out(out)
+			{ }
 
 			virtual ~Diff() { }
 
-			bool operator() () {
-				(*_outAddr) = (*_inAddr1) - (*_inAddr2);
+			bool
+			operator() ()
+			{
+				_out = _in1 - _in2;
 				return true;
 			}
 
-		  private:
+		private:
 
-			double* _inAddr1;
-			double* _inAddr2;
-			double* _outAddr;
+			const double& _in1;
+			const double& _in2;
+			double&       _out;
 
 		};
 
-		template < typename T >
+
+		template <typename T>
 		class Quotient: public Function
 		{
 
-		  public:
+		public:
 
-			Quotient(T* inAddr1, T* inAddr2, T* outAddr)
-				: _inAddr1(inAddr1),
-				  _inAddr2(inAddr2),
-				  _outAddr(outAddr) { }
+			Quotient(const T& in1,
+			         const T& in2,
+			         T&       out)
+				: _in1(in1),
+				  _in2(in2),
+				  _out(out)
+			{ }
 
 			virtual ~Quotient() { }
 
-			bool operator() () {
-				(*_outAddr) = (*_inAddr1) / (*_inAddr2);
+			bool
+			operator() ()
+			{
+				_out = _in1 / _in2;
 				return true;
 			}
 
-		  private:
+		private:
 
-			T* _inAddr1;
-			T* _inAddr2;
-			T* _outAddr;
+			const T& _in1;
+			const T& _in2;
+			T&       _out;
 
 		};
 
-		template < typename T >
+
+		template <typename T>
 		class Mul: public Function
 		{
 
-		  public:
+		public:
 
-			Mul(T* inAddr1, T* inAddr2, T* outAddr)
-				: _inAddr1(inAddr1),
-				  _inAddr2(inAddr2),
-				  _outAddr(outAddr) { }
+			Mul(const T& in1,
+			    const T& in2,
+			    T&       out)
+				: _in1(in1),
+				  _in2(in2),
+				  _out(out)
+			{ }
 
 			virtual ~Mul() { }
 
-			bool operator() () {
-				(*_outAddr) = (*_inAddr1) * (*_inAddr2);
+			bool
+			operator() ()
+			{
+				_out = _in1 * _in2;
 				return true;
 			}
 
-		  private:
+		private:
 
-			T* _inAddr1;
-			T* _inAddr2;
-			T* _outAddr;
+			const T& _in1;
+			const T& _in2;
+			T&       _out;
 
 		};
 
 
-
-		template< typename T>
+		template <typename T>
 		class Abs : public Function
 		{
 
-		  public:
+		public:
 
-			Abs(T* inAddr, double* outAddr)
-				: _inAddr(inAddr),
-				  _outAddr(outAddr) { }
+			Abs(const T& in,
+			    double&  out)
+				: _in (in),
+				  _out(out)
+			{ }
 
 			virtual ~Abs() { }
 
-			bool operator() () {
-				(*_outAddr) = __abs(*_inAddr);
+			bool
+			operator() ()
+			{
+				_out = __abs(_in);
 				return true;
 			}
 
-		  private:
+		private:
 
-			T const*const _inAddr;
-			double* _outAddr;
+			const T& _in;
+			double&  _out;
 
-			double __abs (const TVector3 & x){ return x.Mag(); }
-			template <typename Q, class Dummy=int>
-			double __abs(Q const& x){ return std::fabs( x ); }
+			double __abs (const TVector3& x) { return x.Mag(); }
+			template <typename Q, class Dummy = int>
+			double __abs(const Q& x) { return std::fabs(x); }
 
 		};
 
-		template< typename T>
+
+		template <typename T>
 		class Log : public Function
 		{
 
-		  public:
+		public:
 
-			Log(T* inAddr, double* outAddr)
-				: _inAddr(inAddr),
-				  _outAddr(outAddr) { }
+			Log(const T& in,
+			    double&  out)
+				: _in (in),
+				  _out(out)
+			{ }
 
 			virtual ~Log() { }
 
-			bool operator() () {
-				(*_outAddr) = std::log(*_inAddr);
+			bool
+			operator() ()
+			{
+				_out = std::log(_in);
 				return true;
 			}
 
-		  private:
+		private:
 
-			T const*const _inAddr;
-			double* _outAddr;
+			const T& _in;
+			double&  _out;
+
 		};
+
 
 		class Energy : public Function
 		{
 
-		  public:
+		public:
 
-			Energy(TLorentzVector* inAddr, double* outAddr)
-				: _inAddr(inAddr),
-				  _outAddr(outAddr) { }
+			Energy(const TLorentzVector& in,
+			       double&               out)
+				: _in (in),
+				  _out(out)
+			{ }
 
 			virtual ~Energy() { }
 
-			bool operator() () {
-				(*_outAddr) = _inAddr->E();
+			bool
+			operator() ()
+			{
+				_out = _in.E();
 				return true;
 			}
 
-		  private:
+		private:
 
-			TLorentzVector* _inAddr;
-			double* _outAddr;
+			const TLorentzVector& _in;
+			double&               _out;
 
 		};
+
 
 		class RadToDegree : public Function
 		{
 
-		  public:
+		public:
 
-			RadToDegree(double* inAddr, double* outAddr)
-				: _inAddr(inAddr),
-				  _outAddr(outAddr) { }
+			RadToDegree(const double& in,
+			            double&       out)
+				: _in (in),
+				  _out(out)
+			{ }
 
 			virtual ~RadToDegree() { }
 
-			bool operator() () {
-				(*_outAddr) = ((*_inAddr) / TMath::Pi()) * 180.;
+			bool
+			operator() ()
+			{
+				_out = _in * TMath::RadToDeg();
 				return true;
 			}
 
-		  private:
+		private:
 
-			double* _inAddr;
-			double* _outAddr;
+			const double& _in;
+			double&       _out;
 
 		};
+
 
 		class ConvertIntToDouble : public Function
 		{
 
-		  public:
+		public:
 
-			ConvertIntToDouble(int* inAddr, double* outAddr)
-				: _inAddr(inAddr),
-				  _outAddr(outAddr) { }
+			ConvertIntToDouble(const int& in,
+			                   double&    out)
+				: _in (in),
+				  _out(out)
+			{ }
 
 			virtual ~ConvertIntToDouble() { }
 
-			bool operator() () {
-				(*_outAddr) = (*_inAddr);
+			bool
+			operator() ()
+			{
+				_out = _in;
 				return true;
 			}
 
-		  private:
+		private:
 
-			int* _inAddr;
-			double* _outAddr;
+			const int& _in;
+			double&    _out;
 
 		};
+
 
 		class GetGradXGradY : public Function
 		{
 
-		  public:
+		public:
 
-			GetGradXGradY(TLorentzVector* lorentzVecAddr, double* xGradAddr, double* yGradAddr)
-				: _lorentzVecAddr(lorentzVecAddr),
-				  _xGradAddr(xGradAddr),
-				  _yGradAddr(yGradAddr) { }
+			GetGradXGradY(const TLorentzVector& lorentzVec,
+			              double&               xGrad,
+			              double&               yGrad)
+				: _lorentzVec(lorentzVec),
+				  _xGrad     (xGrad),
+				  _yGrad     (yGrad)
+			{ }
 
 			virtual ~GetGradXGradY() { }
 
-			bool operator() () {
-				TVector3 vect = _lorentzVecAddr->Vect();
-				double z = vect.Z();
-				(*_xGradAddr) = vect.X() / z;
-				(*_yGradAddr) = vect.Y() / z;
+			bool
+			operator() ()
+			{
+				const TVector3 vect = _lorentzVec.Vect();
+				const double   z    = vect.Z();
+				_xGrad = vect.X() / z;
+				_yGrad = vect.Y() / z;
 				return true;
 			}
 
-		  private:
+		private:
 
-			TLorentzVector* _lorentzVecAddr;
-			double* _xGradAddr;
-			double* _yGradAddr;
+			const TLorentzVector& _lorentzVec;
+			double&               _xGrad;
+			double&               _yGrad;
 
 		};
+
 
 		class GetLorentzVectorAttributes : public Function
 		{
 
-		  public:
+		public:
 
-			GetLorentzVectorAttributes(TLorentzVector* lorentzVecAddr, double* xAddr,
-			                                                           double* yAddr,
-			                                                           double* zAddr,
-			                                                           double* phiAddr,
-			                                                           double* thetaAddr)
-				: _lorentzVecAddr(lorentzVecAddr),
-				  _xAddr(xAddr),
-				  _yAddr(yAddr),
-				  _zAddr(zAddr),
-				  _phiAddr(phiAddr),
-				  _thetaAddr(thetaAddr) { }
+			GetLorentzVectorAttributes(const TLorentzVector& lorentzVec,
+			                           double&               x,
+			                           double&               y,
+			                           double&               z,
+			                           double&               phi,
+			                           double&               theta)
+				: _lorentzVec(lorentzVec),
+				  _x         (x),
+				  _y         (y),
+				  _z         (z),
+				  _phi       (phi),
+				  _theta     (theta)
+			{ }
 
 			virtual ~GetLorentzVectorAttributes() { }
 
-			bool operator() () {
-				(*_xAddr) = _lorentzVecAddr->X();
-				(*_yAddr) = _lorentzVecAddr->Y();
-				(*_zAddr) = _lorentzVecAddr->Z();
-				(*_phiAddr) = _lorentzVecAddr->Phi();
-				(*_thetaAddr) = _lorentzVecAddr->Theta();
+			bool
+			operator() ()
+			{
+				_x     = _lorentzVec.X();
+				_y     = _lorentzVec.Y();
+				_z     = _lorentzVec.Z();
+				_phi   = _lorentzVec.Phi();
+				_theta = _lorentzVec.Theta();
 				return true;
 			}
 
-		  private:
+		private:
 
-			TLorentzVector* _lorentzVecAddr;
-			double* _xAddr;
-			double* _yAddr;
-			double* _zAddr;
-			double* _phiAddr;
-			double* _thetaAddr;
+			const TLorentzVector& _lorentzVec;
+			double&               _x;
+			double&               _y;
+			double&               _z;
+			double&               _phi;
+			double&               _theta;
 
 		};
 
-		class GetVectorTVector3: public Function
+
+		class GetVectorTVector3 : public Function
 		{
 
-		  public:
+		public:
 
-			GetVectorTVector3(const std::vector<double>* xAddr,
-			                  const std::vector<double>* yAddr,
-			                  const std::vector<double>* zAddr,
-			                  std::vector<TVector3>* vAddr)
-					: _xAddr(xAddr),
-					  _yAddr(yAddr),
-					  _zAddr(zAddr),
-					  _vAddr(vAddr){}
+			GetVectorTVector3(const std::vector<double>& x,
+			                  const std::vector<double>& y,
+			                  const std::vector<double>& z,
+			                  std::vector<TVector3>&     v)
+				: _x(x),
+				  _y(y),
+				  _z(z),
+				  _v(v)
+			{ }
 
 			virtual ~GetVectorTVector3() { }
 
-			bool operator() () {
-				if(_xAddr->size() != _yAddr->size() && _xAddr->size() != _zAddr->size()) {
+			bool
+			operator() ()
+			{
+				if ((_x.size() != _y.size()) and (_x.size() != _z.size())) {
 					return false;
 				}
-				_vAddr->resize(_xAddr->size());
-				for(unsigned int i = 0; i < _xAddr->size(); i++) {
-					TVector3 vector((*_xAddr)[i], (*_yAddr)[i], (*_zAddr )[i]);
-					(*_vAddr)[i] = vector;
+				_v.resize(_x.size());
+				for (size_t i = 0; i < _x.size(); ++i) {
+					_v[i] = TVector3(_x[i], _y[i], _z[i]);
 				}
 				return true;
 			}
 
-		  private:
+		private:
 
-			const std::vector<double>* _xAddr;
-			const std::vector<double>* _yAddr;
-			const std::vector<double>* _zAddr;
-			std::vector<TVector3>* _vAddr;
+			const std::vector<double>& _x;
+			const std::vector<double>& _y;
+			const std::vector<double>& _z;
+			std::vector<TVector3>&     _v;
 
 		};
 
-		class GetTVector3: public Function
+
+		class GetTVector3 : public Function
 		{
 
-		  public:
+		public:
 
-			GetTVector3(double* xAddr, double* yAddr, double* zAddr, TVector3* outAddr)
-				: _xAddr(xAddr),
-				  _yAddr(yAddr),
-				  _zAddr(zAddr),
-				  _outAddr(outAddr) { }
+			GetTVector3(const double& x,
+			            const double& y,
+			            const double& z,
+			            TVector3&     out)
+				: _x  (x),
+				  _y  (y),
+				  _z  (z),
+				  _out(out)
+			{ }
 
 			virtual ~GetTVector3() { }
 
-			bool operator() () {
-				_outAddr->SetXYZ(*_xAddr, *_yAddr, *_zAddr);
+			bool
+			operator() ()
+			{
+				_out.SetXYZ(_x, _y, _z);
 				return true;
 			}
 
-		  private:
+		private:
 
-			double* _xAddr;
-			double* _yAddr;
-			double* _zAddr;
-			TVector3* _outAddr;
+			const double& _x;
+			const double& _y;
+			const double& _z;
+			TVector3&     _out;
 
 		};
 
-		template<typename T>
+
+		template <typename T>
 		class GetVectorEntry : public Function
 		{
 
 		public:
 
-			GetVectorEntry( std::vector<T>* vector,
-			                int*            entry,
-			                T*              result ) {
-				_vector = vector;
-				_entry  = entry;
-				_result = result;
-				if( (*_entry) < 0 ) {
-					std::cerr<<"Got invalid entry position for a vector entry."<<std::endl;
+			GetVectorEntry(const std::vector<T>& vector,
+			               const int&            entry,
+			               T&                    result)
+				: _vector(vector),
+				  _entry (entry),
+				  _result(result)
+			{
+				if (_entry < 0) {
+					std::cerr << "Got invalid entry position for a vector entry." << std::endl;
 					throw 1;
 				}
 			};
 
 			virtual ~GetVectorEntry() { }
 
-			bool operator() () {
-				if( _vector->size() < 1 ) return true;
-				(*_result) = (*_vector)[(*_entry)];
+			bool
+			operator() ()
+			{
+				if (_vector.size() == 0) {
+					//TODO result is not set; this means probably stale data from the previous event will be used downstream of this function
+					//     to prevent this shouldn't we do
+					// _result = T();?
+					return true;
+				}
+				//TODO add check that _entry does not exceed size of _vector
+				_result = _vector[_entry];
 				return true;
 			};
 
 		private:
-			std::vector<T>* _vector;
-			int*            _entry;
-			T*              _result;
+
+			const std::vector<T>& _vector;
+			const int             _entry;  // constant parameter, needs to be copied
+			T&                    _result;
+
 		};
 
-		class GetTVector3FromTLorenzVector: public Function
+
+		class GetTVector3FromTLorenzVector : public Function
 		{
 
-		  public:
+		public:
 
-			GetTVector3FromTLorenzVector(const TLorentzVector* lvAddr, TVector3* vAddr)
-				: _lv(*lvAddr),
-				  _v(*vAddr){}
+			GetTVector3FromTLorenzVector(const TLorentzVector& lv,
+			                             TVector3&             v)
+				: _lv(lv),
+				  _v (v)
+			{ }
 
 			virtual ~GetTVector3FromTLorenzVector() { }
 
-			bool operator() () {
+			bool
+			operator() ()
+			{
 				_v = _lv.Vect();
 				return true;
 			}
 
-		  private:
+		private:
 
 			const TLorentzVector& _lv;
-			TVector3& _v;
+			TVector3&             _v;
 
 		};
 
-	}
+	}  // functions namespace
 
-}
+}  // antok namespace
 
-#endif
-
+#endif  // ANTOK_FUNCTIONS_HPP
