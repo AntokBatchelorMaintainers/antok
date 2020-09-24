@@ -1,12 +1,11 @@
 #ifndef ANTOK_DATA_H
 #define ANTOK_DATA_H
 
-#include<map>
-#include<set>
-#include<string>
-#include<utility>
+#include <map>
+#include <set>
+#include <string>
 
-#include<Rtypes.h>
+#include "Rtypes.h"
 
 class TLorentzVector;
 class TVector3;
@@ -20,54 +19,67 @@ namespace antok {
 
 		friend class Initializer;
 
-	  public:
+	public:
 
-		template<typename T> bool insert(std::string name);
-		template<typename T> bool insertInputVariable(const std::string& name);
+		//TODO add proper destructor that deletes all allocated memory
 
-		bool isInputVariable(const std::string& name);
+		template <typename T> bool insert             (const std::string& name);
+		template <typename T> bool insertInputVariable(const std::string& name);
 
-		template<typename T> T* getAddr(std::string name);
+		//TODO add const version of getAddr?
+		template <typename T> T* getAddr        (const std::string& name);
+		std::string              getType        (const std::string& name) const;
 
-		std::string getType(std::string name);
-		bool isVector(std::string name);
+		bool isInputVariable(const std::string& name) const;
+		bool isVector       (const std::string& name) const;
 
-		static std::string getVariableInsertionErrorMsg(std::vector<std::string> quantityNames,
-		                                                std::string quantityName = "");
-		static std::string getVariableInsertionErrorMsg(std::string variableName);
+		static std::string getVariableInsertionErrorMsg(const std::vector<std::string>& quantityNames,
+		                                                const std::string&              quantityName = "");
+		static std::string getVariableInsertionErrorMsg(const std::string& variableName);
 
-	  private:
+	private:
 
-		std::map<std::string, std::string> global_map;
-		std::set<std::string> inputVariables; // bookkeeping which variable comes from the input tree
+		std::map<std::string, std::string> _global_map;
+		std::set<std::string>              _inputVariables;  // bookkeeping which variable comes from the input tree
 
-		std::map<std::string, double> doubles;
-		std::map<std::string, int> ints;
-		std::map<std::string, Long64_t> long64_ts;
+		// numbers
+		std::map<std::string, int>      _ints;
+		std::map<std::string, Long64_t> _long64_ts;
+		std::map<std::string, double>   _doubles;
 
-		std::map<std::string, std::vector<int>* > intVectors;
-		std::map<std::string, std::vector<double>* > doubleVectors;
-		std::map<std::string, std::vector<Long64_t>* > long64_tVectors;
-		std::map<std::string, std::vector<TVector3>* > vectorVectors;
-		std::map<std::string, std::vector<TLorentzVector>* > lorentzVectorVectors;
+		// 3- and 4-vectors
+		std::map<std::string, TVector3*>       _vector3s;
+		std::map<std::string, TLorentzVector*> _lorentzVectors;
 
-		std::map<std::string, TLorentzVector*> lorentzVectors;
-		std::map<std::string, TVector3> vectors;
+		// std::vectors
+		std::map<std::string, std::vector<int>* >            _intVectors;
+		std::map<std::string, std::vector<Long64_t>* >       _long64_tVectors;
+		std::map<std::string, std::vector<double>* >         _doubleVectors;
+		std::map<std::string, std::vector<TVector3>* >       _vector3Vectors;
+		std::map<std::string, std::vector<TLorentzVector>* > _lorentzVectorVectors;
 
 
 	};
 
 }
 
-template<typename T>
-bool antok::Data::insertInputVariable(const std::string& name ){
+
+template <typename T>
+bool
+antok::Data::insertInputVariable(const std::string& name )
+{
 	const bool ok = insert<T>(name);
-	if(ok) inputVariables.insert(name);
+	if (ok) {
+		_inputVariables.insert(name);
+	}
 	return ok;
 }
-inline bool antok::Data::isInputVariable(const std::string& name){
-	return inputVariables.find(name) != inputVariables.end();
+
+
+inline bool
+antok::Data::isInputVariable(const std::string& name) const
+{
+	return _inputVariables.find(name) != _inputVariables.end();
 }
 
-#endif
-
+#endif  // ANTOK_DATA_H
