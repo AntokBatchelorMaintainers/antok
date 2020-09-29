@@ -98,7 +98,7 @@ int treereader(std::vector<const char*> infilenames, char* outfilename=0, std::s
 		std::cout << "Processing input file '" << *infilename << "'" << std::endl;
 		TTree* inTree = objectManager->getInTree();
 
-		progress_display* progressIndicator = new progress_display(inTree->GetEntries(), std::cout, "");
+		progress_display progressIndicator(inTree->GetEntries(), std::cout, "");
 
 		for(unsigned int i = 0; i < inTree->GetEntries(); ++i) {
 
@@ -116,10 +116,9 @@ int treereader(std::vector<const char*> infilenames, char* outfilename=0, std::s
 				exit(1);
 			}
 
-			++(*progressIndicator);
+			++progressIndicator;
 
 		}
-
 
 	}
 

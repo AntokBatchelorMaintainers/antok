@@ -700,9 +700,9 @@ antok::Initializer::initializePlotter()
 			}
 			objectManager->registerObjectToWrite(TDirectory::CurrentDirectory(), statsHist);
 			const std::vector<antok::Cut*>& cuts = cutTrain_it->second;
-			std::vector<std::pair<const char*, const bool*>> cutsAndResults;
+			std::vector<std::pair<std::string, const bool*>> cutsAndResults;
 			for (size_t i = 0; i < cuts.size(); ++i) {
-				cutsAndResults.push_back(std::pair<const char*, const bool*>(cuts[i]->getLongName().c_str(), cutter.getCutResult(cuts[i])));
+				cutsAndResults.push_back(std::pair<std::string, const bool*>(cuts[i]->getLongName(), cutter.getCutResult(cuts[i])));
 			}
 			waterfallHists.push_back(antok::plotUtils::waterfallHistogramContainer(statsHist, cutsAndResults));
 		}
