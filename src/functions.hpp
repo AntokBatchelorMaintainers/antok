@@ -86,6 +86,29 @@ namespace antok {
 
 		};
 
+		class Mass2: public Function
+		{
+
+		public:
+
+			Mass2(TLorentzVector* inputAddr, double* outAddr)
+					: _inputAddr(inputAddr),
+					  _outAddr(outAddr) { }
+
+			virtual ~Mass2() { }
+
+			bool operator() () {
+				(*_outAddr) = _inputAddr->M2();
+				return true;
+			}
+
+		private:
+
+			TLorentzVector* _inputAddr;
+			double* _outAddr;
+
+		};
+
 		class GetLorentzVec: public Function
 		{
 
