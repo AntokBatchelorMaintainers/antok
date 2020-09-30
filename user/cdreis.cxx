@@ -33,6 +33,8 @@ antok::Function *antok::user::cdreis::getUserFunction(const YAML::Node &function
 		antokFunctionPtr = antok::user::cdreis::generateGetECALCorrectedTiming(function, quantityNames, index);
 	else if( functionName == "getPhotonPairParticles" )
 		antokFunctionPtr = antok::user::cdreis::generateGetPhotonPairParticles(function, quantityNames, index);
+	else if( functionName == "getThreePionCombinationMass" )
+		antokFunctionPtr = antok::user::cdreis::generateGetThreePionCombinationMass(function, quantityNames, index);
 
 	return antokFunctionPtr;
 }
@@ -1051,4 +1053,58 @@ antok::Function *antok::user::cdreis::generateGetPhotonPairParticles( const YAML
 	                                                                    ECALIndex,
 	                                                                    data.getAddr<std::vector<TLorentzVector> >(resultParticles),
 	                                                                    data.getAddr<int>(resultHasParticles)));
+};
+
+antok::Function *antok::user::cdreis::generateGetThreePionCombinationMass( const YAML::Node&         function,
+                                                                           std::vector<std::string>& quantityNames,
+                                                                           int                       index )
+{
+	if (quantityNames.size() > 1)
+	{
+		std::cerr << "Too many names for function \"" << function["Name"] << "\"." << std::endl;
+		return 0;
+	}
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Pi0_0"     , "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Pi0_1"     , "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Scattered0", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Scattered1", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Scattered2", "TLorentzVector"));
+	args.push_back(std::pair<std::string, std::string>("Charge0"   , "int"           ));
+	args.push_back(std::pair<std::string, std::string>("Charge1"   , "int"           ));
+	args.push_back(std::pair<std::string, std::string>("Charge2"   , "int"           ));
+
+	if (not antok::generators::functionArgumentHandler(args, function, index))
+	{
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return 0;
+	}
+
+	antok::Data &data = antok::ObjectManager::instance()->getData();
+
+	TLorentzVector *Pi0_0      = data.getAddr<TLorentzVector>(args[0].first);
+	TLorentzVector *Pi0_1      = data.getAddr<TLorentzVector>(args[1].first);
+	TLorentzVector *Scattered0 = data.getAddr<TLorentzVector>(args[2].first);
+	TLorentzVector *Scattered1 = data.getAddr<TLorentzVector>(args[3].first);
+	TLorentzVector *Scattered2 = data.getAddr<TLorentzVector>(args[4].first);
+	int            *Charge0    = data.getAddr<int>(args[5].first);
+	int            *Charge1    = data.getAddr<int>(args[6].first);
+	int            *Charge2    = data.getAddr<int>(args[7].first);
+
+	std::string result = quantityNames[0];
+
+	if (not data.insert<std::vector<double> >(result))
+	{
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(result);
+		return 0;
+	}
+	return (new antok::user::cdreis::functions::GetThreePionCombinationMass(Pi0_0,
+	                                                                        Pi0_1,
+	                                                                        Scattered0,
+	                                                                        Scattered1,
+	                                                                        Scattered2,
+	                                                                        Charge0,
+	                                                                        Charge1,
+	                                                                        Charge2,
+	                                                                        data.getAddr<std::vector<double> >(result)));
 };

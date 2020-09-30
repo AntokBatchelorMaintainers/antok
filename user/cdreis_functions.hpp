@@ -716,6 +716,96 @@ namespace antok {
 					int                         *_resultHasParticles;
 				};
 
+				class GetThreePionCombinationMass : public Function
+				{
+				public:
+					GetThreePionCombinationMass( TLorentzVector*      Pi0_0,
+					                             TLorentzVector*      Pi0_1,
+					                             TLorentzVector*      Scattered0,
+					                             TLorentzVector*      Scattered1,
+					                             TLorentzVector*      Scattered2,
+					                             int*                 Charge0,
+					                             int*                 Charge1,
+					                             int*                 Charge2,
+					                             std::vector<double>* Result
+					                           )
+							: _Pi0_0     ( Pi0_0      ),
+							  _Pi0_1     ( Pi0_1      ),
+							  _Scattered0( Scattered0 ),
+							  _Scattered1( Scattered1 ),
+							  _Scattered2( Scattered2 ),
+							  _Charge0   ( Charge0    ),
+							  _Charge1   ( Charge1    ),
+							  _Charge2   ( Charge2    ),
+							  _Result    ( Result     ) {}
+
+					virtual ~GetThreePionCombinationMass() {}
+
+					bool operator() ()
+					{
+						_Result->reserve(4);
+						_Result->clear();
+
+						std::vector<TLorentzVector*> neutrals;
+						neutrals.reserve(2);
+						neutrals.clear();
+						neutrals.push_back(_Pi0_0);
+						neutrals.push_back(_Pi0_1);
+
+						std::vector<TLorentzVector*> charged;
+						charged.reserve(3);
+						charged.clear();
+						charged.push_back(_Scattered0);
+						charged.push_back(_Scattered1);
+						charged.push_back(_Scattered2);
+
+						std::vector<int*> charge;
+						charge.reserve(3);
+						charge.clear();
+						charge.push_back(_Charge0);
+						charge.push_back(_Charge1);
+						charge.push_back(_Charge2);
+
+						for( size_t i = 0; i < neutrals.size(); i++ )
+						{
+							TLorentzVector* pi0 = neutrals[i];
+							for( size_t j = 0; j < charged.size(); j++ )
+							{
+								int             chargeFirst  = *charge[j];
+								TLorentzVector* chargedFirst = charged[j];
+								for( size_t k = j+1; k < charged.size(); k++ )
+								{
+									int             chargeSecond = *charge[k];
+									TLorentzVector* chargedSecond = charged[k];
+									if( chargeFirst == chargeSecond )
+									{
+										continue;
+									}
+									else
+									{
+										TLorentzVector sum = *pi0 + *chargedFirst + *chargedSecond;
+										_Result->push_back( sum.M() );
+									}
+								}
+							}
+						}
+
+						return true;
+
+					}
+
+				private:
+					TLorentzVector*      _Pi0_0;
+					TLorentzVector*      _Pi0_1;
+					TLorentzVector*      _Scattered0;
+					TLorentzVector*      _Scattered1;
+					TLorentzVector*      _Scattered2;
+					int*                 _Charge0;
+					int*                 _Charge1;
+					int*                 _Charge2;
+					std::vector<double>* _Result;
+				};
+
 			}
 
 		}
