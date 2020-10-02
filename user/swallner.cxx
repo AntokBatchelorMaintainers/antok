@@ -154,7 +154,7 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 			possible_const.push_back(std::pair<std::string, double* >("AngleMax", nullptr));
 		}
 
-		if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0 ) ){
+		if( not antok::generators::functionArgumentHandlerPossibleConst<double>(possible_const, function, 0 ) ){
 			std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 			return 0;
 		}
@@ -170,7 +170,7 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 		return 0;
 	}
 
-	if(not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const_per_index, function, index ) ){
+	if(not antok::generators::functionArgumentHandlerPossibleConst<double>(possible_const_per_index, function, index ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -302,11 +302,11 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 		return 0;
 	}
 
-	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
+	if( not antok::generators::functionArgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
-	if( not antok::generators::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0) ){
+	if( not antok::generators::functionArgumentHandlerPossibleConst<int>(possible_const_int, function, 0) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -394,11 +394,11 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLVLikelihood(const YAM
 		return 0;
 	}
 
-	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
+	if( not antok::generators::functionArgumentHandlerPossibleConst<double>(possible_const, function, 0) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
-	if( not antok::generators::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0) ){
+	if( not antok::generators::functionArgumentHandlerPossibleConst<int>(possible_const_int, function, 0) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -468,12 +468,12 @@ antok::Function* antok::user::stefan::getCalcCEDARPIDMulitL(const YAML::Node& fu
 	possible_const_int.push_back(std::pair<std::string, int* >("NHitsCedar1", nullptr));
 	possible_const_int.push_back(std::pair<std::string, int* >("NHitsCedar2", nullptr));
 
-	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
+	if( not antok::generators::functionArgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
-	if( not antok::generators::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
+	if( not antok::generators::functionArgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -558,12 +558,12 @@ antok::Function* antok::user::stefan::getCalcCEDARPIDOneL(const YAML::Node& func
 	possible_const_double.push_back(std::pair<std::string, double* >("ThresholdKaonDeltaLogLike", nullptr));
 	possible_const_double.push_back(std::pair<std::string, double* >("ThresholdPionDeltaLogLike", nullptr));
 
-	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
+	if( not antok::generators::functionArgumentHandlerPossibleConst<double>(possible_const_double, function, 0 ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
 
-	if( not antok::generators::functionrgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
+	if( not antok::generators::functionArgumentHandlerPossibleConst<int>(possible_const_int, function, 0 ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}
@@ -633,7 +633,7 @@ antok::Function* antok::user::stefan::getCalcAngles3P(const YAML::Node& function
 		return 0;
 	}
 
-	if( not antok::generators::functionrgumentHandlerPossibleConst<double>(possible_const, function, 0 ) ){
+	if( not antok::generators::functionArgumentHandlerPossibleConst<double>(possible_const, function, 0 ) ){
 		std::cerr<<antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return 0;
 	}

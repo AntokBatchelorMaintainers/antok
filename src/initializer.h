@@ -1,9 +1,9 @@
 #ifndef ANTOK_INITIALIZER_H
 #define ANTOK_INITIALIZER_H
 
-#include<string>
+#include <string>
 
-#include<yaml-cpp/yaml.h>
+#include <yaml-cpp/yaml.h>
 
 class TFile;
 class TTree;
@@ -17,20 +17,19 @@ namespace antok {
 
 	class Initializer {
 
-	  public:
+	public:
 
 		static Initializer* instance();
 
 		bool readConfigFile(const std::string& filename);
 
-		bool initAll() {
-			return (
-				initializeData()   and
-				initializeInput()  and
-				initializeEvent()  and
-				initializeCutter() and
-				initializePlotter()
-			);
+		bool initAll()
+		{
+			return (    initializeData()
+			        and initializeInput()
+			        and initializeEvent()
+			        and initializeCutter()
+			        and initializePlotter());
 		}
 
 		bool initializeCutter();
@@ -40,17 +39,15 @@ namespace antok {
 		bool initializePlotter();
 		bool updateInput();
 
-	  private:
+	private:
 
 		Initializer();
 
 		static Initializer* _initializer;
-
-		YAML::Node* _config;
+		YAML::Node*         _config;
 
 	};
 
 }
 
-#endif
-
+#endif  // ANTOK_INITIALIZER_H
