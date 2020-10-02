@@ -104,6 +104,34 @@ namespace antok {
 		};
 
 
+		class Mass2: public Function
+		{
+
+		public:
+
+			Mass2(const TLorentzVector& inputLV,
+			      double&               out)
+				: _inputLV(inputLV),
+				  _out    (out)
+			{ }
+
+			virtual ~Mass2() { }
+
+			bool
+			operator() ()
+			{
+				_out = _inputLV.M2();
+				return true;
+			}
+
+		private:
+
+			const TLorentzVector& _inputLV;
+			double&               _out;
+
+		};
+
+
 		class GetLorentzVec: public Function
 		{
 

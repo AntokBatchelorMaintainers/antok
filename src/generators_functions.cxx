@@ -932,7 +932,38 @@ antok::generators::generateMass(const YAML::Node&               function,
 		return nullptr;
 	}
 
-	return new antok::functions::Mass(*data.getAddr<TLorentzVector>(args[0].first), *data.getAddr<double>(quantityName));
+	return new antok::functions::Mass(*data.getAddr<TLorentzVector>(args[0].first),
+	                                  *data.getAddr<double>(quantityName));
+}
+
+
+antok::Function*
+antok::generators::generateMass2(const YAML::Node&               function,
+                                 const std::vector<std::string>& quantityNames,
+                                 const int                       index)
+{
+	if (quantityNames.size() > 1) {
+		std::cerr << "Too many names for function '" << function["Name"] << "'." << std::endl;
+		return nullptr;
+	}
+
+	// Define type of argument
+	std::vector<std::pair<std::string, std::string> > args;
+	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
+	if (not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	const std::string& quantityName = quantityNames[0];
+	antok::Data&       data         = antok::ObjectManager::instance()->getData();
+	if (not data.insert<double>(quantityName)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	return new antok::functions::Mass2(*data.getAddr<TLorentzVector>(args[0].first),
+	                                   *data.getAddr<double>(quantityName));
 }
 
 
