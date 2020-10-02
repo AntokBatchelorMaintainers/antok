@@ -2,7 +2,10 @@
 #define ANTOK_FUNCTIONS_HPP
 
 #include <iostream>
+#include <typeinfo>
 #include <vector>
+
+#include <boost/core/demangle.hpp>
 
 #include "TLorentzVector.h"
 
@@ -18,6 +21,12 @@ namespace antok {
 
 		virtual bool operator() () = 0;
 		virtual ~Function() { }
+
+		std::string
+		name() const
+		{
+			return boost::core::demangle(typeid(*this).name());
+		}
 
 	};
 
