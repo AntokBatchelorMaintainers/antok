@@ -358,7 +358,7 @@ namespace antok {
 									break;
 								}
 								const TLorentzVector pi0Candidate0 = _PhotonLVs[i] + _PhotonLVs[j];
-								if (std::fabs(pi0Candidate0.M() - _Pi0Mass) > getECALMassWindow(_ECALIndices[i] == 1, _ECALIndices[j])) {
+								if (std::fabs(pi0Candidate0.M() - _Pi0Mass) > getECALMassWindow(_ECALIndices[i], _ECALIndices[j])) {
 									continue;
 								}
 								for (size_t m = i + 1; m < nmbPhotons; ++m) {
@@ -373,14 +373,14 @@ namespace antok {
 											continue;
 										}
 										const TLorentzVector pi0Candidate1 = _PhotonLVs[m] + _PhotonLVs[n];
-										if (std::fabs(pi0Candidate1.M() - _Pi0Mass) > getECALMassWindow(_ECALIndices[m] == 1, _ECALIndices[n])) {
+										if (std::fabs(pi0Candidate1.M() - _Pi0Mass) > getECALMassWindow(_ECALIndices[m], _ECALIndices[n])) {
 											continue;
 										}
 										if (nmbCandidatePairs == 0) {
 											_ResultPi0PairLVs.push_back(pi0Candidate0);
 											_ResultPi0PairLVs.push_back(pi0Candidate1);
-											_ResultPi0LV_0 = pi0Candidate0;
-											_ResultPi0LV_1 = pi0Candidate1;
+											_ResultPi0LV_0     = pi0Candidate0;
+											_ResultPi0LV_1     = pi0Candidate1;
 											_ResultECALIndices = {(int)i, (int)j, (int)m, (int)n};
 										}
 										nmbCandidatePairs++;
@@ -392,7 +392,6 @@ namespace antok {
 							_ResultGoodPi0Pair = 1;
 						}
 
-						// std::cout << "!!!HERE nmbPhotons = " << nmbPhotons << ", nmbCandidatePairs = " << nmbCandidatePairs << std::endl;
 						return true;
 					}
 
@@ -405,11 +404,13 @@ namespace antok {
 							return _MassWindowECAL1;
 						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
 							return _MassWindowECAL2;
-						} else if (ECALIndex1 != ECALIndex2) {
+						} else if (   ((ECALIndex1 == 1) and (ECALIndex2 == 2))
+						           or ((ECALIndex1 == 2) and (ECALIndex2 == 1))) {
 							return _MassWindowECALMixed;
 						}
-						//TODO maybe throwing an exception would be more meaningful here?
-						return std::numeric_limits<double>::quiet_NaN();
+						std::stringstream errMsg;
+						errMsg << "At least one of the given ECAL indices (" << ECALIndex1 << ", " << ECALIndex2 << ") is unknown. Aborting...";
+						throw std::runtime_error(errMsg.str());
 					}
 
 					const std::vector<TLorentzVector>& _PhotonLVs;
