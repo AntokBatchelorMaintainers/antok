@@ -10,11 +10,21 @@ namespace antok {
 	namespace generators {
 
 		std::string mergeNameIndex(const std::string& name, const int index);
-		//TODO introduce typedef for args (at least in .cxx file)
-		bool functionArgumentHandler(std::vector<std::pair<std::string, std::string> >& args,
-		                             const YAML::Node&                                  function,
-		                             const int                                          index,
-		                             const bool                                         argStringsAlreadyValues = false);
+		bool nmbArgsIsExactly(const YAML::Node& function, const size_t& actualNmb, const size_t& requiredNmb);
+		//TODO introduce typedef for args (at least in .cxx file) to avoid the long type name
+		bool functionArgumentHandler(std::vector<std::pair<std::string, std::string>>& args,
+		                             const YAML::Node&                                 function,
+		                             const int                                         index,
+		                             const bool                                        argStringsAlreadyValues = false);
+		/**
+		 * Sets values in given args vector to the constants found in YAML node
+		 * @param args Vector of pairs where first: node name, second: node value (will be copied in this function)
+		 * @param function: Node of the function
+		 * @return true if everything was ok
+		 */
+		template <typename T>
+		bool functionArgumentHandlerConst(std::map<std::string, T>& args,
+		                                  const YAML::Node&         function);
 		/**
 		* Sets the data pointers in the args vector to the address of the variable or to a constant if no variable name, but a number is given
 		* @param args Vector of pairs where first: node/variable name, second: data pointer (will be set in this function)
@@ -23,9 +33,9 @@ namespace antok {
 		* @return true if everything was ok
 		*/
 		template <typename T>
-		bool functionArgumentHandlerPossibleConst(std::vector<std::pair<std::string, T*> >& args,
-		                                          const YAML::Node&                         function,
-		                                          const int                                 index);
+		bool functionArgumentHandlerPossibleConst(std::vector<std::pair<std::string, T*>>& args,
+		                                          const YAML::Node&                        function,
+		                                          const int                                index);
 		std::string getFunctionArgumentHandlerErrorMsg(const std::vector<std::string>& quantityNames);
 
 		//TODO since all functions have the same signature, it would maybe easier to use a macro to generate them

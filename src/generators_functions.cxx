@@ -29,10 +29,24 @@ antok::generators::mergeNameIndex(const std::string& name,
 
 
 bool
-antok::generators::functionArgumentHandler(std::vector<std::pair<std::string, std::string> >& args,
-                                           const YAML::Node&                                  function,
-                                           const int                                          index,
-                                           const bool                                         argStringsAlreadyValues)
+antok::generators::nmbArgsIsExactly(const YAML::Node& function,
+          	                             const size_t&     actualNmb,
+                      	                 const size_t&     requiredNmb)
+{
+	if (actualNmb == requiredNmb) {
+		return true;
+	}
+	std::cerr << "Need " << requiredNmb << " argument name(s) instead of " << actualNmb << " name(s) "
+	          << "for function '" << function["Name"] << "'." << std::endl;
+	return false;
+}
+
+
+bool
+antok::generators::functionArgumentHandler(std::vector<std::pair<std::string, std::string>>& args,
+                                           const YAML::Node&                                 function,
+                                           const int                                         index,
+                                           const bool                                        argStringsAlreadyValues)
 {
 	const YAML::Node& functionName = function["Name"];
 	for (size_t i = 0; i < args.size(); ++i) {
@@ -66,6 +80,43 @@ antok::generators::functionArgumentHandler(std::vector<std::pair<std::string, st
 
 
 /**
+ * Sets values in given args vector to the constants found in YAML node
+ * @param args Vector of pairs where first: node name, second: node value (will be copied in this function)
+ * @param function: Node of the function
+ * @return true if everything was ok
+ */
+template <typename T>
+bool
+antok::generators::functionArgumentHandlerConst(std::map<std::string, T>& args,
+                                                const YAML::Node&         function)
+{
+	const YAML::Node& functionName = function["Name"];
+	for (auto& arg : args) {
+		const std::string& argName = arg.first;
+		T&                 argVal  = arg.second;
+		argVal = T();
+		if (not hasNodeKey(function, argName)) {
+			std::cerr << "Argument '" << argName << "' not found (required for function '" << functionName << "')." << std::endl;
+			return false;
+		}
+		const YAML::Node& argNode = function[argName];
+		try {
+			argVal = argNode.as<T>();
+		} catch (const YAML::TypedBadConversion<T>&) {
+			std::cerr << "Argument '" << argName << "' has wrong type (required for function '" << functionName << "')." << std::endl;
+			return false;
+		}
+	}
+	return true;
+}
+
+// specializations for common data types, add more if needed
+template bool antok::generators::functionArgumentHandlerConst<double>     (std::map<std::string, double>&      args, const YAML::Node& function);
+template bool antok::generators::functionArgumentHandlerConst<int>        (std::map<std::string, int>&         args, const YAML::Node& function);
+template bool antok::generators::functionArgumentHandlerConst<std::string>(std::map<std::string, std::string>& args, const YAML::Node& function);
+
+
+/**
  * Sets the data pointers in the args vector to the address of the variable or to a constant if no variable name, but a number is given
  * @param args Vector of pairs where first: node/variable name, second: data pointer (will be set in this function)
  * @param function: Node of the function
@@ -74,9 +125,9 @@ antok::generators::functionArgumentHandler(std::vector<std::pair<std::string, st
  */
 template <typename T>
 bool
-antok::generators::functionArgumentHandlerPossibleConst(std::vector< std::pair< std::string, T* > >& args,
-                                                        const YAML::Node&                            function,
-                                                        const int                                    index)
+antok::generators::functionArgumentHandlerPossibleConst(std::vector<std::pair<std::string, T*>>& args,
+                                                        const YAML::Node&                        function,
+                                                        const int                                index)
 {
 	const YAML::Node& functionName = function["Name"];
 	antok::Data&      data         = antok::ObjectManager::instance()->getData();
@@ -88,6 +139,7 @@ antok::generators::functionArgumentHandlerPossibleConst(std::vector< std::pair< 
 			const YAML::Node& node = function[arg.first];
 			try {
 				const T val = node.as<T>();
+				//TODO potential memory leak
 				arg.second = new T(val);
 			} catch (const YAML::TypedBadConversion<T>& e) {  // test if variable is a variable name
 				std::string variable_name = antok::YAMLUtils::getString(node);
@@ -111,10 +163,9 @@ antok::generators::functionArgumentHandlerPossibleConst(std::vector< std::pair< 
 	return true;
 }
 
-
-// initialize for a bunch of data types, add more if needed
-template bool antok::generators::functionArgumentHandlerPossibleConst<double>(std::vector< std::pair< std::string, double* > >& args, const YAML::Node& function, int index);
-template bool antok::generators::functionArgumentHandlerPossibleConst<int>   (std::vector< std::pair< std::string, int* > >&    args, const YAML::Node& function, int index);
+// specializations for common data types, add more if needed
+template bool antok::generators::functionArgumentHandlerPossibleConst<double>(std::vector<std::pair<std::string, double*>>& args, const YAML::Node& function, int index);
+template bool antok::generators::functionArgumentHandlerPossibleConst<int>   (std::vector<std::pair<std::string, int*>>&    args, const YAML::Node& function, int index);
 
 
 std::string
@@ -141,28 +192,27 @@ antok::generators::generateAbs(const YAML::Node&               function,
                                const std::vector<std::string>& quantityNames,
                                const int                       index)
 {
-	const YAML::Node& functionName = function["Name"];
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << functionName << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Get type of argument
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::string  typeNameArg1;
+	// Get input variables
+	const YAML::Node& functionName = function["Name"];
+	antok::Data&      data         = antok::ObjectManager::instance()->getData();
+	std::string       typeNameArg1;
 	if (hasNodeKey(function, "Arg")) {
 		typeNameArg1 = data.getType(antok::generators::mergeNameIndex(antok::YAMLUtils::getString(function["Arg"]), index));
 	} else {
 		std::cerr << "Argument 'Arg' not found (required for function '" << functionName << "')." << std::endl;
 		return nullptr;
 	}
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Arg", typeNameArg1));
+	std::vector<std::pair<std::string, std::string>> args = {{"Arg", typeNameArg1}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	const std::string& quantityName = quantityNames[0];
 	if (not data.insert<double>(quantityName)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
@@ -170,9 +220,9 @@ antok::generators::generateAbs(const YAML::Node&               function,
 	}
 
 	if        (typeNameArg1 == "double") {
-		return new antok::functions::Abs<double>  (*data.getAddr<double>(args[0].first),   *data.getAddr<double>(quantityName));
+		return new antok::functions::Abs<double>  (*data.getAddr<double>  (args[0].first), *data.getAddr<double>(quantityName));
 	} else if (typeNameArg1 == "int") {
-		return new antok::functions::Abs<int>     (*data.getAddr<int>(args[0].first),      *data.getAddr<double>(quantityName));
+		return new antok::functions::Abs<int>     (*data.getAddr<int>     (args[0].first), *data.getAddr<double>(quantityName));
 	} else if (typeNameArg1 == "TVector3") {
 		return new antok::functions::Abs<TVector3>(*data.getAddr<TVector3>(args[0].first), *data.getAddr<double>(quantityName));
 	} else {
@@ -188,28 +238,27 @@ antok::generators::generateLog(const YAML::Node&               function,
                                const std::vector<std::string>& quantityNames,
                                const int                       index)
 {
-	const YAML::Node& functionName = function["Name"];
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << functionName << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Get type of argument
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::string  typeNameArg1;
+	// Get input variables
+	const YAML::Node& functionName = function["Name"];
+	antok::Data&      data         = antok::ObjectManager::instance()->getData();
+	std::string       typeNameArg1;
 	if (hasNodeKey(function, "Arg")) {
 		typeNameArg1 = data.getType(antok::generators::mergeNameIndex(antok::YAMLUtils::getString(function["Arg"]), index));
 	} else {
 		std::cerr << "Argument 'Arg' not found (required for function '" << functionName << "')." << std::endl;
 		return nullptr;
 	}
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Arg", typeNameArg1));
+	std::vector<std::pair<std::string, std::string>> args = {{"Arg", typeNameArg1}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	const std::string& quantityName = quantityNames[0];
 	if (not data.insert<double>(quantityName)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
@@ -219,7 +268,7 @@ antok::generators::generateLog(const YAML::Node&               function,
 	if        (typeNameArg1 == "double") {
 		return new antok::functions::Log<double>(*data.getAddr<double>(args[0].first), *data.getAddr<double>(quantityName));
 	} else if (typeNameArg1 == "int") {
-		return new antok::functions::Log<int>   (*data.getAddr<int>(args[0].first),    *data.getAddr<double>(quantityName));
+		return new antok::functions::Log<int>   (*data.getAddr<int>   (args[0].first), *data.getAddr<double>(quantityName));
 	} else {
 		std::cerr << "'" << functionName << "' is not (yet) implemented for input type '" << typeNameArg1 << "'." << std::endl;
 	}
@@ -233,19 +282,18 @@ antok::generators::generateConvertIntToDouble(const YAML::Node&               fu
                                               const std::vector<std::string>& quantityNames,
                                               const int                       index)
 {
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << function["Name"] << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define type of argument
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Int", "int"));
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args = {{"Int", "int"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
 	if (not data.insert<double>(quantityName)) {
@@ -262,21 +310,21 @@ antok::generators::generateDiff(const YAML::Node&               function,
                                 const std::vector<std::string>& quantityNames,
                                 const int                       index)
 {
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << function["Name"] << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define types of arguments
+	// Get input variables
 	//TODO support other types like done in antok::generators::generateQuotient()
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Minuend",    "double"));
-	args.push_back(std::pair<std::string, std::string>("Subtrahend", "double"));
+	std::vector<std::pair<std::string, std::string>> args
+		= {{"Minuend",    "double"},
+		   {"Subtrahend", "double"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
 	if (not data.insert<double>(quantityName)) {
@@ -294,15 +342,17 @@ namespace {
 
 	template <typename T>
 	antok::Function*
-	__generateQuotientHelper(antok::Data&                                             data,
-	                         const std::vector<std::pair<std::string, std::string> >& args,
-	                         const std::vector<std::string>&                          quantityNames,
-	                         const std::string&                                       quantityName)
+	__generateQuotientHelper(antok::Data&                                            data,
+	                         const std::vector<std::pair<std::string, std::string>>& args,
+	                         const std::vector<std::string>&                         quantityNames,
+	                         const std::string&                                      quantityName)
 	{
+		// Register output variables
 		if (not data.insert<T>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
 		}
+
 		return new antok::functions::Quotient<T>(*data.getAddr<T>(args[0].first),
 		                                         *data.getAddr<T>(args[1].first),
 		                                         *data.getAddr<T>(quantityName));
@@ -316,15 +366,14 @@ antok::generators::generateQuotient(const YAML::Node&               function,
                                     const std::vector<std::string>& quantityNames,
                                     const int                       index)
 {
-	const YAML::Node& functionName = function["Name"];
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << functionName << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Get types of arguments
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::string  typeNameArg1, typeNameArg2;
+	// Get input variables
+	const YAML::Node& functionName = function["Name"];
+	antok::Data&      data         = antok::ObjectManager::instance()->getData();
+	std::string       typeNameArg1, typeNameArg2;
 	if (hasNodeKey(function, "Dividend")) {
 		typeNameArg1 = data.getType(antok::generators::mergeNameIndex(antok::YAMLUtils::getString(function["Dividend"]), index));
 	} else {
@@ -341,9 +390,9 @@ antok::generators::generateQuotient(const YAML::Node&               function,
 		std::cerr << "Argument 'Dividend' (" << typeNameArg1 << ") and 'Divisor' (" << typeNameArg2 << ") "
 		          << "have different types (required for function '" << functionName << "')." << std::endl;
 	}
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Dividend", typeNameArg1));
-	args.push_back(std::pair<std::string, std::string>("Divisor",  typeNameArg2));
+	std::vector<std::pair<std::string, std::string>> args
+		= {{"Dividend", typeNameArg1},
+		   {"Divisor",  typeNameArg2}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -366,15 +415,17 @@ namespace {
 
 	template <typename T>
 	antok::Function*
-	__generateMulHelper(antok::Data&                                             data,
-	                    const std::vector<std::pair<std::string, std::string> >& args,
-	                    const std::vector<std::string>&                          quantityNames,
-	                    const std::string& quantityName )
+	__generateMulHelper(antok::Data&                                            data,
+	                    const std::vector<std::pair<std::string, std::string>>& args,
+	                    const std::vector<std::string>&                         quantityNames,
+	                    const std::string&                                      quantityName )
 	{
+		// Register output variables
 		if (not data.insert<T>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
 		}
+
 		return new antok::functions::Mul<T>(*data.getAddr<T>(args[0].first),
 		                                    *data.getAddr<T>(args[1].first),
 		                                    *data.getAddr<T>(quantityName));
@@ -388,15 +439,14 @@ antok::generators::generateMul(const YAML::Node&               function,
                                const std::vector<std::string>& quantityNames,
                                const int                       index)
 {
-	const YAML::Node& functionName = function["Name"];
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << functionName << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Get type of arguments
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::string  typeNameArg1, typeNameArg2;
+	// Get input variables
+	const YAML::Node& functionName = function["Name"];
+	antok::Data&      data         = antok::ObjectManager::instance()->getData();
+	std::string       typeNameArg1, typeNameArg2;
 	if (hasNodeKey(function, "Factor1")) {
 		typeNameArg1 = data.getType(antok::generators::mergeNameIndex(antok::YAMLUtils::getString(function["Factor1"]), index));
 	} else {
@@ -413,9 +463,9 @@ antok::generators::generateMul(const YAML::Node&               function,
 		std::cerr << "Argument 'Factor1' (" << typeNameArg1 << ") and 'Factor2' (" << typeNameArg2 << ") have different types "
 		          << "(required for function '" << functionName << "')." << std::endl;
 	}
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Factor1", typeNameArg1));
-	args.push_back(std::pair<std::string, std::string>("Factor2", typeNameArg2));
+	std::vector<std::pair<std::string, std::string>> args
+		= {{"Factor1", typeNameArg1},
+		   {"Factor2", typeNameArg2}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -439,19 +489,18 @@ antok::generators::generateEnergy(const YAML::Node&               function,
                                   const std::vector<std::string>& quantityNames,
                                   const int                       index)
 {
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << function["Name"] << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define type of argument
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args = {{"Vector", "TLorentzVector"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
 	if (not data.insert<double>(quantityName)) {
@@ -468,44 +517,44 @@ antok::generators::generateGetBeamLorentzVector(const YAML::Node&               
                                                 const std::vector<std::string>& quantityNames,
                                                 const int                       index)
 {
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << function["Name"] << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define types of arguments
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("dX",          "double"));
-	args.push_back(std::pair<std::string, std::string>("dY",          "double"));
-	args.push_back(std::pair<std::string, std::string>("XLorentzVec", "TLorentzVector"));
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args
+		= {{"dX",          "double"},
+		   {"dY",          "double"},
+		   {"XLorentzVec", "TLorentzVector"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
-	const double* massBeamAddr   = nullptr;
-	const double* massTargetAddr = nullptr;
-	std::vector<std::pair<std::string, double*>> possible_const_args;
 	const bool hasNodeKeyBeamMass   = antok::YAMLUtils::hasNodeKey(function, "BeamMass");
 	const bool hasNodeKeyTargetMass = antok::YAMLUtils::hasNodeKey(function, "TargetMass");
+	std::vector<std::pair<std::string, double*>> possibleConstArgs;
 	if (hasNodeKeyBeamMass)
-		possible_const_args.push_back(std::pair<std::string, double*>("BeamMass", 0));
+		possibleConstArgs.push_back(std::pair<std::string, double*>("BeamMass", 0));
 	if (hasNodeKeyTargetMass)
-		possible_const_args.push_back(std::pair<std::string, double*>("TargetMass", 0));
-	if (not antok::generators::functionArgumentHandlerPossibleConst(possible_const_args, function, 0)) {
+		possibleConstArgs.push_back(std::pair<std::string, double*>("TargetMass", 0));
+	if (not antok::generators::functionArgumentHandlerPossibleConst(possibleConstArgs, function, 0)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
+	const double* massBeamAddr   = nullptr;
+	const double* massTargetAddr = nullptr;
 	// keep this order!!!
 	if (hasNodeKeyTargetMass) {
-		massTargetAddr = possible_const_args.back().second;
-		possible_const_args.pop_back();
+		massTargetAddr = possibleConstArgs.back().second;
+		possibleConstArgs.pop_back();
 	}
 	if (hasNodeKeyBeamMass) {
-		massBeamAddr = possible_const_args.back().second;
-		possible_const_args.pop_back();
+		massBeamAddr = possibleConstArgs.back().second;
+		possibleConstArgs.pop_back();
 	}
 
+	// Register output variables
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
 	if (not data.insert<TLorentzVector>(quantityName)) {
@@ -527,19 +576,18 @@ antok::generators::generateGetGradXGradY(const YAML::Node&               functio
                                          const std::vector<std::string>& quantityNames,
                                          const int                       index)
 {
-	if (quantityNames.size() != 2) {
-		std::cerr << "Need 2 names for function '" << function["Name"] << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 2)) {
 		return nullptr;
 	}
 
-	// Define type of argument
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args = {{"Vector", "TLorentzVector"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	antok::Data&         data = antok::ObjectManager::instance()->getData();
 	std::vector<double*> quantityAddrs;
 	for (size_t i = 0; i < quantityNames.size(); ++i) {
@@ -559,19 +607,18 @@ antok::generators::generateGetLorentzVectorAttributes(const YAML::Node&         
                                                       const std::vector<std::string>& quantityNames,
                                                       const int                       index)
 {
-	if (quantityNames.size() != 5) {
-		std::cerr << "Need 5 names for function '" << function["Name"] << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 5)) {
 		return nullptr;
 	}
 
-	// Define type of argument
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args = {{"Vector", "TLorentzVector"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	antok::Data&         data = antok::ObjectManager::instance()->getData();
 	std::vector<double*> quantityAddrs;
 	for (size_t i = 0; i < quantityNames.size(); ++i) {
@@ -596,13 +643,12 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
                                          const std::vector<std::string>& quantityNames,
                                          const int                       index)
 {
-	const YAML::Node& functionName = function["Name"];
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << functionName << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define types of arguments
+	// Get input variables
+	const YAML::Node&  functionName = function["Name"];
 	const std::string& quantityName = quantityNames[0];
 	int pType;
 	if        (function["X"] and function["M"]) {
@@ -618,42 +664,44 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 		          << "(variable '" << quantityName << "')." << std::endl;
 		return nullptr;
 	}
-	std::vector<std::pair<std::string, std::string> > args;
+	std::vector<std::pair<std::string, std::string>> args;
 	double* mAddr = nullptr;
 	switch (pType) {
-		case 0:
-			args.push_back(std::pair<std::string, std::string>("X", "double"));
-			args.push_back(std::pair<std::string, std::string>("Y", "double"));
-			args.push_back(std::pair<std::string, std::string>("Z", "double"));
-			try {
-				function["M"].as<double>();
-			} catch (const YAML::TypedBadConversion<double>& e) {
-				std::cerr << "Argument 'M' in function '" << functionName << "' should be of type double (variable '" << quantityName << "')." << std::endl;
+		case 0: {
+			args = {{"X", "double"},
+			        {"Y", "double"},
+			        {"Z", "double"}};
+			std::map<std::string, double> constArgs = {{"M", 0}};
+			if (not antok::generators::functionArgumentHandlerConst<double>(constArgs, function)) {
+				std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 				return nullptr;
 			}
+			//TODO potential memory leak
 			mAddr    = new double();
-			(*mAddr) = function["M"].as<double>();
+			(*mAddr) = constArgs["M"];
 			break;
+		}
 		case 1:
-			args.push_back(std::pair<std::string, std::string>("Px", "double"));
-			args.push_back(std::pair<std::string, std::string>("Py", "double"));
-			args.push_back(std::pair<std::string, std::string>("Pz", "double"));
-			args.push_back(std::pair<std::string, std::string>("E",  "double"));
+			args = {{"Px", "double"},
+			        {"Py", "double"},
+			        {"Pz", "double"},
+			        {"E",  "double"}};
 			break;
-		case 2:
-			args.push_back(std::pair<std::string, std::string>("Vec3", "TVector3"));
-			try {
-				function["M"].as<double>();
-			} catch (const YAML::TypedBadConversion<double>& e) {
-				std::cerr << "Argument 'M' in function '" << functionName << "' should be of type double (variable '" << quantityName << "')." << std::endl;
+		case 2: {
+			args = {{"Vec3", "TVector3"}};
+			std::map<std::string, double> constArgs = {{"M", 0}};
+			if (not antok::generators::functionArgumentHandlerConst<double>(constArgs, function)) {
+				std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 				return nullptr;
 			}
+			//TODO potential memory leak
 			mAddr    = new double();
-			(*mAddr) = function["M"].as<double>();
+			(*mAddr) = constArgs["M"];
 			break;
+		}
 		case 3:
-			args.push_back(std::pair<std::string, std::string>("Vec", "TVector3"));
-			args.push_back(std::pair<std::string, std::string>("E",   "double"));
+			args = {{"Vec", "TVector3"},
+			        {"E",   "double"}};
 			break;
 	}
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
@@ -661,6 +709,7 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 		return nullptr;
 	}
 
+	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	if (not data.insert<TLorentzVector>(quantityName)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
@@ -702,31 +751,29 @@ antok::generators::generateGetTs(const YAML::Node&               function,
                                  const std::vector<std::string>& quantityNames,
                                  const int                       index)
 {
-	if (quantityNames.size() != 3) {
-		std::cerr << "Need 3 names for function '" << function["Name"] << "'" << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 3)) {
 		return nullptr;
 	}
 
-	// Define types of arguments
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("BeamLorentzVec", "TLorentzVector"));
-	args.push_back(std::pair<std::string, std::string>("XLorentzVec",    "TLorentzVector"));
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args
+		= {{"BeamLorentzVec", "TLorentzVector"},
+		   {"XLorentzVec",    "TLorentzVector"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
-
-	std::vector<std::pair<std::string, double*> > possible_const;
-	possible_const.push_back(std::pair<std::string, double*>("TargetMass", nullptr));
+	std::vector<std::pair<std::string, double*>> possibleConstArgs = {{"TargetMass", nullptr}};
 	const double* targetMassAddr = nullptr;
 	if (hasNodeKey(function, "TargetMass")) {
-		if (not antok::generators::functionArgumentHandlerPossibleConst(possible_const, function, 0)) {
+		if (not antok::generators::functionArgumentHandlerPossibleConst(possibleConstArgs, function, 0)) {
 			std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 			return nullptr;
 		}
-		targetMassAddr = possible_const[0].second;
+		targetMassAddr = possibleConstArgs[0].second;
 	}
 
+	// Register output variables
 	antok::Data&         data = antok::ObjectManager::instance()->getData();
 	std::vector<double*> quantityAddrs;
 	for (size_t i = 0; i < quantityNames.size(); ++i) {
@@ -749,31 +796,30 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
                                       const std::vector<std::string>& quantityNames,
                                       const int                       index)
 {
-	const YAML::Node& functionName = function["Name"];
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << functionName << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define types of arguments
-	std::vector<std::pair<std::string, std::string> > args;
+	// Get input variables
+	const YAML::Node& functionName = function["Name"];
+	std::vector<std::pair<std::string, std::string>> args;
 	//TODO maybe it would be better to use an enum for the cases instead of 2 booleans
 	bool fromTLorentzVector = false;
 	bool fromVectors        = false;
 	if (hasNodeKey(function, "X")) {
-		args.push_back(std::pair<std::string, std::string>("X", "double"));
-		args.push_back(std::pair<std::string, std::string>("Y", "double"));
-		args.push_back(std::pair<std::string, std::string>("Z", "double"));
+		args = {{"X", "double"},
+		        {"Y", "double"},
+		        {"Z", "double"}};
 	} else if (hasNodeKey(function,"VectorX")) {
 		fromTLorentzVector = false;
 		fromVectors        = true;
-		args.push_back(std::pair<std::string, std::string>("VectorX", "std::vector<double>"));
-		args.push_back(std::pair<std::string, std::string>("VectorY", "std::vector<double>"));
-		args.push_back(std::pair<std::string, std::string>("VectorZ", "std::vector<double>"));
+		args = {{"VectorX", "std::vector<double>"},
+		        {"VectorY", "std::vector<double>"},
+		        {"VectorZ", "std::vector<double>"}};
 	} else if (hasNodeKey(function,"LVector")) {
 		fromTLorentzVector = true;
 		fromVectors        = false;
-		args.push_back(std::pair<std::string, std::string>("LVector", "TLorentzVector"));
+		args = {{"LVector", "TLorentzVector"}};
 	} else {
 		std::cerr << "Unknown properties for function '" << functionName << "'." << std::endl;
 		return nullptr;
@@ -783,6 +829,7 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
 		return nullptr;
 	}
 
+	// Register output variables and create functor
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
 	if (fromVectors) {
@@ -821,27 +868,26 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
                                           const std::vector<std::string>& quantityNames,
                                           const int                       index)
 {
-	const YAML::Node& functionName = function["Name"];
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << functionName << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define types of arguments
-	std::vector<std::pair<std::string, std::string> > args;
+	// Get input variables
+	const YAML::Node& functionName = function["Name"];
+	std::vector<std::pair<std::string, std::string>> args;
 	int type;
 	if        (hasNodeKey(function, "VectorInt")) {
 		type = 0;
-		args.push_back(std::pair<std::string, std::string>("VectorInt", "std::vector<int>"));
+		args = {{"VectorInt", "std::vector<int>"}};
 	} else if (hasNodeKey(function, "VectorDouble")) {
 		type = 1;
-		args.push_back(std::pair<std::string, std::string>("VectorDouble", "std::vector<double>"));
+		args = {{"VectorDouble", "std::vector<double>"}};
 	} else if (hasNodeKey(function, "VectorTVector3")) {
 		type = 2;
-		args.push_back(std::pair<std::string, std::string>("VectorTVector3", "std::vector<TVector3>"));
+		args = {{"VectorTVector3", "std::vector<TVector3>"}};
 	} else if (hasNodeKey(function, "VectorTLorentzVector")) {
 		type = 3;
-		args.push_back(std::pair<std::string, std::string>("VectorTLorentzVector", "std::vector<TLorentzVector>"));
+		args = {{"VectorTLorentzVector", "std::vector<TLorentzVector>"}};
 	} else {
 		std::cerr << "Unknown properties for function '" << functionName << "'." << std::endl;
 		return nullptr;
@@ -851,20 +897,17 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 		return nullptr;
 	}
 
-	const std::string& quantityName = quantityNames[0];
-	try {
-		function["Entry"].as<int>();
-	} catch (const YAML::InvalidNode &exception) {
-		std::cerr << "Argument 'Entry' in function '" << functionName << "' not found for calculation of variables '" << quantityNames[0] << "'." << std::endl;
-		return nullptr;
-	} catch (const YAML::TypedBadConversion<int> &exception) {
-		std::cerr << "Argument 'Entry' in function '" << functionName << "' should be of type int for calculation of variables '" << quantityNames[0] << "'." << std::endl;
+	// Get constant arguments
+	std::map<std::string, int> constArgs = {{"Entry", 0}};
+	if (not antok::generators::functionArgumentHandlerConst<int>(constArgs, function)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
-	const int entry = function["Entry"].as<int>();
 
+	// Register output variables and create functor
 	//TODO introduce template helper function to avoid repetition
-	antok::Data& data = antok::ObjectManager::instance()->getData();
+	const std::string& quantityName = quantityNames[0];
+	antok::Data&       data         = antok::ObjectManager::instance()->getData();
 	switch (type) {
 		case 0: {
 			if (not data.insert<int>(quantityName)) {
@@ -872,7 +915,7 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 				return nullptr;
 			}
 			return new antok::functions::GetVectorEntry<int>(*data.getAddr<std::vector<int>>(args[0].first),  // vector
-			                                                 entry,
+			                                                 constArgs["Entry"],
 			                                                 *data.getAddr<int>(quantityName));               // result
 		}
 		case 1: {
@@ -881,7 +924,7 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 				return nullptr;
 			}
 			return new antok::functions::GetVectorEntry<double>(*data.getAddr<std::vector<double>>(args[0].first),  // vector
-			                                                    entry,
+			                                                    constArgs["Entry"],
 			                                                    *data.getAddr<double>(quantityName));               // result
 		}
 		case 2: {
@@ -890,7 +933,7 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 				return nullptr;
 			}
 			return new antok::functions::GetVectorEntry<TVector3>(*data.getAddr<std::vector<TVector3>>(args[0].first),  // vector
-			                                                      entry,
+			                                                      constArgs["Entry"],
 			                                                      *data.getAddr<TVector3>(quantityName));               // result
 		}
 		case 3: {
@@ -899,7 +942,7 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 				return nullptr;
 			}
 			return new antok::functions::GetVectorEntry<TLorentzVector>(*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // vector
-			                                                            entry,
+			                                                            constArgs["Entry"],
 			                                                            *data.getAddr<TLorentzVector>(quantityName));               // result
 		}
 	}
@@ -912,19 +955,18 @@ antok::generators::generateMass(const YAML::Node&               function,
                                 const std::vector<std::string>& quantityNames,
                                 const int                       index)
 {
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << function["Name"] << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define type of argument
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args = {{"Vector", "TLorentzVector"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
 	if (not data.insert<double>(quantityName)) {
@@ -942,19 +984,18 @@ antok::generators::generateMass2(const YAML::Node&               function,
                                  const std::vector<std::string>& quantityNames,
                                  const int                       index)
 {
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << function["Name"] << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define type of argument
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Vector", "TLorentzVector"));
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args = {{"Vector", "TLorentzVector"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
 	if (not data.insert<double>(quantityName)) {
@@ -972,20 +1013,19 @@ antok::generators::generateRadToDegree(const YAML::Node&               function,
                                        const std::vector<std::string>& quantityNames,
                                        const int                       index)
 {
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << function["Name"] << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define types of arguments
+	// Get input variables
 	antok::Data& data = antok::ObjectManager::instance() ->getData();
-	std::vector<std::pair<std::string, std::string> > args;
-	args.push_back(std::pair<std::string, std::string>("Angle", "double"));
+	std::vector<std::pair<std::string, std::string>> args = {{"Angle", "double"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
+	// Register output variables
 	const std::string& quantityName = quantityNames[0];
 	if (not data.insert<double>(quantityName)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
@@ -1000,9 +1040,9 @@ namespace {
 
 	template <typename T>
 	antok::Function*
-	__getSumFunction(const std::vector<std::pair<std::string, std::string> >& summandNames,
-	                 const std::vector<std::pair<std::string, std::string> >& subtrahendsNames,
-	                 const std::string&                                       quantityName)
+	__getSumFunction(const std::vector<std::pair<std::string, std::string>>& summandNames,
+	                 const std::vector<std::pair<std::string, std::string>>& subtrahendsNames,
+	                 const std::string&                                      quantityName)
 	{
 		antok::Data& data = antok::ObjectManager::instance()->getData();
 
@@ -1020,16 +1060,17 @@ namespace {
 			inputAddrsSubtrahends.push_back(data.getAddr<T>(variableName));
 		}
 
-		// Produce the function
+		// Register output variables
 		if (not data.insert<T>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 			return nullptr;
 		}
+
 		return new antok::functions::Sum<T>(inputAddrsSummands, inputAddrsSubtrahends, *data.getAddr<T>(quantityName));
 	}
 
 
-	std::vector<std::pair<std::string, std::string> >*
+	std::vector<std::pair<std::string, std::string>>*
 	__getSummandNames(const YAML::Node&  function,
 	                  const std::string& quantityName,
 	                  const int          index,
@@ -1041,8 +1082,8 @@ namespace {
 
 		antok::Data& data     = antok::ObjectManager::instance()->getData();
 		std::string  typeName = "notInitialized";
-		std::vector<std::pair<std::string, std::string> >* summandNames
-		  = new std::vector<std::pair<std::string, std::string> >();
+		std::vector<std::pair<std::string, std::string>>* summandNames
+		  = new std::vector<std::pair<std::string, std::string>>();
 		const bool hasNodeKeyIndices = hasNodeKey(function[type.c_str()], "Indices");
 		const bool hasNodeKeyName    = hasNodeKey(function[type.c_str()], "Name");
 		if (hasNodeKeyIndices or hasNodeKeyName) {
@@ -1058,8 +1099,8 @@ namespace {
 			}
 			std::vector<int> inner_indices;
 			try {
-				inner_indices = function[type.c_str()]["Indices"].as<std::vector<int> >();
-			} catch (const YAML::TypedBadConversion<std::vector<int> >& e) {
+				inner_indices = function[type.c_str()]["Indices"].as<std::vector<int>>();
+			} catch (const YAML::TypedBadConversion<std::vector<int>>& e) {
 				std::cerr << "Could not convert YAML sequence to std::vector<int> when parsing 'Indices' for sum function "
 				          << "(for variable '" << quantityName << "')." << std::endl;
 				return nullptr;
@@ -1121,21 +1162,20 @@ antok::generators::generateSum(const YAML::Node&               function,
                                const std::vector<std::string>& quantityNames,
                                const int                       index)
 {
-	const YAML::Node& functionName = function["Name"];
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << functionName << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
-	// Define types of arguments
+	// Get input variables
+	const YAML::Node&  functionName = function["Name"];
 	const std::string& quantityName = quantityNames[0];
-	std::vector<std::pair<std::string, std::string> >* summandNamesPtr    = __getSummandNames(function, quantityName, index, "Summands");
-	std::vector<std::pair<std::string, std::string> >* subtrahendNamesPtr = __getSummandNames(function, quantityName, index, "Subtrahends");
+	std::vector<std::pair<std::string, std::string>>* summandNamesPtr    = __getSummandNames(function, quantityName, index, "Summands");
+	std::vector<std::pair<std::string, std::string>>* subtrahendNamesPtr = __getSummandNames(function, quantityName, index, "Subtrahends");
 	if ((summandNamesPtr == nullptr) and (subtrahendNamesPtr == nullptr)) {
 		std::cerr << "Could not generate summands for function '" << functionName << "' when trying to register calculation of '" << quantityName << "'." << std::endl;
 		return nullptr;
 	}
-	std::vector<std::pair<std::string, std::string> > summandNames;
+	std::vector<std::pair<std::string, std::string>> summandNames;
 	if (summandNamesPtr != nullptr) {
 		summandNames = (*summandNamesPtr);
 	}
@@ -1143,7 +1183,7 @@ antok::generators::generateSum(const YAML::Node&               function,
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
-	std::vector<std::pair<std::string, std::string> > subtrahendNames;
+	std::vector<std::pair<std::string, std::string>> subtrahendNames;
 	if (subtrahendNamesPtr != nullptr) {
 		subtrahendNames = (*subtrahendNamesPtr);
 	}
@@ -1185,22 +1225,21 @@ antok::generators::generateSum2(const YAML::Node&               function,
                                 const std::vector<std::string>& quantityNames,
                                 const int                       index)
 {
-	const YAML::Node& functionName = function["Name"];
-	if (quantityNames.size() > 1) {
-		std::cerr << "Too many names for function '" << functionName << "'." << std::endl;
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
 	// Define arguments
+	const YAML::Node&  functionName = function["Name"];
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
-	std::vector<std::pair<std::string, std::string> >* summandNamesPtr = __getSummandNames(function, quantityName, index, "Summands");
+	std::vector<std::pair<std::string, std::string>>* summandNamesPtr = __getSummandNames(function, quantityName, index, "Summands");
 	if (summandNamesPtr == nullptr) {
 		std::cerr << "Could not generate summands for function '" << functionName << "' "
 		          << "when trying to register calculation of '" << quantityName << "'." << std::endl;
 		return nullptr;
 	}
-	std::vector<std::pair<std::string, std::string> >& summandNames = (*summandNamesPtr);
+	std::vector<std::pair<std::string, std::string>>& summandNames = (*summandNamesPtr);
 	if (not antok::generators::functionArgumentHandler(summandNames, function, index, true)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -1213,11 +1252,12 @@ antok::generators::generateSum2(const YAML::Node&               function,
 			doubleInputAddrs.push_back(data.getAddr<double>(variableName));
 		}
 
-	// And produce the function
+	// Register output variables
 	if (not data.insert<double>(quantityName)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return nullptr;
 	}
 	delete summandNamesPtr;
+
 	return new antok::functions::Sum2(doubleInputAddrs, *data.getAddr<double>(quantityName));
 }

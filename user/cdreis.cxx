@@ -8,51 +8,11 @@
 #include "generators_functions.h"
 #include "yaml_utils.hpp"
 
+using antok::generators::nmbArgsIsExactly;
+using antok::generators::functionArgumentHandler;
+using antok::generators::functionArgumentHandlerConst;
+using antok::generators::getFunctionArgumentHandlerErrorMsg;
 using antok::YAMLUtils::hasNodeKey;
-
-
-namespace {
-
-	bool
-	checkNmbArgsIsExactly(const YAML::Node& function,
-	                      const size_t&     actualNmb,
-	                      const size_t&     requiredNmb)
-	{
-		if (actualNmb == requiredNmb) {
-			return true;
-		}
-		std::cerr << "Need " << requiredNmb << " name(s) instead of " << actualNmb << " name(s) "
-		          << "for function '" << function["Name"] << "'." << std::endl;
-		return false;
-	}
-
-
-	template <typename T>
-	bool
-	functionArgumentHandlerConst(std::map< std::string, T >& args,
-	                             const YAML::Node&           function)
-	{
-		const YAML::Node& functionName = function["Name"];
-		for (auto& arg : args) {
-			const std::string& argName = arg.first;
-			T&                 argVal  = arg.second;
-			argVal = T();
-			if (not hasNodeKey(function, argName)) {
-				std::cerr << "Argument '" << argName << "' not found (required for function '" << functionName << "')." << std::endl;
-				return false;
-			}
-			const YAML::Node& argNode = function[argName];
-			try {
-				argVal = argNode.as<T>();
-			} catch (const YAML::TypedBadConversion<T>&) {
-				std::cerr << "Argument '" << argName << "' has wrong type (required for function '" << functionName << "')." << std::endl;
-				return false;
-			}
-		}
-		return true;
-	}
-
-}
 
 
 antok::Function*
@@ -93,7 +53,7 @@ antok::user::cdreis::generateGetRecoilLorentzVec(const YAML::Node&              
                                                  const std::vector<std::string>& quantityNames,
                                                  const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 1)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
@@ -101,15 +61,15 @@ antok::user::cdreis::generateGetRecoilLorentzVec(const YAML::Node&              
 	std::vector<std::pair<std::string, std::string>> args
 		= {{"BeamLorentzVec", "TLorentzVector"},
 		   {"XLorentzVec"   , "TLorentzVector"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
 	// Get constant arguments
 	std::map<std::string, double> constArgs = {{"RecoilMass", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -134,7 +94,7 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
                                                   const std::vector<std::string>& quantityNames,
                                                   const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 2)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 2)) {
 		return nullptr;
 	}
 
@@ -148,15 +108,15 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
 		   {"xPV",        "double"},
 		   {"yPV",        "double"},
 		   {"zPV",        "double"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
 	// Get constant arguments
 	std::map<std::string, double> constArgs = {{"RangeECAL1", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -192,7 +152,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
                                                     const std::vector<std::string>& quantityNames,
                                                     const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 6)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 6)) {
 		return nullptr;
 	}
 
@@ -203,8 +163,8 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		   {"VectorZ", "std::vector<double>"},
 		   {"VectorE", "std::vector<double>"},
 		   {"VectorT", "std::vector<double>"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -216,7 +176,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		   {"ThresholdEnergyECAL2", 0},
 		   {"ThresholdTimingECAL2", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -257,14 +217,14 @@ antok::user::cdreis::generateGetVectorLorentzVectorAttributes(const YAML::Node& 
                                                               const std::vector<std::string>& quantityNames,
                                                               const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 7)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 7)) {
 		return nullptr;
 	}
 
 	// Get input variables
 	std::vector<std::pair<std::string, std::string>> args = {{"VectorLV", "std::vector<TLorentzVector>"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -293,7 +253,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
                                         const std::vector<std::string>& quantityNames,
                                         const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 5)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 5)) {
 		return nullptr;
 	}
 
@@ -301,8 +261,8 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 	std::vector<std::pair<std::string, std::string>> args
 		= {{"VectorLV" , "std::vector<TLorentzVector>"},
 		   {"ECALIndex", "std::vector<int>"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -313,7 +273,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 		   {"ECAL1Resolution", 0},
 		   {"ECAL2Resolution", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -364,7 +324,7 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
                                       const std::vector<std::string>& quantityNames,
                                       const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 4)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 4)) {
 		return nullptr;
 	}
 
@@ -378,8 +338,8 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 		   {"Charge0"   , "int"},
 		   {"Charge1"   , "int"},
 		   {"Charge2"   , "int"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -388,7 +348,7 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 		= {{"Mass",            0},
 		   {"ResolutionOmega", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -436,7 +396,7 @@ antok::user::cdreis::generateGetECALCorrectedEnergy(const YAML::Node&           
                                                     const std::vector<std::string>& quantityNames,
                                                     const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 1)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
@@ -445,20 +405,20 @@ antok::user::cdreis::generateGetECALCorrectedEnergy(const YAML::Node&           
 		= {{"Energy"   , "std::vector<double>"},
 		   {"ClusterZ" , "std::vector<double>"},
 		   {"RunNumber", "int"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
 	// Get constant arguments
 	std::map<std::string, double> constArgsDouble = {{"RangeECAL1", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgsDouble, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 	std::map<std::string, std::string> constArgsString = {{"Calibration", ""}};
 	if (not functionArgumentHandlerConst<std::string>(constArgsString, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 	// Read energy corrections from file
@@ -507,7 +467,7 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
                                                     const std::vector<std::string>& quantityNames,
                                                     const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 1)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
@@ -516,20 +476,20 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 		= {{"Timing"  , "std::vector<double>"},
 		   {"Energy"  , "std::vector<double>"},
 		   {"ClusterZ", "std::vector<double>"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
 	// Get constant arguments
 	std::map<std::string, double> constArgsDouble = {{"RangeECAL1", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgsDouble, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 	std::map<std::string, std::string> constArgsString = {{"Calibration", ""}};
 	if (not functionArgumentHandlerConst<std::string>(constArgsString, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 	// Read time-correction coefficients from file
@@ -578,7 +538,7 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
                                                     const std::vector<std::string>& quantityNames,
                                                     const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 2)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 2)) {
 		return nullptr;
 	}
 
@@ -586,8 +546,8 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 	std::vector<std::pair<std::string, std::string>> args
 		= {{"Photons"  , "std::vector<TLorentzVector>"},
 		   {"ECALIndex", "std::vector<int>"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -598,7 +558,7 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 		   {"ECAL2Resolution", 0},
 		   {"Mass",            0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -631,7 +591,7 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
                                                      const std::vector<std::string>& quantityNames,
                                                      const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 10)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 10)) {
 		return nullptr;
 	}
 
@@ -643,22 +603,22 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 		   {"ClusterEnergies",       "std::vector<double>"},
 		   {"ClusterEnergiesError",  "std::vector<double>"},
 		   {"ClusterIndices",        "std::vector<int>"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
 	// Get constant arguments
 	std::map<std::string, int> constArgsInt = {{"ErrorEstimateType", 0}};
 	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 	std::map<std::string, double> constArgsDouble
 		= {{"PrecisionGoal", 0},
 		   {"Mass",          0}};
 	if (not functionArgumentHandlerConst<double>(constArgsDouble, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -719,7 +679,7 @@ antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&      
                                                          const std::vector<std::string>& quantityNames,
                                                          const int                       index)
 {
-	if (not checkNmbArgsIsExactly(function, quantityNames.size(), 1)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
 
@@ -733,15 +693,15 @@ antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&      
 		   {"Charge0"   , "int"},
 		   {"Charge1"   , "int"},
 		   {"Charge2"   , "int"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
 	// Get constant arguments
 	std::map<std::string, int> constArgs = {{"UseSquared", 0}};
 	if (not functionArgumentHandlerConst<int>(constArgs, function)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
