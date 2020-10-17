@@ -980,6 +980,177 @@ namespace antok {
 
 				};
 
+                class GetVector3VectorAttributes : public Function
+				{
+
+				public:
+
+					GetVector3VectorAttributes(const std::vector<TVector3>& Vector3s,                              // TVector3 vectors
+					                                 std::vector<double>&               ResultXComponents,  // x components of TVector3 vectors
+					                                 std::vector<double>&               ResultYComponents,  // y components of TVector3 vectors
+					                                 std::vector<double>&               ResultZComponents)  // z components of TVector3 vectors
+						: _Vector3s             (Vector3s),
+						  _ResultXComponents(ResultXComponents),
+						  _ResultYComponents(ResultYComponents),
+						  _ResultZComponents(ResultZComponents)
+					{ }
+
+					virtual ~GetVector3VectorAttributes() { }
+
+					bool operator() ()
+					{
+						const size_t nmbPhotons = _Vector3s.size();
+						_ResultXComponents.resize(nmbPhotons);
+						_ResultYComponents.resize(nmbPhotons);
+						_ResultZComponents.resize(nmbPhotons);
+						for (size_t i = 0; i < nmbPhotons; ++i) {
+							_ResultXComponents[i] = _Vector3s[i].X();
+							_ResultYComponents[i] = _Vector3s[i].Y();
+							_ResultZComponents[i] = _Vector3s[i].Z();
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<TVector3>& _Vector3s;
+					std::vector<double>&               _ResultXComponents;
+					std::vector<double>&               _ResultYComponents;
+					std::vector<double>&               _ResultZComponents;
+
+				};
+
+				class getECALVariables : public Function
+								{
+
+								public:
+
+									getECALVariables(      const std::vector<double>&         clusterIndex,            // Cluster Index of Detected photon
+									                       const std::vector<TLorentzVector>& photonVec,               // lorentzvector of photon
+									                       const std::vector<TVector3>&       clusterPos,              // position of cluster
+									                       const std::vector<TVector3>&       clusterPosError,         // error in position of cluster
+									                       const std::vector<double>&         clusterE,                // energy of cluster
+									                       const std::vector<double>&         clusterEError,           // error in energy of cluster
+									                       const std::vector<double>&         clusterTime,             // time of ECAL cluster
+									                       const std::vector<TVector3>&       clusterCleanedPos,       // cleaned position of cluster
+									                       const std::vector<double>&         clusterCleanedE,         // cleaned E of cluster
+									                       const std::vector<double>&         clusterCleanedT,         // cleaned T of cluster
+														   const int&                         ECALIndex,               // Selected ECAL
+														   std::vector<TLorentzVector>&       resultPhotonVec,         // lorentzvector of photon
+														   std::vector<TVector3>&             resultClusterPos,        // position of cluster
+														   std::vector<TVector3>&             resultClusterPosError,   // error in position of cluster
+														   std::vector<double>&               resultClusterE,          // energy of cluster
+														   std::vector<double>&               resultClusterEError,     // error in energy of cluster
+														   std::vector<double>&               resultClusterTime,       // time of ECAL cluster
+														   std::vector<TVector3>&             resultClusterCleanedPos, // cleaned Pos of cluster
+														   std::vector<double>&               resultClusterCleanedE,   // cleaned E of cluster
+														   std::vector<double>&               resultClusterCleanedT)   // cleaned T of cluster
+										: _clusterIndex          (clusterIndex),
+										 _photonVec              (photonVec),
+										 _clusterPos             (clusterPos),
+										 _clusterPosError        (clusterPosError),
+										 _clusterE               (clusterE),
+										 _clusterEError          (clusterEError),
+										 _clusterTime            (clusterTime),
+										 _clusterCleanedPos      (clusterCleanedPos),
+										 _clusterCleanedE        (clusterCleanedE),
+										 _clusterCleanedT        (clusterCleanedT),
+										 _ECALIndex              (ECALIndex),
+										 _resultPhotonVec        (resultPhotonVec),
+										 _resultClusterPos       (resultClusterPos),
+										 _resultClusterPosError  (resultClusterPosError),
+										 _resultClusterE         (resultClusterE),
+										 _resultClusterEError    (resultClusterEError),
+										 _resultClusterTime      (resultClusterTime),
+										 _resultClusterCleanedPos(resultClusterCleanedPos),
+										 _resultClusterCleanedE  (resultClusterCleanedE),
+										 _resultClusterCleanedT  (resultClusterCleanedT)
+									{ }
+
+									virtual ~getECALVariables() { }
+
+									bool
+									operator() ()
+									{
+										const size_t nmbClusters = _clusterIndex.size();
+										if (   (_photonVec.size()               != nmbClusters)
+											or (_clusterPos.size()              != nmbClusters)
+											or (_clusterPosError.size()         != nmbClusters)
+											or (_clusterE.size()                != nmbClusters)
+											or (_clusterEError.size()           != nmbClusters)
+											or (_clusterTime.size()             != nmbClusters)
+											or (_clusterCleanedPos.size()       != nmbClusters)
+											or (_clusterCleanedE.size()         != nmbClusters)
+											or (_clusterCleanedT.size()         != nmbClusters))
+										{
+											return false;
+										}
+
+										size_t nmbResultClusters = 0;
+
+										for (size_t i = 0; i < nmbClusters; ++i) {
+											if (_clusterIndex[i] == _ECALIndex) ++nmbResultClusters;
+										}
+
+										_resultPhotonVec.clear();
+										_resultPhotonVec.reserve(nmbResultClusters);
+										_resultClusterPos.clear();
+										_resultClusterPos.reserve(nmbResultClusters);
+										_resultClusterPosError.clear();
+										_resultClusterPosError.reserve(nmbResultClusters);
+										_resultClusterE.clear();
+										_resultClusterE.reserve(nmbResultClusters);
+										_resultClusterEError.clear();
+										_resultClusterEError.reserve(nmbResultClusters);
+										_resultClusterTime.clear();
+										_resultClusterTime.reserve(nmbResultClusters);
+										_resultClusterCleanedPos.clear();
+										_resultClusterCleanedPos.reserve(nmbResultClusters);
+										_resultClusterCleanedE.clear();
+										_resultClusterCleanedE.reserve(nmbResultClusters);
+										_resultClusterCleanedT.clear();
+										_resultClusterCleanedT.reserve(nmbResultClusters);
+
+										for (size_t i = 0; i < nmbClusters; ++i) {
+											if (_clusterIndex[i] == _ECALIndex) {
+												_resultPhotonVec.push_back(_photonVec[i]);
+												_resultClusterPos.push_back(_clusterPos[i]);
+												_resultClusterPosError.push_back(_clusterPosError[i]);
+												_resultClusterE.push_back(_clusterE[i]);
+												_resultClusterEError.push_back(_clusterEError[i]);
+												_resultClusterTime.push_back(_clusterTime[i]);
+												_resultClusterCleanedPos.push_back(_clusterCleanedPos[i]);
+												_resultClusterCleanedE.push_back(_clusterCleanedE[i]);
+												_resultClusterCleanedT.push_back(_clusterCleanedT[i]);
+											}
+										}
+										return true;
+									}
+
+								private:
+
+									const std::vector<double>&         _clusterIndex;
+								    const std::vector<TLorentzVector>& _photonVec;
+								    const std::vector<TVector3>&       _clusterPos;
+								    const std::vector<TVector3>&       _clusterPosError;
+								    const std::vector<double>&         _clusterE;
+								    const std::vector<double>&         _clusterEError;
+								    const std::vector<double>&         _clusterTime;
+								    const std::vector<TVector3>&       _clusterCleanedPos;
+								    const std::vector<double>&         _clusterCleanedE;
+								    const std::vector<double>&         _clusterCleanedT;
+								    const int&                         _ECALIndex;
+								    std::vector<TLorentzVector>&       _resultPhotonVec;
+								    std::vector<TVector3>&             _resultClusterPos;
+								    std::vector<TVector3>&             _resultClusterPosError;
+								    std::vector<double>&               _resultClusterE;
+								    std::vector<double>&               _resultClusterEError;
+								    std::vector<double>&               _resultClusterTime;
+								    std::vector<TVector3>&             _resultClusterCleanedPos;
+								    std::vector<double>&               _resultClusterCleanedE;
+								    std::vector<double>&               _resultClusterCleanedT;
+
+								};
 
 			}  // functions namespace
 

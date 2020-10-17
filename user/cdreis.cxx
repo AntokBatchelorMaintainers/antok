@@ -43,6 +43,10 @@ antok::user::cdreis::getUserFunction(const YAML::Node&         function,
 		return antok::user::cdreis::generateGetKinematicFittingMass         (function, quantityNames, index);
 	} else if (functionName == "getThreePionCombinationMass") {
 		return antok::user::cdreis::generateGetThreePionCombinationMass     (function, quantityNames, index);
+	} else if (functionName == "getVector3VectorAttributes") {
+		return antok::user::cdreis::generateGetVector3VectorAttributes      (function, quantityNames, index);
+	} else if (functionName == "getECALVariables") {
+		return antok::user::cdreis::generateGetECALVariables                (function, quantityNames, index);
 	}
 	return nullptr;
 }
@@ -723,4 +727,132 @@ antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&      
 	                                                                       *data.getAddr<int>           (args[7].first),       // Charge_2
 	                                                                       constArgs["UseSquared"],                            // UseMassSquared,
 	                                                                       *data.getAddr<std::vector<double>>(quantityName));  // Result
+}
+
+antok::Function*
+antok::user::cdreis::generateGetVector3VectorAttributes(const YAML::Node&               function,
+                                                              const std::vector<std::string>& quantityNames,
+                                                              const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 3)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args = {{"Vector3s", "std::vector<TVector3>"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Register output variables
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	for (size_t i = 0; i < quantityNames.size(); ++i) {
+		if (not data.insert<std::vector<double>>(quantityNames[i])) {
+			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			return nullptr;
+		}
+	}
+
+	return new antok::user::cdreis::functions::GetVector3VectorAttributes(*data.getAddr<std::vector<TVector3>>(args[0].first),        // TVector3s
+                                                                          *data.getAddr<std::vector<double>>(quantityNames[0]),       // ResultXComponents
+                                                                          *data.getAddr<std::vector<double>>(quantityNames[1]),       // ResultYComponents
+                                                                          *data.getAddr<std::vector<double>>(quantityNames[2]));      // ResultZComponents
+}
+
+antok::Function*
+antok::user::cdreis::generateGetECALVariables(const YAML::Node&               function,
+                                              const std::vector<std::string>& quantityNames,
+                                              const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 9)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	std::vector<std::pair<std::string, std::string> > args
+		= {{"ECAL_clusterIndex"      , "std::vector<double>"},
+		   {"PhotonVecsECAL_Vec"            , "std::vector<TLorentzVector>"},
+		   {"ECAL_clusterPos"        , "std::vector<TVector3>"},
+		   {"ECAL_clusterPosError"   , "std::vector<TVector3>"},
+		   {"ECAL_clusterEnergy"     , "std::vector<double>"},
+		   {"ECAL_clusterEnergyError", "std::vector<double>"},
+		   {"ECAL_clusterT"     		, "std::vector<double>"},
+		   {"ECAL_clusterCleanedPos"	, "std::vector<TVector3>"},
+		   {"ECAL_clusterCleanedE"	, "std::vector<double>"},
+		   {"ECAL_clusterCleanedT"	, "std::vector<double>"}};
+	if (not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Get constant arguments
+
+	std::map<std::string, int> constArgsInt = {{"ECALIndex", 0}};
+		if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
+			std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+			return nullptr;
+		}
+
+	// Register output variables
+	antok::Data&       data         = antok::ObjectManager::instance()->getData();
+
+	if (not data.insert<std::vector<TLorentzVector>>(quantityNames[0])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[0]);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<TVector3>>(quantityNames[1])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[1]);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<TVector3>>(quantityNames[2])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[2]);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<double>>(quantityNames[3])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[3]);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<double>>(quantityNames[4])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[4]);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<double>>(quantityNames[5])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[5]);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<TVector3>>(quantityNames[6])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[6]);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<double>>(quantityNames[7])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[7]);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<double>>(quantityNames[8])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[8]);
+		return nullptr;
+	}
+
+
+	return new antok::user::cdreis::functions::getECALVariables( *data.getAddr<std::vector<double>>(args[0].first),            // ClusterIndex
+																 *data.getAddr<std::vector<TLorentzVector>>(args[1].first),    // PhotonVec
+															 	 *data.getAddr<std::vector<TVector3>>(args[2].first),          // ClusterPos
+																 *data.getAddr<std::vector<TVector3>>(args[3].first),          // ClusterPosError
+																 *data.getAddr<std::vector<double>>(args[4].first),            // ClusterE
+																 *data.getAddr<std::vector<double>>(args[5].first),            // ClusterEError
+																 *data.getAddr<std::vector<double>>(args[6].first),            // ClusterT
+																 *data.getAddr<std::vector<TVector3>>(args[7].first),          // ClusterCleanedPos
+																 *data.getAddr<std::vector<double>>(args[8].first),            // ClusterCleanedE
+																 *data.getAddr<std::vector<double>>(args[9].first),            // ClusterCleanedT
+																 constArgsInt["ECALIndex"],                                    // SelectedECALIndex
+																 *data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // ResultPhotonVec
+																 *data.getAddr<std::vector<TVector3>>(quantityNames[1]),       // ResultClusterPos
+																 *data.getAddr<std::vector<TVector3>>(quantityNames[2]),       // ResultClusterPosError
+																 *data.getAddr<std::vector<double>>(quantityNames[3]),         // ResultClusterE
+																 *data.getAddr<std::vector<double>>(quantityNames[4]),         // ResultClusterEError
+																 *data.getAddr<std::vector<double>>(quantityNames[5]),         // ResultClusterT
+																 *data.getAddr<std::vector<TVector3>>(quantityNames[6]),       // ResultClusterCleanedPos
+																 *data.getAddr<std::vector<double>>(quantityNames[7]),         // ResultClusterCleanedE
+																 *data.getAddr<std::vector<double>>(quantityNames[8]));        // ResultClusterCleanedT
 }
