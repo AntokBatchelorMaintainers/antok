@@ -148,17 +148,15 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
                                                     const std::vector<std::string>& quantityNames,
                                                     const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 6)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 4)) {
 		return nullptr;
 	}
 
 	// Get input variables
 	std::vector<std::pair<std::string, std::string>> args
-		= {{"VectorX", "std::vector<double>"},
-		   {"VectorY", "std::vector<double>"},
-		   {"VectorZ", "std::vector<double>"},
-		   {"VectorE", "std::vector<double>"},
-		   {"VectorT", "std::vector<double>"}};
+		= {{"VectorPos", "std::vector<TVector3>"},
+		   {"VectorE",   "std::vector<double>"},
+		   {"VectorT",   "std::vector<double>"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -178,33 +176,33 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	for (size_t i = 0; i < quantityNames.size() - 1; ++i) {
+	if (not data.insert<std::vector<TVector3>>(quantityNames[0])) {
+        std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[0]);
+        return nullptr;
+    }
+	for (size_t i = 1; i < quantityNames.size() - 1; ++i) {
 		if (not data.insert<std::vector<double>>(quantityNames[i])) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
 			return nullptr;
 		}
 	}
-	if (not data.insert<std::vector<int>>(quantityNames[5])) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[5]);
+	if (not data.insert<std::vector<int>>(quantityNames[3])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[3]);
 		return nullptr;
 	}
 
-	return new antok::user::cdreis::functions::GetCleanedEcalClusters(*data.getAddr<std::vector<double>>(args[0].first),      // xPositions
-	                                                                  *data.getAddr<std::vector<double>>(args[1].first),      // yPositions
-	                                                                  *data.getAddr<std::vector<double>>(args[2].first),      // zPositions
-	                                                                  *data.getAddr<std::vector<double>>(args[3].first),      // Energies
-	                                                                  *data.getAddr<std::vector<double>>(args[4].first),      // Times
+	return new antok::user::cdreis::functions::GetCleanedEcalClusters(*data.getAddr<std::vector<TVector3>>(args[0].first),      // xPositions
+	                                                                  *data.getAddr<std::vector<double>>(args[1].first),      // Energies
+	                                                                  *data.getAddr<std::vector<double>>(args[2].first),      // Times
 	                                                                  constArgs["RangeECAL1"],                                // zECAL1
 	                                                                  constArgs["ThresholdEnergyECAL1"],                      // ThresholdEnergyECAL1
 	                                                                  constArgs["ThresholdTimingECAL1"],                      // WindowTimingECAL1
 	                                                                  constArgs["ThresholdEnergyECAL2"],                      // ThresholdEnergyECAL2
 	                                                                  constArgs["ThresholdTimingECAL2"],                      // WindowTimingECAL2
-	                                                                  *data.getAddr<std::vector<double>>(quantityNames[0]),   // ResultXPositions
-	                                                                  *data.getAddr<std::vector<double>>(quantityNames[1]),   // ResultYPositions
-	                                                                  *data.getAddr<std::vector<double>>(quantityNames[2]),   // ResultZPositions
-	                                                                  *data.getAddr<std::vector<double>>(quantityNames[3]),   // ResultEnergies
-	                                                                  *data.getAddr<std::vector<double>>(quantityNames[4]),   // ResultTimes
-	                                                                  *data.getAddr<std::vector<int>>   (quantityNames[5]));  // ResultECALIndices
+	                                                                  *data.getAddr<std::vector<TVector3>>(quantityNames[0]), // ResultPositions
+	                                                                  *data.getAddr<std::vector<double>>(quantityNames[1]),   // ResultEnergies
+	                                                                  *data.getAddr<std::vector<double>>(quantityNames[2]),   // ResultTimes
+	                                                                  *data.getAddr<std::vector<int>>   (quantityNames[3]));  // ResultECALIndices
 }
 
 
