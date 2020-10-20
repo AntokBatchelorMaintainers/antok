@@ -58,25 +58,17 @@ namespace antok {
 
 				public:
 
-					GetPhotonLorentzVecs(const std::vector<double>&   xPositions,         // x positions of ECAL photon clusters
-					                     const std::vector<double>&   yPositions,         // y positions of ECAL photon clusters
-					                     const std::vector<double>&   zPositions,         // z positions of ECAL photon clusters
+					GetPhotonLorentzVecs(const std::vector<TVector3>&   positions,        // positions of ECAL photon clusters
 					                     const std::vector<double>&   Energies,           // energies of ECAL photon clusters
 					                     const std::vector<double>&   Times,              // times of ECAL photon clusters
-					                     const double&                xPV,                // x positions of primary vertex
-					                     const double&                yPV,                // y positions of primary vertex
-					                     const double&                zPV,                // z positions of primary vertex
+					                     const TVector3&              PV,                 // x positions of primary vertex
 					                     const double&                zECAL1,             // z position that distinguishes between ECAL 1 and 2
 					                     std::vector<TLorentzVector>& ResultLVs,          // photon Lorentz vectors
 					                     std::vector<int>&            ResultECALIndices)  // indices of the ECAL that measured the photons
-						: _xPositions       (xPositions),
-						  _yPositions       (yPositions),
-						  _zPositions       (zPositions),
+						: _positions        (positions),
 						  _Energies         (Energies),
 						  _Times            (Times),
-						  _xPV              (xPV),
-						  _yPV              (yPV),
-						  _zPV              (zPV),
+						  _PV               (PV),
 						  _zECAL1           (zECAL1),
 						  _ResultLVs        (ResultLVs),
 						  _ResultECALIndices(ResultECALIndices)
@@ -87,10 +79,8 @@ namespace antok {
 					bool
 					operator() ()
 					{
-						const size_t nmbPhotons = _xPositions.size();
-						if (   (_yPositions.size() != nmbPhotons)
-						    or (_zPositions.size() != nmbPhotons)
-						    or (_Energies.size()   != nmbPhotons)
+						const size_t nmbPhotons = _positions.size();
+						if (   (_Energies.size()   != nmbPhotons)
 						    or (_Times.size()      != nmbPhotons)) {
 							return false;
 						}
@@ -98,10 +88,10 @@ namespace antok {
 						_ResultLVs.resize(nmbPhotons);
 						_ResultECALIndices.resize(nmbPhotons);
 						for (size_t i = 0; i < nmbPhotons; ++i) {
-							TVector3 mom(_xPositions[i] - _xPV, _yPositions[i] - _yPV, _zPositions[i] - _zPV);
+							TVector3 mom = _positions[i] - _PV;
 							mom.SetMag(_Energies[i]);
 							_ResultLVs[i] = TLorentzVector(mom, _Energies[i]);
-							if (_zPositions[i] < _zECAL1) {
+							if (_positions[i].Z() < _zECAL1) {
 								_ResultECALIndices[i] = 1;
 							} else {
 								_ResultECALIndices[i] = 2;
@@ -112,14 +102,10 @@ namespace antok {
 
 				private:
 
-					const std::vector<double>&   _xPositions;
-					const std::vector<double>&   _yPositions;
-					const std::vector<double>&   _zPositions;
+					const std::vector<TVector3>& _positions;
 					const std::vector<double>&   _Energies;
 					const std::vector<double>&   _Times;
-					const double&                _xPV;
-					const double&                _yPV;
-					const double&                _zPV;
+					const TVector3&              _PV;
 					const double                 _zECAL1;  // constant parameter, needs to be copied
 					std::vector<TLorentzVector>& _ResultLVs;
 					std::vector<int>&            _ResultECALIndices;
@@ -1032,39 +1018,27 @@ namespace antok {
 									                       const std::vector<double>&         clusterE,                // energy of cluster
 									                       const std::vector<double>&         clusterEError,           // error in energy of cluster
 									                       const std::vector<double>&         clusterTime,             // time of ECAL cluster
-									                       const std::vector<TVector3>&       clusterCleanedPos,       // cleaned position of cluster
-									                       const std::vector<double>&         clusterCleanedE,         // cleaned E of cluster
-									                       const std::vector<double>&         clusterCleanedT,         // cleaned T of cluster
 														   const int&                         ECALIndex,               // Selected ECAL
 														   std::vector<TLorentzVector>&       resultPhotonVec,         // lorentzvector of photon
 														   std::vector<TVector3>&             resultClusterPos,        // position of cluster
 														   std::vector<TVector3>&             resultClusterPosError,   // error in position of cluster
 														   std::vector<double>&               resultClusterE,          // energy of cluster
 														   std::vector<double>&               resultClusterEError,     // error in energy of cluster
-														   std::vector<double>&               resultClusterTime,       // time of ECAL cluster
-														   std::vector<TVector3>&             resultClusterCleanedPos, // cleaned Pos of cluster
-														   std::vector<double>&               resultClusterCleanedE,   // cleaned E of cluster
-														   std::vector<double>&               resultClusterCleanedT)   // cleaned T of cluster
-										: _clusterIndex          (clusterIndex),
+														   std::vector<double>&               resultClusterTime )       // time of ECAL cluster
+                                       : _clusterIndex           (clusterIndex),
 										 _photonVec              (photonVec),
 										 _clusterPos             (clusterPos),
 										 _clusterPosError        (clusterPosError),
 										 _clusterE               (clusterE),
 										 _clusterEError          (clusterEError),
 										 _clusterTime            (clusterTime),
-										 _clusterCleanedPos      (clusterCleanedPos),
-										 _clusterCleanedE        (clusterCleanedE),
-										 _clusterCleanedT        (clusterCleanedT),
 										 _ECALIndex              (ECALIndex),
 										 _resultPhotonVec        (resultPhotonVec),
 										 _resultClusterPos       (resultClusterPos),
 										 _resultClusterPosError  (resultClusterPosError),
 										 _resultClusterE         (resultClusterE),
 										 _resultClusterEError    (resultClusterEError),
-										 _resultClusterTime      (resultClusterTime),
-										 _resultClusterCleanedPos(resultClusterCleanedPos),
-										 _resultClusterCleanedE  (resultClusterCleanedE),
-										 _resultClusterCleanedT  (resultClusterCleanedT)
+										 _resultClusterTime      (resultClusterTime)
 									{ }
 
 									virtual ~getECALVariables() { }
@@ -1073,7 +1047,7 @@ namespace antok {
 									operator() ()
 									{
 										const size_t nmbClusters = _clusterIndex.size();
-										if (   (_photonVec.size()               != nmbClusters)
+										/*if (   (_photonVec.size()               != nmbClusters)
 											or (_clusterPos.size()              != nmbClusters)
 											or (_clusterPosError.size()         != nmbClusters)
 											or (_clusterE.size()                != nmbClusters)
@@ -1083,8 +1057,9 @@ namespace antok {
 											or (_clusterCleanedE.size()         != nmbClusters)
 											or (_clusterCleanedT.size()         != nmbClusters))
 										{
+											std::cerr << "wrong sizes of input vectors!";
 											return false;
-										}
+										}*/
 
 										size_t nmbResultClusters = 0;
 
@@ -1092,24 +1067,18 @@ namespace antok {
 											if (_clusterIndex[i] == _ECALIndex) ++nmbResultClusters;
 										}
 
-										_resultPhotonVec.clear();
 										_resultPhotonVec.reserve(nmbResultClusters);
-										_resultClusterPos.clear();
+										_resultPhotonVec.clear();
 										_resultClusterPos.reserve(nmbResultClusters);
-										_resultClusterPosError.clear();
+										_resultClusterPos.clear();
 										_resultClusterPosError.reserve(nmbResultClusters);
-										_resultClusterE.clear();
+										_resultClusterPosError.clear();
 										_resultClusterE.reserve(nmbResultClusters);
-										_resultClusterEError.clear();
+										_resultClusterE.clear();
 										_resultClusterEError.reserve(nmbResultClusters);
-										_resultClusterTime.clear();
+										_resultClusterEError.clear();
 										_resultClusterTime.reserve(nmbResultClusters);
-										_resultClusterCleanedPos.clear();
-										_resultClusterCleanedPos.reserve(nmbResultClusters);
-										_resultClusterCleanedE.clear();
-										_resultClusterCleanedE.reserve(nmbResultClusters);
-										_resultClusterCleanedT.clear();
-										_resultClusterCleanedT.reserve(nmbResultClusters);
+										_resultClusterTime.clear();
 
 										for (size_t i = 0; i < nmbClusters; ++i) {
 											if (_clusterIndex[i] == _ECALIndex) {
@@ -1119,9 +1088,6 @@ namespace antok {
 												_resultClusterE.push_back(_clusterE[i]);
 												_resultClusterEError.push_back(_clusterEError[i]);
 												_resultClusterTime.push_back(_clusterTime[i]);
-												_resultClusterCleanedPos.push_back(_clusterCleanedPos[i]);
-												_resultClusterCleanedE.push_back(_clusterCleanedE[i]);
-												_resultClusterCleanedT.push_back(_clusterCleanedT[i]);
 											}
 										}
 										return true;
@@ -1136,19 +1102,13 @@ namespace antok {
 								    const std::vector<double>&         _clusterE;
 								    const std::vector<double>&         _clusterEError;
 								    const std::vector<double>&         _clusterTime;
-								    const std::vector<TVector3>&       _clusterCleanedPos;
-								    const std::vector<double>&         _clusterCleanedE;
-								    const std::vector<double>&         _clusterCleanedT;
-								    const int&                         _ECALIndex;
+								    const int                          _ECALIndex; //const paramerter, needs to be copied
 								    std::vector<TLorentzVector>&       _resultPhotonVec;
 								    std::vector<TVector3>&             _resultClusterPos;
 								    std::vector<TVector3>&             _resultClusterPosError;
 								    std::vector<double>&               _resultClusterE;
 								    std::vector<double>&               _resultClusterEError;
 								    std::vector<double>&               _resultClusterTime;
-								    std::vector<TVector3>&             _resultClusterCleanedPos;
-								    std::vector<double>&               _resultClusterCleanedE;
-								    std::vector<double>&               _resultClusterCleanedT;
 
 								};
 

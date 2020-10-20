@@ -104,14 +104,10 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
 
 	// Get input variables
 	std::vector<std::pair<std::string, std::string>> args
-		= {{"VectorX",    "std::vector<double>"},
-		   {"VectorY",    "std::vector<double>"},
-		   {"VectorZ",    "std::vector<double>"},
+		= {{"VectorPos",  "std::vector<TVector3>"},
 		   {"VectorE",    "std::vector<double>"},
 		   {"VectorTime", "std::vector<double>"},
-		   {"xPV",        "double"},
-		   {"yPV",        "double"},
-		   {"zPV",        "double"}};
+		   {"PV",         "TVector3"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -137,14 +133,10 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
 		return nullptr;
 	}
 
-	return new antok::user::cdreis::functions::GetPhotonLorentzVecs(*data.getAddr<std::vector<double>>(args[0].first),  // xPositions
-	                                                                *data.getAddr<std::vector<double>>(args[1].first),  // yPositions
-	                                                                *data.getAddr<std::vector<double>>(args[2].first),  // zPositions
-	                                                                *data.getAddr<std::vector<double>>(args[3].first),  // Energies
-	                                                                *data.getAddr<std::vector<double>>(args[4].first),  // Times
-	                                                                *data.getAddr<double>             (args[5].first),  // xPV
-	                                                                *data.getAddr<double>             (args[6].first),  // yPV
-	                                                                *data.getAddr<double>             (args[7].first),  // zPV
+	return new antok::user::cdreis::functions::GetPhotonLorentzVecs(*data.getAddr<std::vector<TVector3>>(args[0].first),  // Positions
+	                                                                *data.getAddr<std::vector<double>>(args[1].first),  // Energies
+	                                                                *data.getAddr<std::vector<double>>(args[2].first),  // Times
+	                                                                *data.getAddr<TVector3>             (args[3].first),  // PV
 	                                                                constArgs["RangeECAL1"],                            // zECAL1
 	                                                                *data.getAddr<std::vector<TLorentzVector>>(ResultLVs),
 	                                                                *data.getAddr<std::vector<int>>           (ResultECALIndices));
@@ -765,7 +757,7 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
                                               const std::vector<std::string>& quantityNames,
                                               const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 9)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 6)) {
 		return nullptr;
 	}
 
@@ -777,10 +769,7 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 		   {"ECAL_clusterPosError"   , "std::vector<TVector3>"},
 		   {"ECAL_clusterEnergy"     , "std::vector<double>"},
 		   {"ECAL_clusterEnergyError", "std::vector<double>"},
-		   {"ECAL_clusterT"     		, "std::vector<double>"},
-		   {"ECAL_clusterCleanedPos"	, "std::vector<TVector3>"},
-		   {"ECAL_clusterCleanedE"	, "std::vector<double>"},
-		   {"ECAL_clusterCleanedT"	, "std::vector<double>"}};
+		   {"ECAL_clusterT"     		, "std::vector<double>"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -821,18 +810,6 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[5]);
 		return nullptr;
 	}
-	if (not data.insert<std::vector<TVector3>>(quantityNames[6])) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[6]);
-		return nullptr;
-	}
-	if (not data.insert<std::vector<double>>(quantityNames[7])) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[7]);
-		return nullptr;
-	}
-	if (not data.insert<std::vector<double>>(quantityNames[8])) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[8]);
-		return nullptr;
-	}
 
 
 	return new antok::user::cdreis::functions::getECALVariables( *data.getAddr<std::vector<double>>(args[0].first),            // ClusterIndex
@@ -842,17 +819,11 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 																 *data.getAddr<std::vector<double>>(args[4].first),            // ClusterE
 																 *data.getAddr<std::vector<double>>(args[5].first),            // ClusterEError
 																 *data.getAddr<std::vector<double>>(args[6].first),            // ClusterT
-																 *data.getAddr<std::vector<TVector3>>(args[7].first),          // ClusterCleanedPos
-																 *data.getAddr<std::vector<double>>(args[8].first),            // ClusterCleanedE
-																 *data.getAddr<std::vector<double>>(args[9].first),            // ClusterCleanedT
 																 constArgsInt["ECALIndex"],                                    // SelectedECALIndex
 																 *data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // ResultPhotonVec
 																 *data.getAddr<std::vector<TVector3>>(quantityNames[1]),       // ResultClusterPos
 																 *data.getAddr<std::vector<TVector3>>(quantityNames[2]),       // ResultClusterPosError
 																 *data.getAddr<std::vector<double>>(quantityNames[3]),         // ResultClusterE
 																 *data.getAddr<std::vector<double>>(quantityNames[4]),         // ResultClusterEError
-																 *data.getAddr<std::vector<double>>(quantityNames[5]),         // ResultClusterT
-																 *data.getAddr<std::vector<TVector3>>(quantityNames[6]),       // ResultClusterCleanedPos
-																 *data.getAddr<std::vector<double>>(quantityNames[7]),         // ResultClusterCleanedE
-																 *data.getAddr<std::vector<double>>(quantityNames[8]));        // ResultClusterCleanedT
+																 *data.getAddr<std::vector<double>>(quantityNames[5]));        // ResultClusterT
 }
