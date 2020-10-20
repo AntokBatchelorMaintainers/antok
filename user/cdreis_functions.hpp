@@ -801,15 +801,15 @@ namespace antok {
 						                              _EnergyErrorType);
 						const bool success0 = neutralFit0.doFit();
 						if (success0) {
-							_ResultLorentzVectors.push_back(neutralFit0.getLVSum());
-							_ResultPullsX0.push_back       (neutralFit0.getPulls()[0]);
-							_ResultPullsY0.push_back       (neutralFit0.getPulls()[1]);
-							_ResultPullsE0.push_back       (neutralFit0.getPulls()[2]);
-							_ResultPullsX1.push_back       (neutralFit0.getPulls()[3]);
-							_ResultPullsY1.push_back       (neutralFit0.getPulls()[4]);
-							_ResultPullsE1.push_back       (neutralFit0.getPulls()[5]);
-							_ResultChi2s.push_back         (neutralFit0.getChi2());
-							_ResultCLs.push_back           (neutralFit0.getCL());
+							_ResultLorentzVectors.push_back(neutralFit0.getImprovedLVSum());
+							_ResultPullsX0.push_back       (neutralFit0.pullValues()[0]);
+							_ResultPullsY0.push_back       (neutralFit0.pullValues()[1]);
+							_ResultPullsE0.push_back       (neutralFit0.pullValues()[2]);
+							_ResultPullsX1.push_back       (neutralFit0.pullValues()[3]);
+							_ResultPullsY1.push_back       (neutralFit0.pullValues()[4]);
+							_ResultPullsE1.push_back       (neutralFit0.pullValues()[5]);
+							_ResultChi2s.push_back         (neutralFit0.chi2Value());
+							_ResultCLs.push_back           (neutralFit0.pValue());
 						}
 
 						antok::NeutralFit neutralFit1(_VertexPosition,
@@ -826,15 +826,15 @@ namespace antok {
 						                              _EnergyErrorType);
 						const bool success1 = neutralFit1.doFit();
 						if (success1) {
-							_ResultLorentzVectors.push_back(neutralFit1.getLVSum());
-							_ResultPullsX0.push_back       (neutralFit1.getPulls()[0]);
-							_ResultPullsY0.push_back       (neutralFit1.getPulls()[1]);
-							_ResultPullsE0.push_back       (neutralFit1.getPulls()[2]);
-							_ResultPullsX1.push_back       (neutralFit1.getPulls()[3]);
-							_ResultPullsY1.push_back       (neutralFit1.getPulls()[4]);
-							_ResultPullsE1.push_back       (neutralFit1.getPulls()[5]);
-							_ResultChi2s.push_back         (neutralFit1.getChi2());
-							_ResultCLs.push_back           (neutralFit1.getCL());
+							_ResultLorentzVectors.push_back(neutralFit1.getImprovedLVSum());
+							_ResultPullsX0.push_back       (neutralFit1.pullValues()[0]);
+							_ResultPullsY0.push_back       (neutralFit1.pullValues()[1]);
+							_ResultPullsE0.push_back       (neutralFit1.pullValues()[2]);
+							_ResultPullsX1.push_back       (neutralFit1.pullValues()[3]);
+							_ResultPullsY1.push_back       (neutralFit1.pullValues()[4]);
+							_ResultPullsE1.push_back       (neutralFit1.pullValues()[5]);
+							_ResultChi2s.push_back         (neutralFit1.chi2Value());
+							_ResultCLs.push_back           (neutralFit1.pValue());
 						}
 
 						if (success0 and success1) {
