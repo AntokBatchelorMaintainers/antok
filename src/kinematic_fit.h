@@ -83,6 +83,8 @@ namespace antok {
 
 		//! Return number of steps performed so far
 		size_t nmbSteps() const { return _nmbSteps; }
+		//! Return maximum allowed number of iterations
+		size_t maxNmbSteps() const { return _maxNmbSteps; }
 		//! Set maximum allowed number of iterations
 		void setMaxNmbSteps(const size_t maxNmbSteps) { _maxNmbSteps = maxNmbSteps; }
 		//! Return current values of the fit parameters

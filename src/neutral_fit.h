@@ -58,7 +58,7 @@ namespace antok {
 		//! Perform the fit
 		bool doFit();
 
-		//! Return whether the measured mass of the two-photon system is within _massWindowSize * _mass
+		//! Return whether the measured mass of the two-photon system is within +- _massWindowSize * _mass around _mass
 		bool   massIsInWindow() const;
 		//! Return chi^2 value of fit
 		double chi2Value()      const { return _kinFitter->chi2Value(); }

@@ -703,13 +703,13 @@ namespace antok {
 
 					GetKinematicFittingMass(const TVector3&              VertexPosition,
 					                        const std::vector<TVector3>& ClusterPositions,
-					                        const std::vector<TVector3>& ClusterPositionErrors,
+					                        const std::vector<TVector3>& ClusterPositionVariances,
 					                        const std::vector<double>&   ClusterEnergies,
-					                        const std::vector<double>&   ClusterEnergyErrors,
+					                        const std::vector<double>&   ClusterEnergyVariances,
 					                        const std::vector<int>&      ClusterIndices,
 					                        const double&                Mass,
-					                        const double&                Window,
-					                        const int&                   EnergyErrorType,
+					                        const double&                massWindowSize,
+					                        const int&                   whichEnergyVariance,
 					                        std::vector<TLorentzVector>& ResultLorentzVectors,
 					                        std::vector<double>&         ResultChi2s,
 					                        std::vector<double>&         ResultPullsX0,
@@ -718,27 +718,27 @@ namespace antok {
 					                        std::vector<double>&         ResultPullsX1,
 					                        std::vector<double>&         ResultPullsY1,
 					                        std::vector<double>&         ResultPullsE1,
-					                        std::vector<double>&         ResultCLs,
+					                        std::vector<double>&         ResultPValues,
 					                        int&                         ResultSuccess)
-						: _VertexPosition       (VertexPosition),
-						  _ClusterPositions     (ClusterPositions),
-						  _ClusterPositionErrors(ClusterPositionErrors),
-						  _ClusterEnergies      (ClusterEnergies),
-						  _ClusterEnergyErrors  (ClusterEnergyErrors),
-						  _ClusterIndices       (ClusterIndices),
-						  _Mass                 (Mass),
-						  _Window               (Window),
-						  _EnergyErrorType      (EnergyErrorType),
-						  _ResultLorentzVectors (ResultLorentzVectors),
-						  _ResultChi2s          (ResultChi2s),
-						  _ResultPullsX0        (ResultPullsX0),
-						  _ResultPullsY0        (ResultPullsY0),
-						  _ResultPullsE0        (ResultPullsE0),
-						  _ResultPullsX1        (ResultPullsX1),
-						  _ResultPullsY1        (ResultPullsY1),
-						  _ResultPullsE1        (ResultPullsE1),
-						  _ResultCLs            (ResultCLs),
-						  _ResultSuccess        (ResultSuccess)
+						: _VertexPosition          (VertexPosition),
+						  _ClusterPositions        (ClusterPositions),
+						  _ClusterPositionVariances(ClusterPositionVariances),
+						  _ClusterEnergies         (ClusterEnergies),
+						  _ClusterEnergyVariances  (ClusterEnergyVariances),
+						  _ClusterIndices          (ClusterIndices),
+						  _Mass                    (Mass),
+						  _massWindowSize          (massWindowSize),
+						  _whichEnergyVariance     (whichEnergyVariance),
+						  _ResultLorentzVectors    (ResultLorentzVectors),
+						  _ResultChi2s             (ResultChi2s),
+						  _ResultPullsX0           (ResultPullsX0),
+						  _ResultPullsY0           (ResultPullsY0),
+						  _ResultPullsE0           (ResultPullsE0),
+						  _ResultPullsX1           (ResultPullsX1),
+						  _ResultPullsY1           (ResultPullsY1),
+						  _ResultPullsE1           (ResultPullsE1),
+						  _ResultPValues           (ResultPValues),
+						  _ResultSuccess           (ResultSuccess)
 					{ }
 
 					virtual ~GetKinematicFittingMass() { }
@@ -746,9 +746,9 @@ namespace antok {
 					bool
 					operator() ()
 					{
-						if (   (_ClusterIndices.size()        != 4)
-						    or (_ClusterPositions.size()      != _ClusterEnergies.size())
-						    or (_ClusterPositionErrors.size() != _ClusterEnergyErrors.size())) {
+						if (   (_ClusterIndices.size()           != 4)
+						    or (_ClusterPositions.size()         != _ClusterEnergies.size())
+						    or (_ClusterPositionVariances.size() != _ClusterEnergyVariances.size())) {
 							return false;
 						}
 
@@ -768,8 +768,8 @@ namespace antok {
 						_ResultPullsY1.clear();
 						_ResultPullsE1.reserve(2);
 						_ResultPullsE1.clear();
-						_ResultCLs.reserve(2);
-						_ResultCLs.clear();
+						_ResultPValues.reserve(2);
+						_ResultPValues.clear();
 						_ResultSuccess = 0;
 
 						if (   (_ClusterIndices[0] == -1)
@@ -780,25 +780,25 @@ namespace antok {
 						}
 						const double maxPosError = 1e3;
 						for (size_t i = 0; i < 4; ++i) {
-							if (   (_ClusterPositionErrors[_ClusterIndices[i]].X() > maxPosError)
-							    or (_ClusterPositionErrors[_ClusterIndices[i]].Y() > maxPosError)
-							    or (_ClusterPositionErrors[_ClusterIndices[i]].Z() > maxPosError)) {
+							if (   (_ClusterPositionVariances[_ClusterIndices[i]].X() > maxPosError)
+							    or (_ClusterPositionVariances[_ClusterIndices[i]].Y() > maxPosError)
+							    or (_ClusterPositionVariances[_ClusterIndices[i]].Z() > maxPosError)) {
 								return true;
 							}
 						}
 
 						antok::NeutralFit neutralFit0(_VertexPosition,
-						                              _ClusterPositions     [_ClusterIndices[0]],
-						                              _ClusterPositions     [_ClusterIndices[1]],
-						                              _ClusterPositionErrors[_ClusterIndices[0]],
-						                              _ClusterPositionErrors[_ClusterIndices[1]],
-						                              _ClusterEnergies      [_ClusterIndices[0]],
-						                              _ClusterEnergies      [_ClusterIndices[1]],
-						                              _ClusterEnergyErrors  [_ClusterIndices[0]],
-						                              _ClusterEnergyErrors  [_ClusterIndices[1]],
+						                              _ClusterPositions        [_ClusterIndices[0]],
+						                              _ClusterPositions        [_ClusterIndices[1]],
+						                              _ClusterPositionVariances[_ClusterIndices[0]],
+						                              _ClusterPositionVariances[_ClusterIndices[1]],
+						                              _ClusterEnergies         [_ClusterIndices[0]],
+						                              _ClusterEnergies         [_ClusterIndices[1]],
+						                              _ClusterEnergyVariances  [_ClusterIndices[0]],
+						                              _ClusterEnergyVariances  [_ClusterIndices[1]],
 						                              _Mass,
-						                              _Window,
-						                              _EnergyErrorType);
+						                              _massWindowSize,
+						                              _whichEnergyVariance);
 						const bool success0 = neutralFit0.doFit();
 						if (success0) {
 							_ResultLorentzVectors.push_back(neutralFit0.getImprovedLVSum());
@@ -809,21 +809,21 @@ namespace antok {
 							_ResultPullsY1.push_back       (neutralFit0.pullValues()[4]);
 							_ResultPullsE1.push_back       (neutralFit0.pullValues()[5]);
 							_ResultChi2s.push_back         (neutralFit0.chi2Value());
-							_ResultCLs.push_back           (neutralFit0.pValue());
+							_ResultPValues.push_back       (neutralFit0.pValue());
 						}
 
 						antok::NeutralFit neutralFit1(_VertexPosition,
-						                              _ClusterPositions     [_ClusterIndices[2]],
-						                              _ClusterPositions     [_ClusterIndices[3]],
-						                              _ClusterPositionErrors[_ClusterIndices[2]],
-						                              _ClusterPositionErrors[_ClusterIndices[3]],
-						                              _ClusterEnergies      [_ClusterIndices[2]],
-						                              _ClusterEnergies      [_ClusterIndices[3]],
-						                              _ClusterEnergyErrors  [_ClusterIndices[2]],
-						                              _ClusterEnergyErrors  [_ClusterIndices[3]],
+						                              _ClusterPositions        [_ClusterIndices[2]],
+						                              _ClusterPositions        [_ClusterIndices[3]],
+						                              _ClusterPositionVariances[_ClusterIndices[2]],
+						                              _ClusterPositionVariances[_ClusterIndices[3]],
+						                              _ClusterEnergies         [_ClusterIndices[2]],
+						                              _ClusterEnergies         [_ClusterIndices[3]],
+						                              _ClusterEnergyVariances  [_ClusterIndices[2]],
+						                              _ClusterEnergyVariances  [_ClusterIndices[3]],
 						                              _Mass,
-						                              _Window,
-						                              _EnergyErrorType);
+						                              _massWindowSize,
+						                              _whichEnergyVariance);
 						const bool success1 = neutralFit1.doFit();
 						if (success1) {
 							_ResultLorentzVectors.push_back(neutralFit1.getImprovedLVSum());
@@ -834,7 +834,7 @@ namespace antok {
 							_ResultPullsY1.push_back       (neutralFit1.pullValues()[4]);
 							_ResultPullsE1.push_back       (neutralFit1.pullValues()[5]);
 							_ResultChi2s.push_back         (neutralFit1.chi2Value());
-							_ResultCLs.push_back           (neutralFit1.pValue());
+							_ResultPValues.push_back       (neutralFit1.pValue());
 						}
 
 						if (success0 and success1) {
@@ -847,13 +847,13 @@ namespace antok {
 
 					const TVector3&              _VertexPosition;
 					const std::vector<TVector3>& _ClusterPositions;
-					const std::vector<TVector3>& _ClusterPositionErrors;
+					const std::vector<TVector3>& _ClusterPositionVariances;
 					const std::vector<double>&   _ClusterEnergies;
-					const std::vector<double>&   _ClusterEnergyErrors;
+					const std::vector<double>&   _ClusterEnergyVariances;
 					const std::vector<int>&      _ClusterIndices;
-					const double                 _Mass;             // constant parameter, needs to be copied
-					const double                 _Window;           // constant parameter, needs to be copied
-					const int                    _EnergyErrorType;  // constant parameter, needs to be copied
+					const double                 _Mass;                 // constant parameter, needs to be copied
+					const double                 _massWindowSize;       // constant parameter, needs to be copied
+					const int                    _whichEnergyVariance;  // constant parameter, needs to be copied
 					std::vector<TLorentzVector>& _ResultLorentzVectors;
 					std::vector<double>&         _ResultChi2s;
 					std::vector<double>&         _ResultPullsX0;
@@ -862,7 +862,7 @@ namespace antok {
 					std::vector<double>&         _ResultPullsX1;
 					std::vector<double>&         _ResultPullsY1;
 					std::vector<double>&         _ResultPullsE1;
-					std::vector<double>&         _ResultCLs;
+					std::vector<double>&         _ResultPValues;
 					int&                         _ResultSuccess;
 
 				};

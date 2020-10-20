@@ -619,7 +619,7 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	// Register output variables
 	const std::string& ResultLorentzVectors = quantityNames[0];
 	const std::string& ResultChi2s          = quantityNames[1];
-	const std::string& ResultCLs            = quantityNames[2];
+	const std::string& ResultPValues        = quantityNames[2];
 	const std::string& ResultSuccess        = quantityNames[3];
 	antok::Data&       data                 = antok::ObjectManager::instance()->getData();
 	if (not data.insert<std::vector<TLorentzVector>>(ResultLorentzVectors)) {
@@ -636,8 +636,8 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 			return nullptr;
 		}
 	}
-	if (not data.insert<std::vector<double>>(ResultCLs)) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(ResultCLs);
+	if (not data.insert<std::vector<double>>(ResultPValues)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(ResultPValues);
 		return nullptr;
 	}
 	if (not data.insert<int>(ResultSuccess)) {
@@ -648,13 +648,13 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	//TODO check address mapping
 	return new antok::user::cdreis::functions::GetKinematicFittingMass(*data.getAddr<TVector3>             (args[2].first),  // VertexPosition
 	                                                                   *data.getAddr<std::vector<TVector3>>(args[0].first),  // ClusterPositions
-	                                                                   *data.getAddr<std::vector<TVector3>>(args[1].first),  // ClusterPositionErrors
+	                                                                   *data.getAddr<std::vector<TVector3>>(args[1].first),  // ClusterPositionVariances
 	                                                                   *data.getAddr<std::vector<double>>  (args[3].first),  // ClusterEnergies
-	                                                                   *data.getAddr<std::vector<double>>  (args[4].first),  // ClusterEnergieErrors
+	                                                                   *data.getAddr<std::vector<double>>  (args[4].first),  // ClusterEnergieVariances
 	                                                                   *data.getAddr<std::vector<int>>     (args[5].first),  // ClusterIndices
 	                                                                   constArgsDouble["Mass"],                              // Mass
-	                                                                   constArgsDouble["PrecisionGoal"],                     // Window,
-	                                                                   constArgsInt   ["ErrorEstimateType"],                 // EnergyErrorType,
+	                                                                   constArgsDouble["PrecisionGoal"],                     // massWindowSize,
+	                                                                   constArgsInt   ["ErrorEstimateType"],                 // whichEnergyVariance,
 	                                                                   *data.getAddr<std::vector<TLorentzVector>>(ResultLorentzVectors),
 	                                                                   *data.getAddr<std::vector<double>>        (ResultChi2s),
 	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[4]),  // _ResultPullsX0
@@ -663,7 +663,7 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[7]),  // _ResultPullsX1
 	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[8]),  // _ResultPullsY1
 	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[9]),  // _ResultPullsE1
-	                                                                   *data.getAddr<std::vector<double>>        (ResultCLs),
+	                                                                   *data.getAddr<std::vector<double>>        (ResultPValues),
 	                                                                   *data.getAddr<int>                        (ResultSuccess));
 }
 

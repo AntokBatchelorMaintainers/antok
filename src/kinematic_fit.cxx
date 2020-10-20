@@ -78,26 +78,30 @@ antok::KinematicFit::step()
 	// Get values of contraint functions for
 	//     fitPars_(i - 1) = _fitParsStart + _deltaFitPars_(i - 1)
 	// and eta_(i - 1)     = _etaStart     + _deltaEta_(i - 1)
-	// corresponds to vector c_i on p. 254 and to c in Eq. (9.10.5), respectively
+	// constrVals corresponds to vector c_i on p. 254 and to c in Eq. (9.10.5), respectively
 	const TVectorD& constrVals = (_nmbFitPars == 0) ?
 		_problem.constraintFuncs(_etaStart + _deltaEta) :
 		_problem.constraintFuncs(_fitParsStart + _deltaFitPars, _etaStart + _deltaEta);
-	// get Jacobian of contraint functions w.r.t. measured values and fit parameters
-	TMatrixD JEta, JFitPars;  // correspond to A_i, B_i on p. 254 and A, B in Eqs. (9.10.3) and (9.10.4), respectively
+	// get Jacobian of contraint functions w.r.t. fit parameters and measured values
+	TMatrixD JFitPars, JEta;  // correspond to A_i, B_i on p. 254 and A, B in Eqs. (9.10.3) and (9.10.4), respectively
 	if (_nmbFitPars == 0) {
 		_problem.jacobianConstraintFuncs(_etaStart + _deltaEta, JEta);
 	} else {
 		_problem.jacobianConstraintFuncs(_fitParsStart + _deltaFitPars, _etaStart + _deltaEta, JFitPars, JEta);
 	}
 
-	const TMatrixDSym G_B = calcGB(JEta);
-	//TODO shouldn't we use formula at top of p. 255: delta_i = -G_y^{-1} B^T G_B(c - B _deltaEta_(i - 1) + A xi_i)?
-	//     i.e. delta should be initialized with c_i - B_i _deltaEta_(i - 1)
+	//TODO shouldn't we use the formula at top of p. 255: delta_i = -G_y^{-1} B^T G_B(c - B _deltaEta_(i - 1) + A xi_i)?
+	//     i.e. shouldn't delta be initialized with c_i - B_i _deltaEta_(i - 1)
+	//     BG: if I implement this, the fits don't converge even if I
+	//         increase the number of allowed iterations to 100000 and
+	//         enlarge the convergence window to 1e-5 maybe there is a
+	//         problem with the formula in the book?
 	// calculate delta_i using Eq. (9.10.15) in the form delta_i = -G_y^{-1} B^T G_B(c + A xi_i)
 	TVectorD delta(constrVals);  // c vector in Eq. (9.10.15)
+	const TMatrixDSym G_B = calcGB(JEta);
 	if (_nmbFitPars != 0) {
-		//TODO shouldn't we use formula at bottom of p. 254: xi_i = -(A^T G_B A)^{-1} A^T G_B (c - B _deltaEta_(i - 1))?
-		//     i.e. xi should be initialized with c_i - B_i _deltaEta_(i - 1)
+		//TODO shouldn't we use the formula at bottom of p. 254: xi_i = -(A^T G_B A)^{-1} A^T G_B (c - B _deltaEta_(i - 1))?
+		//     i.e. shouldn't xi be initialized with c_i - B_i _deltaEta_(i - 1)? (see above)
 		// calculate xi_i using Eq. (9.10.14), i.e. xi_i = -(A^T G_B A)^{-1} A^T G_B c
 		const TMatrixDSym ATGBAinv    = calcATGBAinv(JFitPars, G_B);
 		const TMatrixD    ATGB        = TMatrixD(JFitPars, TMatrixD::kTransposeMult, G_B);
@@ -130,8 +134,8 @@ TMatrixDSym
 antok::KinematicFit::covFitPars()
 {
 	assert(_nmbFitPars > 0);
-	// get Jacobian of contraint functions w.r.t. measured values and fit parameters
-	TMatrixD JEta, JFitPars;  // A and B in Eqs. (9.10.3) and (9.10.4)
+	// get Jacobian of contraint functions w.r.t. fit parameters and measured values
+	TMatrixD JFitPars, JEta;  // A and B in Eqs. (9.10.3) and (9.10.4)
 	_problem.jacobianConstraintFuncs(_fitParsStart + _deltaFitPars, _etaStart + _deltaEta, JFitPars, JEta);
 
 	// calculate Eq. (9.10.19) C_xiTilde = (A^T G_B A)^{-1}
@@ -143,8 +147,8 @@ antok::KinematicFit::covFitPars()
 TMatrixDSym
 antok::KinematicFit::covImprovedMeasurements()
 {
-	// get Jacobian of contraint functions w.r.t. measured values and fit parameters
-	TMatrixD JEta, JFitPars;  // A and B in Eqs. (9.10.3) and (9.10.4)
+	// get Jacobian of contraint functions w.r.t. fit parameters and measured values
+	TMatrixD JFitPars, JEta;  // A and B in Eqs. (9.10.3) and (9.10.4)
 	if (_nmbFitPars == 0) {
 		_problem.jacobianConstraintFuncs(_etaStart + _deltaEta, JEta);
 	} else {
