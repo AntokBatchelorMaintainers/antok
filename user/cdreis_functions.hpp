@@ -969,6 +969,8 @@ namespace antok {
 						_ResultXComponents.resize(nmbPhotons);
 						_ResultYComponents.resize(nmbPhotons);
 						_ResultZComponents.resize(nmbPhotons);
+
+						// loop over TVector3 vector and split into vector for each component
 						for (size_t i = 0; i < nmbPhotons; ++i) {
 							_ResultXComponents[i] = _Vector3s[i].X();
 							_ResultYComponents[i] = _Vector3s[i].Y();
@@ -1026,23 +1028,22 @@ namespace antok {
 									bool
 									operator() ()
 									{
+										// check if all vectors have the same size
 										const size_t nmbClusters = _clusterIndex.size();
-										/*if (   (_photonVec.size()               != nmbClusters)
+										if (   (_photonVec.size()               != nmbClusters)
 											or (_clusterPos.size()              != nmbClusters)
 											or (_clusterPosError.size()         != nmbClusters)
 											or (_clusterE.size()                != nmbClusters)
 											or (_clusterEError.size()           != nmbClusters)
-											or (_clusterTime.size()             != nmbClusters)
-											or (_clusterCleanedPos.size()       != nmbClusters)
-											or (_clusterCleanedE.size()         != nmbClusters)
-											or (_clusterCleanedT.size()         != nmbClusters))
+											or (_clusterTime.size()             != nmbClusters))
 										{
 											std::cerr << "wrong sizes of input vectors!";
 											return false;
-										}*/
+										}
 
 										size_t nmbResultClusters = 0;
 
+                                        // additional loop to get number of clusters in specific ecal
 										for (size_t i = 0; i < nmbClusters; ++i) {
 											if (_clusterIndex[i] == _ECALIndex) ++nmbResultClusters;
 										}
@@ -1060,6 +1061,7 @@ namespace antok {
 										_resultClusterTime.reserve(nmbResultClusters);
 										_resultClusterTime.clear();
 
+										// loop over clusters and push attributes back it hit is in required ecal
 										for (size_t i = 0; i < nmbClusters; ++i) {
 											if (_clusterIndex[i] == _ECALIndex) {
 												_resultPhotonVec.push_back(_photonVec[i]);
