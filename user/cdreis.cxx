@@ -591,12 +591,12 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 
 	// Get input variables
 	std::vector<std::pair<std::string, std::string>> args
-		= {{"ClusterPositions",      "std::vector<TVector3>"},
-		   {"ClusterPositionsError", "std::vector<TVector3>"},
-		   {"VertexPosition",        "TVector3"},
-		   {"ClusterEnergies",       "std::vector<double>"},
-		   {"ClusterEnergiesError",  "std::vector<double>"},
-		   {"ClusterIndices",        "std::vector<int>"}};
+		= {{"ClusterPositions",         "std::vector<TVector3>"},
+		   {"ClusterPositionsVariance", "std::vector<TVector3>"},
+		   {"VertexPosition",           "TVector3"},
+		   {"ClusterEnergies",          "std::vector<double>"},
+		   {"ClusterEnergiesVariance",  "std::vector<double>"},
+		   {"ClusterIndices",           "std::vector<int>"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -761,12 +761,12 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 
 	// Get input variables
 	std::vector<std::pair<std::string, std::string> > args
-		= {{"ECAL_clusterIndex"      , "std::vector<double>"},
-		   {"PhotonVecsECAL_Vec"            , "std::vector<TLorentzVector>"},
-		   {"ECAL_clusterPos"        , "std::vector<TVector3>"},
-		   {"ECAL_clusterPosError"   , "std::vector<TVector3>"},
-		   {"ECAL_clusterEnergy"     , "std::vector<double>"},
-		   {"ECAL_clusterEnergyError", "std::vector<double>"},
+		= {{"ECAL_clusterIndex"         , "std::vector<double>"},
+		   {"PhotonVecsECAL_Vec"        , "std::vector<TLorentzVector>"},
+		   {"ECAL_clusterPos"           , "std::vector<TVector3>"},
+		   {"ECAL_clusterPosVariance"   , "std::vector<TVector3>"},
+		   {"ECAL_clusterEnergy"        , "std::vector<double>"},
+		   {"ECAL_clusterEnergyVariance", "std::vector<double>"},
 		   {"ECAL_clusterT"     		, "std::vector<double>"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -813,15 +813,15 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 	return new antok::user::cdreis::functions::getECALVariables( *data.getAddr<std::vector<double>>(args[0].first),            // ClusterIndex
 																 *data.getAddr<std::vector<TLorentzVector>>(args[1].first),    // PhotonVec
 															 	 *data.getAddr<std::vector<TVector3>>(args[2].first),          // ClusterPos
-																 *data.getAddr<std::vector<TVector3>>(args[3].first),          // ClusterPosError
-																 *data.getAddr<std::vector<double>>(args[4].first),            // ClusterE
-																 *data.getAddr<std::vector<double>>(args[5].first),            // ClusterEError
+																 *data.getAddr<std::vector<TVector3>>(args[3].first),          // ClusterPosVariance
+																 *data.getAddr<std::vector<double>>(args[4].first),            // ClusterEnergy
+																 *data.getAddr<std::vector<double>>(args[5].first),            // ClusterEnergyVariance
 																 *data.getAddr<std::vector<double>>(args[6].first),            // ClusterT
 																 constArgsInt["ECALIndex"],                                    // SelectedECALIndex
 																 *data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // ResultPhotonVec
 																 *data.getAddr<std::vector<TVector3>>(quantityNames[1]),       // ResultClusterPos
-																 *data.getAddr<std::vector<TVector3>>(quantityNames[2]),       // ResultClusterPosError
-																 *data.getAddr<std::vector<double>>(quantityNames[3]),         // ResultClusterE
-																 *data.getAddr<std::vector<double>>(quantityNames[4]),         // ResultClusterEError
+																 *data.getAddr<std::vector<TVector3>>(quantityNames[2]),       // ResultClusterPosVariance
+																 *data.getAddr<std::vector<double>>(quantityNames[3]),         // ResultClusterEnergy
+																 *data.getAddr<std::vector<double>>(quantityNames[4]),         // ResultClusterEnergyVariance
 																 *data.getAddr<std::vector<double>>(quantityNames[5]));        // ResultClusterT
 }
