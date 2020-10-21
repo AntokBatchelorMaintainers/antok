@@ -614,7 +614,7 @@ namespace antok {
 
 				};
 
-
+				// TODO currently function is not used, check if it is necessary
 				class GetPhotonPairParticles : public Function
 				{
 
@@ -999,29 +999,29 @@ namespace antok {
 
 					getECALVariables(const std::vector<double>&         clusterIndex,                 // Cluster Index of Detected photon
 									 const std::vector<TLorentzVector>& photonVec,                    // lorentzvector of photon
-									 const std::vector<TVector3>&       clusterPos,                   // position of cluster
-									 const std::vector<TVector3>&       clusterPosVariance,           // Variance in position of cluster
+									 const std::vector<TVector3>&       clusterPosition,              // position of cluster
+									 const std::vector<TVector3>&       clusterPositionVariance,      // Variance in position of cluster
 									 const std::vector<double>&         clusterEnergy,                // energy of cluster
 									 const std::vector<double>&         clusterEnergyVariance,        // Variance in energy of cluster
 									 const std::vector<double>&         clusterTime,                  // time of ECAL cluster
 									 const int&                         ECALIndex,                    // Selected ECAL
 									 std::vector<TLorentzVector>&       resultPhotonVec,              // lorentzvector of photon
-									 std::vector<TVector3>&             resultClusterPos,             // position of cluster
-									 std::vector<TVector3>&             resultClusterPosVariance,     // Variance in position of cluster
+									 std::vector<TVector3>&             resultClusterPosition,        // position of cluster
+									 std::vector<TVector3>&             resultClusterPositionVariance,// Variance in position of cluster
 									 std::vector<double>&               resultClusterEnergy,          // energy of cluster
 									 std::vector<double>&               resultClusterEnergyVariance,  // Variance in energy of cluster
 									 std::vector<double>&               resultClusterTime )           // time of ECAL cluster
 						: _clusterIndex                   (clusterIndex),
 						  _photonVec                      (photonVec),
-						  _clusterPos                     (clusterPos),
-						  _clusterPosVariance             (clusterPosVariance),
+						  _clusterPosition                (clusterPosition),
+						  _clusterPositionVariance        (clusterPositionVariance),
 						  _clusterEnergy                  (clusterEnergy),
 						  _clusterEnergyVariance          (clusterEnergyVariance),
 						  _clusterTime                    (clusterTime),
 						  _ECALIndex                      (ECALIndex),
 						  _resultPhotonVec                (resultPhotonVec),
-						  _resultClusterPos               (resultClusterPos),
-						  _resultClusterPosVariance       (resultClusterPosVariance),
+						  _resultClusterPosition          (resultClusterPosition),
+						  _resultClusterPositionVariance  (resultClusterPositionVariance),
 						  _resultClusterEnergy            (resultClusterEnergy),
 						  _resultClusterEnergyVariance    (resultClusterEnergyVariance),
 						  _resultClusterTime              (resultClusterTime)
@@ -1036,8 +1036,8 @@ namespace antok {
 						// check if all vectors have the same size
 						const size_t nmbClusters = _clusterIndex.size();
 						if (   (_photonVec.size()               != nmbClusters)
-							or (_clusterPos.size()              != nmbClusters)
-							or (_clusterPosVariance.size()      != nmbClusters)
+							or (_clusterPosition.size()         != nmbClusters)
+							or (_clusterPositionVariance.size() != nmbClusters)
 							or (_clusterEnergy.size()           != nmbClusters)
 							or (_clusterEnergyVariance.size()   != nmbClusters)
 							or (_clusterTime.size()             != nmbClusters)) {
@@ -1053,31 +1053,24 @@ namespace antok {
 							}
 						}
 
-						//TODO since the size of the vectors is known, use
-						//     vector::resize(), no vector::clear() needed; write
-						//     to vector elements directly (instead of vector::push_back())
-						_resultPhotonVec.reserve(nmbResultClusters);
-						_resultPhotonVec.clear();
-						_resultClusterPos.reserve(nmbResultClusters);
-						_resultClusterPos.clear();
-						_resultClusterPosVariance.reserve(nmbResultClusters);
-						_resultClusterPosVariance.clear();
-						_resultClusterEnergy.reserve(nmbResultClusters);
-						_resultClusterEnergy.clear();
-						_resultClusterEnergyVariance.reserve(nmbResultClusters);
-						_resultClusterEnergyVariance.clear();
-						_resultClusterTime.reserve(nmbResultClusters);
-						_resultClusterTime.clear();
+						_resultPhotonVec.resize(nmbResultClusters);
+						_resultClusterPosition.resize(nmbResultClusters);
+						_resultClusterPositionVariance.resize(nmbResultClusters);
+						_resultClusterEnergy.resize(nmbResultClusters);
+						_resultClusterEnergyVariance.resize(nmbResultClusters);
+						_resultClusterTime.resize(nmbResultClusters);
 
+						int nmbAccepted = 0;
 						// loop over clusters and push attributes back if hit is in required ECAL
 						for (size_t i = 0; i < nmbClusters; ++i) {
 							if (_clusterIndex[i] == _ECALIndex) {
-								_resultPhotonVec.push_back(_photonVec[i]);
-								_resultClusterPos.push_back(_clusterPos[i]);
-								_resultClusterPosVariance.push_back(_clusterPosVariance[i]);
-								_resultClusterEnergy.push_back(_clusterEnergy[i]);
-								_resultClusterEnergyVariance.push_back(_clusterEnergyVariance[i]);
-								_resultClusterTime.push_back(_clusterTime[i]);
+								_resultPhotonVec[nmbAccepted] = _photonVec[i];
+								_resultClusterPosition[nmbAccepted] = _clusterPosition[i];
+								_resultClusterPositionVariance[nmbAccepted] = _clusterPositionVariance[i];
+								_resultClusterEnergy[nmbAccepted] = _clusterEnergy[i];
+								_resultClusterEnergyVariance[nmbAccepted] = _clusterEnergyVariance[i];
+								_resultClusterTime[nmbAccepted] = _clusterTime[i];
+								++nmbAccepted;
 							}
 						}
 						return true;
@@ -1087,15 +1080,15 @@ namespace antok {
 
 					const std::vector<double>&         _clusterIndex;
 					const std::vector<TLorentzVector>& _photonVec;
-					const std::vector<TVector3>&       _clusterPos;
-					const std::vector<TVector3>&       _clusterPosVariance;
+					const std::vector<TVector3>&       _clusterPosition;
+					const std::vector<TVector3>&       _clusterPositionVariance;
 					const std::vector<double>&         _clusterEnergy;
 					const std::vector<double>&         _clusterEnergyVariance;
 					const std::vector<double>&         _clusterTime;
 					const int                          _ECALIndex; //const paramerter, needs to be copied
 					std::vector<TLorentzVector>&       _resultPhotonVec;
-					std::vector<TVector3>&             _resultClusterPos;
-					std::vector<TVector3>&             _resultClusterPosVariance;
+					std::vector<TVector3>&             _resultClusterPosition;
+					std::vector<TVector3>&             _resultClusterPositionVariance;
 					std::vector<double>&               _resultClusterEnergy;
 					std::vector<double>&               _resultClusterEnergyVariance;
 					std::vector<double>&               _resultClusterTime;

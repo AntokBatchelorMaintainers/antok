@@ -591,9 +591,9 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 
 	// Get input variables
 	std::vector<std::pair<std::string, std::string>> args
-		= {{"ClusterPositions",         "std::vector<TVector3>"},
+		= {{"VertexPosition",           "TVector3"},
+		   {"ClusterPositions",         "std::vector<TVector3>"},
 		   {"ClusterPositionsVariance", "std::vector<TVector3>"},
-		   {"VertexPosition",           "TVector3"},
 		   {"ClusterEnergies",          "std::vector<double>"},
 		   {"ClusterEnergiesVariance",  "std::vector<double>"},
 		   {"ClusterIndices",           "std::vector<int>"}};
@@ -645,10 +645,9 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 		return nullptr;
 	}
 
-	//TODO check address mapping
-	return new antok::user::cdreis::functions::GetKinematicFittingMass(*data.getAddr<TVector3>             (args[2].first),  // VertexPosition
-	                                                                   *data.getAddr<std::vector<TVector3>>(args[0].first),  // ClusterPositions
-	                                                                   *data.getAddr<std::vector<TVector3>>(args[1].first),  // ClusterPositionVariances
+	return new antok::user::cdreis::functions::GetKinematicFittingMass(*data.getAddr<TVector3>             (args[0].first),  // VertexPosition
+	                                                                   *data.getAddr<std::vector<TVector3>>(args[1].first),  // ClusterPositions
+	                                                                   *data.getAddr<std::vector<TVector3>>(args[2].first),  // ClusterPositionVariances
 	                                                                   *data.getAddr<std::vector<double>>  (args[3].first),  // ClusterEnergies
 	                                                                   *data.getAddr<std::vector<double>>  (args[4].first),  // ClusterEnergieVariances
 	                                                                   *data.getAddr<std::vector<int>>     (args[5].first),  // ClusterIndices
