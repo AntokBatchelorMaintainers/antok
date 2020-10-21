@@ -36,7 +36,8 @@ namespace antok {
 		    \param[in] cluster1EnergyVariance   variance of the energy of the first calorimeter cluster
 		    \param[in] cluster2EnergyVariance   variance of the energy of the second calorimeter cluster
 		    \param[in] mass                     mass the photon pair is constrained to
-		    \param[in] massWindowSize           width of mass window used in massIsInWindow() specified as fraction of constraint mass
+		    \param[in] massLowerLimit           lower mass limit used in massIsInWindow()
+		    \param[in] massUpperLimit           upper mass limit used in massIsInWindow()
 		    \param[in] whichEnergyVariance      defines how variance of cluster energy is calculated:
 		                                        0 = variance as returned by PHAST
 		                                        1 = square of cluster energy
@@ -51,14 +52,16 @@ namespace antok {
 		           const double    cluster1EnergyVariance,
 		           const double    cluster2EnergyVariance,
 		           const double    mass,
-		           const double    massWindowSize      = 0.1,
+		           const double    massLowerLimit,
+		           const double    massUpperLimit,
+		           const double    convergenceLimit = 1e-10,
 		           const int       whichEnergyVariance = 0);
 		~NeutralFit() { delete _kinFitter; }
 
 		//! Perform the fit
 		bool doFit();
 
-		//! Return whether the measured mass of the two-photon system is within +- _massWindowSize * _mass around _mass
+		//! Return whether the measured mass of the two-photon system is within the defined mass window
 		bool   massIsInWindow() const;
 		//! Return chi^2 value of fit
 		double chi2Value()      const { return _kinFitter->chi2Value(); }
@@ -115,7 +118,9 @@ namespace antok {
 		TLorentzVector _improvedLVSum;  //!< sum of the Lorentz vectors of the photon pair after fit
 
 		const double _mass;                 //!< mass the photon pair is constrained to
-		const double _massWindowSize;       //!< width of mass window used in massIsInWindow() specified as fraction of constraint mass
+		const double _massLowerLimit;       //!< lower mass limit of mass window used in massIsInWindow()
+		const double _massUpperLimit;       //!< upper mass limit of mass window used in massIsInWindow()
+		const double _convergenceLimit;     //!< limit for determining if fit converged
 		const int    _whichEnergyVariance;  //!< defines how variance of cluster energy is calculated:
 
 		TVectorD    _startValues;  //!< start values for measured variables that enter the fit

@@ -15,9 +15,10 @@
 #include "neutral_problem.h"
 
 
-antok::NeutralProblem::NeutralProblem(const double mass)
+antok::NeutralProblem::NeutralProblem(const double mass, const double convergenceLimit = 1e-10)
 	: _mass2(mass * mass),
-	  _funcValue(1)
+	  _funcValue(1),
+	  _convergenceLimit(convergenceLimit)
 { }
 
 

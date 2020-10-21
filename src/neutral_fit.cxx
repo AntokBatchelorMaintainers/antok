@@ -37,9 +37,11 @@ antok::NeutralFit::NeutralFit(const TVector3& vertexPosition,
                               const double    cluster1EnergyVariance,
                               const double    cluster2EnergyVariance,
                               const double    mass,
-                              const double    massWindowSize,
+                              const double    massLowerLimit,
+                              const double    massUpperLimit,
+                              const double    convergenceLimit,
                               const int       whichEnergyVariance)
-	: _problem                 (mass),
+	: _problem                 (mass, convergenceLimit),
 	  _kinFitter               (nullptr),
 	  _vertexPosition          (vertexPosition),
 	  _cluster1Position        (cluster1Position),
@@ -54,7 +56,9 @@ antok::NeutralFit::NeutralFit(const TVector3& vertexPosition,
 	  _improvedLV_2            (0, 0, 0, 0),
 	  _improvedLVSum           (0, 0, 0, 0),
 	  _mass                    (mass),
-	  _massWindowSize          (massWindowSize),
+	  _massLowerLimit          (massLowerLimit),
+	  _massUpperLimit          (massUpperLimit),
+	  _convergenceLimit        (convergenceLimit),
 	  _whichEnergyVariance     (whichEnergyVariance)
 {
 	if (_first) {
@@ -97,10 +101,7 @@ antok::NeutralFit::massIsInWindow() const
 	const TLorentzVector photonLV_1((_cluster1Position - _vertexPosition).Unit() * _cluster1Energy, _cluster1Energy);
 	const TLorentzVector photonLV_2((_cluster2Position - _vertexPosition).Unit() * _cluster2Energy, _cluster2Energy);
 
-	//TODO the definition of the value of massWindowSize as fraction of
-	//     the constraint mass is a bit weird; an absolute value would
-	//     make more sense
-	return fabs((photonLV_1 + photonLV_2).M() - _mass) < _massWindowSize * _mass;
+	return ( ((photonLV_1 + photonLV_2).M() > _massLowerLimit) && ((photonLV_1 + photonLV_2).M() < _massUpperLimit) );
 }
 
 

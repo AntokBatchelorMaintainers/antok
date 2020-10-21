@@ -708,7 +708,9 @@ namespace antok {
 					                        const std::vector<double>&   ClusterEnergyVariances,
 					                        const std::vector<int>&      ClusterIndices,
 					                        const double&                Mass,
-					                        const double&                massWindowSize,
+					                        const double&                massLowerLimit,
+					                        const double&                massUpperLimit,
+					                        const double&                convergenceLimit,
 					                        const int&                   whichEnergyVariance,
 					                        std::vector<TLorentzVector>& ResultLorentzVectors,
 					                        std::vector<double>&         ResultChi2s,
@@ -727,7 +729,9 @@ namespace antok {
 						  _ClusterEnergyVariances  (ClusterEnergyVariances),
 						  _ClusterIndices          (ClusterIndices),
 						  _Mass                    (Mass),
-						  _massWindowSize          (massWindowSize),
+						  _massLowerLimit          (massLowerLimit),
+						  _massUpperLimit          (massUpperLimit),
+						  _convergenceLimit        (convergenceLimit),
 						  _whichEnergyVariance     (whichEnergyVariance),
 						  _ResultLorentzVectors    (ResultLorentzVectors),
 						  _ResultChi2s             (ResultChi2s),
@@ -797,7 +801,9 @@ namespace antok {
 						                              _ClusterEnergyVariances  [_ClusterIndices[0]],
 						                              _ClusterEnergyVariances  [_ClusterIndices[1]],
 						                              _Mass,
-						                              _massWindowSize,
+						                              _massLowerLimit,
+						                              _massUpperLimit,
+						                              _convergenceLimit,
 						                              _whichEnergyVariance);
 						const bool success0 = neutralFit0.doFit();
 						if (success0) {
@@ -822,7 +828,9 @@ namespace antok {
 						                              _ClusterEnergyVariances  [_ClusterIndices[2]],
 						                              _ClusterEnergyVariances  [_ClusterIndices[3]],
 						                              _Mass,
-						                              _massWindowSize,
+						                              _massLowerLimit,
+						                              _massUpperLimit,
+						                              _convergenceLimit,
 						                              _whichEnergyVariance);
 						const bool success1 = neutralFit1.doFit();
 						if (success1) {
@@ -852,7 +860,9 @@ namespace antok {
 					const std::vector<double>&   _ClusterEnergyVariances;
 					const std::vector<int>&      _ClusterIndices;
 					const double                 _Mass;                 // constant parameter, needs to be copied
-					const double                 _massWindowSize;       // constant parameter, needs to be copied
+					const double                 _massLowerLimit;       // constant parameter, needs to be copied
+					const double                 _massUpperLimit;       // constant parameter, needs to be copied
+					const double                 _convergenceLimit;     // constant parameter, needs to be copied
 					const int                    _whichEnergyVariance;  // constant parameter, needs to be copied
 					std::vector<TLorentzVector>& _ResultLorentzVectors;
 					std::vector<double>&         _ResultChi2s;
