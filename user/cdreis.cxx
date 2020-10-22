@@ -766,13 +766,13 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 	// Get input variables
 	std::vector<std::pair<std::string, std::string> > args
 
-		= {{"ECAL_clusterIndex",          "std::vector<double>"},
-		   {"PhotonVecsECAL_Vec",         "std::vector<TLorentzVector>"},
-		   {"ECAL_clusterPos",            "std::vector<TVector3>"},
-		   {"ECAL_clusterPosVariance",    "std::vector<TVector3>"},
-		   {"ECAL_clusterEnergy",         "std::vector<double>"},
-		   {"ECAL_clusterEnergyVariance", "std::vector<double>"},
-		   {"ECAL_clusterTime",           "std::vector<double>"}};
+		= {{"ECAL_clusterIndex",               "std::vector<double>"},
+		   {"PhotonVecsECAL_Vec",              "std::vector<TLorentzVector>"},
+		   {"ECAL_clusterPosition",            "std::vector<TVector3>"},
+		   {"ECAL_clusterPositionVariance",    "std::vector<TVector3>"},
+		   {"ECAL_clusterEnergy",              "std::vector<double>"},
+		   {"ECAL_clusterEnergyVariance",      "std::vector<double>"},
+		   {"ECAL_clusterTime",                "std::vector<double>"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -800,8 +800,8 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 	}
 
 	for (size_t i=3; i < 6; ++i) {
-		if (not data.insert<std::vector<double>>(quantityNames[3])) {
-			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[3]);
+		if (not data.insert<std::vector<double>>(quantityNames[i])) {
+			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
 			return nullptr;
 		}
 	}

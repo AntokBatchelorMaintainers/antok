@@ -1045,7 +1045,7 @@ namespace antok {
 					{
 						// check if all vectors have the same size
 						const size_t nmbClusters = _clusterIndex.size();
-						if (   (_photonVec.size()               != nmbClusters)
+						/*if (   (_photonVec.size()               != nmbClusters)
 							or (_clusterPosition.size()         != nmbClusters)
 							or (_clusterPositionVariance.size() != nmbClusters)
 							or (_clusterEnergy.size()           != nmbClusters)
@@ -1053,7 +1053,7 @@ namespace antok {
 							or (_clusterTime.size()             != nmbClusters)) {
 							std::cerr << "wrong sizes of input vectors!";
 							return false;
-						}
+						}*/
 
 						// get number of clusters in given ECAL
 						size_t nmbResultClusters = 0;
