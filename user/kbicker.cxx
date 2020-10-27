@@ -11,9 +11,9 @@
 #include<rpd_helper_helper.h>
 #include<yaml_utils.hpp>
 
-antok::Function* antok::user::kbicker::getUserFunction(const YAML::Node& function,
-                                                       std::vector<std::string>& quantityNames,
-                                                       int index)
+antok::Function* antok::user::kbicker::getUserFunction(const YAML::Node&               function,
+                                                       const std::vector<std::string>& quantityNames,
+                                                       int                             index)
 {
 	std::string functionName = antok::YAMLUtils::getString(function["Name"]);
 	Function* antokFunctionPtr = 0;
@@ -27,7 +27,7 @@ antok::Function* antok::user::kbicker::getUserFunction(const YAML::Node& functio
 	return antokFunctionPtr;
 }
 
-antok::Function* antok::user::kbicker::generateGetRpdExpectedHitsParameters(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::kbicker::generateGetRpdExpectedHitsParameters(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 
 	using antok::YAMLUtils::hasNodeKey;
 
@@ -93,7 +93,7 @@ antok::Function* antok::user::kbicker::generateGetRpdExpectedHitsParameters(cons
 
 }
 
-antok::Function* antok::user::kbicker::generateGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::kbicker::generateGetRpdPhi(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(not (quantityNames.size() == 2 or quantityNames.size() == 4)) {
@@ -189,7 +189,7 @@ antok::Function* antok::user::kbicker::generateGetRpdPhi(const YAML::Node& funct
 
 };
 
-antok::Function* antok::user::kbicker::generateGetCutOnExtraTracks(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::kbicker::generateGetCutOnExtraTracks(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() != 3) {

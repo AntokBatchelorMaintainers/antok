@@ -16,7 +16,7 @@ namespace {
 }
 
 
-antok::Function* antok::user::stefan::getCalcLTProjections(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::stefan::getCalcLTProjections(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 	if(quantityNames.size() != 2) {
 		std::cerr<<"Need 2 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
@@ -54,7 +54,7 @@ antok::Function* antok::user::stefan::getCalcLTProjections(const YAML::Node& fun
 	return new antok::user::stefan::functions::CalcLTProjection(vector, direction, quantityAddrs[0], quantityAddrs[1]);
 }
 
-antok::Function* antok::user::stefan::getCalcArmenterosAlpha(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::stefan::getCalcArmenterosAlpha(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 	if(quantityNames.size() != 1) {
 		std::cerr<<"Need 1 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
@@ -87,7 +87,7 @@ antok::Function* antok::user::stefan::getCalcArmenterosAlpha(const YAML::Node& f
 	return new antok::user::stefan::functions::CalcArmenterosAlpha(longitudinal_mom_1, longitudinal_mom_2, quantityAddrs[0]);
 }
 
-antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 	if(quantityNames.size() != 6 && quantityNames.size() != 7) {
 		std::cerr<<"Need 6/7 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
@@ -251,7 +251,7 @@ antok::Function* antok::user::stefan::getCalcRICHPID(const YAML::Node& function,
 	}
 }
 
-antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 	using antok::YAMLUtils::hasNodeKey;
 
 
@@ -359,7 +359,7 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLV(const YAML::Node& f
 																	);
 }
 
-antok::Function* antok::user::stefan::getDetermineKaonPionLVLikelihood(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::stefan::getDetermineKaonPionLVLikelihood(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 	if(quantityNames.size() != 5) {
 		std::cerr<<"Need 5 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
@@ -437,7 +437,7 @@ antok::Function* antok::user::stefan::getDetermineKaonPionLVLikelihood(const YAM
 																	);
 }
 
-antok::Function* antok::user::stefan::getCalcCEDARPID(const YAML::Node& function, std::vector<std::string>& quantityNames, int index){
+antok::Function* antok::user::stefan::getCalcCEDARPID(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index){
 	using antok::YAMLUtils::hasNodeKey;
 	if(hasNodeKey(function, "ThresholdsKaonDeltaLogLikeCedar1")){
 		return antok::user::stefan::getCalcCEDARPIDMulitL(function, quantityNames, index);
@@ -446,7 +446,7 @@ antok::Function* antok::user::stefan::getCalcCEDARPID(const YAML::Node& function
 	}
 }
 
-antok::Function* antok::user::stefan::getCalcCEDARPIDMulitL(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::stefan::getCalcCEDARPIDMulitL(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 	if(quantityNames.size() != 5 and quantityNames.size() != 3 ) {
 		std::cerr<<"Need 3/5 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
@@ -534,7 +534,7 @@ antok::Function* antok::user::stefan::getCalcCEDARPIDMulitL(const YAML::Node& fu
 }
 
 
-antok::Function* antok::user::stefan::getCalcCEDARPIDOneL(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::stefan::getCalcCEDARPIDOneL(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 	if(quantityNames.size() != 4 and quantityNames.size() != 1) {
 		std::cerr<<"Need 1/4 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
@@ -609,7 +609,7 @@ antok::Function* antok::user::stefan::getCalcCEDARPIDOneL(const YAML::Node& func
 	        );
 }
 
-antok::Function* antok::user::stefan::getCalcAngles3P(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::stefan::getCalcAngles3P(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 	if(quantityNames.size() != 4) {
 		std::cerr<<"Need 4 names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return nullptr;
@@ -662,7 +662,7 @@ antok::Function* antok::user::stefan::getCalcAngles3P(const YAML::Node& function
 }
 
 
-antok::Function* antok::user::stefan::getCalcRapidityXF(const YAML::Node& function, std::vector<std::string>& quantityNames, int index) {
+antok::Function* antok::user::stefan::getCalcRapidityXF(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index) {
 	using antok::YAMLUtils::hasNodeKey;
 
 
@@ -697,7 +697,7 @@ antok::Function* antok::user::stefan::getCalcRapidityXF(const YAML::Node& functi
 }
 
 antok::Function* antok::user::stefan::getUserFunction(const YAML::Node& function,
-                                                          std::vector<std::string>& quantityNames,
+                                                          const std::vector<std::string>& quantityNames,
                                                           int index)
 {
 	std::string functionName = antok::YAMLUtils::getString(function["Name"]);

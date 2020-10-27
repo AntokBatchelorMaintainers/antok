@@ -11,8 +11,7 @@ namespace antok {
 
 		namespace cdreis {
 
-			//TODO make arguments const -> requires changing signature of ALL user functions
-			antok::Function* getUserFunction                         (const YAML::Node& function, std::vector<std::string>& quantityNames, const int index);
+			antok::Function* getUserFunction                         (const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index);
 
 			//TODO sort
 			antok::Function* generateGetRecoilLorentzVec             (const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index);

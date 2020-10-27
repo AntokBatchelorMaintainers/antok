@@ -15,12 +15,12 @@
 
 namespace {
 
-	std::vector<antok::Function* (*)(const YAML::Node&, std::vector<std::string>&, int)>
-	__getUserFunctions(const YAML::Node&         function,
-	                   std::vector<std::string>& quantityNames,
-	                   int                       index)
+	std::vector<antok::Function* (*)(const YAML::Node&, const std::vector<std::string>&, int)>
+	__getUserFunctions(const YAML::Node&               function,
+	                   const std::vector<std::string>& quantityNames,
+	                   int                             index)
 	{
-		std::vector<antok::Function* (*)(const YAML::Node&, std::vector<std::string>&, int)> userFunctions;
+		std::vector<antok::Function* (*)(const YAML::Node&, const std::vector<std::string>&, int)> userFunctions;
 		// User defined function have to be added here
 
 		userFunctions.push_back(&antok::user::kbicker::getUserFunction);
@@ -40,11 +40,11 @@ namespace antok {
 	namespace user {
 
 		antok::Function*
-		getUserFunction(const YAML::Node&         function,
-		                std::vector<std::string>& quantityNames,
-		                int                       index)
+		getUserFunction(const YAML::Node&               function,
+		                const std::vector<std::string>& quantityNames,
+		                int                             index)
 		{
-			std::vector<antok::Function* (*)(const YAML::Node&, std::vector<std::string>&, int)>
+			std::vector<antok::Function* (*)(const YAML::Node&, const std::vector<std::string>&, int)>
 				userFunctions = __getUserFunctions(function, quantityNames, index);
 			antok::Function* retval = nullptr;
 			for (size_t i = 0; i < userFunctions.size(); ++i) {

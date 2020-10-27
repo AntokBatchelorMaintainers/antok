@@ -16,9 +16,9 @@ using antok::YAMLUtils::hasNodeKey;
 
 
 antok::Function*
-antok::user::cdreis::getUserFunction(const YAML::Node&         function,
-                                     std::vector<std::string>& quantityNames,
-                                     int                       index)
+antok::user::cdreis::getUserFunction(const YAML::Node&                function,
+                                     const std::vector<std::string>&  quantityNames,
+                                     int                              index)
 {
 	const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
 	if        (functionName == "GetRecoilLorentzVec") {
