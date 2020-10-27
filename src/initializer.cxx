@@ -12,7 +12,6 @@
 #include "data.h"
 #include "functions.hpp"
 #include "generators_cuts.h"
-#include "generators_functions.h"
 #include "generators_plots.h"
 #include "initializer.h"
 #include "object_manager.h"
@@ -137,9 +136,7 @@ antok::Initializer::initializeCutter()
 		return false;
 	}
 
-	//TODO use C++11 range-based syntax, i.e. for (const YAML::Node& cutTrain: config["CutTrains"])
-	for (YAML::const_iterator cutTrain_it = config["CutTrains"].begin(); cutTrain_it != config["CutTrains"].end(); ++cutTrain_it) {
-		const YAML::Node& cutTrain = (*cutTrain_it);
+	for (const YAML::Node& cutTrain: config["CutTrains"]) {
 		if (not hasNodeKey(cutTrain, "Name")) {
 			std::cerr << "'Name' not found in one of the 'CutTrains'." << std::endl;
 			return false;
@@ -184,9 +181,7 @@ antok::Initializer::initializeCutter()
 		}
 		outFile->cd();
 
-		//TODO use C++11 range-based syntax, i.e. for (const YAML::Node& cutEntry: config["Cuts"])
-		for (YAML::const_iterator cuts_it = cutTrain["Cuts"].begin(); cuts_it != cutTrain["Cuts"].end(); ++cuts_it) {
-			const YAML::Node& cutEntry = (*cuts_it);
+		for (const YAML::Node& cutEntry : cutTrain["Cuts"]) {
 			std::string shortName = antok::YAMLUtils::getString(cutEntry["ShortName"]);
 			if (shortName == "") {
 				std::cerr << "Did not find one of the cut's 'ShortName'." << std::endl;
@@ -220,9 +215,8 @@ antok::Initializer::initializeCutter()
 
 	}  // End loop over CutTrains
 
-	//TODO use C++11 range-based loop, i.e. for (const auto& outTree_it: cutter._outTreeMap), or using structured bindings
-	for (std::map<std::string, TTree*>::const_iterator outTree_it = cutter._outTreeMap.begin(); outTree_it != cutter._outTreeMap.end(); ++outTree_it) {
-		cutter._treesToFill.push_back(std::pair<TTree*, long>(outTree_it->second, cutter.getAllCutsCutmaskForCutTrain(outTree_it->first)));
+	for (std::pair<std::string, TTree*> outTree : cutter._outTreeMap) {
+		cutter._treesToFill.push_back(std::pair<TTree*, long>(outTree.second, cutter.getAllCutsCutmaskForCutTrain(outTree.first)));
 	}
 
 	return true;
@@ -244,10 +238,6 @@ antok::Initializer::initializeData()
 	}
 	YAML::Node& config = *_config;
 
-	//TODO can this be moved below, i.e. closer to the block, where data is used?
-	objectManager->_data = new antok::Data();
-	antok::Data& data = objectManager->getData();
-
 	if (not hasNodeKey(config, "TreeBranches")) {
 		std::cerr << "TreeBranches not found in configuration file." << std::endl;
 		return false;
@@ -257,14 +247,15 @@ antok::Initializer::initializeData()
 		return false;
 	}
 
+    objectManager->_data = new antok::Data();
+	antok::Data& data = objectManager->getData();
 	// Get all the branches in the tree and fill the data maps
 	YAML::Node perEventTreeBranches    = config["TreeBranches"]["onePerEvent"];
 	YAML::Node perParticleTreeBranches = config["TreeBranches"]["onePerParticle"];
-	//TODO use C++11 range-based loops
-	for (YAML::const_iterator typeIt = perEventTreeBranches.begin(); typeIt != perEventTreeBranches.end(); ++typeIt) {
-		for (YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
-			std::string type = antok::YAMLUtils::getString(typeIt->first);
-			std::string name = antok::YAMLUtils::getString(*valIt);
+	for(const YAML::detail::iterator_value treeBranch : perEventTreeBranches) {
+		for (const YAML::Node& node : treeBranch.second) {
+			std::string type = antok::YAMLUtils::getString(treeBranch.first);
+			std::string name = antok::YAMLUtils::getString(node);
 			if (name == "") {
 				std::cerr << "Conversion to std::string failed for one of the 'TreeBranches'' 'onePerEvent' " << type << "s." << std::endl;
 				return false;
@@ -316,11 +307,10 @@ antok::Initializer::initializeData()
 			return false;
 		}
 
-		//TODO use C++11 range-based loops
-		for (YAML::const_iterator typeIt = perParticleTreeBranches.begin(); typeIt != perParticleTreeBranches.end(); ++typeIt) {
-			for (YAML::const_iterator valIt = typeIt->second.begin(); valIt != typeIt->second.end(); ++valIt) {
-				std::string type = antok::YAMLUtils::getString(typeIt->first);
-				std::string baseName = antok::YAMLUtils::getString(*valIt);
+		for(const YAML::detail::iterator_value treeBranch : perParticleTreeBranches) {
+			for (const YAML::Node& typeNode : treeBranch.second) {
+				std::string type = antok::YAMLUtils::getString(treeBranch.first);
+				std::string baseName = antok::YAMLUtils::getString(typeNode);
 				if (baseName == "") {
 					std::cerr << "Conversion to std::string failed for one of the 'TreeBranches'' 'onePerParticle' " << type << "s." << std::endl;
 					return false;
@@ -488,9 +478,8 @@ antok::Initializer::updateInput()
 	// set the addresses of all branches of all ouput trees to those of
 	// the input tree if no we have no dedicated output trees
 	if (not hasNodeKey(config, "OutputTree")) {  // no definition for the output tree given -> write full input tree
-		//TODO use C++11 range-based loop
-		for (std::map<std::string,TTree *>::iterator it = cutter._outTreeMap.begin(); it != cutter._outTreeMap.end(); ++it) {
-			objectManager->getInTree()->CopyAddresses(it->second);
+		for (std::pair<std::string,TTree *> outTree : cutter._outTreeMap) {
+			objectManager->getInTree()->CopyAddresses(outTree.second);
 		}
 	}
 
@@ -517,9 +506,7 @@ antok::Initializer::initializeEvent()
 	if (not hasNodeKey(config, "CalculatedQuantities")) {
 		std::cerr << "Warning: 'CalculatedQuantities' not found in configuration file." << std::endl;
 	}
-	//TODO use C++11 range-based loop
-	for (YAML::const_iterator calcQuantity_it = config["CalculatedQuantities"].begin(); calcQuantity_it != config["CalculatedQuantities"].end(); ++calcQuantity_it) {
-		YAML::Node calcQuantity = (*calcQuantity_it);
+	for (YAML::Node calcQuantity : config["CalculatedQuantities"]) {
 		std::vector<std::string> quantityBaseNames;
 		if (not hasNodeKey(calcQuantity, "Name")) {
 			std::cerr << "Could not convert a 'Name' of an entry in 'CalculatedQuantities'." << std::endl;
@@ -570,69 +557,20 @@ antok::Initializer::initializeEvent()
 
 		const YAML::Node&  function     = calcQuantity["Function"];
 		const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
-		//TODO use C++11 range-based loops
-		for (size_t indices_i = 0; indices_i < indices.size(); ++indices_i) {
+		for (int index : indices) {
 			std::vector<std::string> quantityNames;
-			for (unsigned int baseName_i = 0; baseName_i < quantityBaseNames.size(); ++baseName_i) {
-				if (indices[indices_i] > 0) {
+			for ( std::string baseName : quantityBaseNames) {
+				if (index > 0) {
 					std::stringstream strStr;
-					strStr << quantityBaseNames[baseName_i] << indices[indices_i];
+					strStr << baseName << index;
 					quantityNames.push_back(strStr.str());
 				} else {
-					quantityNames.push_back(quantityBaseNames[baseName_i]);
+					quantityNames.push_back(baseName);
 				}
 			}
 
-			//TODO it would help readability to move this block into a separate function
 			antok::Function* antokFunctionPtr = nullptr;
-			if        (functionName == "abs") {
-				antokFunctionPtr = antok::generators::generateAbs                       (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "log") {
-				antokFunctionPtr = antok::generators::generateLog                       (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "convertIntToDouble") {
-				antokFunctionPtr = antok::generators::generateConvertIntToDouble        (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "diff") {
-				antokFunctionPtr = antok::generators::generateDiff                      (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "quotient") {
-				antokFunctionPtr = antok::generators::generateQuotient                  (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "mul") {
-				antokFunctionPtr = antok::generators::generateMul                       (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "energy") {
-				antokFunctionPtr = antok::generators::generateEnergy                    (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "getBeamLorentzVector") {
-				antokFunctionPtr = antok::generators::generateGetBeamLorentzVector      (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "getGradXGradY") {
-				antokFunctionPtr = antok::generators::generateGetGradXGradY             (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "getLorentzVectorAttributes") {
-				antokFunctionPtr = antok::generators::generateGetLorentzVectorAttributes(function, quantityNames, indices[indices_i]);
-			} else if (functionName == "getLorentzVec") {
-				antokFunctionPtr = antok::generators::generateGetLorentzVec             (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "getTs") {
-				antokFunctionPtr = antok::generators::generateGetTs                     (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "getVector3") {
-				antokFunctionPtr = antok::generators::generateGetVector3                (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "getVectorEntry") {
-				antokFunctionPtr = antok::generators::generateGetVectorEntry            (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "mass") {
-				antokFunctionPtr = antok::generators::generateMass                      (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "mass2") {
-				antokFunctionPtr = antok::generators::generateMass2                     (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "radToDegree") {
-				antokFunctionPtr = antok::generators::generateRadToDegree               (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "sum") {
-				antokFunctionPtr = antok::generators::generateSum                       (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "sum2") {
-				antokFunctionPtr = antok::generators::generateSum2                      (function, quantityNames, indices[indices_i]);
-			} else if (functionName == "") {
-				std::cerr << "Could not convert function name to std::string for CalculatedQuantity '" << quantityNames[0] << "'." << std::endl;
-				return false;
-			} else {
-				antokFunctionPtr = antok::user::getUserFunction(function, quantityNames, indices[indices_i]);
-				if (antokFunctionPtr == nullptr) {
-					std::cerr << "Function type '" << functionName << "' did not initialize correctly or is not supported." << std::endl;
-					return false;
-				}
-			}
+			antokFunctionPtr = antok::Initializer::getFunction(function, quantityNames, index );
 			if (antokFunctionPtr == nullptr) {
 				std::cerr << "Error initializing function with name '" + functionName + "' which should calculate [";
 				for (size_t i = 0; i < (quantityNames.size() - 1); ++i) {
@@ -687,11 +625,8 @@ antok::Initializer::initializePlotter()
 		antok::Cutter& cutter = objectManager->getCutter();
 		TFile* outFile = objectManager->getOutFile();
 		std::vector<antok::plotUtils::waterfallHistogramContainer> waterfallHists;
-		//TODO use C++11 range-based loops
-		for (std::map<std::string, std::vector<antok::Cut*>>::const_iterator cutTrain_it = cutter._cutTrainsCutOrderMap.begin();
-		     cutTrain_it != cutter._cutTrainsCutOrderMap.end();
-		     ++cutTrain_it) {
-			const std::string& cutTrainName = cutTrain_it->first;
+		for (std::pair<std::string, std::vector<antok::Cut*>> cutTrain : cutter._cutTrainsCutOrderMap) {
+			const std::string& cutTrainName = cutTrain.first;
 			outFile->cd(cutTrainName.c_str());
 			TH1D* statsHist = (TH1D*)statsHistTemplate->Clone(plotOptions.statisticsHistOutName.c_str());
 			if (statsHist == nullptr) {
@@ -701,7 +636,7 @@ antok::Initializer::initializePlotter()
 				return false;
 			}
 			objectManager->registerObjectToWrite(TDirectory::CurrentDirectory(), statsHist);
-			const std::vector<antok::Cut*>& cuts = cutTrain_it->second;
+			const std::vector<antok::Cut*>& cuts = cutTrain.second;
 			std::vector<std::pair<std::string, const bool*>> cutsAndResults;
 			for (size_t i = 0; i < cuts.size(); ++i) {
 				cutsAndResults.push_back(std::pair<std::string, const bool*>(cuts[i]->getLongName(), cutter.getCutResult(cuts[i])));
@@ -715,9 +650,7 @@ antok::Initializer::initializePlotter()
 	if (not hasNodeKey(config, "Plots")) {
 		std::cerr << "Warning: 'Plots' not found in configuration file." << std::endl;
 	}
-	//TODO use C++11 range-based loops
-	for (YAML::const_iterator plots_it = config["Plots"].begin(); plots_it != config["Plots"].end(); ++plots_it) {
-		const YAML::Node& plot = *plots_it;
+	for (const YAML::Node& plot : config["Plots"]) {
 		if (not hasNodeKey(plot, "Name")) {
 			std::cerr << "'Name' not found for one of the 'Plots'." << std::endl;
 			return false;
@@ -739,8 +672,7 @@ antok::Initializer::initializePlotter()
 		antok::Plot* antokPlot = nullptr;
 		if (hasNodeKey(plot, "Variables")) {
 			if (plot["Variables"].IsSequence()) {
-				if (not (    plot["Variables"].IsSequence()  //TODO isn't this check redundant to the one before?
-				         and plot["LowerBounds"].IsSequence()
+				if (not (    plot["LowerBounds"].IsSequence()
 				         and plot["UpperBounds"].IsSequence()
 				         and plot["NBins"].IsSequence())) {
 					std::cerr << "'Variables', 'LowerBounds', 'UpperBounds' and 'NBins' all need to be sequences (in 'Plot' '" << plotName << "')." << std::endl;
@@ -833,4 +765,59 @@ createOutTree(TTree* const      inTree,
 	}
 
 	return outTree;
+}
+
+
+antok::Function* antok::Initializer::getFunction(const YAML::Node function, const std::vector<std::string> quantityNames, const int index)
+{
+    const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
+    if (functionName == "abs") {
+        return antok::generators::generateAbs                       (function, quantityNames, index);
+    } else if (functionName == "log") {
+        return antok::generators::generateLog                       (function, quantityNames, index);
+    } else if (functionName == "convertIntToDouble") {
+        return antok::generators::generateConvertIntToDouble        (function, quantityNames, index);
+    } else if (functionName == "diff") {
+        return antok::generators::generateDiff                      (function, quantityNames, index);
+    } else if (functionName == "quotient") {
+        return antok::generators::generateQuotient                  (function, quantityNames, index);
+    } else if (functionName == "mul") {
+        return antok::generators::generateMul                       (function, quantityNames, index);
+    } else if (functionName == "energy") {
+        return antok::generators::generateEnergy                    (function, quantityNames, index);
+    } else if (functionName == "getBeamLorentzVector") {
+        return antok::generators::generateGetBeamLorentzVector      (function, quantityNames, index);
+    } else if (functionName == "getGradXGradY") {
+        return antok::generators::generateGetGradXGradY             (function, quantityNames, index);
+    } else if (functionName == "getLorentzVectorAttributes") {
+        return antok::generators::generateGetLorentzVectorAttributes(function, quantityNames, index);
+    } else if (functionName == "getLorentzVec") {
+        return antok::generators::generateGetLorentzVec             (function, quantityNames, index);
+    } else if (functionName == "getTs") {
+        return antok::generators::generateGetTs                     (function, quantityNames, index);
+    } else if (functionName == "getVector3") {
+        return antok::generators::generateGetVector3                (function, quantityNames, index);
+    } else if (functionName == "getVectorEntry") {
+        return antok::generators::generateGetVectorEntry            (function, quantityNames, index);
+    } else if (functionName == "mass") {
+        return antok::generators::generateMass                      (function, quantityNames, index);
+    } else if (functionName == "mass2") {
+        return antok::generators::generateMass2                     (function, quantityNames, index);
+    } else if (functionName == "radToDegree") {
+        return antok::generators::generateRadToDegree               (function, quantityNames, index);
+    } else if (functionName == "sum") {
+        return antok::generators::generateSum                       (function, quantityNames, index);
+    } else if (functionName == "sum2") {
+        return antok::generators::generateSum2                      (function, quantityNames, index);
+    } else if (functionName == "") {
+        std::cerr << "Could not convert function name to std::string for CalculatedQuantity '" << quantityNames[0] << "'." << std::endl;
+        return nullptr;
+    } else {
+        antok::Function* usrFunctionPtr = antok::user::getUserFunction(function, quantityNames, index);
+        if (usrFunctionPtr == nullptr) {
+            std::cerr << "Function type '" << functionName << "' did not initialize correctly or is not supported." << std::endl;
+        }
+        return usrFunctionPtr;
+
+    }
 }
