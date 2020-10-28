@@ -803,22 +803,20 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
 	// Get input variables
 	const YAML::Node& functionName = function["Name"];
 	std::vector<std::pair<std::string, std::string>> args;
-	//TODO maybe it would be better to use an enum for the cases instead of 2 booleans
-	bool fromTLorentzVector = false;
-	bool fromVectors        = false;
+	enum inputTypes {err = -1, fromCoords = 0, fromVectors = 1, fromTLorentzVector = 2 };
+	inputTypes inType = err;
 	if (hasNodeKey(function, "X")) {
+		inType = fromCoords;
 		args = {{"X", "double"},
 		        {"Y", "double"},
 		        {"Z", "double"}};
 	} else if (hasNodeKey(function,"VectorX")) {
-		fromTLorentzVector = false;
-		fromVectors        = true;
+		inType = fromVectors;
 		args = {{"VectorX", "std::vector<double>"},
 		        {"VectorY", "std::vector<double>"},
 		        {"VectorZ", "std::vector<double>"}};
 	} else if (hasNodeKey(function,"LVector")) {
-		fromTLorentzVector = true;
-		fromVectors        = false;
+		inType = fromTLorentzVector;
 		args = {{"LVector", "TLorentzVector"}};
 	} else {
 		std::cerr << "Unknown properties for function '" << functionName << "'." << std::endl;
@@ -828,15 +826,22 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
-
 	// Register output variables and create functor
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
-	if (fromVectors) {
-		if (fromTLorentzVector) {
-			std::cerr << "Unclear what to do in function '" << functionName << "'." << std::endl;
-			return nullptr;
-		} else {
+
+	switch(inType) {
+		case fromCoords: {
+			if (not data.insert<TVector3>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+				return nullptr;
+			}
+			return new antok::functions::GetTVector3(*data.getAddr<double>(args[0].first),    // x
+			                                         *data.getAddr<double>(args[1].first),    // y
+			                                         *data.getAddr<double>(args[2].first),    // z
+			                                         *data.getAddr<TVector3>(quantityName));  // out
+		}
+		case fromVectors: {
 			if (not data.insert<std::vector<TVector3>>(quantityName)) {
 				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 				return nullptr;
@@ -846,22 +851,42 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
 			                                               *data.getAddr<std::vector<double>>(args[2].first),    // z
 			                                               *data.getAddr<std::vector<TVector3>>(quantityName));  // out
 		}
-	} else {
-		if (not data.insert<TVector3>(quantityName)) {
+		case fromTLorentzVector: {
+			if (not data.insert<TVector3>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+				return nullptr;
+			}
+			return new antok::functions::GetTVector3FromTLorenzVector(*data.getAddr<TLorentzVector>(args[0].first), *data.getAddr<TVector3>(quantityName));
+		}
+		default: {
+			std::cerr << "Unclear what to do in function '" << functionName << "'." << std::endl;
+			return nullptr;
+		}
+	}
+	
+	return nullptr;
+}
+
+namespace {
+	// use template to register output variables and create functor
+	template <typename T>
+	antok::Function*
+	__getVectorEntryFunction(const int&                                       index,
+	                         std::vector<std::pair<std::string, std::string>> args,
+	                         const std::vector<std::string>&                  quantityNames)
+	{
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+		const std::string& quantityName = quantityNames[0];
+		
+		if (not data.insert<T>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
 		}
-		if (fromTLorentzVector) {
-			return new antok::functions::GetTVector3FromTLorenzVector(*data.getAddr<TLorentzVector>(args[0].first), *data.getAddr<TVector3>(quantityName));
-		} else {
-			return new antok::functions::GetTVector3(*data.getAddr<double>(args[0].first),    // x
-			                                         *data.getAddr<double>(args[1].first),    // y
-			                                         *data.getAddr<double>(args[2].first),    // z
-			                                         *data.getAddr<TVector3>(quantityName));  // out
-		}
+		return new antok::functions::GetVectorEntry<T>(*data.getAddr<std::vector<T>>(args[0].first),  // vector
+		                                               index,
+		                                               *data.getAddr<T>(quantityName));               // result
 	}
 }
-
 
 antok::Function*
 antok::generators::generateGetVectorEntry(const YAML::Node&               function,
@@ -904,46 +929,19 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 		return nullptr;
 	}
 
-	// Register output variables and create functor
-	//TODO introduce template helper function to avoid repetition
-	const std::string& quantityName = quantityNames[0];
-	antok::Data&       data         = antok::ObjectManager::instance()->getData();
+	// return functor
 	switch (type) {
 		case 0: {
-			if (not data.insert<int>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
-				return nullptr;
-			}
-			return new antok::functions::GetVectorEntry<int>(*data.getAddr<std::vector<int>>(args[0].first),  // vector
-			                                                 constArgs["Entry"],
-			                                                 *data.getAddr<int>(quantityName));               // result
+		  return __getVectorEntryFunction<int>(constArgs["Entry"], args, quantityNames);
 		}
 		case 1: {
-			if (not data.insert<double>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
-				return nullptr;
-			}
-			return new antok::functions::GetVectorEntry<double>(*data.getAddr<std::vector<double>>(args[0].first),  // vector
-			                                                    constArgs["Entry"],
-			                                                    *data.getAddr<double>(quantityName));               // result
+		  return __getVectorEntryFunction<double>(constArgs["Entry"], args, quantityNames);
 		}
 		case 2: {
-			if (not data.insert<TVector3>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
-				return nullptr;
-			}
-			return new antok::functions::GetVectorEntry<TVector3>(*data.getAddr<std::vector<TVector3>>(args[0].first),  // vector
-			                                                      constArgs["Entry"],
-			                                                      *data.getAddr<TVector3>(quantityName));               // result
+		  return __getVectorEntryFunction<TVector3>(constArgs["Entry"], args, quantityNames);
 		}
 		case 3: {
-			if (not data.insert<TLorentzVector>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
-				return nullptr;
-			}
-			return new antok::functions::GetVectorEntry<TLorentzVector>(*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // vector
-			                                                            constArgs["Entry"],
-			                                                            *data.getAddr<TLorentzVector>(quantityName));               // result
+		  return __getVectorEntryFunction<TLorentzVector>(constArgs["Entry"], args, quantityNames);
 		}
 	}
 	return nullptr;
@@ -1215,7 +1213,7 @@ antok::generators::generateSum(const YAML::Node&               function,
 		return nullptr;
 	}
 	delete summandNamesPtr;
-	//TODO why isn't subtrahendNamesPtr deleted too?
+	delete subtrahendNamesPtr;
 	return antokFunction;
 }
 
