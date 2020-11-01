@@ -4,6 +4,7 @@
 #include <iostream>
 #include <typeinfo>
 #include <vector>
+#include <typeinfo>
 
 #include <boost/core/demangle.hpp>
 
@@ -397,6 +398,7 @@ namespace antok {
 			operator() ()
 			{
 				_out = _in1 / _in2;
+
 				return true;
 			}
 
@@ -405,6 +407,41 @@ namespace antok {
 			const T& _in1;
 			const T& _in2;
 			T&       _out;
+
+		};
+
+		template <>
+		class Quotient<std::vector<double>>: public Function
+		{
+
+		public:
+
+			Quotient(const std::vector<double>& in1,
+			         const std::vector<double>& in2,
+			         std::vector<double>&       out)
+				: _in1(in1),
+				  _in2(in2),
+				  _out(out)
+			{ }
+
+			virtual ~Quotient() { }
+
+			bool
+			operator() () {
+                size_t sizeVec = _in1.size();
+                if (_in2.size() != sizeVec) std::cerr << "input vectors for Quotient have different size";
+                _out.resize(sizeVec);
+                for (size_t i = 0; i < sizeVec; ++i) {
+                    _out[i] = _in1[i] / _in2[i];
+                }
+                return true;
+            }
+
+		private:
+
+			const std::vector<double>& _in1;
+			const std::vector<double>& _in2;
+			std::vector<double>&       _out;
 
 		};
 

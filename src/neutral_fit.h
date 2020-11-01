@@ -67,6 +67,8 @@ namespace antok {
 		double chi2Value()      const { return _kinFitter->chi2Value(); }
 		//! Return P-value of fit
 		double pValue()         const { return _kinFitter->pValue();    }
+		//! Return number of performed iterations of fit
+		int nmbIterations()     const { return _kinFitter->nmbSteps();  }
 
 		//! Return improved Lorentz vector of first photon
 		const TLorentzVector& getImprovedLV1()   const { return _improvedLV_1;  }

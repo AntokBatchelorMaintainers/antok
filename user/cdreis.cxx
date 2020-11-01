@@ -585,7 +585,7 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
                                                      const std::vector<std::string>& quantityNames,
                                                      const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 10)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 11)) {
 		return nullptr;
 	}
 
@@ -622,7 +622,8 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	const std::string& ResultLorentzVectors = quantityNames[0];
 	const std::string& ResultChi2s          = quantityNames[1];
 	const std::string& ResultPValues        = quantityNames[2];
-	const std::string& ResultSuccess        = quantityNames[3];
+	const std::string& ResultNmbIter        = quantityNames[3];
+	const std::string& ResultSuccess        = quantityNames[4];
 	antok::Data&       data                 = antok::ObjectManager::instance()->getData();
 	if (not data.insert<std::vector<TLorentzVector>>(ResultLorentzVectors)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(ResultLorentzVectors);
@@ -632,7 +633,7 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(ResultChi2s);
 		return nullptr;
 	}
-	for (size_t i = 4; i < 10; ++i) {
+	for (size_t i = 5; i < 11; ++i) {
 		if (not data.insert<std::vector<double>>(quantityNames[i])) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
 			return nullptr;
@@ -640,6 +641,10 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	}
 	if (not data.insert<std::vector<double>>(ResultPValues)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(ResultPValues);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<int>>(ResultNmbIter)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(ResultNmbIter);
 		return nullptr;
 	}
 	if (not data.insert<int>(ResultSuccess)) {
@@ -660,13 +665,14 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	                                                                   constArgsInt   ["ErrorEstimateType"],                 // whichEnergyVariance,
 	                                                                   *data.getAddr<std::vector<TLorentzVector>>(ResultLorentzVectors),
 	                                                                   *data.getAddr<std::vector<double>>        (ResultChi2s),
-	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[4]),  // ResultPullsX0
-	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[5]),  // ResultPullsY0
-	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[6]),  // ResultPullsE0
-	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[7]),  // ResultPullsX1
-	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[8]),  // ResultPullsY1
-	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[9]),  // ResultPullsE1
+	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[5]),  // ResultPullsX0
+	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[6]),  // ResultPullsY0
+	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[7]),  // ResultPullsE0
+	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[8]),  // ResultPullsX1
+	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[9]),  // ResultPullsY1
+	                                                                   *data.getAddr<std::vector<double>>        (quantityNames[10]),  // ResultPullsE1
 	                                                                   *data.getAddr<std::vector<double>>        (ResultPValues),
+	                                                                   *data.getAddr<std::vector<int>>           (ResultNmbIter),
 	                                                                   *data.getAddr<int>                        (ResultSuccess));
 }
 

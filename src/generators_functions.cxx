@@ -403,6 +403,8 @@ antok::generators::generateQuotient(const YAML::Node&               function,
 		return __generateQuotientHelper<double>(data, args, quantityNames, quantityName);
 	} else if (typeNameArg1 == "int") {
 		return __generateQuotientHelper<int>   (data, args, quantityNames, quantityName);
+	} else if (typeNameArg1 == "std::vector<double>") {
+		return __generateQuotientHelper<std::vector<double>>   (data, args, quantityNames, quantityName);
 	} else {
 		std::cerr << "'" << functionName << "' not implemented for type '" << typeNameArg1 << "' for "
 		          << "variables '" << args[0].first << "' and '" << args[1].first << "'." << std::endl;
@@ -863,7 +865,7 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
 			return nullptr;
 		}
 	}
-	
+
 	return nullptr;
 }
 
@@ -877,7 +879,7 @@ namespace {
 	{
 		antok::Data& data = antok::ObjectManager::instance()->getData();
 		const std::string& quantityName = quantityNames[0];
-		
+
 		if (not data.insert<T>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
