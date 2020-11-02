@@ -118,30 +118,38 @@ namespace antok {
 
 				public:
 
-					GetCleanedEcalClusters(const std::vector<TVector3>& Positions,             // positions of ECAL photon clusters
-					                       const std::vector<double>&   Energies,              // energies of ECAL photon clusters
-					                       const std::vector<double>&   Times,                 // times of ECAL photon clusters
-					                       const double&                zECAL1,                // z position that distinguishes between ECAL 1 and 2
-					                       const double&                ThresholdEnergyECAL1,  // energy threshold applied to ECAL1 clusters
-					                       const double&                WindowTimingECAL1,     // window applied on ECAL1 cluster times
-					                       const double&                ThresholdEnergyECAL2,  // energy threshold applied to ECAL2 clusters
-					                       const double&                WindowTimingECAL2,     // window applied on ECAL1 cluster times
-					                       std::vector<TVector3>&       ResultPositions,       // positions of ECAL photon clusters
-					                       std::vector<double>&         ResultEnergies,        // energies of ECAL photon clusters
-					                       std::vector<double>&         ResultTimes,           // times of ECAL photon clusters
-					                       std::vector<int>&            ResultECALIndices)     // indices of the ECAL that measured the photons
-						: _Positions           (Positions),
-						  _Energies            (Energies),
-						  _Times               (Times),
-						  _zECAL1              (zECAL1),
-						  _ThresholdEnergyECAL1(ThresholdEnergyECAL1),
-						  _WindowTimingECAL1   (WindowTimingECAL1),
-						  _ThresholdEnergyECAL2(ThresholdEnergyECAL2),
-						  _WindowTimingECAL2   (WindowTimingECAL2),
-						  _ResultPositions     (ResultPositions),
-						  _ResultEnergies      (ResultEnergies),
-						  _ResultTimes         (ResultTimes),
-						  _ResultECALIndices   (ResultECALIndices)
+					GetCleanedEcalClusters(const std::vector<TVector3>& Positions,               // positions of ECAL photon clusters
+					                       const std::vector<double>&   Energies,                // energies of ECAL photon clusters
+					                       const std::vector<double>&   Times,                   // times of ECAL photon clusters
+					                       const std::vector<TVector3>& PositionVariances,       // position variances of ECAL photon clusters
+					                       const std::vector<double>&   EnergyVariances,         // energy variances of ECAL photon clusters
+					                       const double&                zECAL1,                  // z position that distinguishes between ECAL 1 and 2
+					                       const double&                ThresholdEnergyECAL1,    // energy threshold applied to ECAL1 clusters
+					                       const double&                WindowTimingECAL1,       // window applied on ECAL1 cluster times
+					                       const double&                ThresholdEnergyECAL2,    // energy threshold applied to ECAL2 clusters
+					                       const double&                WindowTimingECAL2,       // window applied on ECAL1 cluster times
+					                       std::vector<TVector3>&       ResultPositions,         // positions of ECAL photon clusters
+					                       std::vector<double>&         ResultEnergies,          // energies of ECAL photon clusters
+					                       std::vector<double>&         ResultTimes,             // times of ECAL photon clusters
+					                       std::vector<TVector3>&       ResultPositionVariances, // position variances of ECAL photon clusters
+					                       std::vector<double>&         ResultEnergyVariances,   // energy variances of ECAL photon clusters
+					                       std::vector<int>&            ResultECALIndices)       // indices of the ECAL that measured the photons
+						: _Positions               (Positions),
+						  _Energies                (Energies),
+						  _Times                   (Times),
+						  _PositionVariances       (PositionVariances),
+						  _EnergyVariances         (EnergyVariances),
+						  _zECAL1                  (zECAL1),
+						  _ThresholdEnergyECAL1    (ThresholdEnergyECAL1),
+						  _WindowTimingECAL1       (WindowTimingECAL1),
+						  _ThresholdEnergyECAL2    (ThresholdEnergyECAL2),
+						  _WindowTimingECAL2       (WindowTimingECAL2),
+						  _ResultPositions         (ResultPositions),
+						  _ResultEnergies          (ResultEnergies),
+						  _ResultTimes             (ResultTimes),
+						  _ResultPositionVariances (ResultPositionVariances),
+						  _ResultEnergyVariances   (ResultEnergyVariances),
+						  _ResultECALIndices       (ResultECALIndices)
 					{ }
 
 					virtual ~GetCleanedEcalClusters() { }
@@ -150,8 +158,11 @@ namespace antok {
 					operator() ()
 					{
 						const size_t nmbPhotons = _Positions.size();
-						if (   (_Energies.size() != nmbPhotons)
-						    or (_Times.size()    != nmbPhotons)) {
+						if (   (_Energies.size()          != nmbPhotons)
+						    or (_Times.size()             != nmbPhotons)
+						    or (_PositionVariances.size() != nmbPhotons)
+						    or (_EnergyVariances.size()   != nmbPhotons)) {
+						    std::cerr << "Input vectors do not have the same size";
 							return false;
 						}
 
@@ -161,6 +172,10 @@ namespace antok {
 						_ResultEnergies.clear();
 						_ResultTimes.reserve(nmbPhotons);
 						_ResultTimes.clear();
+						_ResultPositionVariances.reserve(nmbPhotons);
+						_ResultPositionVariances.clear();
+						_ResultEnergyVariances.reserve(nmbPhotons);
+						_ResultEnergyVariances.clear();
 						_ResultECALIndices.reserve(nmbPhotons);
 						_ResultECALIndices.clear();
 
@@ -176,9 +191,11 @@ namespace antok {
 								}
 								_ResultECALIndices.push_back(2);
 							}
-							_ResultPositions.push_back(_Positions[i]);
-							_ResultEnergies.push_back  (_Energies[i]);
-							_ResultTimes.push_back     (_Times[i]);
+							_ResultPositions.push_back         (_Positions[i]);
+							_ResultEnergies.push_back          (_Energies[i]);
+							_ResultTimes.push_back             (_Times[i]);
+							_ResultPositionVariances.push_back (_PositionVariances[i]);
+							_ResultEnergyVariances.push_back   (_EnergyVariances[i]);
 						}
 						return true;
 					}
@@ -188,6 +205,8 @@ namespace antok {
 					const std::vector<TVector3>& _Positions;
 					const std::vector<double>&   _Energies;
 					const std::vector<double>&   _Times;
+					const std::vector<TVector3>& _PositionVariances;
+					const std::vector<double>&   _EnergyVariances;
 					const double                 _zECAL1;                // constant parameter, needs to be copied
 					const double                 _ThresholdEnergyECAL1;  // constant parameter, needs to be copied
 					const double                 _WindowTimingECAL1;     // constant parameter, needs to be copied
@@ -196,6 +215,8 @@ namespace antok {
 					std::vector<TVector3>&       _ResultPositions;
 					std::vector<double>&         _ResultEnergies;
 					std::vector<double>&         _ResultTimes;
+					std::vector<TVector3>&       _ResultPositionVariances;
+					std::vector<double>&         _ResultEnergyVariances;
 					std::vector<int>&            _ResultECALIndices;
 
 				};

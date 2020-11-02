@@ -148,15 +148,17 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
                                                     const std::vector<std::string>& quantityNames,
                                                     const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 4)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 6)) {
 		return nullptr;
 	}
 
 	// Get input variables
 	std::vector<std::pair<std::string, std::string>> args
-		= {{"VectorPosition", "std::vector<TVector3>"},
-		   {"VectorEnergy",   "std::vector<double>"},
-		   {"VectorTime",     "std::vector<double>"}};
+		= {{"VectorPosition",        "std::vector<TVector3>"},
+		   {"VectorEnergy",          "std::vector<double>"},
+		   {"VectorTime",            "std::vector<double>"},
+		   {"VectorPositionVariance","std::vector<TVector3>"},
+		   {"VectorEnergyVariance",  "std::vector<double>"},};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -180,20 +182,30 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
         std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[0]);
         return nullptr;
     }
-	for (size_t i = 1; i < quantityNames.size() - 1; ++i) {
+	for (size_t i = 1; i < 3; ++i) {
 		if (not data.insert<std::vector<double>>(quantityNames[i])) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
 			return nullptr;
 		}
 	}
-	if (not data.insert<std::vector<int>>(quantityNames[3])) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[3]);
+	if (not data.insert<std::vector<TVector3>>(quantityNames[3])) {
+        std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[3]);
+        return nullptr;
+    }
+    if (not data.insert<std::vector<double>>(quantityNames[4])) {
+        std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[4]);
+        return nullptr;
+	}
+	if (not data.insert<std::vector<int>>(quantityNames[5])) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[5]);
 		return nullptr;
 	}
 
-	return new antok::user::cdreis::functions::GetCleanedEcalClusters(*data.getAddr<std::vector<TVector3>>(args[0].first),      // xPositions
+	return new antok::user::cdreis::functions::GetCleanedEcalClusters(*data.getAddr<std::vector<TVector3>>(args[0].first),      // Positions
 	                                                                  *data.getAddr<std::vector<double>>  (args[1].first),      // Energies
 	                                                                  *data.getAddr<std::vector<double>>  (args[2].first),      // Times
+	                                                                  *data.getAddr<std::vector<TVector3>>(args[3].first),      // Positions variance
+	                                                                  *data.getAddr<std::vector<double>>  (args[4].first),      // Energies variance
 	                                                                  constArgs["RangeECAL1"],                                  // zECAL1
 	                                                                  constArgs["ThresholdEnergyECAL1"],                        // ThresholdEnergyECAL1
 	                                                                  constArgs["ThresholdTimingECAL1"],                        // WindowTimingECAL1
@@ -202,7 +214,9 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 	                                                                  *data.getAddr<std::vector<TVector3>>(quantityNames[0]),   // ResultPositions
 	                                                                  *data.getAddr<std::vector<double>>  (quantityNames[1]),   // ResultEnergies
 	                                                                  *data.getAddr<std::vector<double>>  (quantityNames[2]),   // ResultTimes
-	                                                                  *data.getAddr<std::vector<int>>     (quantityNames[3]));  // ResultECALIndices
+	                                                                  *data.getAddr<std::vector<TVector3>>(quantityNames[3]),   // ResultPositions variance
+	                                                                  *data.getAddr<std::vector<double>>  (quantityNames[4]),   // ResultEnergies variance
+	                                                                  *data.getAddr<std::vector<int>>     (quantityNames[5]));  // ResultECALIndices
 }
 
 
