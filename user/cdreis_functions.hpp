@@ -773,9 +773,12 @@ namespace antok {
 					bool
 					operator() ()
 					{
+						size_t sizeVec = _ClusterEnergies.size();
 						if (   (_ClusterIndices.size()           != 4)
-						    or (_ClusterPositions.size()         != _ClusterEnergies.size())
-						    or (_ClusterPositionVariances.size() != _ClusterEnergyVariances.size())) {
+						    or (_ClusterPositions.size()         != sizeVec)
+						    or (_ClusterPositionVariances.size() != sizeVec)
+						    or (_ClusterEnergies.size()          != sizeVec)
+						    or (_ClusterEnergyVariances.size()   != sizeVec)) {
 							return false;
 						}
 
@@ -901,6 +904,39 @@ namespace antok {
 
 				};
 
+				class getNominalMassDifferences : public Function
+				{
+
+				public:
+
+					getNominalMassDifferences(const std::vector<TLorentzVector>&  VectorLV,
+					                          const double                        NominalMass,
+					                          std::vector<double>&                MassDifferences)
+						: _VectorLV          (VectorLV),
+						  _NominalMass       (NominalMass),
+						  _MassDifferences   (MassDifferences)
+					{ }
+
+                    virtual ~getNominalMassDifferences() { }
+
+					bool
+					operator() ()
+					{
+						size_t sizeVec = _VectorLV.size();
+						_MassDifferences.resize(sizeVec);
+						for (size_t i = 0; i < sizeVec; ++i) {
+                            _MassDifferences[i] = _VectorLV[i].M() - _NominalMass;
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<TLorentzVector>& _VectorLV;
+					const double                       _NominalMass;       // constant parameter, needs to be copied
+					std::vector<double>&               _MassDifferences;
+
+				};
 
 				class GetThreePionCombinationMass : public Function
 				{

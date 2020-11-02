@@ -41,6 +41,8 @@ antok::user::cdreis::getUserFunction(const YAML::Node&                function,
 		return antok::user::cdreis::generateGetPhotonPairParticles          (function, quantityNames, index);
 	} else if (functionName == "getKinematicFittingMass") {
 		return antok::user::cdreis::generateGetKinematicFittingMass         (function, quantityNames, index);
+	} else if (functionName == "getNominalMassDifferences") {
+		return antok::user::cdreis::generateGetNominalMassDifferences       (function, quantityNames, index);
 	} else if (functionName == "getThreePionCombinationMass") {
 		return antok::user::cdreis::generateGetThreePionCombinationMass     (function, quantityNames, index);
 	} else if (functionName == "getVector3VectorAttributes") {
@@ -690,6 +692,41 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	                                                                   *data.getAddr<int>                        (ResultSuccess));
 }
 
+antok::Function*
+antok::user::cdreis::generateGetNominalMassDifferences (const YAML::Node&               function,
+                                                        const std::vector<std::string>& quantityNames,
+                                                        const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args = {{"VectorLV", "std::vector<TLorentzVector>"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Get constant arguments
+	std::map<std::string, double> constArgs = {{"NominalMass", 0}};
+	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+    // Register output variables
+	const std::string& quantityName = quantityNames[0];
+	antok::Data&       data         = antok::ObjectManager::instance()->getData();
+	if (not data.insert<std::vector<double> >(quantityName)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+		return nullptr;
+	}
+
+	return new antok::user::cdreis::functions::getNominalMassDifferences(*data.getAddr<std::vector<TLorentzVector>>(args[0].first), // Vector of TLorentzVectors
+	                                                                     constArgs["NominalMass"],                                  // NominalMass
+	                                                                     *data.getAddr<std::vector<double>>(quantityName));     // ResultMassDifferences
+}
 
 antok::Function*
 antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&               function,
