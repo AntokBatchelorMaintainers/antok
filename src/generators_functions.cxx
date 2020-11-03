@@ -214,10 +214,18 @@ antok::generators::generateAbs(const YAML::Node&               function,
 
 	// Register output variables
 	const std::string& quantityName = quantityNames[0];
-	if (not data.insert<double>(quantityName)) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
-		return nullptr;
-	}
+    if (typeNameArg1 == "std::vector<double>") {
+        if (not data.insert<std::vector<double>>(quantityName)) {
+            std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+            return nullptr;
+        }
+    }
+    else {
+        if (not data.insert<double>(quantityName)) {
+            std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+            return nullptr;
+        }
+    }
 
 	if        (typeNameArg1 == "double") {
 		return new antok::functions::Abs<double>  (*data.getAddr<double>  (args[0].first), *data.getAddr<double>(quantityName));
@@ -225,13 +233,15 @@ antok::generators::generateAbs(const YAML::Node&               function,
 		return new antok::functions::Abs<int>     (*data.getAddr<int>     (args[0].first), *data.getAddr<double>(quantityName));
 	} else if (typeNameArg1 == "TVector3") {
 		return new antok::functions::Abs<TVector3>(*data.getAddr<TVector3>(args[0].first), *data.getAddr<double>(quantityName));
+	} else if (typeNameArg1 == "std::vector<double>") {
+		return new antok::functions::Abs<std::vector<double>>(*data.getAddr<std::vector<double>>(args[0].first),
+		                                                      *data.getAddr<std::vector<double>>(quantityName));
 	} else {
 		std::cerr << "'" << functionName << "' is not (yet) implemented for input type '" << typeNameArg1 << "'." << std::endl;
 	}
 	return nullptr;
 
 }
-
 
 antok::Function*
 antok::generators::generateLog(const YAML::Node&               function,
@@ -260,15 +270,28 @@ antok::generators::generateLog(const YAML::Node&               function,
 
 	// Register output variables
 	const std::string& quantityName = quantityNames[0];
-	if (not data.insert<double>(quantityName)) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
-		return nullptr;
-	}
+    if (typeNameArg1 == "std::vector<double>") {
+        if (not data.insert<std::vector<double>>(quantityName)) {
+            std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+            return nullptr;
+        }
+    }
+    else {
+        if (not data.insert<double>(quantityName)) {
+            std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+            return nullptr;
+        }
+    }
 
 	if        (typeNameArg1 == "double") {
-		return new antok::functions::Log<double>(*data.getAddr<double>(args[0].first), *data.getAddr<double>(quantityName));
+		return new antok::functions::Log<double>             (*data.getAddr<double>(args[0].first),
+		                                                      *data.getAddr<double>(quantityName));
 	} else if (typeNameArg1 == "int") {
-		return new antok::functions::Log<int>   (*data.getAddr<int>   (args[0].first), *data.getAddr<double>(quantityName));
+		return new antok::functions::Log<int>                (*data.getAddr<int>   (args[0].first),
+		                                                      *data.getAddr<double>(quantityName));
+	} else if (typeNameArg1 == "std::vector<double>") {
+		return new antok::functions::Log<std::vector<double>>(*data.getAddr<std::vector<double>>(args[0].first),
+		                                                      *data.getAddr<std::vector<double>>(quantityName));
 	} else {
 		std::cerr << "'" << functionName << "' is not (yet) implemented for input type '" << typeNameArg1 << "'." << std::endl;
 	}
@@ -304,6 +327,28 @@ antok::generators::generateConvertIntToDouble(const YAML::Node&               fu
 	return new antok::functions::ConvertIntToDouble(*data.getAddr<int>(args[0].first), *data.getAddr<double>(quantityName));
 }
 
+namespace {
+
+	template <typename T>
+	antok::Function*
+	__generateDiffHelper(antok::Data&                                            data,
+	                     const std::vector<std::pair<std::string, std::string>>& args,
+	                     const std::vector<std::string>&                         quantityNames,
+	                     const std::string&                                      quantityName)
+	{
+		// Register output variables
+		if (not data.insert<T>(quantityName)) {
+			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+			return nullptr;
+		}
+
+		return new antok::functions::Diff<T>(*data.getAddr<T>(args[0].first),
+		                                     *data.getAddr<T>(args[1].first),
+		                                     *data.getAddr<T>(quantityName));
+	}
+
+}  // anonymous namespace
+
 
 antok::Function*
 antok::generators::generateDiff(const YAML::Node&               function,
@@ -315,28 +360,46 @@ antok::generators::generateDiff(const YAML::Node&               function,
 	}
 
 	// Get input variables
-	//TODO support other types like done in antok::generators::generateQuotient()
+	const YAML::Node& functionName = function["Name"];
+	antok::Data&      data         = antok::ObjectManager::instance()->getData();
+	std::string       typeNameArg1, typeNameArg2;
+	if (hasNodeKey(function, "Minuend")) {
+		typeNameArg1 = data.getType(antok::generators::mergeNameIndex(antok::YAMLUtils::getString(function["Minuend"]), index));
+	} else {
+		std::cerr << "Argument 'Minuend' not found (required for function '" << functionName << "')." << std::endl;
+		return nullptr;
+	}
+	if (hasNodeKey(function, "Subtrahend")) {
+		typeNameArg2 = data.getType(antok::generators::mergeNameIndex(antok::YAMLUtils::getString(function["Subtrahend"]), index));
+	} else {
+		std::cerr << "Argument 'Subtrahend' not found (required for function '" << functionName << "')." << std::endl;
+		return nullptr;
+	}
+	if (typeNameArg1 != typeNameArg2) {
+		std::cerr << "Argument 'Minuend' (" << typeNameArg1 << ") and 'Subtrahend' (" << typeNameArg2 << ") "
+		          << "have different types (required for function '" << functionName << "')." << std::endl;
+	}
 	std::vector<std::pair<std::string, std::string>> args
-		= {{"Minuend",    "double"},
-		   {"Subtrahend", "double"}};
+		= {{"Minuend", typeNameArg1},
+		   {"Subtrahend",  typeNameArg2}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
-	// Register output variables
 	const std::string& quantityName = quantityNames[0];
-	antok::Data&       data         = antok::ObjectManager::instance()->getData();
-	if (not data.insert<double>(quantityName)) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+	if        (typeNameArg1 == "double") {
+		return __generateDiffHelper<double>(data, args, quantityNames, quantityName);
+	} else if (typeNameArg1 == "int") {
+		return __generateDiffHelper<int>   (data, args, quantityNames, quantityName);
+	} else if (typeNameArg1 == "std::vector<double>") {
+		return __generateDiffHelper<std::vector<double>>   (data, args, quantityNames, quantityName);
+	} else {
+		std::cerr << "'" << functionName << "' not implemented for type '" << typeNameArg1 << "' for "
+		          << "variables '" << args[0].first << "' and '" << args[1].first << "'." << std::endl;
 		return nullptr;
 	}
-
-	return new antok::functions::Diff(*data.getAddr<double>(args[0].first),
-	                                  *data.getAddr<double>(args[1].first),
-	                                  *data.getAddr<double>(quantityName));
 }
-
 
 namespace {
 

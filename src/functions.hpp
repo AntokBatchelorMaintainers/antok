@@ -346,15 +346,15 @@ namespace antok {
 		};
 
 
-		//TODO template argument and result types as in Quotient below
+		template <typename T>
 		class Diff : public Function
 		{
 
 		public:
 
-			Diff(const double& in1,
-			     const double& in2,
-			     double&       out)
+			Diff(const T& in1,
+			     const T& in2,
+			     T&       out)
 				: _in1(in1),
 				  _in2(in2),
 				  _out(out)
@@ -371,9 +371,43 @@ namespace antok {
 
 		private:
 
-			const double& _in1;
-			const double& _in2;
-			double&       _out;
+			const T& _in1;
+			const T& _in2;
+			T&       _out;
+		};
+
+		template <>
+		class Diff<std::vector<double>>: public Function
+		{
+
+		public:
+
+			Diff(const std::vector<double>& in1,
+			         const std::vector<double>& in2,
+			         std::vector<double>&       out)
+				: _in1(in1),
+				  _in2(in2),
+				  _out(out)
+			{ }
+
+			virtual ~Diff() { }
+
+			bool
+			operator() () {
+                size_t sizeVec = _in1.size();
+                if (_in2.size() != sizeVec) std::cerr << "input vectors for Diff have different size";
+                _out.resize(sizeVec);
+                for (size_t i = 0; i < sizeVec; ++i) {
+                    _out[i] = _in1[i] / _in2[i];
+                }
+                return true;
+            }
+
+		private:
+
+			const std::vector<double>& _in1;
+			const std::vector<double>& _in2;
+			std::vector<double>&       _out;
 
 		};
 
@@ -510,6 +544,37 @@ namespace antok {
 
 		};
 
+		template <>
+		class Abs<std::vector<double>>: public Function
+		{
+
+		public:
+
+			Abs(const std::vector<double>&  in,
+			         std::vector<double>&   out)
+				: _in(in),
+				  _out(out)
+			{ }
+
+			virtual ~Abs() { }
+
+			bool
+			operator() () {
+                size_t sizeVec = _in.size();
+                _out.resize(sizeVec);
+                for (size_t i = 0; i < sizeVec; ++i) {
+                    _out[i] = std::fabs(_in[i]);
+                }
+                return true;
+            }
+
+		private:
+
+			const std::vector<double>& _in;
+			std::vector<double>&       _out;
+
+		};
+
 
 		template <typename T>
 		class Log : public Function
@@ -536,6 +601,37 @@ namespace antok {
 
 			const T& _in;
 			double&  _out;
+
+		};
+
+		template <>
+		class Log<std::vector<double>>: public Function
+		{
+
+		public:
+
+			Log(const std::vector<double>&  in,
+			         std::vector<double>&   out)
+				: _in(in),
+				  _out(out)
+			{ }
+
+			virtual ~Log() { }
+
+			bool
+			operator() () {
+                size_t sizeVec = _in.size();
+                _out.resize(sizeVec);
+                for (size_t i = 0; i < sizeVec; ++i) {
+                    _out[i] = std::log(_in[i]);
+                }
+                return true;
+            }
+
+		private:
+
+			const std::vector<double>& _in;
+			std::vector<double>&       _out;
 
 		};
 
