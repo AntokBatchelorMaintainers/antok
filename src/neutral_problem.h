@@ -23,7 +23,7 @@ namespace antok {
 	public:
 
 		//! \param[in] mass is the desired mass for the reconstructed photon pair
-		NeutralProblem(const double mass, const double convergenceLimit);
+		NeutralProblem(const double mass, const double precisionGoal);
 		~NeutralProblem() {}
 
 		//! Constraint function; evaluates to 0, if constraints are fulfilled
@@ -36,7 +36,7 @@ namespace antok {
 		void jacobianConstraintFuncs   (const TVectorD& eta, TMatrixD& jacobianEta);
 
 		//! Convergence criterion
-		bool   isConverged()    const { return fabs(_funcValue[0]) / _mass2 < _convergenceLimit; }
+		bool   isConverged()    const { return fabs(_funcValue[0]) / _mass2 < _precisionGoal; }
 		//! There is one constraint function
 		size_t nmbConstraints() const { return 1; }
 
@@ -44,7 +44,7 @@ namespace antok {
 
 		const double _mass2;            //!< mass squared that the photon pair is constrained to
 		TVectorD     _funcValue;        //!< holds value of constraint function
-		const double _convergenceLimit; //!< sets the limit for which fit is accepted as converged
+		const double _precisionGoal;    //!< sets the limit for which fit is accepted as converged
 
 	};
 

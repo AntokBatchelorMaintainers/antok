@@ -39,9 +39,9 @@ antok::NeutralFit::NeutralFit(const TVector3& vertexPosition,
                               const double    mass,
                               const double    massLowerLimit,
                               const double    massUpperLimit,
-                              const double    convergenceLimit,
+                              const double    precisionGoal,
                               const int       whichEnergyVariance)
-	: _problem                 (mass, convergenceLimit),
+	: _problem                 (mass, precisionGoal),
 	  _kinFitter               (nullptr),
 	  _vertexPosition          (vertexPosition),
 	  _cluster1Position        (cluster1Position),
@@ -58,7 +58,7 @@ antok::NeutralFit::NeutralFit(const TVector3& vertexPosition,
 	  _mass                    (mass),
 	  _massLowerLimit          (massLowerLimit),
 	  _massUpperLimit          (massUpperLimit),
-	  _convergenceLimit        (convergenceLimit),
+	  _precisionGoal           (precisionGoal),
 	  _whichEnergyVariance     (whichEnergyVariance)
 {
 	if (_first) {

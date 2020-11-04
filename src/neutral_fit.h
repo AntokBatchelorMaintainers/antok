@@ -54,7 +54,7 @@ namespace antok {
 		           const double    mass,
 		           const double    massLowerLimit,
 		           const double    massUpperLimit,
-		           const double    convergenceLimit = 1e-10,
+		           const double    precisionGoal,
 		           const int       whichEnergyVariance = 0);
 		~NeutralFit() { delete _kinFitter; }
 
@@ -122,7 +122,7 @@ namespace antok {
 		const double _mass;                 //!< mass the photon pair is constrained to
 		const double _massLowerLimit;       //!< lower mass limit of mass window used in massIsInWindow()
 		const double _massUpperLimit;       //!< upper mass limit of mass window used in massIsInWindow()
-		const double _convergenceLimit;     //!< limit for determining if fit converged
+		const double _precisionGoal;        //!< limit for determining if fit converged
 		const int    _whichEnergyVariance;  //!< defines how variance of cluster energy is calculated:
 
 		TVectorD    _startValues;  //!< start values for measured variables that enter the fit

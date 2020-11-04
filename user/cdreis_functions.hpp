@@ -731,7 +731,7 @@ namespace antok {
 					                        const double&                Mass,
 					                        const double&                massLowerLimit,
 					                        const double&                massUpperLimit,
-					                        const double&                convergenceLimit,
+					                        const double&                precisionGoal,
 					                        const int&                   whichEnergyVariance,
 					                        std::vector<TLorentzVector>& ResultLorentzVectors,
 					                        std::vector<double>&         ResultChi2s,
@@ -753,7 +753,7 @@ namespace antok {
 						  _Mass                    (Mass),
 						  _massLowerLimit          (massLowerLimit),
 						  _massUpperLimit          (massUpperLimit),
-						  _convergenceLimit        (convergenceLimit),
+						  _precisionGoal           (precisionGoal),
 						  _whichEnergyVariance     (whichEnergyVariance),
 						  _ResultLorentzVectors    (ResultLorentzVectors),
 						  _ResultChi2s             (ResultChi2s),
@@ -831,7 +831,7 @@ namespace antok {
 						                              _Mass,
 						                              _massLowerLimit,
 						                              _massUpperLimit,
-						                              _convergenceLimit,
+						                              _precisionGoal,
 						                              _whichEnergyVariance);
 						const bool success0 = neutralFit0.doFit();
                         _ResultLorentzVectors.push_back(neutralFit0.getImprovedLVSum());
@@ -857,7 +857,7 @@ namespace antok {
 						                              _Mass,
 						                              _massLowerLimit,
 						                              _massUpperLimit,
-						                              _convergenceLimit,
+						                              _precisionGoal,
 						                              _whichEnergyVariance);
 						const bool success1 = neutralFit1.doFit();
                         _ResultLorentzVectors.push_back(neutralFit1.getImprovedLVSum());
@@ -888,7 +888,7 @@ namespace antok {
 					const double                 _Mass;                 // constant parameter, needs to be copied
 					const double                 _massLowerLimit;       // constant parameter, needs to be copied
 					const double                 _massUpperLimit;       // constant parameter, needs to be copied
-					const double                 _convergenceLimit;     // constant parameter, needs to be copied
+					const double                 _precisionGoal;        // constant parameter, needs to be copied
 					const int                    _whichEnergyVariance;  // constant parameter, needs to be copied
 					std::vector<TLorentzVector>& _ResultLorentzVectors;
 					std::vector<double>&         _ResultChi2s;

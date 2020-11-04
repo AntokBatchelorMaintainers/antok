@@ -628,7 +628,7 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 		= {{"Mass",             0},
 		   {"MassLowerLimit",   0},
 		   {"MassUpperLimit",   0},
-		   {"ConvergenceLimit", 0}};
+		   {"PrecisionGoal", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgsDouble, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -677,7 +677,7 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	                                                                   constArgsDouble["Mass"],                              // Mass
 	                                                                   constArgsDouble["MassLowerLimit"],                    // massLowerLimit,
 	                                                                   constArgsDouble["MassUpperLimit"],                    // massUpperLimit,
-	                                                                   constArgsDouble["ConvergenceLimit"],                  // limit to determine convergence
+	                                                                   constArgsDouble["PrecisionGoal"],                     // limit to determine convergence
 	                                                                   constArgsInt   ["ErrorEstimateType"],                 // whichEnergyVariance,
 	                                                                   *data.getAddr<std::vector<TLorentzVector>>(ResultLorentzVectors),
 	                                                                   *data.getAddr<std::vector<double>>        (ResultChi2s),
