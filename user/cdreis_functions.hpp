@@ -20,7 +20,146 @@ namespace antok {
 
 			namespace functions {
 
-				class GetRecoilLorentzVec : public Function {
+				class GetVector3VectorAttributes : public Function
+				{
+
+				public:
+
+
+					GetVector3VectorAttributes(const std::vector<TVector3>& Vector3s,           // TVector3 vectors
+					                                 std::vector<double>&   ResultXComponents,  // x components of TVector3 vectors
+					                                 std::vector<double>&   ResultYComponents,  // y components of TVector3 vectors
+					                                 std::vector<double>&   ResultZComponents)  // z components of TVector3 vectors
+						: _Vector3s         (Vector3s),
+						  _ResultXComponents(ResultXComponents),
+						  _ResultYComponents(ResultYComponents),
+						  _ResultZComponents(ResultZComponents)
+					{ }
+
+					virtual ~GetVector3VectorAttributes() { }
+
+					bool
+					operator() ()
+					{
+						const size_t nmbPhotons = _Vector3s.size();
+						_ResultXComponents.resize(nmbPhotons);
+						_ResultYComponents.resize(nmbPhotons);
+						_ResultZComponents.resize(nmbPhotons);
+
+						// loop over TVector3 vector and split into vector for each component
+						for (size_t i = 0; i < nmbPhotons; ++i) {
+							_ResultXComponents[i] = _Vector3s[i].X();
+							_ResultYComponents[i] = _Vector3s[i].Y();
+							_ResultZComponents[i] = _Vector3s[i].Z();
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<TVector3>& _Vector3s;
+					std::vector<double>&         _ResultXComponents;
+					std::vector<double>&         _ResultYComponents;
+					std::vector<double>&         _ResultZComponents;
+
+				};
+
+				class GetVectorLorentzVectorAttributes : public Function
+				{
+
+				public:
+
+					GetVectorLorentzVectorAttributes(const std::vector<TLorentzVector>& LVs,                // Lorentz vectors
+					                                 std::vector<double>&               ResultXComponents,  // x components of Lorentz vectors
+					                                 std::vector<double>&               ResultYComponents,  // y components of Lorentz vectors
+					                                 std::vector<double>&               ResultZComponents,  // z components of Lorentz vectors
+					                                 std::vector<double>&               ResultEnergies,     // energies of Lorentz vectors
+					                                 std::vector<double>&               ResultThetas,       // polar angles of Lorentz vectors
+					                                 std::vector<double>&               ResultPhis,         // azimuthal angles of Lorentz vectors
+					                                 std::vector<double>&               ResultMags)         // magnitudes of Lorentz vectors
+						: _LVs              (LVs),
+						  _ResultXComponents(ResultXComponents),
+						  _ResultYComponents(ResultYComponents),
+						  _ResultZComponents(ResultZComponents),
+						  _ResultEnergies   (ResultEnergies),
+						  _ResultThetas     (ResultThetas),
+						  _ResultPhis       (ResultPhis),
+						  _ResultMags       (ResultMags)
+					{ }
+
+					virtual ~GetVectorLorentzVectorAttributes() { }
+
+					bool operator() ()
+					{
+						const size_t nmbPhotons = _LVs.size();
+						_ResultXComponents.resize(nmbPhotons);
+						_ResultYComponents.resize(nmbPhotons);
+						_ResultZComponents.resize(nmbPhotons);
+						_ResultEnergies.resize   (nmbPhotons);
+						_ResultThetas.resize     (nmbPhotons);
+						_ResultPhis.resize       (nmbPhotons);
+						_ResultMags.resize       (nmbPhotons);
+						for (size_t i = 0; i < nmbPhotons; ++i) {
+							_ResultXComponents[i] = _LVs[i].X();
+							_ResultYComponents[i] = _LVs[i].Y();
+							_ResultZComponents[i] = _LVs[i].Z();
+							_ResultEnergies   [i] = _LVs[i].E();
+							_ResultThetas     [i] = _LVs[i].Theta();
+							_ResultPhis       [i] = _LVs[i].Phi();
+							_ResultMags       [i] = _LVs[i].Mag();
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<TLorentzVector>& _LVs;
+					std::vector<double>&               _ResultXComponents;
+					std::vector<double>&               _ResultYComponents;
+					std::vector<double>&               _ResultZComponents;
+					std::vector<double>&               _ResultEnergies;
+					std::vector<double>&               _ResultThetas;
+					std::vector<double>&               _ResultPhis;
+					std::vector<double>&               _ResultMags;
+
+				};
+
+				class getNominalMassDifferences : public Function
+				{
+
+				public:
+
+					getNominalMassDifferences(const std::vector<TLorentzVector>&  VectorLV,
+					                          const double                        NominalMass,
+					                          std::vector<double>&                MassDifferences)
+						: _VectorLV          (VectorLV),
+						  _NominalMass       (NominalMass),
+						  _MassDifferences   (MassDifferences)
+					{ }
+
+                    virtual ~getNominalMassDifferences() { }
+
+					bool
+					operator() ()
+					{
+						size_t sizeVec = _VectorLV.size();
+						_MassDifferences.resize(sizeVec);
+						for (size_t i = 0; i < sizeVec; ++i) {
+                            _MassDifferences[i] = _VectorLV[i].M() - _NominalMass;
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<TLorentzVector>& _VectorLV;
+					const double                       _NominalMass;       // constant parameter, needs to be copied
+					std::vector<double>&               _MassDifferences;
+
+				};
+
+				class GetRecoilLorentzVec : public Function
+				{
 
 				public:
 
@@ -52,66 +191,121 @@ namespace antok {
 
 				};
 
-
-				class GetPhotonLorentzVecs : public Function
+				class GetECALCorrectedEnergy : public Function
 				{
 
 				public:
 
-					GetPhotonLorentzVecs(const std::vector<TVector3>& Positions,          // positions of ECAL photon clusters
-					                     const std::vector<double>&   Energies,           // energies of ECAL photon clusters
-					                     const std::vector<double>&   Times,              // times of ECAL photon clusters
-					                     const TVector3&              PV,                 // x positions of primary vertex
-					                     const double&                zECAL1,             // z position that distinguishes between ECAL 1 and 2
-					                     std::vector<TLorentzVector>& ResultLVs,          // photon Lorentz vectors
-					                     std::vector<int>&            ResultECALIndices)  // indices of the ECAL that measured the photons
-						: _Positions        (Positions),
-						  _Energies         (Energies),
-						  _Times            (Times),
-						  _PV               (PV),
-						  _zECAL1           (zECAL1),
-						  _ResultLVs        (ResultLVs),
-						  _ResultECALIndices(ResultECALIndices)
+					GetECALCorrectedEnergy(const std::vector<double>&                      Energies,                 // energies of ECAL clusters to be corrected
+					                       const std::vector<double>&                      zPositions,               // z positions of ECAL clusters
+					                       const double&                                   zECAL1,                   // z position that distinguishes between ECAL 1 and 2
+					                       const int&                                      RunNumber,                // run number of the event
+					                       const std::map<int, std::pair<double, double>>& Corrections,              // energy-correction factors for ECAL1 and 2 by run number
+					                       std::vector<double>&                            ResultCorrectedEnergies)  // corrected energies of ECAL clusters
+						: _Energies               (Energies),
+						  _zPositions             (zPositions),
+						  _zECAL1                 (zECAL1),
+						  _RunNumber              (RunNumber),
+						  _Corrections            (Corrections),
+						  _ResultCorrectedEnergies(ResultCorrectedEnergies)
 					{ }
 
-					virtual ~GetPhotonLorentzVecs() { }
+					virtual ~GetECALCorrectedEnergy() { }
 
-					bool
-					operator() ()
+					bool operator() ()
 					{
-						const size_t nmbPhotons = _Positions.size();
-						if (   (_Energies.size() != nmbPhotons)
-						    or (_Times.size()    != nmbPhotons)) {
+						const size_t nmbClusters = _Energies.size();
+						if (_zPositions.size() != nmbClusters) {
 							return false;
 						}
 
-						_ResultLVs.resize(nmbPhotons);
-						_ResultECALIndices.resize(nmbPhotons);
-						for (size_t i = 0; i < nmbPhotons; ++i) {
-							TVector3 mom = _Positions[i] - _PV;
-							mom.SetMag(_Energies[i]);
-							_ResultLVs[i] = TLorentzVector(mom, _Energies[i]);
-							if (_Positions[i].Z() < _zECAL1) {
-								_ResultECALIndices[i] = 1;
-							} else {
-								_ResultECALIndices[i] = 2;
+						_ResultCorrectedEnergies.resize(nmbClusters);
+						for (size_t i = 0; i < nmbClusters; ++i) {
+							double correction = 1;
+							auto it = _Corrections.find(_RunNumber);
+							if (it != _Corrections.end()) {
+								if (_zPositions[i] < _zECAL1) {
+									correction = it->second.first;
+								} else {
+									correction = it->second.second;
+								}
 							}
+							_ResultCorrectedEnergies[i] = correction * _Energies[i];
 						}
 						return true;
 					}
 
 				private:
 
-					const std::vector<TVector3>& _Positions;
-					const std::vector<double>&   _Energies;
-					const std::vector<double>&   _Times;
-					const TVector3&              _PV;
-					const double                 _zECAL1;  // constant parameter, needs to be copied
-					std::vector<TLorentzVector>& _ResultLVs;
-					std::vector<int>&            _ResultECALIndices;
+					const std::vector<double>&                     _Energies;
+					const std::vector<double>&                     _zPositions;
+					const double                                   _zECAL1;       // constant parameter, needs to be copied
+					const int&                                     _RunNumber;
+					const std::map<int, std::pair<double, double>> _Corrections;  // constant parameter, needs to be copied
+					std::vector<double>&                           _ResultCorrectedEnergies;
 
 				};
 
+				class GetECALCorrectedTiming : public Function
+				{
+
+				public:
+
+					GetECALCorrectedTiming(const std::vector<double>&                        Times,                 // times of ECAL clusters to be corrected
+					                       const std::vector<double>&                        Energies,              // energies of ECAL clusters
+					                       const std::vector<double>&                        zPositions,            // z positions of ECAL clusters
+					                       const double&                                     zECAL1,                // z position that distinguishes between ECAL 1 and 2
+					                       const std::map<std::string, std::vector<double>>& CalibrationCoeffs,     // calibration coefficients used to correct times
+					                       std::vector<double>&                              ResultCorrectedTimes)  // corrected times of ECAL clusters
+						: _Times               (Times),
+						  _Energies            (Energies),
+						  _zPositions          (zPositions),
+						  _zECAL1              (zECAL1),
+						  _CalibrationCoeffs   (CalibrationCoeffs),
+						  _ResultCorrectedTimes(ResultCorrectedTimes)
+					{ }
+
+					virtual ~GetECALCorrectedTiming() { }
+
+					bool
+					operator() ()
+					{
+						const size_t nmbClusters = _Times.size();
+						if ((_Energies.size() != nmbClusters) and (_zPositions.size() != nmbClusters)) {
+							return false;
+						}
+
+						_ResultCorrectedTimes.resize(nmbClusters);
+						for (size_t i = 0; i < nmbClusters; ++i) {
+							double       correction = 0;
+							const double energy     = _Energies[i];
+							const double energy2    = energy * energy;
+							if (_zPositions[i] < _zECAL1) {
+								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL1");
+								correction = coefficients[0] + coefficients[1] / energy  - coefficients[2] * energy
+								                             - coefficients[3] / energy2 + coefficients[4] * energy2;
+							} else {
+							  const double               energy3      = energy * energy2;
+								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL2");
+								correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
+								                             - coefficients[3] / energy2 - coefficients[4] * energy2
+								                             + coefficients[5] / energy3 + coefficients[6] * energy3;
+							}
+							_ResultCorrectedTimes[i] = _Times[i] - correction;
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<double>&                       _Times;
+					const std::vector<double>&                       _Energies;
+					const std::vector<double>&                       _zPositions;
+					const double                                     _zECAL1;             // constant parameter, needs to be copied
+					const std::map<std::string, std::vector<double>> _CalibrationCoeffs;  // constant parameter, needs to be copied
+					std::vector<double>&                             _ResultCorrectedTimes;
+
+				};
 
 				class GetCleanedEcalClusters : public Function
 				{
@@ -221,67 +415,246 @@ namespace antok {
 
 				};
 
-
-				class GetVectorLorentzVectorAttributes : public Function
+				class getECALVariables : public Function
 				{
 
 				public:
 
-					GetVectorLorentzVectorAttributes(const std::vector<TLorentzVector>& LVs,                // Lorentz vectors
-					                                 std::vector<double>&               ResultXComponents,  // x components of Lorentz vectors
-					                                 std::vector<double>&               ResultYComponents,  // y components of Lorentz vectors
-					                                 std::vector<double>&               ResultZComponents,  // z components of Lorentz vectors
-					                                 std::vector<double>&               ResultEnergies,     // energies of Lorentz vectors
-					                                 std::vector<double>&               ResultThetas,       // polar angles of Lorentz vectors
-					                                 std::vector<double>&               ResultPhis,         // azimuthal angles of Lorentz vectors
-					                                 std::vector<double>&               ResultMags)         // magnitudes of Lorentz vectors
-						: _LVs              (LVs),
-						  _ResultXComponents(ResultXComponents),
-						  _ResultYComponents(ResultYComponents),
-						  _ResultZComponents(ResultZComponents),
-						  _ResultEnergies   (ResultEnergies),
-						  _ResultThetas     (ResultThetas),
-						  _ResultPhis       (ResultPhis),
-						  _ResultMags       (ResultMags)
+					getECALVariables(const std::vector<double>&         clusterIndex,                 // Cluster Index of Detected photon
+									 const std::vector<TLorentzVector>& photonVec,                    // lorentzvector of photon
+									 const std::vector<TVector3>&       clusterPosition,              // position of cluster
+									 const std::vector<TVector3>&       clusterPositionVariance,      // Variance in position of cluster
+									 const std::vector<double>&         clusterEnergy,                // energy of cluster
+									 const std::vector<double>&         clusterEnergyVariance,        // Variance in energy of cluster
+									 const std::vector<double>&         clusterTime,                  // time of ECAL cluster
+									 const int&                         ECALIndex,                    // Selected ECAL
+									 std::vector<TLorentzVector>&       resultPhotonVec,              // lorentzvector of photon
+									 std::vector<TVector3>&             resultClusterPosition,        // position of cluster
+									 std::vector<TVector3>&             resultClusterPositionVariance,// Variance in position of cluster
+									 std::vector<double>&               resultClusterEnergy,          // energy of cluster
+									 std::vector<double>&               resultClusterEnergyVariance,  // Variance in energy of cluster
+									 std::vector<double>&               resultClusterTime )           // time of ECAL cluster
+						: _clusterIndex                   (clusterIndex),
+						  _photonVec                      (photonVec),
+						  _clusterPosition                (clusterPosition),
+						  _clusterPositionVariance        (clusterPositionVariance),
+						  _clusterEnergy                  (clusterEnergy),
+						  _clusterEnergyVariance          (clusterEnergyVariance),
+						  _clusterTime                    (clusterTime),
+						  _ECALIndex                      (ECALIndex),
+						  _resultPhotonVec                (resultPhotonVec),
+						  _resultClusterPosition          (resultClusterPosition),
+						  _resultClusterPositionVariance  (resultClusterPositionVariance),
+						  _resultClusterEnergy            (resultClusterEnergy),
+						  _resultClusterEnergyVariance    (resultClusterEnergyVariance),
+						  _resultClusterTime              (resultClusterTime)
 					{ }
 
-					virtual ~GetVectorLorentzVectorAttributes() { }
 
-					bool operator() ()
+					virtual ~getECALVariables() { }
+
+					bool
+					operator() ()
 					{
-						const size_t nmbPhotons = _LVs.size();
-						_ResultXComponents.resize(nmbPhotons);
-						_ResultYComponents.resize(nmbPhotons);
-						_ResultZComponents.resize(nmbPhotons);
-						_ResultEnergies.resize   (nmbPhotons);
-						_ResultThetas.resize     (nmbPhotons);
-						_ResultPhis.resize       (nmbPhotons);
-						_ResultMags.resize       (nmbPhotons);
-						for (size_t i = 0; i < nmbPhotons; ++i) {
-							_ResultXComponents[i] = _LVs[i].X();
-							_ResultYComponents[i] = _LVs[i].Y();
-							_ResultZComponents[i] = _LVs[i].Z();
-							_ResultEnergies   [i] = _LVs[i].E();
-							_ResultThetas     [i] = _LVs[i].Theta();
-							_ResultPhis       [i] = _LVs[i].Phi();
-							_ResultMags       [i] = _LVs[i].Mag();
+						// check if all vectors have the same size
+						const size_t nmbClusters = _clusterIndex.size();
+						/*if (   (_photonVec.size()               != nmbClusters)
+							or (_clusterPosition.size()         != nmbClusters)
+							or (_clusterPositionVariance.size() != nmbClusters)
+							or (_clusterEnergy.size()           != nmbClusters)
+							or (_clusterEnergyVariance.size()   != nmbClusters)
+							or (_clusterTime.size()             != nmbClusters)) {
+							std::cerr << "wrong sizes of input vectors!";
+							return false;
+						}*/
+
+						// get number of clusters in given ECAL
+						size_t nmbResultClusters = 0;
+						for (size_t i = 0; i < nmbClusters; ++i) {
+							if (_clusterIndex[i] == _ECALIndex) {
+								++nmbResultClusters;
+							}
+						}
+
+						_resultPhotonVec.resize(nmbResultClusters);
+						_resultClusterPosition.resize(nmbResultClusters);
+						_resultClusterPositionVariance.resize(nmbResultClusters);
+						_resultClusterEnergy.resize(nmbResultClusters);
+						_resultClusterEnergyVariance.resize(nmbResultClusters);
+						_resultClusterTime.resize(nmbResultClusters);
+
+						int nmbAccepted = 0;
+						// loop over clusters and push attributes back if hit is in required ECAL
+						for (size_t i = 0; i < nmbClusters; ++i) {
+							if (_clusterIndex[i] == _ECALIndex) {
+								_resultPhotonVec[nmbAccepted] = _photonVec[i];
+								_resultClusterPosition[nmbAccepted] = _clusterPosition[i];
+								_resultClusterPositionVariance[nmbAccepted] = _clusterPositionVariance[i];
+								_resultClusterEnergy[nmbAccepted] = _clusterEnergy[i];
+								_resultClusterEnergyVariance[nmbAccepted] = _clusterEnergyVariance[i];
+								_resultClusterTime[nmbAccepted] = _clusterTime[i];
+								++nmbAccepted;
+							}
 						}
 						return true;
 					}
 
 				private:
 
-					const std::vector<TLorentzVector>& _LVs;
-					std::vector<double>&               _ResultXComponents;
-					std::vector<double>&               _ResultYComponents;
-					std::vector<double>&               _ResultZComponents;
-					std::vector<double>&               _ResultEnergies;
-					std::vector<double>&               _ResultThetas;
-					std::vector<double>&               _ResultPhis;
-					std::vector<double>&               _ResultMags;
+					const std::vector<double>&         _clusterIndex;
+					const std::vector<TLorentzVector>& _photonVec;
+					const std::vector<TVector3>&       _clusterPosition;
+					const std::vector<TVector3>&       _clusterPositionVariance;
+					const std::vector<double>&         _clusterEnergy;
+					const std::vector<double>&         _clusterEnergyVariance;
+					const std::vector<double>&         _clusterTime;
+					const int                          _ECALIndex; //const paramerter, needs to be copied
+					std::vector<TLorentzVector>&       _resultPhotonVec;
+					std::vector<TVector3>&             _resultClusterPosition;
+					std::vector<TVector3>&             _resultClusterPositionVariance;
+					std::vector<double>&               _resultClusterEnergy;
+					std::vector<double>&               _resultClusterEnergyVariance;
+					std::vector<double>&               _resultClusterTime;
 
 				};
 
+				class GetPhotonLorentzVecs : public Function
+				{
+
+				public:
+
+					GetPhotonLorentzVecs(const std::vector<TVector3>& Positions,          // positions of ECAL photon clusters
+					                     const std::vector<double>&   Energies,           // energies of ECAL photon clusters
+					                     const std::vector<double>&   Times,              // times of ECAL photon clusters
+					                     const TVector3&              PV,                 // x positions of primary vertex
+					                     const double&                RangeECAL1,         // z position that distinguishes between ECAL 1 and 2
+					                     std::vector<TLorentzVector>& ResultLVs,          // photon Lorentz vectors
+					                     std::vector<int>&            ResultECALIndices)  // indices of the ECAL that measured the photons
+						: _Positions        (Positions),
+						  _Energies         (Energies),
+						  _Times            (Times),
+						  _PV               (PV),
+						  _RangeECAL1       (RangeECAL1),
+						  _ResultLVs        (ResultLVs),
+						  _ResultECALIndices(ResultECALIndices)
+					{ }
+
+					virtual ~GetPhotonLorentzVecs() { }
+
+					bool
+					operator() ()
+					{
+						const size_t nmbPhotons = _Positions.size();
+						if (   (_Energies.size() != nmbPhotons)
+						    or (_Times.size()    != nmbPhotons)) {
+							return false;
+						}
+
+						_ResultLVs.resize(nmbPhotons);
+						_ResultECALIndices.resize(nmbPhotons);
+						for (size_t i = 0; i < nmbPhotons; ++i) {
+							TVector3 mom = _Positions[i] - _PV;
+							mom.SetMag(_Energies[i]);
+							_ResultLVs[i] = TLorentzVector(mom, _Energies[i]);
+							if (_Positions[i].Z() < _RangeECAL1) {
+								_ResultECALIndices[i] = 1;
+							} else {
+								_ResultECALIndices[i] = 2;
+							}
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<TVector3>& _Positions;
+					const std::vector<double>&   _Energies;
+					const std::vector<double>&   _Times;
+					const TVector3&              _PV;
+					const double                 _RangeECAL1;  // constant parameter, needs to be copied
+					std::vector<TLorentzVector>& _ResultLVs;
+					std::vector<int>&            _ResultECALIndices;
+
+				};
+
+				class GetPhotonPairParticles : public Function
+				{
+
+				public:
+
+					GetPhotonPairParticles(const std::vector<TLorentzVector>& PhotonLVs,            // Lorentz vectors of photons
+					                       const double&                      NominalMass,          // nominal mass of photon pair
+					                       const double&                      MassWindowECALMixed,  // m(gamma gamma) cut applied around NominalMass when the photon pair is in ECAL1 and 2
+					                       const double&                      MassWindowECAL1,      // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL1
+					                       const double&                      MassWindowECAL2,      // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL2
+					                       const std::vector<int>&            ECALIndices,          // indices of the ECAL that measured the photons
+					                       std::vector<TLorentzVector>&       ResultParticleLVs,    // Lorentz vectors of all particles reconstructed from photon pairs
+					                       int&                               ResultHasParticles)   // 1 if at least one photon pair was found; else 0
+						: _PhotonLVs          (PhotonLVs),
+						  _NominalMass        (NominalMass),
+						  _MassWindowECALMixed(MassWindowECALMixed),
+						  _MassWindowECAL1    (MassWindowECAL1),
+						  _MassWindowECAL2    (MassWindowECAL2),
+						  _ECALIndices        (ECALIndices),
+						  _ResultParticles    (ResultParticleLVs),
+						  _ResultHasParticles (ResultHasParticles)
+					{ }
+
+					virtual ~GetPhotonPairParticles() { }
+
+					bool
+					operator() ()
+					{
+						const size_t nmbPhotons = _PhotonLVs.size();
+						if (_ECALIndices.size() != nmbPhotons) {
+							return false;
+						}
+
+						_ResultParticles.reserve(nmbPhotons * nmbPhotons);
+						_ResultParticles.clear();
+						_ResultHasParticles = 0;
+						if (nmbPhotons < 2) {
+							return true;
+						}
+						for (size_t i = 0; i < nmbPhotons; ++i) {
+							for (size_t j = i + 1; j < nmbPhotons; ++j) {
+								const TLorentzVector candidate = _PhotonLVs[i] + _PhotonLVs[j];
+								if (std::fabs(candidate.M() - _NominalMass) < getECALResolution(_ECALIndices[i] == 1, _ECALIndices[j])) {
+									_ResultParticles.push_back(candidate);
+								}
+							}
+						}
+						if (_ResultParticles.size() > 1) {
+							_ResultHasParticles = 1;
+						}
+						return true;
+					}
+
+				private:
+
+					double getECALResolution(const int ECALIndex1,
+					                         const int ECALIndex2) const
+					{
+						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
+							return _MassWindowECAL1;
+						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
+							return _MassWindowECAL2;
+						} else if (ECALIndex1 != ECALIndex2) {
+							return _MassWindowECALMixed;
+						}
+						return std::numeric_limits<double>::quiet_NaN();
+					}
+
+					const std::vector<TLorentzVector>& _PhotonLVs;
+					const double                       _NominalMass;          // constant parameter, needs to be copied
+					const double                       _MassWindowECALMixed;  // constant parameter, needs to be copied
+					const double                       _MassWindowECAL1;      // constant parameter, needs to be copied
+					const double                       _MassWindowECAL2;      // constant parameter, needs to be copied
+					const std::vector<int>&            _ECALIndices;
+					std::vector<TLorentzVector>&       _ResultParticles;
+					int&                               _ResultHasParticles;
+
+				};
 
 				class GetPi0Pair : public Function
 				{
@@ -413,309 +786,6 @@ namespace antok {
 					std::vector<int>&                  _ResultECALIndices;
 
 				};
-
-
-				class GetOmega : public Function
-				{
-
-				public:
-
-					GetOmega(const TLorentzVector& Pi0LV_O,                 // Lorentz vector of 1st pi^0
-					         const TLorentzVector& Pi0LV_1,                 // Lorentz vector of 2nd pi^0
-					         const TLorentzVector& ChargedPartLV_0,         // Lorentz vector of 1st charged particle
-					         const TLorentzVector& ChargedPartLV_1,         // Lorentz vector of 2nd charged particle
-					         const TLorentzVector& ChargedPartLV_2,         // Lorentz vector of 3rd charged particle
-					         const int&            Charge_0,                // charge of 1st charged particle
-					         const int&            Charge_1,                // charge of 2nd charged particle
-					         const int&            Charge_2,                // charge of 3rd charged particle
-					         const double&         OmegaMass,               // nominal omega mass
-					         const double&         MassWindowOmega,         // cut around OmegaMass applied on m(pi^- pi^0 pi^+)
-					         TLorentzVector&       ResultOmegaLV,           // Lorentz vector of last found omega candidate
-					         int&                  ResultAccepted,          // 1 if there is exactly one omega candidate, 0 otherwise
-					         TLorentzVector&       ResultNotUsedPi0LV,      // Lorentz vector of the pi^0 that is not part of the omega
-					         TLorentzVector&       ResultNotUsedPiMinusLV)  // Lorentz vector of the pi^- that is not part of the omega
-						: _Pi0LV_O               (Pi0LV_O),
-						  _Pi0LV_1               (Pi0LV_1),
-						  _ChargedPartLV_0       (ChargedPartLV_0),
-						  _ChargedPartLV_1       (ChargedPartLV_1),
-						  _ChargedPartLV_2       (ChargedPartLV_2),
-						  _Charge_0              (Charge_0),
-						  _Charge_1              (Charge_1),
-						  _Charge_2              (Charge_2),
-						  _OmegaMass             (OmegaMass),
-						  _MassWindowOmega       (MassWindowOmega),
-						  _ResultOmegaLV         (ResultOmegaLV),
-						  _ResultAccepted        (ResultAccepted),
-						  _ResultNotUsedPi0LV    (ResultNotUsedPi0LV),
-						  _ResultNotUsedPiMinusLV(ResultNotUsedPiMinusLV)
-					{ }
-
-					virtual ~GetOmega() { }
-
-					bool
-					operator() ()
-					{
-						// searches for omega(782) -> pi^- pi^0 pi^+ candidates in pi^- pi^- pi^0 pi^0 pi^+ final state
-						// if several omega candidates are found, the last found one is returned
-						const std::vector<const TLorentzVector*> pi0s       = {&_Pi0LV_O, &_Pi0LV_1};
-						const std::vector<const TLorentzVector*> chargedLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
-						const std::vector<const int*>            charges    = {&_Charge_0,        &_Charge_1,        &_Charge_2};
-						size_t numberCandidates = 0;
-						_ResultAccepted = 0;
-						// Loop over available pi^0s
-						for (size_t i = 0; i < pi0s.size(); ++i) {
-							// Loop over charged particles
-							for (size_t j = 0; j < chargedLVs.size(); ++j) {
-								for (size_t k = j + 1; k < chargedLVs.size(); ++k) {
-									// Find pi+ pi- pair
-									if (*charges[j] + *charges[k] == 0) {
-										// Check if mass fits omega(782) nominal mass
-										const TLorentzVector candidate = *pi0s[i] + *chargedLVs[j] + *chargedLVs[k];
-										if (std::fabs(candidate.M() - _OmegaMass) < _MassWindowOmega) {
-											_ResultOmegaLV = candidate;
-											numberCandidates++;  // Count omega candidates
-											// find pi^0 that is not part of the omega candidate
-											for (size_t l = 0; l < pi0s.size(); l++) {
-												if (i != l) {
-													_ResultNotUsedPi0LV = *pi0s[l];
-												}
-											}
-											// find pi^- that is not part of the omega candidate
-											for (size_t m = 0; m < chargedLVs.size(); ++m) {
-												if ((m != j) and (m != k)) {
-													_ResultNotUsedPiMinusLV = *chargedLVs[m];
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-						if (numberCandidates ==  1) {
-							_ResultAccepted = 1;
-						}
-
-						return true;
-					}
-
-				private:
-
-					const TLorentzVector& _Pi0LV_O;
-					const TLorentzVector& _Pi0LV_1;
-					const TLorentzVector& _ChargedPartLV_0;
-					const TLorentzVector& _ChargedPartLV_1;
-					const TLorentzVector& _ChargedPartLV_2;
-					const int&            _Charge_0;
-					const int&            _Charge_1;
-					const int&            _Charge_2;
-					const double          _OmegaMass;        // constant parameter, needs to be copied
-					const double          _MassWindowOmega;  // constant parameter, needs to be copied
-					TLorentzVector&       _ResultOmegaLV;
-					int&                  _ResultAccepted;
-					TLorentzVector&       _ResultNotUsedPi0LV;
-					TLorentzVector&       _ResultNotUsedPiMinusLV;
-
-				};
-
-
-				class GetECALCorrectedEnergy : public Function
-				{
-
-				public:
-
-					GetECALCorrectedEnergy(const std::vector<double>&                      Energies,                 // energies of ECAL clusters to be corrected
-					                       const std::vector<double>&                      zPositions,               // z positions of ECAL clusters
-					                       const double&                                   zECAL1,                   // z position that distinguishes between ECAL 1 and 2
-					                       const int&                                      RunNumber,                // run number of the event
-					                       const std::map<int, std::pair<double, double>>& Corrections,              // energy-correction factors for ECAL1 and 2 by run number
-					                       std::vector<double>&                            ResultCorrectedEnergies)  // corrected energies of ECAL clusters
-						: _Energies               (Energies),
-						  _zPositions             (zPositions),
-						  _zECAL1                 (zECAL1),
-						  _RunNumber              (RunNumber),
-						  _Corrections            (Corrections),
-						  _ResultCorrectedEnergies(ResultCorrectedEnergies)
-					{ }
-
-					virtual ~GetECALCorrectedEnergy() { }
-
-					bool operator() ()
-					{
-						const size_t nmbClusters = _Energies.size();
-						if (_zPositions.size() != nmbClusters) {
-							return false;
-						}
-
-						_ResultCorrectedEnergies.resize(nmbClusters);
-						for (size_t i = 0; i < nmbClusters; ++i) {
-							double correction = 1;
-							auto it = _Corrections.find(_RunNumber);
-							if (it != _Corrections.end()) {
-								if (_zPositions[i] < _zECAL1) {
-									correction = it->second.first;
-								} else {
-									correction = it->second.second;
-								}
-							}
-							_ResultCorrectedEnergies[i] = correction * _Energies[i];
-						}
-						return true;
-					}
-
-				private:
-
-					const std::vector<double>&                     _Energies;
-					const std::vector<double>&                     _zPositions;
-					const double                                   _zECAL1;       // constant parameter, needs to be copied
-					const int&                                     _RunNumber;
-					const std::map<int, std::pair<double, double>> _Corrections;  // constant parameter, needs to be copied
-					std::vector<double>&                           _ResultCorrectedEnergies;
-
-				};
-
-
-				class GetECALCorrectedTiming : public Function
-				{
-
-				public:
-
-					GetECALCorrectedTiming(const std::vector<double>&                        Times,                 // times of ECAL clusters to be corrected
-					                       const std::vector<double>&                        Energies,              // energies of ECAL clusters
-					                       const std::vector<double>&                        zPositions,            // z positions of ECAL clusters
-					                       const double&                                     zECAL1,                // z position that distinguishes between ECAL 1 and 2
-					                       const std::map<std::string, std::vector<double>>& CalibrationCoeffs,     // calibration coefficients used to correct times
-					                       std::vector<double>&                              ResultCorrectedTimes)  // corrected times of ECAL clusters
-						: _Times               (Times),
-						  _Energies            (Energies),
-						  _zPositions          (zPositions),
-						  _zECAL1              (zECAL1),
-						  _CalibrationCoeffs   (CalibrationCoeffs),
-						  _ResultCorrectedTimes(ResultCorrectedTimes)
-					{ }
-
-					virtual ~GetECALCorrectedTiming() { }
-
-					bool
-					operator() ()
-					{
-						const size_t nmbClusters = _Times.size();
-						if ((_Energies.size() != nmbClusters) and (_zPositions.size() != nmbClusters)) {
-							return false;
-						}
-
-						_ResultCorrectedTimes.resize(nmbClusters);
-						for (size_t i = 0; i < nmbClusters; ++i) {
-							double       correction = 0;
-							const double energy     = _Energies[i];
-							const double energy2    = energy * energy;
-							if (_zPositions[i] < _zECAL1) {
-								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL1");
-								correction = coefficients[0] + coefficients[1] / energy  - coefficients[2] * energy
-								                             - coefficients[3] / energy2 + coefficients[4] * energy2;
-							} else {
-							  const double               energy3      = energy * energy2;
-								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL2");
-								correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
-								                             - coefficients[3] / energy2 - coefficients[4] * energy2
-								                             + coefficients[5] / energy3 + coefficients[6] * energy3;
-							}
-							_ResultCorrectedTimes[i] = _Times[i] - correction;
-						}
-						return true;
-					}
-
-				private:
-
-					const std::vector<double>&                       _Times;
-					const std::vector<double>&                       _Energies;
-					const std::vector<double>&                       _zPositions;
-					const double                                     _zECAL1;             // constant parameter, needs to be copied
-					const std::map<std::string, std::vector<double>> _CalibrationCoeffs;  // constant parameter, needs to be copied
-					std::vector<double>&                             _ResultCorrectedTimes;
-
-				};
-
-				// TODO currently function is not used, check if it is necessary
-				class GetPhotonPairParticles : public Function
-				{
-
-				public:
-
-					//TODO is ResultHasParticles really needed? size of ResultParticleLVs contains the same info
-					GetPhotonPairParticles(const std::vector<TLorentzVector>& PhotonLVs,            // Lorentz vectors of photons
-					                       const double&                      NominalMass,          // nominal mass of photon pair
-					                       const double&                      MassWindowECALMixed,  // m(gamma gamma) cut applied around NominalMass when the photon pair is in ECAL1 and 2
-					                       const double&                      MassWindowECAL1,      // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL1
-					                       const double&                      MassWindowECAL2,      // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL2
-					                       const std::vector<int>&            ECALIndices,          // indices of the ECAL that measured the photons
-					                       std::vector<TLorentzVector>&       ResultParticleLVs,    // Lorentz vectors of all particles reconstructed from photon pairs
-					                       int&                               ResultHasParticles)   // 1 if at least one photon pair was found; else 0
-						: _PhotonLVs          (PhotonLVs),
-						  _NominalMass        (NominalMass),
-						  _MassWindowECALMixed(MassWindowECALMixed),
-						  _MassWindowECAL1    (MassWindowECAL1),
-						  _MassWindowECAL2    (MassWindowECAL2),
-						  _ECALIndices        (ECALIndices),
-						  _ResultParticles    (ResultParticleLVs),
-						  _ResultHasParticles (ResultHasParticles)
-					{ }
-
-					virtual ~GetPhotonPairParticles() { }
-
-					bool
-					operator() ()
-					{
-						const size_t nmbPhotons = _PhotonLVs.size();
-						if (_ECALIndices.size() != nmbPhotons) {
-							return false;
-						}
-
-						_ResultParticles.reserve(nmbPhotons * nmbPhotons);
-						_ResultParticles.clear();
-						_ResultHasParticles = 0;
-						if (nmbPhotons < 2) {
-							return true;
-						}
-						for (size_t i = 0; i < nmbPhotons; ++i) {
-							for (size_t j = i + 1; j < nmbPhotons; ++j) {
-								const TLorentzVector candidate = _PhotonLVs[i] + _PhotonLVs[j];
-								if (std::fabs(candidate.M() - _NominalMass) < getECALResolution(_ECALIndices[i] == 1, _ECALIndices[j])) {
-									_ResultParticles.push_back(candidate);
-								}
-							}
-						}
-						if (_ResultParticles.size() > 1) {
-							_ResultHasParticles = 1;
-						}
-						return true;
-					}
-
-				private:
-
-					double getECALResolution(const int ECALIndex1,
-					                         const int ECALIndex2) const
-					{
-						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
-							return _MassWindowECAL1;
-						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
-							return _MassWindowECAL2;
-						} else if (ECALIndex1 != ECALIndex2) {
-							return _MassWindowECALMixed;
-						}
-						return std::numeric_limits<double>::quiet_NaN();
-					}
-
-					const std::vector<TLorentzVector>& _PhotonLVs;
-					const double                       _NominalMass;          // constant parameter, needs to be copied
-					const double                       _MassWindowECALMixed;  // constant parameter, needs to be copied
-					const double                       _MassWindowECAL1;      // constant parameter, needs to be copied
-					const double                       _MassWindowECAL2;      // constant parameter, needs to be copied
-					const std::vector<int>&            _ECALIndices;
-					std::vector<TLorentzVector>&       _ResultParticles;
-					int&                               _ResultHasParticles;
-
-				};
-
 
 				class GetKinematicFittingMass : public Function
 				{
@@ -908,37 +978,105 @@ namespace antok {
 
 				};
 
-				class getNominalMassDifferences : public Function
+				class GetOmega : public Function
 				{
 
 				public:
 
-					getNominalMassDifferences(const std::vector<TLorentzVector>&  VectorLV,
-					                          const double                        NominalMass,
-					                          std::vector<double>&                MassDifferences)
-						: _VectorLV          (VectorLV),
-						  _NominalMass       (NominalMass),
-						  _MassDifferences   (MassDifferences)
+					GetOmega(const TLorentzVector& Pi0LV_O,                 // Lorentz vector of 1st pi^0
+					         const TLorentzVector& Pi0LV_1,                 // Lorentz vector of 2nd pi^0
+					         const TLorentzVector& ChargedPartLV_0,         // Lorentz vector of 1st charged particle
+					         const TLorentzVector& ChargedPartLV_1,         // Lorentz vector of 2nd charged particle
+					         const TLorentzVector& ChargedPartLV_2,         // Lorentz vector of 3rd charged particle
+					         const int&            Charge_0,                // charge of 1st charged particle
+					         const int&            Charge_1,                // charge of 2nd charged particle
+					         const int&            Charge_2,                // charge of 3rd charged particle
+					         const double&         OmegaMass,               // nominal omega mass
+					         const double&         MassWindowOmega,         // cut around OmegaMass applied on m(pi^- pi^0 pi^+)
+					         TLorentzVector&       ResultOmegaLV,           // Lorentz vector of last found omega candidate
+					         int&                  ResultAccepted,          // 1 if there is exactly one omega candidate, 0 otherwise
+					         TLorentzVector&       ResultNotUsedPi0LV,      // Lorentz vector of the pi^0 that is not part of the omega
+					         TLorentzVector&       ResultNotUsedPiMinusLV)  // Lorentz vector of the pi^- that is not part of the omega
+						: _Pi0LV_O               (Pi0LV_O),
+						  _Pi0LV_1               (Pi0LV_1),
+						  _ChargedPartLV_0       (ChargedPartLV_0),
+						  _ChargedPartLV_1       (ChargedPartLV_1),
+						  _ChargedPartLV_2       (ChargedPartLV_2),
+						  _Charge_0              (Charge_0),
+						  _Charge_1              (Charge_1),
+						  _Charge_2              (Charge_2),
+						  _OmegaMass             (OmegaMass),
+						  _MassWindowOmega       (MassWindowOmega),
+						  _ResultOmegaLV         (ResultOmegaLV),
+						  _ResultAccepted        (ResultAccepted),
+						  _ResultNotUsedPi0LV    (ResultNotUsedPi0LV),
+						  _ResultNotUsedPiMinusLV(ResultNotUsedPiMinusLV)
 					{ }
 
-                    virtual ~getNominalMassDifferences() { }
+					virtual ~GetOmega() { }
 
 					bool
 					operator() ()
 					{
-						size_t sizeVec = _VectorLV.size();
-						_MassDifferences.resize(sizeVec);
-						for (size_t i = 0; i < sizeVec; ++i) {
-                            _MassDifferences[i] = _VectorLV[i].M() - _NominalMass;
+						// searches for omega(782) -> pi^- pi^0 pi^+ candidates in pi^- pi^- pi^0 pi^0 pi^+ final state
+						// if several omega candidates are found, the last found one is returned
+						const std::vector<const TLorentzVector*> pi0s       = {&_Pi0LV_O, &_Pi0LV_1};
+						const std::vector<const TLorentzVector*> chargedLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
+						const std::vector<const int*>            charges    = {&_Charge_0,        &_Charge_1,        &_Charge_2};
+						size_t numberCandidates = 0;
+						_ResultAccepted = 0;
+						// Loop over available pi^0s
+						for (size_t i = 0; i < pi0s.size(); ++i) {
+							// Loop over charged particles
+							for (size_t j = 0; j < chargedLVs.size(); ++j) {
+								for (size_t k = j + 1; k < chargedLVs.size(); ++k) {
+									// Find pi+ pi- pair
+									if (*charges[j] + *charges[k] == 0) {
+										// Check if mass fits omega(782) nominal mass
+										const TLorentzVector candidate = *pi0s[i] + *chargedLVs[j] + *chargedLVs[k];
+										if (std::fabs(candidate.M() - _OmegaMass) < _MassWindowOmega) {
+											_ResultOmegaLV = candidate;
+											numberCandidates++;  // Count omega candidates
+											// find pi^0 that is not part of the omega candidate
+											for (size_t l = 0; l < pi0s.size(); l++) {
+												if (i != l) {
+													_ResultNotUsedPi0LV = *pi0s[l];
+												}
+											}
+											// find pi^- that is not part of the omega candidate
+											for (size_t m = 0; m < chargedLVs.size(); ++m) {
+												if ((m != j) and (m != k)) {
+													_ResultNotUsedPiMinusLV = *chargedLVs[m];
+												}
+											}
+										}
+									}
+								}
+							}
 						}
+						if (numberCandidates ==  1) {
+							_ResultAccepted = 1;
+						}
+
 						return true;
 					}
 
 				private:
 
-					const std::vector<TLorentzVector>& _VectorLV;
-					const double                       _NominalMass;       // constant parameter, needs to be copied
-					std::vector<double>&               _MassDifferences;
+					const TLorentzVector& _Pi0LV_O;
+					const TLorentzVector& _Pi0LV_1;
+					const TLorentzVector& _ChargedPartLV_0;
+					const TLorentzVector& _ChargedPartLV_1;
+					const TLorentzVector& _ChargedPartLV_2;
+					const int&            _Charge_0;
+					const int&            _Charge_1;
+					const int&            _Charge_2;
+					const double          _OmegaMass;        // constant parameter, needs to be copied
+					const double          _MassWindowOmega;  // constant parameter, needs to be copied
+					TLorentzVector&       _ResultOmegaLV;
+					int&                  _ResultAccepted;
+					TLorentzVector&       _ResultNotUsedPi0LV;
+					TLorentzVector&       _ResultNotUsedPiMinusLV;
 
 				};
 
@@ -1020,154 +1158,6 @@ namespace antok {
 
 				};
 
-
-				class GetVector3VectorAttributes : public Function
-				{
-
-				public:
-
-
-					GetVector3VectorAttributes(const std::vector<TVector3>& Vector3s,           // TVector3 vectors
-					                                 std::vector<double>&   ResultXComponents,  // x components of TVector3 vectors
-					                                 std::vector<double>&   ResultYComponents,  // y components of TVector3 vectors
-					                                 std::vector<double>&   ResultZComponents)  // z components of TVector3 vectors
-						: _Vector3s         (Vector3s),
-						  _ResultXComponents(ResultXComponents),
-						  _ResultYComponents(ResultYComponents),
-						  _ResultZComponents(ResultZComponents)
-					{ }
-
-					virtual ~GetVector3VectorAttributes() { }
-
-					bool
-					operator() ()
-					{
-						const size_t nmbPhotons = _Vector3s.size();
-						_ResultXComponents.resize(nmbPhotons);
-						_ResultYComponents.resize(nmbPhotons);
-						_ResultZComponents.resize(nmbPhotons);
-
-						// loop over TVector3 vector and split into vector for each component
-						for (size_t i = 0; i < nmbPhotons; ++i) {
-							_ResultXComponents[i] = _Vector3s[i].X();
-							_ResultYComponents[i] = _Vector3s[i].Y();
-							_ResultZComponents[i] = _Vector3s[i].Z();
-						}
-						return true;
-					}
-
-				private:
-
-					const std::vector<TVector3>& _Vector3s;
-					std::vector<double>&         _ResultXComponents;
-					std::vector<double>&         _ResultYComponents;
-					std::vector<double>&         _ResultZComponents;
-
-				};
-
-
-				class getECALVariables : public Function
-				{
-
-				public:
-
-					getECALVariables(const std::vector<double>&         clusterIndex,                 // Cluster Index of Detected photon
-									 const std::vector<TLorentzVector>& photonVec,                    // lorentzvector of photon
-									 const std::vector<TVector3>&       clusterPosition,              // position of cluster
-									 const std::vector<TVector3>&       clusterPositionVariance,      // Variance in position of cluster
-									 const std::vector<double>&         clusterEnergy,                // energy of cluster
-									 const std::vector<double>&         clusterEnergyVariance,        // Variance in energy of cluster
-									 const std::vector<double>&         clusterTime,                  // time of ECAL cluster
-									 const int&                         ECALIndex,                    // Selected ECAL
-									 std::vector<TLorentzVector>&       resultPhotonVec,              // lorentzvector of photon
-									 std::vector<TVector3>&             resultClusterPosition,        // position of cluster
-									 std::vector<TVector3>&             resultClusterPositionVariance,// Variance in position of cluster
-									 std::vector<double>&               resultClusterEnergy,          // energy of cluster
-									 std::vector<double>&               resultClusterEnergyVariance,  // Variance in energy of cluster
-									 std::vector<double>&               resultClusterTime )           // time of ECAL cluster
-						: _clusterIndex                   (clusterIndex),
-						  _photonVec                      (photonVec),
-						  _clusterPosition                (clusterPosition),
-						  _clusterPositionVariance        (clusterPositionVariance),
-						  _clusterEnergy                  (clusterEnergy),
-						  _clusterEnergyVariance          (clusterEnergyVariance),
-						  _clusterTime                    (clusterTime),
-						  _ECALIndex                      (ECALIndex),
-						  _resultPhotonVec                (resultPhotonVec),
-						  _resultClusterPosition          (resultClusterPosition),
-						  _resultClusterPositionVariance  (resultClusterPositionVariance),
-						  _resultClusterEnergy            (resultClusterEnergy),
-						  _resultClusterEnergyVariance    (resultClusterEnergyVariance),
-						  _resultClusterTime              (resultClusterTime)
-					{ }
-
-
-					virtual ~getECALVariables() { }
-
-					bool
-					operator() ()
-					{
-						// check if all vectors have the same size
-						const size_t nmbClusters = _clusterIndex.size();
-						/*if (   (_photonVec.size()               != nmbClusters)
-							or (_clusterPosition.size()         != nmbClusters)
-							or (_clusterPositionVariance.size() != nmbClusters)
-							or (_clusterEnergy.size()           != nmbClusters)
-							or (_clusterEnergyVariance.size()   != nmbClusters)
-							or (_clusterTime.size()             != nmbClusters)) {
-							std::cerr << "wrong sizes of input vectors!";
-							return false;
-						}*/
-
-						// get number of clusters in given ECAL
-						size_t nmbResultClusters = 0;
-						for (size_t i = 0; i < nmbClusters; ++i) {
-							if (_clusterIndex[i] == _ECALIndex) {
-								++nmbResultClusters;
-							}
-						}
-
-						_resultPhotonVec.resize(nmbResultClusters);
-						_resultClusterPosition.resize(nmbResultClusters);
-						_resultClusterPositionVariance.resize(nmbResultClusters);
-						_resultClusterEnergy.resize(nmbResultClusters);
-						_resultClusterEnergyVariance.resize(nmbResultClusters);
-						_resultClusterTime.resize(nmbResultClusters);
-
-						int nmbAccepted = 0;
-						// loop over clusters and push attributes back if hit is in required ECAL
-						for (size_t i = 0; i < nmbClusters; ++i) {
-							if (_clusterIndex[i] == _ECALIndex) {
-								_resultPhotonVec[nmbAccepted] = _photonVec[i];
-								_resultClusterPosition[nmbAccepted] = _clusterPosition[i];
-								_resultClusterPositionVariance[nmbAccepted] = _clusterPositionVariance[i];
-								_resultClusterEnergy[nmbAccepted] = _clusterEnergy[i];
-								_resultClusterEnergyVariance[nmbAccepted] = _clusterEnergyVariance[i];
-								_resultClusterTime[nmbAccepted] = _clusterTime[i];
-								++nmbAccepted;
-							}
-						}
-						return true;
-					}
-
-				private:
-
-					const std::vector<double>&         _clusterIndex;
-					const std::vector<TLorentzVector>& _photonVec;
-					const std::vector<TVector3>&       _clusterPosition;
-					const std::vector<TVector3>&       _clusterPositionVariance;
-					const std::vector<double>&         _clusterEnergy;
-					const std::vector<double>&         _clusterEnergyVariance;
-					const std::vector<double>&         _clusterTime;
-					const int                          _ECALIndex; //const paramerter, needs to be copied
-					std::vector<TLorentzVector>&       _resultPhotonVec;
-					std::vector<TVector3>&             _resultClusterPosition;
-					std::vector<TVector3>&             _resultClusterPositionVariance;
-					std::vector<double>&               _resultClusterEnergy;
-					std::vector<double>&               _resultClusterEnergyVariance;
-					std::vector<double>&               _resultClusterTime;
-
-				};
 
 			}  // functions namespace
 
