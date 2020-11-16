@@ -897,12 +897,12 @@ namespace antok {
 			operator() ()
 			{
 				if (_vector.size() == 0) {
-					//TODO result is not set; this means probably stale data from the previous event will be used downstream of this function
-					//     to prevent this shouldn't we do
-					// _result = T();?
+					_result = T();
 					return true;
 				}
-				//TODO add check that _entry does not exceed size of _vector
+				if (_entry > _vector.size()) {
+					std::cerr << "GetVectorEntry entry position is out of vector range." << std::endl;
+				}
 				_result = _vector[_entry];
 				return true;
 			};

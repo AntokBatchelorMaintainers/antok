@@ -21,7 +21,16 @@ namespace antok {
 
 	public:
 
-		//TODO add proper destructor that deletes all allocated memory
+		// delete all allocated memory
+		virtual ~Data(){
+            for (std::pair<std::string, TVector3*>                    const& v3Pair        : _vector3s)             delete &v3Pair.second;
+            for (std::pair<std::string, TLorentzVector*>              const& LVPair        : _lorentzVectors)       delete &LVPair.second;
+            for (std::pair<std::string, std::vector<int>*>            const& intVecPair    : _intVectors)           delete &intVecPair.second;
+            for (std::pair<std::string, std::vector<Long64_t>*>       const& l64tVecPair   : _long64_tVectors)      delete &l64tVecPair.second;
+            for (std::pair<std::string, std::vector<double>*>         const& doubleVecPair : _doubleVectors)        delete &doubleVecPair.second;
+            for (std::pair<std::string, std::vector<TVector3>*>       const& v3VecPair     : _vector3Vectors)       delete &v3VecPair.second;
+            for (std::pair<std::string, std::vector<TLorentzVector>*> const& LVVecPair     : _lorentzVectorVectors) delete &LVVecPair.second;
+		};
 
 		template <typename T> bool insert             (const std::string& name);
 		template <typename T> bool insertInputVariable(const std::string& name);
