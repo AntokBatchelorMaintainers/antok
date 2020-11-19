@@ -8,6 +8,7 @@
 #include "TLorentzRotation.h"
 #include "TLorentzVector.h"
 #include "TRotation.h"
+#include "TMath.h"
 
 #include "functions.hpp"
 #include "neutral_fit.h"
@@ -1077,6 +1078,133 @@ namespace antok {
 					int&                  _ResultAccepted;
 					TLorentzVector&       _ResultNotUsedPi0LV;
 					TLorentzVector&       _ResultNotUsedPiMinusLV;
+
+				};
+
+                class GetFittedOmegaMassVsPrecisionGoal : public Function
+				{
+
+				public:
+
+					GetFittedOmegaMassVsPrecisionGoal(const TVector3&              VertexPosition,
+                                                      const TLorentzVector&        ChargedPartLV_0,         // Lorentz vector of 1st charged particle
+					                                  const TLorentzVector&        ChargedPartLV_1,         // Lorentz vector of 2nd charged particle
+					                                  const TLorentzVector&        ChargedPartLV_2,         // Lorentz vector of 3rd charged particle
+					                                  const int&                   Charge_0,                // charge of 1st charged particle
+					                                  const int&                   Charge_1,                // charge of 2nd charged particle
+					                                  const int&                   Charge_2,                // charge of 3rd charged particle
+					                                  const std::vector<TVector3>& ClusterPositions,
+					                                  const std::vector<TVector3>& ClusterPositionVariances,
+					                                  const std::vector<double>&   ClusterEnergies,
+					                                  const std::vector<double>&   ClusterEnergyVariances,
+					                                  const std::vector<int>&      ClusterIndices,
+					                                  const double&                PiMass,
+					                                  const double&                PiMassLowerLimit,
+					                                  const double&                PiMassUpperLimit,
+					                                  const double&                precisionGoalLowerLimit,
+					                                  const double&                precisionGoalUpperLimit,
+					                                  const int&                   whichEnergyVariance,
+					                                  const double&                OmegaMass,
+					                                  const double&                OmegaMasswindow,
+					                                  std::vector<double>&         ResultPrecisionGoals,
+					                                  std::vector<int>&            ResultAcceptedOmegas,
+					                                  std::vector<double>&         ResultOmegaMasses)
+						: _VertexPosition          (VertexPosition),
+					      _ChargedPartLV_0         (ChargedPartLV_0),
+						  _ChargedPartLV_1         (ChargedPartLV_1),
+						  _ChargedPartLV_2         (ChargedPartLV_2),
+						  _Charge_0                (Charge_0),
+						  _Charge_1                (Charge_1),
+						  _Charge_2                (Charge_2),
+						  _ClusterPositions        (ClusterPositions),
+						  _ClusterPositionVariances(ClusterPositionVariances),
+						  _ClusterEnergies         (ClusterEnergies),
+						  _ClusterEnergyVariances  (ClusterEnergyVariances),
+						  _ClusterIndices          (ClusterIndices),
+						  _PiMass                  (PiMass),
+						  _PiMassLowerLimit        (PiMassLowerLimit),
+						  _PiMassUpperLimit        (PiMassUpperLimit),
+						  _precisionGoalLowerLimit (precisionGoalLowerLimit),
+						  _precisionGoalUpperLimit (precisionGoalUpperLimit),
+						  _whichEnergyVariance     (whichEnergyVariance),
+						  _OmegaMass               (OmegaMass),
+						  _OmegaMasswindow         (OmegaMasswindow),
+						  _ResultPrecisionGoals    (ResultPrecisionGoals),
+						  _ResultAcceptedOmegas    (ResultAcceptedOmegas),
+						  _ResultOmegaMasses       (ResultOmegaMasses)
+					{ }
+
+					virtual ~GetFittedOmegaMassVsPrecisionGoal() { }
+
+					bool
+					operator() ()
+					{
+
+						size_t sizeVectors = TMath::Log(_precisionGoalLowerLimit / _precisionGoalUpperLimit);
+						_ResultPrecisionGoals.resize(sizeVectors);
+						_ResultAcceptedOmegas.resize(sizeVectors);
+						_ResultOmegaMasses   .resize(sizeVectors);
+						std::vector<TLorentzVector> PiLorentzVectors;
+                        std::vector<double>         PiChi2s;
+                        std::vector<double>         PiPullsX0;
+                        std::vector<double>         PiPullsY0;
+                        std::vector<double>         PiPullsE0;
+                        std::vector<double>         PiPullsX1;
+                        std::vector<double>         PiPullsY1;
+                        std::vector<double>         PiPullsE1;
+                        std::vector<double>         PiPValues;
+                        std::vector<int>            PiNmbIterations;
+                        int                         PiSuccess = 0;
+                        TLorentzVector              OmegaLV;
+					    int                         OmegaAccepted = 0;
+					    TLorentzVector              FinalPi0LV;
+					    TLorentzVector              FinalPiMinusLV;
+					    size_t index = 0;
+					    //TODO implement checks for safe use
+						for (double PG = _precisionGoalLowerLimit; PG >= _precisionGoalUpperLimit; PG*= 0.1 ) {
+                            GetKinematicFittingMass* PiPairFit = new GetKinematicFittingMass( _VertexPosition, _ClusterPositions, _ClusterPositionVariances, _ClusterEnergies, _ClusterEnergyVariances,
+                                                                                              _ClusterIndices, _PiMass, _PiMassLowerLimit, _PiMassUpperLimit, PG, _whichEnergyVariance, PiLorentzVectors,
+                                                                                              PiChi2s, PiPullsX0, PiPullsY0, PiPullsE0, PiPullsX1, PiPullsY1, PiPullsE1, PiPValues, PiNmbIterations, PiSuccess);
+                            (*PiPairFit)();
+                            delete PiPairFit;
+                        	if (!PiSuccess) continue;
+                        	GetOmega* getOmega = new GetOmega( PiLorentzVectors[0], PiLorentzVectors[1], _ChargedPartLV_0, _ChargedPartLV_1, _ChargedPartLV_2, _Charge_0,
+                        	                                  _Charge_1, _Charge_2, _OmegaMass, _OmegaMasswindow, OmegaLV, OmegaAccepted, FinalPi0LV, FinalPiMinusLV);
+                        	(*getOmega)();
+                        	delete getOmega;
+                        	_ResultPrecisionGoals[index] = PG;
+                        	_ResultAcceptedOmegas[index] = OmegaAccepted;
+                        	_ResultOmegaMasses[index]    = OmegaLV.M();
+                        	++index;
+                        }
+                        return true;
+					}
+
+				private:
+
+					const TVector3&              _VertexPosition;
+					const TLorentzVector&        _ChargedPartLV_0;
+					const TLorentzVector&        _ChargedPartLV_1;
+					const TLorentzVector&        _ChargedPartLV_2;
+					const int&                   _Charge_0;
+					const int&                   _Charge_1;
+					const int&                   _Charge_2;
+					const std::vector<TVector3>& _ClusterPositions;
+					const std::vector<TVector3>& _ClusterPositionVariances;
+					const std::vector<double>&   _ClusterEnergies;
+					const std::vector<double>&   _ClusterEnergyVariances;
+					const std::vector<int>&      _ClusterIndices;
+					const double                 _PiMass;                    // constant parameter, needs to be copied
+					const double                 _PiMassLowerLimit;          // constant parameter, needs to be copied
+					const double                 _PiMassUpperLimit;          // constant parameter, needs to be copied
+					const double                 _precisionGoalLowerLimit;   // constant parameter, needs to be copied
+					const double                 _precisionGoalUpperLimit;   // constant parameter, needs to be copied
+					const int                    _whichEnergyVariance;       // constant parameter, needs to be copied
+					const double                 _OmegaMass;                 // constant parameter, needs to be copied
+					const double                 _OmegaMasswindow;           // constant parameter, needs to be copied
+					std::vector<double>&         _ResultPrecisionGoals;
+					std::vector<int>&            _ResultAcceptedOmegas;
+					std::vector<double>&         _ResultOmegaMasses;
 
 				};
 

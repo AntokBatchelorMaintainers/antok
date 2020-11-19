@@ -271,6 +271,13 @@ antok::generators::generateLog(const YAML::Node&               function,
 		return nullptr;
 	}
 
+	// Get constant arguments
+	std::map<std::string, double> constArgs = {{"Base", 0}};
+	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
 	// Register output variables
 	const std::string& quantityName = quantityNames[0];
     if (typeNameArg1 == "std::vector<double>") {
@@ -288,12 +295,15 @@ antok::generators::generateLog(const YAML::Node&               function,
 
 	if        (typeNameArg1 == "double") {
 		return new antok::functions::Log<double>             (*data.getAddr<double>(args[0].first),
+		                                                      constArgs["Base"],
 		                                                      *data.getAddr<double>(quantityName));
 	} else if (typeNameArg1 == "int") {
 		return new antok::functions::Log<int>                (*data.getAddr<int>   (args[0].first),
+		                                                      constArgs["Base"],
 		                                                      *data.getAddr<double>(quantityName));
 	} else if (typeNameArg1 == "std::vector<double>") {
 		return new antok::functions::Log<std::vector<double>>(*data.getAddr<std::vector<double>>(args[0].first),
+                                                              constArgs["Base"],
 		                                                      *data.getAddr<std::vector<double>>(quantityName));
 	} else {
 		std::cerr << "'" << functionName << "' is not (yet) implemented for input type '" << typeNameArg1 << "'." << std::endl;

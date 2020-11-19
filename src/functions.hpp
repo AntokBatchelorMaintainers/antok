@@ -582,10 +582,12 @@ namespace antok {
 
 		public:
 
-			Log(const T& in,
-			    double&  out)
-				: _in (in),
-				  _out(out)
+			Log(const T&      in,
+			    const double& base,
+			    double&       out)
+				: _in  (in),
+                  _base(base),
+				  _out (out)
 			{ }
 
 			virtual ~Log() { }
@@ -593,14 +595,15 @@ namespace antok {
 			bool
 			operator() ()
 			{
-				_out = std::log(_in);
+				_out = std::log(_in)/std::log(_base);
 				return true;
 			}
 
 		private:
 
-			const T& _in;
-			double&  _out;
+			const T&     _in;
+			const double _base;
+			double&      _out;
 
 		};
 
@@ -611,8 +614,10 @@ namespace antok {
 		public:
 
 			Log(const std::vector<double>&  in,
-			         std::vector<double>&   out)
+			    const double&               base,
+                std::vector<double>&        out)
 				: _in(in),
+				  _base(base),
 				  _out(out)
 			{ }
 
@@ -623,7 +628,7 @@ namespace antok {
                 size_t sizeVec = _in.size();
                 _out.resize(sizeVec);
                 for (size_t i = 0; i < sizeVec; ++i) {
-                    _out[i] = std::log(_in[i]);
+                    _out[i] = std::log(_in[i])/std::log(_base);
                 }
                 return true;
             }
@@ -631,6 +636,7 @@ namespace antok {
 		private:
 
 			const std::vector<double>& _in;
+			const double               _base;
 			std::vector<double>&       _out;
 
 		};

@@ -22,33 +22,35 @@ antok::user::cdreis::getUserFunction(const YAML::Node&                function,
 {
 	const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
 	if        (functionName == "getVector3VectorAttributes") {
-		return antok::user::cdreis::generateGetVector3VectorAttributes      (function, quantityNames, index);
+		return antok::user::cdreis::generateGetVector3VectorAttributes       (function, quantityNames, index);
 	} else if (functionName == "getVectorLorentzVectorAttributes") {
-		return antok::user::cdreis::generateGetVectorLorentzVectorAttributes(function, quantityNames, index);
+		return antok::user::cdreis::generateGetVectorLorentzVectorAttributes (function, quantityNames, index);
 	} else if (functionName == "getNominalMassDifferences") {
-		return antok::user::cdreis::generateGetNominalMassDifferences       (function, quantityNames, index);
+		return antok::user::cdreis::generateGetNominalMassDifferences        (function, quantityNames, index);
 	} else if (functionName == "GetRecoilLorentzVec") {
-		return antok::user::cdreis::generateGetRecoilLorentzVec             (function, quantityNames, index);
+		return antok::user::cdreis::generateGetRecoilLorentzVec              (function, quantityNames, index);
 	} else if (functionName == "getECALCorrectedEnergy") {
-		return antok::user::cdreis::generateGetECALCorrectedEnergy          (function, quantityNames, index);
+		return antok::user::cdreis::generateGetECALCorrectedEnergy           (function, quantityNames, index);
 	} else if (functionName == "getECALCorrectedTiming") {
-		return antok::user::cdreis::generateGetECALCorrectedTiming          (function, quantityNames, index);
+		return antok::user::cdreis::generateGetECALCorrectedTiming           (function, quantityNames, index);
 	} else if (functionName == "getCleanedEcalClusters") {
-		return antok::user::cdreis::generateGetCleanedEcalClusters          (function, quantityNames, index);
+		return antok::user::cdreis::generateGetCleanedEcalClusters           (function, quantityNames, index);
 	} else if (functionName == "getECALVariables") {
-		return antok::user::cdreis::generateGetECALVariables                (function, quantityNames, index);
+		return antok::user::cdreis::generateGetECALVariables                 (function, quantityNames, index);
 	} else if (functionName == "getPhotonLorentzVecs") {
-		return antok::user::cdreis::generateGetPhotonLorentzVecs            (function, quantityNames, index);
+		return antok::user::cdreis::generateGetPhotonLorentzVecs             (function, quantityNames, index);
 	} else if (functionName == "getPhotonPairParticles") {
-		return antok::user::cdreis::generateGetPhotonPairParticles          (function, quantityNames, index);
+		return antok::user::cdreis::generateGetPhotonPairParticles           (function, quantityNames, index);
 	} else if (functionName == "getPi0Pair") {
-		return antok::user::cdreis::generateGetPi0Pair                      (function, quantityNames, index);
+		return antok::user::cdreis::generateGetPi0Pair                       (function, quantityNames, index);
 	} else if (functionName == "getKinematicFittingMass") {
-		return antok::user::cdreis::generateGetKinematicFittingMass         (function, quantityNames, index);
+		return antok::user::cdreis::generateGetKinematicFittingMass          (function, quantityNames, index);
 	} else if (functionName == "getOmega") {
-		return antok::user::cdreis::generateGetOmega                        (function, quantityNames, index);
+		return antok::user::cdreis::generateGetOmega                         (function, quantityNames, index);
+	} else if (functionName == "getFittedOmegaMassVsPrecisionGoal") {
+		return antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(function, quantityNames, index);
 	} else if (functionName == "getThreePionCombinationMass") {
-		return antok::user::cdreis::generateGetThreePionCombinationMass     (function, quantityNames, index);
+		return antok::user::cdreis::generateGetThreePionCombinationMass      (function, quantityNames, index);
 	}
 	return nullptr;
 }
@@ -825,6 +827,97 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 	                                                    *data.getAddr<int>           (ResultAccepted),
 	                                                    *data.getAddr<TLorentzVector>(ResultNotUsedPi0LV),
 	                                                    *data.getAddr<TLorentzVector>(ResultNotUsedPiMinusLV));
+}
+
+antok::Function*
+antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(const YAML::Node&               function,
+                                                               const std::vector<std::string>& quantityNames,
+                                                               const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 3)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	std::vector<std::pair<std::string, std::string>> args
+		= {{"VertexPosition"          , "TVector3"},
+		   {"Scattered0"              , "TLorentzVector"},
+		   {"Scattered1"              , "TLorentzVector"},
+		   {"Scattered2"              , "TLorentzVector"},
+		   {"Charge0"                 , "int"},
+		   {"Charge1"                 , "int"},
+		   {"Charge2"                 , "int"},
+		   {"ClusterPositions"        , "std::vector<TVector3>"},
+		   {"ClusterPositionsVariance", "std::vector<TVector3>"},
+		   {"ClusterEnergies"         , "std::vector<double>"},
+		   {"ClusterEnergiesVariance" , "std::vector<double>"},
+		   {"ClusterIndices"          , "std::vector<int>"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Get constant arguments
+	std::map<std::string, int> constArgsInt = {{"ErrorEstimateType", 0}};
+	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+	std::map<std::string, double> constArgs
+		= {{"PiMass",                  0},
+		   {"PiMassLowerLimit",        0},
+		   {"PiMassUpperLimit",        0},
+		   {"PrecisionGoalLowerLimit", 0},
+		   {"PrecisionGoalUpperLimit", 0},
+		   {"OmegaMass",               0},
+		   {"OmegaMasswindow",         0}};
+
+	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+    // Register output variables
+	const std::string& ResultPrecisionGoals = quantityNames[0];
+	const std::string& ResultAcceptedOmegas = quantityNames[1];
+	const std::string& ResultOmegaMasses    = quantityNames[2];
+	antok::Data&       data                   = antok::ObjectManager::instance()->getData();
+	if (not data.insert<std::vector<double>>(ResultPrecisionGoals)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(ResultPrecisionGoals);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<int>>(ResultAcceptedOmegas)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(ResultAcceptedOmegas);
+		return nullptr;
+	}
+	if (not data.insert<std::vector<double>>(ResultOmegaMasses)) {
+		std::cerr << antok::Data::getVariableInsertionErrorMsg(ResultOmegaMasses);
+		return nullptr;
+	}
+
+	return new antok::user::cdreis::functions::GetFittedOmegaMassVsPrecisionGoal(*data.getAddr<TVector3>             (args[0].first),  // VertexPosition
+	                                                                             *data.getAddr<TLorentzVector>       (args[1].first),  // ChargedPartLV_0
+	                                                                             *data.getAddr<TLorentzVector>       (args[2].first),  // ChargedPartLV_1
+	                                                                             *data.getAddr<TLorentzVector>       (args[3].first),  // ChargedPartLV_2
+	                                                                             *data.getAddr<int>                  (args[4].first),  // Charge_0
+	                                                                             *data.getAddr<int>                  (args[5].first),  // Charge_1
+	                                                                             *data.getAddr<int>                  (args[6].first),  // Charge_2
+	                                                                             *data.getAddr<std::vector<TVector3>>(args[7].first),  // ClusterPositions
+	                                                                             *data.getAddr<std::vector<TVector3>>(args[8].first),  // ClusterPositionVariances
+	                                                                             *data.getAddr<std::vector<double>>  (args[9].first),  // ClusterEnergies
+	                                                                             *data.getAddr<std::vector<double>>  (args[10].first), // ClusterEnergieVariances
+	                                                                             *data.getAddr<std::vector<int>>     (args[11].first), // ClusterIndices
+	                                                                             constArgs["PiMass"],                                  // PiMass
+	                                                                             constArgs["PiMassLowerLimit"],                        // PiMassLowerLimit
+	                                                                             constArgs["PiMassUpperLimit"],                        // PiMassUpperLimit
+	                                                                             constArgs["PrecisionGoalLowerLimit"],                 // PrecisionGoalLowerLimit
+	                                                                             constArgs["PrecisionGoalUpperLimit"],                 // PrecisionGoalUpperLimit
+	                                                                             constArgs["ErrorEstimateType"],                       // ErrorEstimateType
+	                                                                             constArgs["OmegaMass"],                               // OmegaMass
+	                                                                             constArgs["OmegaMasswindow"],                         // OmegaMasswindow
+	                                                                             *data.getAddr<std::vector<double>>(ResultPrecisionGoals),
+	                                                                             *data.getAddr<std::vector<int>>   (ResultAcceptedOmegas),
+	                                                                             *data.getAddr<std::vector<double>>(ResultOmegaMasses));
 }
 
 
