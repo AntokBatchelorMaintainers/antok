@@ -11,7 +11,7 @@ namespace antok {
 
 		std::string mergeNameIndex(const std::string& name, const int index);
 		bool nmbArgsIsExactly(const YAML::Node& function, const size_t& actualNmb, const size_t& requiredNmb);
-		//TODO introduce typedef for args (at least in .cxx file) to avoid the long type name
+		std::string getTypeOfArg(const YAML::Node&  function, const int index, const std::string& argName);
 		bool functionArgumentHandler(std::vector<std::pair<std::string, std::string>>& args,
 		                             const YAML::Node&                                 function,
 		                             const int                                         index,
@@ -39,26 +39,27 @@ namespace antok {
 		std::string getFunctionArgumentHandlerErrorMsg(const std::vector<std::string>& quantityNames);
 
 		// macro for shorter prototyping of the antok functions
-		#define FUNCTIONPROTOTYPE(fctName) antok::Function* fctName (const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index)
-		FUNCTIONPROTOTYPE(generateAbs);
-		FUNCTIONPROTOTYPE(generateLog);
-		FUNCTIONPROTOTYPE(generateConvertIntToDouble);
-		FUNCTIONPROTOTYPE(generateDiff);
-		FUNCTIONPROTOTYPE(generateQuotient);
-		FUNCTIONPROTOTYPE(generateMul);
-		FUNCTIONPROTOTYPE(generateEnergy);
-		FUNCTIONPROTOTYPE(generateGetBeamLorentzVector);
-		FUNCTIONPROTOTYPE(generateGetGradXGradY);
-		FUNCTIONPROTOTYPE(generateGetLorentzVectorAttributes);
-		FUNCTIONPROTOTYPE(generateGetLorentzVec);
-		FUNCTIONPROTOTYPE(generateGetTs);
-		FUNCTIONPROTOTYPE(generateGetVector3);
-		FUNCTIONPROTOTYPE(generateGetVectorEntry);
-		FUNCTIONPROTOTYPE(generateMass);
-		FUNCTIONPROTOTYPE(generateMass2);
-		FUNCTIONPROTOTYPE(generateRadToDegree);
-		FUNCTIONPROTOTYPE(generateSum);
-		FUNCTIONPROTOTYPE(generateSum2);
+		#define FUNCTION_PROTOTYPE(fctName) antok::Function* fctName (const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index)
+		FUNCTION_PROTOTYPE(generateAbs);
+		FUNCTION_PROTOTYPE(generateLog);
+		FUNCTION_PROTOTYPE(generateConvertIntToDouble);
+		FUNCTION_PROTOTYPE(generateDiff);
+		FUNCTION_PROTOTYPE(generateQuotient);
+		FUNCTION_PROTOTYPE(generateMul);
+		FUNCTION_PROTOTYPE(generateEnergy);
+		FUNCTION_PROTOTYPE(generateGetBeamLorentzVector);
+		FUNCTION_PROTOTYPE(generateGetGradXGradY);
+		FUNCTION_PROTOTYPE(generateGetLorentzVectorAttributes);
+		FUNCTION_PROTOTYPE(generateGetLorentzVec);
+		FUNCTION_PROTOTYPE(generateGetTs);
+		FUNCTION_PROTOTYPE(generateGetVector3);
+		FUNCTION_PROTOTYPE(generateGetVectorEntry);
+		FUNCTION_PROTOTYPE(generateMass);
+		FUNCTION_PROTOTYPE(generateMass2);
+		FUNCTION_PROTOTYPE(generateRadToDegree);
+		FUNCTION_PROTOTYPE(generateSum);
+		FUNCTION_PROTOTYPE(generateSum2);
+
 	}
 
 }

@@ -4,7 +4,6 @@
 #include <iostream>
 #include <typeinfo>
 #include <vector>
-#include <typeinfo>
 
 #include <boost/core/demangle.hpp>
 
@@ -138,32 +137,34 @@ namespace antok {
 
 		public:
 
+			enum lorentzVecDefType {XYZM = 0, PxPyPzE = 1, Vec3M = 2, Vec3E = 3};
+
 			GetLorentzVec(const double&   x,
 			              const double&   y,
 			              const double&   z,
-			              const double&   m,
+			              const double&   fourthComp,  // m or E
 			              TLorentzVector& out,
-			              const int       pType)
-				: _xAddr   (&x),
-				  _yAddr   (&y),
-				  _zAddr   (&z),
-				  _vec3Addr(nullptr),
-				  _mAddr   (&m),
-				  _out     (out),
-				  _pType   (pType)
+			              const int       defType)
+				: _xAddr         (&x),
+				  _yAddr         (&y),
+				  _zAddr         (&z),
+				  _vec3Addr      (nullptr),
+				  _fourthCompAddr(&fourthComp),
+				  _out           (out),
+				  _defType       (defType)
 			{ }
 
 			GetLorentzVec(const TVector3& vec3,
-			              const double&   m,
+			              const double&   fourthComp,  // m or E
 			              TLorentzVector& out,
-			              const int       pType)
-				: _xAddr   (nullptr),
-				  _yAddr   (nullptr),
-				  _zAddr   (nullptr),
-				  _vec3Addr(&vec3),
-				  _mAddr   (&m),
-				  _out     (out),
-				  _pType   (pType)
+			              const int       defType)
+				: _xAddr         (nullptr),
+				  _yAddr         (nullptr),
+				  _zAddr         (nullptr),
+				  _vec3Addr      (&vec3),
+				  _fourthCompAddr(&fourthComp),
+				  _out           (out),
+				  _defType       (defType)
 			{ }
 
 			virtual ~GetLorentzVec() { }
@@ -171,18 +172,18 @@ namespace antok {
 			bool
 			operator() ()
 			{
-				switch(_pType) {
-					case 0:
-						_out.SetXYZM(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
+				switch(_defType) {
+					case XYZM:
+						_out.SetXYZM(*_xAddr, *_yAddr, *_zAddr, *_fourthCompAddr);
 						break;
-					case 1:
-						_out.SetPxPyPzE(*_xAddr, *_yAddr, *_zAddr, *_mAddr);
+					case PxPyPzE:
+						_out.SetPxPyPzE(*_xAddr, *_yAddr, *_zAddr, *_fourthCompAddr);
 						break;
-					case 2:
-						_out.SetVectM(*_vec3Addr, *_mAddr);
+					case Vec3M:
+						_out.SetVectM(*_vec3Addr, *_fourthCompAddr);
 						break;
-					case 3:
-						_out.SetPxPyPzE(_vec3Addr->X(), _vec3Addr->Y(), _vec3Addr->Z(), *_mAddr);
+					case Vec3E:
+						_out.SetPxPyPzE(_vec3Addr->X(), _vec3Addr->Y(), _vec3Addr->Z(), *_fourthCompAddr);
 						break;
 				}
 				return true;
@@ -194,9 +195,9 @@ namespace antok {
 			const double*   _yAddr;
 			const double*   _zAddr;
 			const TVector3* _vec3Addr;
-			const double*   _mAddr;
+			const double*   _fourthCompAddr;
 			TLorentzVector& _out;
-			const int       _pType;
+			const int       _defType;
 
 		};
 
@@ -376,15 +377,16 @@ namespace antok {
 			T&       _out;
 		};
 
+
 		template <>
-		class Diff<std::vector<double>>: public Function
+		class Diff<std::vector<double>> : public Function
 		{
 
 		public:
 
 			Diff(const std::vector<double>& in1,
-			         const std::vector<double>& in2,
-			         std::vector<double>&       out)
+			     const std::vector<double>& in2,
+			     std::vector<double>&       out)
 				: _in1(in1),
 				  _in2(in2),
 				  _out(out)
@@ -393,15 +395,18 @@ namespace antok {
 			virtual ~Diff() { }
 
 			bool
-			operator() () {
-                size_t sizeVec = _in1.size();
-                if (_in2.size() != sizeVec) std::cerr << "input vectors for Diff have different size";
-                _out.resize(sizeVec);
-                for (size_t i = 0; i < sizeVec; ++i) {
-                    _out[i] = _in1[i] / _in2[i];
-                }
-                return true;
-            }
+			operator() ()
+			{
+				const size_t sizeVec = _in1.size();
+				if (_in2.size() != sizeVec) {
+					return false;
+				}
+				_out.resize(sizeVec);
+				for (size_t i = 0; i < sizeVec; ++i) {
+					_out[i] = _in1[i] - _in2[i];
+				}
+				return true;
+			}
 
 		private:
 
@@ -432,7 +437,6 @@ namespace antok {
 			operator() ()
 			{
 				_out = _in1 / _in2;
-
 				return true;
 			}
 
@@ -443,6 +447,7 @@ namespace antok {
 			T&       _out;
 
 		};
+
 
 		template <>
 		class Quotient<std::vector<double>>: public Function
@@ -461,15 +466,18 @@ namespace antok {
 			virtual ~Quotient() { }
 
 			bool
-			operator() () {
-                size_t sizeVec = _in1.size();
-                if (_in2.size() != sizeVec) std::cerr << "input vectors for Quotient have different size";
-                _out.resize(sizeVec);
-                for (size_t i = 0; i < sizeVec; ++i) {
-                    _out[i] = _in1[i] / _in2[i];
-                }
-                return true;
-            }
+			operator() ()
+			{
+				const size_t sizeVec = _in1.size();
+				if (_in2.size() != sizeVec) {
+					return false;
+				}
+				_out.resize(sizeVec);
+				for (size_t i = 0; i < sizeVec; ++i) {
+					_out[i] = _in1[i] / _in2[i];
+				}
+				return true;
+			}
 
 		private:
 
@@ -512,6 +520,45 @@ namespace antok {
 		};
 
 
+		template <>
+		class Mul<std::vector<double>>: public Function
+		{
+
+		public:
+
+			Mul(const std::vector<double>& in1,
+			    const std::vector<double>& in2,
+			    std::vector<double>&       out)
+				: _in1(in1),
+				  _in2(in2),
+				  _out(out)
+			{ }
+
+			virtual ~Mul() { }
+
+			bool
+			operator() ()
+			{
+				const size_t sizeVec = _in1.size();
+				if (_in2.size() != sizeVec) {
+					return false;
+				}
+				_out.resize(sizeVec);
+				for (size_t i = 0; i < sizeVec; ++i) {
+					_out[i] = _in1[i] * _in2[i];
+				}
+				return true;
+			}
+
+		private:
+
+			const std::vector<double>& _in1;
+			const std::vector<double>& _in2;
+			std::vector<double>&       _out;
+
+		};
+
+
 		template <typename T>
 		class Abs : public Function
 		{
@@ -544,14 +591,15 @@ namespace antok {
 
 		};
 
+
 		template <>
 		class Abs<std::vector<double>>: public Function
 		{
 
 		public:
 
-			Abs(const std::vector<double>&  in,
-			         std::vector<double>&   out)
+			Abs(const std::vector<double>& in,
+			    std::vector<double>&       out)
 				: _in(in),
 				  _out(out)
 			{ }
@@ -559,14 +607,15 @@ namespace antok {
 			virtual ~Abs() { }
 
 			bool
-			operator() () {
-                size_t sizeVec = _in.size();
-                _out.resize(sizeVec);
-                for (size_t i = 0; i < sizeVec; ++i) {
-                    _out[i] = std::fabs(_in[i]);
-                }
-                return true;
-            }
+			operator() ()
+			{
+				const size_t sizeVec = _in.size();
+				_out.resize(sizeVec);
+				for (size_t i = 0; i < sizeVec; ++i) {
+				    _out[i] = std::fabs(_in[i]);
+				}
+				return true;
+			}
 
 		private:
 
@@ -586,7 +635,7 @@ namespace antok {
 			    const double& base,
 			    double&       out)
 				: _in  (in),
-                  _base(base),
+				  _base(base),
 				  _out (out)
 			{ }
 
@@ -595,17 +644,24 @@ namespace antok {
 			bool
 			operator() ()
 			{
-				_out = std::log(_in)/std::log(_base);
-				return true;
+				if (std::isnan(_base)) {
+					// default: natural logarithm
+					_out = std::log(_in);
+					return true;
+				} else {
+					_out = std::log(_in) / std::log(_base);
+					return true;
+				}
 			}
 
 		private:
 
 			const T&     _in;
-			const double _base;
+			const double _base;  // constant parameter, needs to be copied; if nan, ln is calculated
 			double&      _out;
 
 		};
+
 
 		template <>
 		class Log<std::vector<double>>: public Function
@@ -613,30 +669,31 @@ namespace antok {
 
 		public:
 
-			Log(const std::vector<double>&  in,
-			    const double&               base,
-                std::vector<double>&        out)
-				: _in(in),
+			Log(const std::vector<double>& in,
+			    const double&              base,
+			    std::vector<double>&       out)
+				: _in  (in),
 				  _base(base),
-				  _out(out)
+				  _out (out)
 			{ }
 
 			virtual ~Log() { }
 
 			bool
-			operator() () {
-                size_t sizeVec = _in.size();
-                _out.resize(sizeVec);
-                for (size_t i = 0; i < sizeVec; ++i) {
-                    _out[i] = std::log(_in[i])/std::log(_base);
-                }
-                return true;
-            }
+			operator() ()
+			{
+				const size_t sizeVec = _in.size();
+				_out.resize(sizeVec);
+				for (size_t i = 0; i < sizeVec; ++i) {
+					_out[i] = std::log(_in[i]) / std::log(_base);
+				}
+				return true;
+			}
 
 		private:
 
 			const std::vector<double>& _in;
-			const double               _base;
+			const double               _base;  // constant parameter, needs to be copied
 			std::vector<double>&       _out;
 
 		};
@@ -906,8 +963,8 @@ namespace antok {
 					_result = T();
 					return true;
 				}
-				if (_entry > _vector.size()) {
-					std::cerr << "GetVectorEntry entry position is out of vector range." << std::endl;
+				if (_entry >= (int)_vector.size()) {
+					return false;
 				}
 				_result = _vector[_entry];
 				return true;
