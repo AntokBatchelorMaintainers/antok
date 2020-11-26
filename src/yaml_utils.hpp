@@ -1,99 +1,125 @@
 #ifndef ANTOK_YAML_UTILS_HPP
 #define ANTOK_YAML_UTILS_HPP
 
-#include<iostream>
+#include <iostream>
 
-#include<yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 
-#include<data.h>
-#include<object_manager.h>
+#include "data.h"
+#include "object_manager.h"
 
 namespace antok {
 
 	namespace YAMLUtils {
 
-		inline std::string getString(const YAML::Node& node) {
-			try{
+		inline
+		std::string
+		getString(const YAML::Node& node)
+		{
+			try {
 				return node.as<std::string>();
-			} catch(const YAML::TypedBadConversion<std::string>& e) {
+			} catch (const YAML::TypedBadConversion<std::string>& e) {
 				return "";
 			}
 		}
 
+
 		template<typename T>
-		inline bool getValue(const YAML::Node& node, T* valPtr) {
-			try{
+		inline
+		bool
+		getValue(const YAML::Node& node,
+		         T*                valPtr)  //TODO make this a reference
+		{
+			try {
 				*valPtr = node.as<T>();
 				return true;
-			} catch(const YAML::TypedBadConversion<T>& e) {
+			} catch (const YAML::TypedBadConversion<T>& e) {
 				return false;
 			}
 		}
 
+
 		template<typename T>
-		inline T* getAddress(const YAML::Node& node) {
-			T* retval = 0;
+		inline
+		T*
+		getAddress(const YAML::Node& node)
+		{
+			T* retval = nullptr;
 			try {
 				T val = node.as<T>();
-				retval = new T(val);
+				retval = new T(val);  //TODO potential memory leak if calling code does not take care of freeing
 			} catch (const YAML::TypedBadConversion<T>& e) {
 				// not bad yet, could be a variable name there
 			}
-			if(retval == 0) {
+			if (retval == nullptr) {
 				antok::Data& data = antok::ObjectManager::instance()->getData();
-				std::string name = antok::YAMLUtils::getString(node);
-				if(name == "") {
-					std::cerr<<"Entry has to be either a variable name or a convertible type."<<std::endl;
-					return 0;
+				const std::string name = antok::YAMLUtils::getString(node);
+				if (name == "") {
+					std::cerr << "Entry has to be either a variable name or a convertible type." << std::endl;
+					return nullptr;
 				}
 				retval = data.getAddr<T>(name);
-				if(retval == 0) {
-					std::cerr<<"Variable \""<<name<<"\" not found in Data."<<std::endl;
-					return 0;
+				if (retval == nullptr) {
+					std::cerr << "Variable '"<< name << "' not found in Data." << std::endl;
+					return nullptr;
 				}
 			}
 			return retval;
 		}
 
+
 		template<>
-		inline TLorentzVector* getAddress<TLorentzVector>(const YAML::Node& node) {
-			TLorentzVector* retval = 0;
+		inline
+		TLorentzVector*
+		getAddress<TLorentzVector>(const YAML::Node& node)
+		{
+			TLorentzVector* retval = nullptr;
 			antok::Data& data = antok::ObjectManager::instance()->getData();
-			std::string name = antok::YAMLUtils::getString(node);
-			if(name == "") {
-				std::cerr<<"Entry has to be either a variable name or a convertible type."<<std::endl;
-				return 0;
+			const std::string name = antok::YAMLUtils::getString(node);
+			if (name == "") {
+				std::cerr << "Entry has to be either a variable name or a convertible type." << std::endl;
+				return nullptr;
 			}
 			retval = data.getAddr<TLorentzVector>(name);
-			if(retval == 0) {
-				std::cerr<<"Variable \""<<name<<"\" not found in Data."<<std::endl;
-				return 0;
+			if (retval == nullptr) {
+				std::cerr << "Variable '" << name << "' not found in Data." << std::endl;
+				return nullptr;
 			}
 			return retval;
 		}
 
-		inline bool hasNodeKey(const YAML::Node& node, std::string key) {
+
+		inline
+		bool
+		hasNodeKey(const YAML::Node&  node,
+		           const std::string& key)
+		{
 			try {
 				return node[key];
-			} catch(const YAML::BadSubscript&) {
+			} catch(const YAML::BadSubscript& e) {
 				return false;
 			}
 		}
-		inline bool handleOnOffOption(std::string optionName, const YAML::Node& option, std::string location) {
 
+
+		inline
+		bool
+		handleOnOffOption(const std::string& optionName,
+		                  const YAML::Node&  option,
+		                  const std::string& location)
+		{
 			using antok::YAMLUtils::hasNodeKey;
-
 			if (not hasNodeKey(option, optionName)) {
-				std::cerr << "Warning: \"" << optionName << "\" not found in \"" << location << "\", switching it off" << std::endl;
+				std::cerr << "Warning: option '" << optionName << "' not found at '" << location << "'. Switching it off." << std::endl;
 			} else {
-				std::string optionValue = antok::YAMLUtils::getString(option[optionName]);
+				const std::string optionValue = antok::YAMLUtils::getString(option[optionName]);
 				if (optionValue == "On") {
 					return true;
 				} else if (optionValue == "Off") {
 					// returning at end of function
 				} else {
-					std::cerr << "Warning: \"" << location << "\"'s \"" << optionName << "\" is \"" << optionValue
-					        << "\" instead of \"On\" or \"Off\", switching it off" << std::endl;
+					std::cerr << "Warning: the value of option '" << optionName << "' at '" << location << "' is "
+					          << "'" << optionValue << "' instead of 'On' or 'Off'. Switching it off." << std::endl;
 				}
 			}
 			return false;
@@ -104,5 +130,4 @@ namespace antok {
 
 }
 
-#endif
-
+#endif  // ANTOK_YAML_UTILS_HPP

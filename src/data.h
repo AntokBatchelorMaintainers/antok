@@ -6,9 +6,8 @@
 #include <string>
 
 #include "Rtypes.h"
-
-class TLorentzVector;
-class TVector3;
+#include "TLorentzVector.h"
+#include "TVector3.h"
 
 namespace antok {
 
@@ -21,23 +20,24 @@ namespace antok {
 
 	public:
 
-		// delete all allocated memory
-		virtual ~Data(){
-            for (std::pair<std::string, TVector3*>                    const& v3Pair        : _vector3s)             delete &v3Pair.second;
-            for (std::pair<std::string, TLorentzVector*>              const& LVPair        : _lorentzVectors)       delete &LVPair.second;
-            for (std::pair<std::string, std::vector<int>*>            const& intVecPair    : _intVectors)           delete &intVecPair.second;
-            for (std::pair<std::string, std::vector<Long64_t>*>       const& l64tVecPair   : _long64_tVectors)      delete &l64tVecPair.second;
-            for (std::pair<std::string, std::vector<double>*>         const& doubleVecPair : _doubleVectors)        delete &doubleVecPair.second;
-            for (std::pair<std::string, std::vector<TVector3>*>       const& v3VecPair     : _vector3Vectors)       delete &v3VecPair.second;
-            for (std::pair<std::string, std::vector<TLorentzVector>*> const& LVVecPair     : _lorentzVectorVectors) delete &LVVecPair.second;
+		virtual ~Data()
+		{
+			// delete all allocated memory
+			for (const auto& v3Pair        : _vector3s)             delete v3Pair.second;
+			for (const auto& LVPair        : _lorentzVectors)       delete LVPair.second;
+			for (const auto& intVecPair    : _intVectors)           delete intVecPair.second;
+			for (const auto& l64tVecPair   : _long64_tVectors)      delete l64tVecPair.second;
+			for (const auto& doubleVecPair : _doubleVectors)        delete doubleVecPair.second;
+			for (const auto& v3VecPair     : _vector3Vectors)       delete v3VecPair.second;
+			for (const auto& LVVecPair     : _lorentzVectorVectors) delete LVVecPair.second;
 		};
 
 		template <typename T> bool insert             (const std::string& name);
 		template <typename T> bool insertInputVariable(const std::string& name);
 
 		//TODO add const version of getAddr?
-		template <typename T> T* getAddr        (const std::string& name);
-		std::string              getType        (const std::string& name) const;
+		template <typename T> T* getAddr(const std::string& name);
+		std::string              getType(const std::string& name) const;
 
 		bool isInputVariable(const std::string& name) const;
 		bool isVector       (const std::string& name) const;
@@ -60,13 +60,14 @@ namespace antok {
 		std::map<std::string, TVector3*>       _vector3s;
 		std::map<std::string, TLorentzVector*> _lorentzVectors;
 
-		// std::vectors
-		std::map<std::string, std::vector<int>* >            _intVectors;
-		std::map<std::string, std::vector<Long64_t>* >       _long64_tVectors;
-		std::map<std::string, std::vector<double>* >         _doubleVectors;
-		std::map<std::string, std::vector<TVector3>* >       _vector3Vectors;
-		std::map<std::string, std::vector<TLorentzVector>* > _lorentzVectorVectors;
+		// std::vectors of numbers
+		std::map<std::string, std::vector<int>*>            _intVectors;
+		std::map<std::string, std::vector<Long64_t>*>       _long64_tVectors;
+		std::map<std::string, std::vector<double>*>         _doubleVectors;
 
+		// std::vectors of 3- and 4-vectors
+		std::map<std::string, std::vector<TVector3>*>       _vector3Vectors;
+		std::map<std::string, std::vector<TLorentzVector>*> _lorentzVectorVectors;
 
 	};
 

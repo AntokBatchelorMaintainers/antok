@@ -98,7 +98,7 @@ namespace antok {
 			return false;
 		}
 		_global_map[name] = "std::vector<int>";
-		_intVectors[name] = (new std::vector<int>);
+		_intVectors[name] = new std::vector<int>;
 		return true;
 	}
 
@@ -111,7 +111,7 @@ namespace antok {
 			return false;
 		}
 		_global_map     [name] = "std::vector<Long64_t>";
-		_long64_tVectors[name] = (new std::vector<Long64_t>);
+		_long64_tVectors[name] = new std::vector<Long64_t>;
 		return true;
 	}
 
@@ -124,7 +124,7 @@ namespace antok {
 			return false;
 		}
 		_global_map   [name] = "std::vector<double>";
-		_doubleVectors[name] = (new std::vector<double>);
+		_doubleVectors[name] = new std::vector<double>;
 		return true;
 	}
 
@@ -137,7 +137,7 @@ namespace antok {
 			return false;
 		}
 		_global_map    [name] = "std::vector<TVector3>";
-		_vector3Vectors[name] = (new std::vector<TVector3>);
+		_vector3Vectors[name] = new std::vector<TVector3>;
 		return true;
 	}
 
@@ -150,7 +150,7 @@ namespace antok {
 			return false;
 		}
 		_global_map          [name] = "std::vector<TLorentzVector>";
-		_lorentzVectorVectors[name] = (new std::vector<TLorentzVector>);
+		_lorentzVectorVectors[name] = new std::vector<TLorentzVector>;
 		return true;
 	}
 
