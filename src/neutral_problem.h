@@ -33,7 +33,7 @@ namespace antok {
 		//! Jacobian matrix of the constraint funtion
 		/*! \param[in] eta current estimate for the fitted measured values
 		    \return    matrix of the first derivatives of the constraint function w.r.t. eta */
-		void jacobianConstraintFuncs   (const TVectorD& eta, TMatrixD& jacobianEta);
+		void jacobianConstraintFuncs(const TVectorD& eta, TMatrixD& jacobianEta);
 
 		//! Convergence criterion
 		bool   isConverged()    const { return fabs(_funcValue[0]) / _mass2 < _precisionGoal; }
@@ -42,9 +42,9 @@ namespace antok {
 
 	private:
 
-		const double _mass2;            //!< mass squared that the photon pair is constrained to
-		TVectorD     _funcValue;        //!< holds value of constraint function
-		const double _precisionGoal;    //!< sets the limit for which fit is accepted as converged
+		const double _mass2;          //!< mass squared that the photon pair is constrained to
+		TVectorD     _funcValue;      //!< holds value of constraint function
+		const double _precisionGoal;  //!< sets the limit for which fit is accepted as converged
 
 	};
 

@@ -100,8 +100,9 @@ antok::NeutralFit::massIsInWindow() const
 {
 	const TLorentzVector photonLV_1((_cluster1Position - _vertexPosition).Unit() * _cluster1Energy, _cluster1Energy);
 	const TLorentzVector photonLV_2((_cluster2Position - _vertexPosition).Unit() * _cluster2Energy, _cluster2Energy);
+	const double         mass = (photonLV_1 + photonLV_2).M();
 
-	return ( ((photonLV_1 + photonLV_2).M() > _massLowerLimit) && ((photonLV_1 + photonLV_2).M() < _massUpperLimit) );
+	return _massLowerLimit < mass and mass < _massUpperLimit;
 }
 
 

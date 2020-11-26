@@ -15,9 +15,10 @@
 #include "neutral_problem.h"
 
 
-antok::NeutralProblem::NeutralProblem(const double mass, const double precisionGoal)
-	: _mass2(mass * mass),
-	  _funcValue(1),
+antok::NeutralProblem::NeutralProblem(const double mass,
+                                      const double precisionGoal)
+	: _mass2        (mass * mass),
+	  _funcValue    (1),
 	  _precisionGoal(precisionGoal)
 { }
 
