@@ -3,7 +3,8 @@
 
 #include <string>
 
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
+
 #include "generators_functions.h"
 
 class TFile;
@@ -44,10 +45,10 @@ namespace antok {
 
 		Initializer();
 
+		antok::Function* getFunction(const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index);
+
 		static Initializer* _initializer;
 		YAML::Node*         _config;
-
-		antok::Function* getFunction(const YAML::Node function, const std::vector<std::string> quantityNames, const int index);
 
 	};
 

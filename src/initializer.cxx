@@ -136,12 +136,12 @@ antok::Initializer::initializeCutter()
 		return false;
 	}
 
-	for (const YAML::Node& cutTrain: config["CutTrains"]) {
+	for (const YAML::Node& cutTrain : config["CutTrains"]) {
 		if (not hasNodeKey(cutTrain, "Name")) {
 			std::cerr << "'Name' not found in one of the 'CutTrains'." << std::endl;
 			return false;
 		}
-		std::string cutTrainName = antok::YAMLUtils::getString(cutTrain["Name"]);
+		const std::string cutTrainName = antok::YAMLUtils::getString(cutTrain["Name"]);
 		if (cutTrainName == "") {
 			std::cerr << "Could not convert 'Name' to std::string for one of the 'CutTrains'." << std::endl;
 			return false;
@@ -157,7 +157,7 @@ antok::Initializer::initializeCutter()
 
 		bool pertinent = false;
 		{
-			std::string pertinence = antok::YAMLUtils::getString(cutTrain["Pertinent"]);
+			const std::string pertinence = antok::YAMLUtils::getString(cutTrain["Pertinent"]);
 			if (pertinence == "Yes") {
 				pertinent = true;
 			} else if (pertinence == "No") {
@@ -175,7 +175,9 @@ antok::Initializer::initializeCutter()
 		if (pertinent) {
 			outFile->cd(cutTrainName.c_str());
 			TTree* outTree = createOutTree(inTree, config);
-			if (outTree == nullptr) return false;
+			if (outTree == nullptr) {
+				return false;
+			}
 			cutter._outTreeMap[cutTrainName] = outTree;
 			assert(objectManager->registerObjectToWrite(TDirectory::CurrentDirectory(), outTree));
 		}
@@ -215,7 +217,7 @@ antok::Initializer::initializeCutter()
 
 	}  // End loop over CutTrains
 
-	for (std::pair<std::string, TTree*> outTree : cutter._outTreeMap) {
+	for (const std::pair<std::string, TTree*>& outTree : cutter._outTreeMap) {
 		cutter._treesToFill.push_back(std::pair<TTree*, long>(outTree.second, cutter.getAllCutsCutmaskForCutTrain(outTree.first)));
 	}
 
@@ -243,21 +245,21 @@ antok::Initializer::initializeData()
 		return false;
 	}
 	if (not hasNodeKey(config["TreeBranches"], "onePerEvent")) {
-		std::cerr << "TreeBranch['onePerEvent'] not found in configuration file." << std::endl;
+		std::cerr << "TreeBranches['onePerEvent'] not found in configuration file." << std::endl;
 		return false;
 	}
 
-    objectManager->_data = new antok::Data();
-	antok::Data& data = objectManager->getData();
 	// Get all the branches in the tree and fill the data maps
+	objectManager->_data = new antok::Data();
+	antok::Data& data = objectManager->getData();
 	YAML::Node perEventTreeBranches    = config["TreeBranches"]["onePerEvent"];
 	YAML::Node perParticleTreeBranches = config["TreeBranches"]["onePerParticle"];
-	for(const YAML::detail::iterator_value treeBranch : perEventTreeBranches) {
-		for (const YAML::Node& node : treeBranch.second) {
+	for (const YAML::detail::iterator_value& treeBranch : perEventTreeBranches) {
+		for (const YAML::Node& typeNode : treeBranch.second) {
 			std::string type = antok::YAMLUtils::getString(treeBranch.first);
-			std::string name = antok::YAMLUtils::getString(node);
+			std::string name = antok::YAMLUtils::getString(typeNode);
 			if (name == "") {
-				std::cerr << "Conversion to std::string failed for one of the 'TreeBranches'' 'onePerEvent' " << type << "s." << std::endl;
+				std::cerr << "Conversion to std::string failed for one of the TreeBranches['onePerEvent'] " << type << "s." << std::endl;
 				return false;
 			}
 			if (type == "double") {
@@ -291,7 +293,7 @@ antok::Initializer::initializeData()
 					return false;
 				}
 			} else if (type == "") {
-				std::cerr << "Could not convert branch type to string when parsing the 'TreeBranches'' 'onePerEvent' part." << std::endl;
+				std::cerr << "Could not convert branch type to string when parsing the TreeBranches['onePerEvent'] part." << std::endl;
 				return false;
 			} else {
 				std::cerr << "Data type '" << type << "' not supported." << std::endl;
@@ -300,77 +302,79 @@ antok::Initializer::initializeData()
 		}
 	}
 
+	// lambda to construct variable names
+	auto variableName = [] (const std::string& baseName, const int i) -> std::string
+	{
+		std::stringstream varName;
+		varName << baseName << i;
+		return varName.str();
+	};
+
 	const size_t nParticles = antok::Constants::nParticles();
 	if (hasNodeKey(config["TreeBranches"], "onePerParticle")) {
 		if (nParticles == 0) {
-			std::cerr << "Input branches 'onePerParticle' given, but 'NumberOfParticles' was not defined!" << std::endl;
+			std::cerr << "Input branches TreeBranches['onePerParticle'] given, but 'NumberOfParticles' was not defined!" << std::endl;
 			return false;
 		}
 
-		for(const YAML::detail::iterator_value treeBranch : perParticleTreeBranches) {
+		for (const YAML::detail::iterator_value& treeBranch : perParticleTreeBranches) {
 			for (const YAML::Node& typeNode : treeBranch.second) {
-				std::string type = antok::YAMLUtils::getString(treeBranch.first);
+				std::string type     = antok::YAMLUtils::getString(treeBranch.first);
 				std::string baseName = antok::YAMLUtils::getString(typeNode);
 				if (baseName == "") {
-					std::cerr << "Conversion to std::string failed for one of the 'TreeBranches'' 'onePerParticle' " << type << "s." << std::endl;
+					std::cerr << "Conversion to std::string failed for one of the TreeBranches['onePerParticle'] " << type << "s." << std::endl;
 					return false;
 				}
 				if (type == "double") {
 					for (size_t i = 0; i < nParticles; ++i) {
-						std::stringstream strStr;
-						strStr << baseName << (i + 1);
-						if (not data.insertInputVariable<double>(strStr.str())) {
-							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<double>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
 							return false;
 						}
 					}
 				} else if (type == "int") {
 					for (size_t i = 0; i < nParticles; ++i) {
-						std::stringstream strStr;
-						strStr << baseName << (i + 1);
-						if (not data.insertInputVariable<int>(strStr.str())) {
-							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<int>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
 							return false;
 						}
 					}
 				} else if (type == "Long64_t") {
 					for (size_t i = 0; i < nParticles; ++i) {
-						std::stringstream strStr;
-						strStr << baseName << (i + 1);
-						if (not data.insertInputVariable<Long64_t>(strStr.str())) {
-							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<Long64_t>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
 							return false;
 						}
 					}
 				} else if (type == "std::vector<double>") {
 					for (size_t i = 0; i < nParticles; ++i) {
-						std::stringstream strStr;
-						strStr << baseName << (i + 1);
-						if (not data.insertInputVariable<std::vector<double>>(strStr.str())) {
-							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<std::vector<double>>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
 							return false;
 						}
 					}
 				} else if (type == "TLorentzVector") {
 					for (size_t i = 0; i < nParticles; ++i) {
-						std::stringstream strStr;
-						strStr << baseName << (i + 1);
-						if (not data.insertInputVariable<TLorentzVector>(strStr.str())) {
-							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<TLorentzVector>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
 							return false;
 						}
 					}
 				} else if (type == "TVector3") {
 					for (size_t i = 0; i < nParticles; ++i) {
-						std::stringstream strStr;
-						strStr << baseName << (i + 1);
-						if (not data.insertInputVariable<TVector3>(strStr.str())) {
-							std::cerr << antok::Data::getVariableInsertionErrorMsg(strStr.str());
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<TVector3>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
 							return false;
 						}
 					}
 				} else if (type == "") {
-					std::cerr << "Could not convert branch type to std::string when parsing the 'TreeBranches'' 'onePerParticle' part." << std::endl;
+					std::cerr << "Could not convert branch type to std::string when parsing the TreeBranches['onePerParticle'] part." << std::endl;
 					return false;
 				} else {
 					std::cerr << "Data type '" << type << "' not supported." << std::endl;
@@ -379,7 +383,7 @@ antok::Initializer::initializeData()
 			}
 		}  // loop over perParticleTreeBranches
 	} else if (nParticles > 0) {
-		std::cerr << "'NumberOfParticles' given but input branch definition 'onePerParticle' is missing!" << std::endl;
+		std::cerr << "'NumberOfParticles' given but input branch definition TreeBranches['onePerParticle'] is missing!" << std::endl;
 		return false;
 	}  // onePerParticle branch
 
@@ -413,40 +417,39 @@ antok::Initializer::initializeInput()
 	}
 	objectManager->_inTree = inTree;
 
-	//TODO use C++11 range-based loops below
-	for (std::map<std::string, double>::iterator it = data._doubles.begin(); it != data._doubles.end(); ++it) {
-		if (data.isInputVariable(it->first))
-			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+	for (auto& it : data._doubles) {
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
 	}
-	for (std::map<std::string, int>::iterator it = data._ints.begin(); it != data._ints.end(); ++it) {
-		if (data.isInputVariable(it->first))
-			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+	for (auto& it : data._ints) {
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
 	}
-	for (std::map<std::string, Long64_t>::iterator it = data._long64_ts.begin(); it != data._long64_ts.end(); ++it) {
-		if (data.isInputVariable(it->first))
-			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+	for (auto& it : data._long64_ts) {
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
 	}
-	for (std::map<std::string, std::vector<double>* >::iterator it = data._doubleVectors.begin(); it != data._doubleVectors.end(); ++it) {
-		std::vector<double>* const oldPtr  = it->second; // SetBranchAddress is not allowed to change when opening a (new) file
-		if (data.isInputVariable(it->first))
-			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
-		if (it->second != oldPtr) {
-			std::cout << "Pointer address of vector<double> '" << it->first << "' has changed while opening a new file." << std::endl;
+	for (auto& it : data._doubleVectors) {
+		std::vector<double>* const oldPtr = it.second;  // SetBranchAddress is not allowed to change when opening a (new) file
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
+		if (it.second != oldPtr) {  //TODO unclear why this obscure test is needed
+			std::cout << "Pointer address of vector<double> '" << it.first << "' has changed while opening a new file." << std::endl;
 			return false;
 		}
 	}
-	for (std::map<std::string, TLorentzVector*>::iterator it = data._lorentzVectors.begin(); it != data._lorentzVectors.end(); ++it) {
-		TLorentzVector* const oldPtr  = it->second; // SetBranchAddress is not allowed to change when opening a (new) file
-		if (data.isInputVariable(it->first))
-			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
-		if (it->second != oldPtr) {
-			std::cout << "Pointer address of TLorentzVector '" << it->first << "' has changed while opening a new file." << std::endl;
+	for (auto& it : data._lorentzVectors) {
+		TLorentzVector* const oldPtr = it.second;  // SetBranchAddress is not allowed to change when opening a (new) file
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
+		if (it.second != oldPtr) {  //TODO unclear why this obscure test is needed
+			std::cout << "Pointer address of TLorentzVector '" << it.first << "' has changed while opening a new file." << std::endl;
 			return false;
 		}
 	}
-	for (std::map<std::string, TVector3*>::iterator it = data._vector3s.begin(); it != data._vector3s.end(); ++it) {
-		if (data.isInputVariable(it->first))
-			inTree->SetBranchAddress(it->first.c_str(), &(it->second));
+	for (auto& it : data._vector3s) {
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
 	}
 
 	return true;
@@ -557,20 +560,20 @@ antok::Initializer::initializeEvent()
 
 		const YAML::Node&  function     = calcQuantity["Function"];
 		const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
-		for (int index : indices) {
+		for (const int index : indices) {
 			std::vector<std::string> quantityNames;
-			for ( std::string baseName : quantityBaseNames) {
+			for (const std::string& baseName : quantityBaseNames) {
 				if (index > 0) {
-					std::stringstream strStr;
-					strStr << baseName << index;
-					quantityNames.push_back(strStr.str());
+					std::stringstream qName;
+					qName << baseName << index;
+					quantityNames.push_back(qName.str());
 				} else {
 					quantityNames.push_back(baseName);
 				}
 			}
 
 			antok::Function* antokFunctionPtr = nullptr;
-			antokFunctionPtr = antok::Initializer::getFunction(function, quantityNames, index );
+			antokFunctionPtr = antok::Initializer::getFunction(function, quantityNames, index);
 			if (antokFunctionPtr == nullptr) {
 				std::cerr << "Error initializing function with name '" + functionName + "' which should calculate [";
 				for (size_t i = 0; i < (quantityNames.size() - 1); ++i) {
@@ -622,10 +625,10 @@ antok::Initializer::initializePlotter()
 			          << "in the input file '" << inFile->GetName() << "'." << std::endl;
 			return false;
 		}
-		antok::Cutter& cutter = objectManager->getCutter();
+		const antok::Cutter& cutter = objectManager->getCutter();
 		TFile* outFile = objectManager->getOutFile();
 		std::vector<antok::plotUtils::waterfallHistogramContainer> waterfallHists;
-		for (std::pair<std::string, std::vector<antok::Cut*>> cutTrain : cutter._cutTrainsCutOrderMap) {
+		for (const std::pair<std::string, std::vector<antok::Cut*>>& cutTrain : cutter._cutTrainsCutOrderMap) {
 			const std::string& cutTrainName = cutTrain.first;
 			outFile->cd(cutTrainName.c_str());
 			TH1D* statsHist = (TH1D*)statsHistTemplate->Clone(plotOptions.statisticsHistOutName.c_str());
@@ -655,7 +658,7 @@ antok::Initializer::initializePlotter()
 			std::cerr << "'Name' not found for one of the 'Plots'." << std::endl;
 			return false;
 		}
-		std::string plotName = antok::YAMLUtils::getString(plot["Name"]);
+		const std::string plotName = antok::YAMLUtils::getString(plot["Name"]);
 
 		if (plotName.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_ ") != std::string::npos) {
 			std::cerr << "Invalid character in name for 'Plot' '" << plotName << "'." << std::endl;
@@ -734,7 +737,6 @@ createOutTree(TTree* const      inTree,
               const YAML::Node& config)
 {
 	using antok::YAMLUtils::hasNodeKey;
-
 	TTree* outTree = nullptr;
 	if (not hasNodeKey(config, "OutputTree")) {  // no definition for the output tree given -> write full input tree
 		outTree = inTree->CloneTree(0);
@@ -742,23 +744,22 @@ createOutTree(TTree* const      inTree,
 		antok::Data& data = antok::ObjectManager::instance()->getData();
 		outTree = new TTree(inTree->GetName(), inTree->GetTitle());
 
-		for (const auto variable_node: config["OutputTree"]) {
-			const std::string variable_name = antok::YAMLUtils::getString(variable_node);
-			const std::string variable_type = data.getType(variable_name);
-			if (variable_name != "") {
-				if      (variable_type == "double")	             addToOutputBranch<double>             (outTree, data, variable_name);
-				else if (variable_type == "int")	               addToOutputBranch<int>                (outTree, data, variable_name);
-				else if (variable_type == "TVector3")            addToOutputBranch<TVector3>           (outTree, data, variable_name);
-				else if (variable_type == "TLorentzVector")      addToOutputBranch<TLorentzVector>     (outTree, data, variable_name);
-				else if (variable_type == "std::vector<double>") addToOutputBranch<std::vector<double>>(outTree, data, variable_name);
+		for (const auto& variableNode : config["OutputTree"]) {
+			const std::string variableName = antok::YAMLUtils::getString(variableNode);
+			const std::string variableType = data.getType(variableName);
+			if (variableName != "") {
+				if      (variableType == "double")	            addToOutputBranch<double>             (outTree, data, variableName);
+				else if (variableType == "int")	                addToOutputBranch<int>                (outTree, data, variableName);
+				else if (variableType == "TVector3")            addToOutputBranch<TVector3>           (outTree, data, variableName);
+				else if (variableType == "TLorentzVector")      addToOutputBranch<TLorentzVector>     (outTree, data, variableName);
+				else if (variableType == "std::vector<double>") addToOutputBranch<std::vector<double>>(outTree, data, variableName);
 				else {
-					std::cerr << "Variable type '" << variable_type << "' of variable '"
-					          << variable_name << "' not implemented for own output tree." << std::endl;
+					std::cerr << "Variable type '" << variableType << "' of variable '"
+					          << variableName << "' not implemented for own output tree." << std::endl;
 					return nullptr;
 				}
-
 			} else {
-				std::cerr << "Variable '" << variable_name << "' not found in Data's global map for the output tree." << std::endl;
+				std::cerr << "Variable '" << variableName << "' not found in Data's global map for the output tree." << std::endl;
 				return nullptr;
 			}
 		}
@@ -768,56 +769,58 @@ createOutTree(TTree* const      inTree,
 }
 
 
-antok::Function* antok::Initializer::getFunction(const YAML::Node function, const std::vector<std::string> quantityNames, const int index)
+antok::Function*
+antok::Initializer::getFunction(const YAML::Node&               function,
+                                const std::vector<std::string>& quantityNames,
+                                const int                       index)
 {
-    const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
-    if (functionName == "abs") {
-        return antok::generators::generateAbs                       (function, quantityNames, index);
-    } else if (functionName == "log") {
-        return antok::generators::generateLog                       (function, quantityNames, index);
-    } else if (functionName == "convertIntToDouble") {
-        return antok::generators::generateConvertIntToDouble        (function, quantityNames, index);
-    } else if (functionName == "diff") {
-        return antok::generators::generateDiff                      (function, quantityNames, index);
-    } else if (functionName == "quotient") {
-        return antok::generators::generateQuotient                  (function, quantityNames, index);
-    } else if (functionName == "mul") {
-        return antok::generators::generateMul                       (function, quantityNames, index);
-    } else if (functionName == "energy") {
-        return antok::generators::generateEnergy                    (function, quantityNames, index);
-    } else if (functionName == "getBeamLorentzVector") {
-        return antok::generators::generateGetBeamLorentzVector      (function, quantityNames, index);
-    } else if (functionName == "getGradXGradY") {
-        return antok::generators::generateGetGradXGradY             (function, quantityNames, index);
-    } else if (functionName == "getLorentzVectorAttributes") {
-        return antok::generators::generateGetLorentzVectorAttributes(function, quantityNames, index);
-    } else if (functionName == "getLorentzVec") {
-        return antok::generators::generateGetLorentzVec             (function, quantityNames, index);
-    } else if (functionName == "getTs") {
-        return antok::generators::generateGetTs                     (function, quantityNames, index);
-    } else if (functionName == "getVector3") {
-        return antok::generators::generateGetVector3                (function, quantityNames, index);
-    } else if (functionName == "getVectorEntry") {
-        return antok::generators::generateGetVectorEntry            (function, quantityNames, index);
-    } else if (functionName == "mass") {
-        return antok::generators::generateMass                      (function, quantityNames, index);
-    } else if (functionName == "mass2") {
-        return antok::generators::generateMass2                     (function, quantityNames, index);
-    } else if (functionName == "radToDegree") {
-        return antok::generators::generateRadToDegree               (function, quantityNames, index);
-    } else if (functionName == "sum") {
-        return antok::generators::generateSum                       (function, quantityNames, index);
-    } else if (functionName == "sum2") {
-        return antok::generators::generateSum2                      (function, quantityNames, index);
-    } else if (functionName == "") {
-        std::cerr << "Could not convert function name to std::string for CalculatedQuantity '" << quantityNames[0] << "'." << std::endl;
-        return nullptr;
-    } else {
-        antok::Function* usrFunctionPtr = antok::user::getUserFunction(function, quantityNames, index);
-        if (usrFunctionPtr == nullptr) {
-            std::cerr << "Function type '" << functionName << "' did not initialize correctly or is not supported." << std::endl;
-        }
-        return usrFunctionPtr;
-
-    }
+	const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
+	if        (functionName == "abs") {
+		return antok::generators::generateAbs                       (function, quantityNames, index);
+	} else if (functionName == "log") {
+		return antok::generators::generateLog                       (function, quantityNames, index);
+	} else if (functionName == "convertIntToDouble") {
+		return antok::generators::generateConvertIntToDouble        (function, quantityNames, index);
+	} else if (functionName == "diff") {
+		return antok::generators::generateDiff                      (function, quantityNames, index);
+	} else if (functionName == "quotient") {
+		return antok::generators::generateQuotient                  (function, quantityNames, index);
+	} else if (functionName == "mul") {
+		return antok::generators::generateMul                       (function, quantityNames, index);
+	} else if (functionName == "energy") {
+		return antok::generators::generateEnergy                    (function, quantityNames, index);
+	} else if (functionName == "getBeamLorentzVector") {
+		return antok::generators::generateGetBeamLorentzVector      (function, quantityNames, index);
+	} else if (functionName == "getGradXGradY") {
+		return antok::generators::generateGetGradXGradY             (function, quantityNames, index);
+	} else if (functionName == "getLorentzVectorAttributes") {
+		return antok::generators::generateGetLorentzVectorAttributes(function, quantityNames, index);
+	} else if (functionName == "getLorentzVec") {
+		return antok::generators::generateGetLorentzVec             (function, quantityNames, index);
+	} else if (functionName == "getTs") {
+		return antok::generators::generateGetTs                     (function, quantityNames, index);
+	} else if (functionName == "getVector3") {
+		return antok::generators::generateGetVector3                (function, quantityNames, index);
+	} else if (functionName == "getVectorEntry") {
+		return antok::generators::generateGetVectorEntry            (function, quantityNames, index);
+	} else if (functionName == "mass") {
+		return antok::generators::generateMass                      (function, quantityNames, index);
+	} else if (functionName == "mass2") {
+		return antok::generators::generateMass2                     (function, quantityNames, index);
+	} else if (functionName == "radToDegree") {
+		return antok::generators::generateRadToDegree               (function, quantityNames, index);
+	} else if (functionName == "sum") {
+		return antok::generators::generateSum                       (function, quantityNames, index);
+	} else if (functionName == "sum2") {
+		return antok::generators::generateSum2                      (function, quantityNames, index);
+	} else if (functionName == "") {
+		std::cerr << "Could not convert function name to std::string for calculated quantity '" << quantityNames[0] << "'." << std::endl;
+		return nullptr;
+	} else {
+		antok::Function* usrFunctionPtr = antok::user::getUserFunction(function, quantityNames, index);
+		if (usrFunctionPtr == nullptr) {
+		    std::cerr << "Function type '" << functionName << "' did not initialize correctly or is not supported." << std::endl;
+		}
+		return usrFunctionPtr;
+	}
 }
