@@ -151,8 +151,7 @@ antok::generators::functionArgumentHandlerPossibleConst(vecPairString<T*>& args,
 	antok::Data&      data         = antok::ObjectManager::instance()->getData();
 
 	// find all arguments which are given in the function node
-	for (size_t i = 0; i < args.size(); ++i) {
-		auto& arg = args[i];
+	for (auto& arg : args) {
 		if (hasNodeKey(function, arg.first)) {
 			const YAML::Node& node = function[arg.first];
 			try {

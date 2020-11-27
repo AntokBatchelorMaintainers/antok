@@ -430,22 +430,22 @@ antok::Initializer::initializeInput()
 			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
 	}
 	for (auto& it : data._doubleVectors) {
-		std::vector<double>* const oldPtr = it.second;  // SetBranchAddress is not allowed to change when opening a (new) file
+		//std::vector<double>* const oldPtr = it.second;  // SetBranchAddress is not allowed to change when opening a (new) file
 		if (data.isInputVariable(it.first))
 			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
-		if (it.second != oldPtr) {  //TODO unclear why this obscure test is needed
+		/*if (it.second != oldPtr) {  //TODO unclear why this obscure test is needed
 			std::cout << "Pointer address of vector<double> '" << it.first << "' has changed while opening a new file." << std::endl;
 			return false;
-		}
+		*/
 	}
 	for (auto& it : data._lorentzVectors) {
-		TLorentzVector* const oldPtr = it.second;  // SetBranchAddress is not allowed to change when opening a (new) file
+		//TLorentzVector* const oldPtr = it.second;  // SetBranchAddress is not allowed to change when opening a (new) file
 		if (data.isInputVariable(it.first))
 			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
-		if (it.second != oldPtr) {  //TODO unclear why this obscure test is needed
+		/*if (it.second != oldPtr) {  //TODO unclear why this obscure test is needed
 			std::cout << "Pointer address of TLorentzVector '" << it.first << "' has changed while opening a new file." << std::endl;
 			return false;
-		}
+		}*/
 	}
 	for (auto& it : data._vector3s) {
 		if (data.isInputVariable(it.first))

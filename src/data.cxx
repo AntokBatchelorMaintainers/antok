@@ -7,6 +7,9 @@
 
 namespace antok {
 
+	static int    FAIL_VALUE_INT    = -8888;
+	static double FAIL_VALUE_DOUBLE = -8888.8;
+
 	template <typename T>
 	bool
 	Data::insert(const std::string& name)
@@ -33,7 +36,7 @@ namespace antok {
 			return false;
 		}
 		_global_map[name] = "int";
-		_ints      [name] = -8888;  //TODO make magic int configurable
+		_ints      [name] = FAIL_VALUE_INT;
 		return true;
 	}
 
@@ -46,7 +49,7 @@ namespace antok {
 			return false;
 		}
 		_global_map[name] = "Long64_t";
-		_long64_ts [name] = -8888;  //TODO make magic int configurable
+		_long64_ts [name] = FAIL_VALUE_INT;
 		return true;
 	}
 
@@ -59,7 +62,7 @@ namespace antok {
 			return false;
 		}
 		_global_map[name] = "double";
-		_doubles   [name] = -8888.8;  //TODO use nan
+		_doubles   [name] = FAIL_VALUE_DOUBLE;  //TODO fails if its NaN
 		return true;
 	}
 
