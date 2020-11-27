@@ -8,10 +8,10 @@
 #include "TLorentzRotation.h"
 #include "TLorentzVector.h"
 #include "TRotation.h"
-#include "TMath.h"
 
 #include "functions.hpp"
 #include "neutral_fit.h"
+
 
 namespace antok {
 
@@ -25,7 +25,6 @@ namespace antok {
 				{
 
 				public:
-
 
 					GetVector3VectorAttributes(const std::vector<TVector3>& Vector3s,           // TVector3 vectors
 					                                 std::vector<double>&   ResultXComponents,  // x components of TVector3 vectors
@@ -64,6 +63,7 @@ namespace antok {
 					std::vector<double>&         _ResultZComponents;
 
 				};
+
 
 				class GetVectorLorentzVectorAttributes : public Function
 				{
@@ -125,28 +125,29 @@ namespace antok {
 
 				};
 
+
 				class getNominalMassDifferences : public Function
 				{
 
 				public:
 
-					getNominalMassDifferences(const std::vector<TLorentzVector>&  VectorLV,
-					                          const double                        NominalMass,
-					                          std::vector<double>&                MassDifferences)
-						: _VectorLV          (VectorLV),
-						  _NominalMass       (NominalMass),
-						  _MassDifferences   (MassDifferences)
+					getNominalMassDifferences(const std::vector<TLorentzVector>& VectorLV,
+					                          const double                       NominalMass,
+					                          std::vector<double>&               MassDifferences)
+						: _VectorLV       (VectorLV),
+						  _NominalMass    (NominalMass),
+						  _MassDifferences(MassDifferences)
 					{ }
 
-                    virtual ~getNominalMassDifferences() { }
+					virtual ~getNominalMassDifferences() { }
 
 					bool
 					operator() ()
 					{
-						size_t sizeVec = _VectorLV.size();
+						const size_t sizeVec = _VectorLV.size();
 						_MassDifferences.resize(sizeVec);
 						for (size_t i = 0; i < sizeVec; ++i) {
-                            _MassDifferences[i] = _VectorLV[i].M() - _NominalMass;
+							_MassDifferences[i] = _VectorLV[i].M() - _NominalMass;
 						}
 						return true;
 					}
@@ -154,10 +155,11 @@ namespace antok {
 				private:
 
 					const std::vector<TLorentzVector>& _VectorLV;
-					const double                       _NominalMass;       // constant parameter, needs to be copied
+					const double                       _NominalMass;  // constant parameter, needs to be copied
 					std::vector<double>&               _MassDifferences;
 
 				};
+
 
 				class GetRecoilLorentzVec : public Function
 				{
@@ -192,6 +194,7 @@ namespace antok {
 
 				};
 
+
 				class GetECALCorrectedEnergy : public Function
 				{
 
@@ -225,6 +228,7 @@ namespace antok {
 							double correction = 1;
 							auto it = _Corrections.find(_RunNumber);
 							if (it != _Corrections.end()) {
+								//TODO use vector with ECAL indices instead of zECAL1
 								if (_zPositions[i] < _zECAL1) {
 									correction = it->second.first;
 								} else {
@@ -246,6 +250,7 @@ namespace antok {
 					std::vector<double>&                           _ResultCorrectedEnergies;
 
 				};
+
 
 				class GetECALCorrectedTiming : public Function
 				{
@@ -278,15 +283,16 @@ namespace antok {
 
 						_ResultCorrectedTimes.resize(nmbClusters);
 						for (size_t i = 0; i < nmbClusters; ++i) {
-							double       correction = 0;
-							const double energy     = _Energies[i];
-							const double energy2    = energy * energy;
+							const double energy  = _Energies[i];
+							const double energy2 = energy * energy;
+							double correction = 0;
+							//TODO use vector with ECAL indices instead of zECAL1
 							if (_zPositions[i] < _zECAL1) {
 								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL1");
 								correction = coefficients[0] + coefficients[1] / energy  - coefficients[2] * energy
 								                             - coefficients[3] / energy2 + coefficients[4] * energy2;
 							} else {
-							  const double               energy3      = energy * energy2;
+							  const double energy3 = energy * energy2;
 								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL2");
 								correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
 								                             - coefficients[3] / energy2 - coefficients[4] * energy2
@@ -308,43 +314,44 @@ namespace antok {
 
 				};
 
+
 				class GetCleanedEcalClusters : public Function
 				{
 
 				public:
 
-					GetCleanedEcalClusters(const std::vector<TVector3>& Positions,               // positions of ECAL photon clusters
-					                       const std::vector<double>&   Energies,                // energies of ECAL photon clusters
-					                       const std::vector<double>&   Times,                   // times of ECAL photon clusters
-					                       const std::vector<TVector3>& PositionVariances,       // position variances of ECAL photon clusters
-					                       const std::vector<double>&   EnergyVariances,         // energy variances of ECAL photon clusters
-					                       const double&                zECAL1,                  // z position that distinguishes between ECAL 1 and 2
-					                       const double&                ThresholdEnergyECAL1,    // energy threshold applied to ECAL1 clusters
-					                       const double&                WindowTimingECAL1,       // window applied on ECAL1 cluster times
-					                       const double&                ThresholdEnergyECAL2,    // energy threshold applied to ECAL2 clusters
-					                       const double&                WindowTimingECAL2,       // window applied on ECAL1 cluster times
-					                       std::vector<TVector3>&       ResultPositions,         // positions of ECAL photon clusters
-					                       std::vector<double>&         ResultEnergies,          // energies of ECAL photon clusters
-					                       std::vector<double>&         ResultTimes,             // times of ECAL photon clusters
-					                       std::vector<TVector3>&       ResultPositionVariances, // position variances of ECAL photon clusters
-					                       std::vector<double>&         ResultEnergyVariances,   // energy variances of ECAL photon clusters
-					                       std::vector<int>&            ResultECALIndices)       // indices of the ECAL that measured the photons
-						: _Positions               (Positions),
-						  _Energies                (Energies),
-						  _Times                   (Times),
-						  _PositionVariances       (PositionVariances),
-						  _EnergyVariances         (EnergyVariances),
-						  _zECAL1                  (zECAL1),
-						  _ThresholdEnergyECAL1    (ThresholdEnergyECAL1),
-						  _WindowTimingECAL1       (WindowTimingECAL1),
-						  _ThresholdEnergyECAL2    (ThresholdEnergyECAL2),
-						  _WindowTimingECAL2       (WindowTimingECAL2),
-						  _ResultPositions         (ResultPositions),
-						  _ResultEnergies          (ResultEnergies),
-						  _ResultTimes             (ResultTimes),
-						  _ResultPositionVariances (ResultPositionVariances),
-						  _ResultEnergyVariances   (ResultEnergyVariances),
-						  _ResultECALIndices       (ResultECALIndices)
+					GetCleanedEcalClusters(const std::vector<TVector3>& Positions,                // positions of ECAL photon clusters
+					                       const std::vector<double>&   Energies,                 // energies of ECAL photon clusters
+					                       const std::vector<double>&   Times,                    // times of ECAL photon clusters
+					                       const std::vector<TVector3>& PositionVariances,        // position variances of ECAL photon clusters
+					                       const std::vector<double>&   EnergyVariances,          // energy variances of ECAL photon clusters
+					                       const double&                zECAL1,                   // z position that distinguishes between ECAL 1 and 2
+					                       const double&                ThresholdEnergyECAL1,     // energy threshold applied to ECAL1 clusters
+					                       const double&                WindowTimingECAL1,        // window applied on ECAL1 cluster times
+					                       const double&                ThresholdEnergyECAL2,     // energy threshold applied to ECAL2 clusters
+					                       const double&                WindowTimingECAL2,        // window applied on ECAL1 cluster times
+					                       std::vector<TVector3>&       ResultPositions,          // positions of ECAL photon clusters
+					                       std::vector<double>&         ResultEnergies,           // energies of ECAL photon clusters
+					                       std::vector<double>&         ResultTimes,              // times of ECAL photon clusters
+					                       std::vector<TVector3>&       ResultPositionVariances,  // position variances of ECAL photon clusters
+					                       std::vector<double>&         ResultEnergyVariances,    // energy variances of ECAL photon clusters
+					                       std::vector<int>&            ResultECALIndices)        // indices of the ECAL that measured the photons
+						: _Positions              (Positions),
+						  _Energies               (Energies),
+						  _Times                  (Times),
+						  _PositionVariances      (PositionVariances),
+						  _EnergyVariances        (EnergyVariances),
+						  _zECAL1                 (zECAL1),
+						  _ThresholdEnergyECAL1   (ThresholdEnergyECAL1),
+						  _WindowTimingECAL1      (WindowTimingECAL1),
+						  _ThresholdEnergyECAL2   (ThresholdEnergyECAL2),
+						  _WindowTimingECAL2      (WindowTimingECAL2),
+						  _ResultPositions        (ResultPositions),
+						  _ResultEnergies         (ResultEnergies),
+						  _ResultTimes            (ResultTimes),
+						  _ResultPositionVariances(ResultPositionVariances),
+						  _ResultEnergyVariances  (ResultEnergyVariances),
+						  _ResultECALIndices      (ResultECALIndices)
 					{ }
 
 					virtual ~GetCleanedEcalClusters() { }
@@ -357,24 +364,24 @@ namespace antok {
 						    or (_Times.size()             != nmbPhotons)
 						    or (_PositionVariances.size() != nmbPhotons)
 						    or (_EnergyVariances.size()   != nmbPhotons)) {
-						    std::cerr << "Input vectors do not have the same size";
+							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
 
-						_ResultPositions.reserve(nmbPhotons);
 						_ResultPositions.clear();
-						_ResultEnergies.reserve(nmbPhotons);
 						_ResultEnergies.clear();
-						_ResultTimes.reserve(nmbPhotons);
 						_ResultTimes.clear();
-						_ResultPositionVariances.reserve(nmbPhotons);
 						_ResultPositionVariances.clear();
-						_ResultEnergyVariances.reserve(nmbPhotons);
 						_ResultEnergyVariances.clear();
-						_ResultECALIndices.reserve(nmbPhotons);
 						_ResultECALIndices.clear();
-
+						_ResultPositions.reserve        (nmbPhotons);
+						_ResultEnergies.reserve         (nmbPhotons);
+						_ResultTimes.reserve            (nmbPhotons);
+						_ResultPositionVariances.reserve(nmbPhotons);
+						_ResultEnergyVariances.reserve  (nmbPhotons);
+						_ResultECALIndices.reserve      (nmbPhotons);
 						for (size_t i = 0; i < nmbPhotons; ++i) {
+							//TODO use vector with ECAL indices instead of zECAL1
 							if (_Positions[i].Z() < _zECAL1) {
 								if ((_Energies[i] < _ThresholdEnergyECAL1) or (fabs(_Times[i]) > _WindowTimingECAL1)) {
 									continue;
@@ -386,11 +393,11 @@ namespace antok {
 								}
 								_ResultECALIndices.push_back(2);
 							}
-							_ResultPositions.push_back         (_Positions[i]);
-							_ResultEnergies.push_back          (_Energies[i]);
-							_ResultTimes.push_back             (_Times[i]);
-							_ResultPositionVariances.push_back (_PositionVariances[i]);
-							_ResultEnergyVariances.push_back   (_EnergyVariances[i]);
+							_ResultPositions.push_back        (_Positions[i]);
+							_ResultEnergies.push_back         (_Energies[i]);
+							_ResultTimes.push_back            (_Times[i]);
+							_ResultPositionVariances.push_back(_PositionVariances[i]);
+							_ResultEnergyVariances.push_back  (_EnergyVariances[i]);
 						}
 						return true;
 					}
@@ -416,41 +423,41 @@ namespace antok {
 
 				};
 
+
 				class getECALVariables : public Function
 				{
 
 				public:
 
-					getECALVariables(const std::vector<double>&         clusterIndex,                 // Cluster Index of Detected photon
-									 const std::vector<TLorentzVector>& photonVec,                    // lorentzvector of photon
-									 const std::vector<TVector3>&       clusterPosition,              // position of cluster
-									 const std::vector<TVector3>&       clusterPositionVariance,      // Variance in position of cluster
-									 const std::vector<double>&         clusterEnergy,                // energy of cluster
-									 const std::vector<double>&         clusterEnergyVariance,        // Variance in energy of cluster
-									 const std::vector<double>&         clusterTime,                  // time of ECAL cluster
-									 const int&                         ECALIndex,                    // Selected ECAL
-									 std::vector<TLorentzVector>&       resultPhotonVec,              // lorentzvector of photon
-									 std::vector<TVector3>&             resultClusterPosition,        // position of cluster
-									 std::vector<TVector3>&             resultClusterPositionVariance,// Variance in position of cluster
-									 std::vector<double>&               resultClusterEnergy,          // energy of cluster
-									 std::vector<double>&               resultClusterEnergyVariance,  // Variance in energy of cluster
-									 std::vector<double>&               resultClusterTime )           // time of ECAL cluster
-						: _clusterIndex                   (clusterIndex),
-						  _photonVec                      (photonVec),
-						  _clusterPosition                (clusterPosition),
-						  _clusterPositionVariance        (clusterPositionVariance),
-						  _clusterEnergy                  (clusterEnergy),
-						  _clusterEnergyVariance          (clusterEnergyVariance),
-						  _clusterTime                    (clusterTime),
-						  _ECALIndex                      (ECALIndex),
-						  _resultPhotonVec                (resultPhotonVec),
-						  _resultClusterPosition          (resultClusterPosition),
-						  _resultClusterPositionVariance  (resultClusterPositionVariance),
-						  _resultClusterEnergy            (resultClusterEnergy),
-						  _resultClusterEnergyVariance    (resultClusterEnergyVariance),
-						  _resultClusterTime              (resultClusterTime)
+					getECALVariables(const std::vector<double>&         clusterIndex,                   // Cluster Index of Detected photon
+					                 const std::vector<TLorentzVector>& photonVec,                      // lorentzvector of photon
+					                 const std::vector<TVector3>&       clusterPosition,                // position of cluster
+					                 const std::vector<TVector3>&       clusterPositionVariance,        // Variance in position of cluster
+					                 const std::vector<double>&         clusterEnergy,                  // energy of cluster
+					                 const std::vector<double>&         clusterEnergyVariance,          // Variance in energy of cluster
+					                 const std::vector<double>&         clusterTime,                    // time of ECAL cluster
+					                 const int&                         ECALIndex,                      // Selected ECAL
+					                 std::vector<TLorentzVector>&       resultPhotonVec,                // lorentzvector of photon
+					                 std::vector<TVector3>&             resultClusterPosition,          // position of cluster
+					                 std::vector<TVector3>&             resultClusterPositionVariance,  // Variance in position of cluster
+					                 std::vector<double>&               resultClusterEnergy,            // energy of cluster
+					                 std::vector<double>&               resultClusterEnergyVariance,    // Variance in energy of cluster
+					                 std::vector<double>&               resultClusterTime )             // time of ECAL cluster
+						: _clusterIndex                 (clusterIndex),
+						  _photonVec                    (photonVec),
+						  _clusterPosition              (clusterPosition),
+						  _clusterPositionVariance      (clusterPositionVariance),
+						  _clusterEnergy                (clusterEnergy),
+						  _clusterEnergyVariance        (clusterEnergyVariance),
+						  _clusterTime                  (clusterTime),
+						  _ECALIndex                    (ECALIndex),
+						  _resultPhotonVec              (resultPhotonVec),
+						  _resultClusterPosition        (resultClusterPosition),
+						  _resultClusterPositionVariance(resultClusterPositionVariance),
+						  _resultClusterEnergy          (resultClusterEnergy),
+						  _resultClusterEnergyVariance  (resultClusterEnergyVariance),
+						  _resultClusterTime            (resultClusterTime)
 					{ }
-
 
 					virtual ~getECALVariables() { }
 
@@ -459,13 +466,15 @@ namespace antok {
 					{
 						// check if all vectors have the same size
 						const size_t nmbClusters = _clusterIndex.size();
+						//TODO reenable check and fix bug that leads to vectors having different sizes
+						//     if vectors have different sizes we are reading potentially random data in the loop below
 						/*if (   (_photonVec.size()               != nmbClusters)
-							or (_clusterPosition.size()         != nmbClusters)
-							or (_clusterPositionVariance.size() != nmbClusters)
-							or (_clusterEnergy.size()           != nmbClusters)
-							or (_clusterEnergyVariance.size()   != nmbClusters)
-							or (_clusterTime.size()             != nmbClusters)) {
-							std::cerr << "wrong sizes of input vectors!";
+						    or (_clusterPosition.size()         != nmbClusters)
+						    or (_clusterPositionVariance.size() != nmbClusters)
+						    or (_clusterEnergy.size()           != nmbClusters)
+						    or (_clusterEnergyVariance.size()   != nmbClusters)
+						    or (_clusterTime.size()             != nmbClusters)) {
+							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}*/
 
@@ -476,24 +485,23 @@ namespace antok {
 								++nmbResultClusters;
 							}
 						}
-
-						_resultPhotonVec.resize(nmbResultClusters);
-						_resultClusterPosition.resize(nmbResultClusters);
+						_resultPhotonVec.resize              (nmbResultClusters);
+						_resultClusterPosition.resize        (nmbResultClusters);
 						_resultClusterPositionVariance.resize(nmbResultClusters);
-						_resultClusterEnergy.resize(nmbResultClusters);
-						_resultClusterEnergyVariance.resize(nmbResultClusters);
-						_resultClusterTime.resize(nmbResultClusters);
+						_resultClusterEnergy.resize          (nmbResultClusters);
+						_resultClusterEnergyVariance.resize  (nmbResultClusters);
+						_resultClusterTime.resize            (nmbResultClusters);
 
+						// loop over clusters and save information if cluster is in required ECAL
 						int nmbAccepted = 0;
-						// loop over clusters and push attributes back if hit is in required ECAL
 						for (size_t i = 0; i < nmbClusters; ++i) {
 							if (_clusterIndex[i] == _ECALIndex) {
-								_resultPhotonVec[nmbAccepted] = _photonVec[i];
-								_resultClusterPosition[nmbAccepted] = _clusterPosition[i];
+								_resultPhotonVec              [nmbAccepted] = _photonVec              [i];
+								_resultClusterPosition        [nmbAccepted] = _clusterPosition        [i];
 								_resultClusterPositionVariance[nmbAccepted] = _clusterPositionVariance[i];
-								_resultClusterEnergy[nmbAccepted] = _clusterEnergy[i];
-								_resultClusterEnergyVariance[nmbAccepted] = _clusterEnergyVariance[i];
-								_resultClusterTime[nmbAccepted] = _clusterTime[i];
+								_resultClusterEnergy          [nmbAccepted] = _clusterEnergy          [i];
+								_resultClusterEnergyVariance  [nmbAccepted] = _clusterEnergyVariance  [i];
+								_resultClusterTime            [nmbAccepted] = _clusterTime            [i];
 								++nmbAccepted;
 							}
 						}
@@ -509,7 +517,7 @@ namespace antok {
 					const std::vector<double>&         _clusterEnergy;
 					const std::vector<double>&         _clusterEnergyVariance;
 					const std::vector<double>&         _clusterTime;
-					const int                          _ECALIndex; //const paramerter, needs to be copied
+					const int                          _ECALIndex;  // const paramerter, needs to be copied
 					std::vector<TLorentzVector>&       _resultPhotonVec;
 					std::vector<TVector3>&             _resultClusterPosition;
 					std::vector<TVector3>&             _resultClusterPositionVariance;
@@ -518,6 +526,7 @@ namespace antok {
 					std::vector<double>&               _resultClusterTime;
 
 				};
+
 
 				class GetPhotonLorentzVecs : public Function
 				{
@@ -548,15 +557,20 @@ namespace antok {
 						const size_t nmbPhotons = _Positions.size();
 						if (   (_Energies.size() != nmbPhotons)
 						    or (_Times.size()    != nmbPhotons)) {
+							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
 
-						_ResultLVs.resize(nmbPhotons);
+						_ResultLVs.resize        (nmbPhotons);
 						_ResultECALIndices.resize(nmbPhotons);
 						for (size_t i = 0; i < nmbPhotons; ++i) {
 							TVector3 mom = _Positions[i] - _PV;
 							mom.SetMag(_Energies[i]);
 							_ResultLVs[i] = TLorentzVector(mom, _Energies[i]);
+							//TODO this function should not produce another vector
+							//     with ECAL indices (we already have this vector);
+							//     the function should just calculate the photon
+							//     4-vector for each cluster
 							if (_Positions[i].Z() < _RangeECAL1) {
 								_ResultECALIndices[i] = 1;
 							} else {
@@ -577,6 +591,32 @@ namespace antok {
 					std::vector<int>&            _ResultECALIndices;
 
 				};
+
+
+				namespace {
+
+					double
+					getECALMassWindow(const int    ECALIndex1,
+					                  const int    ECALIndex2,
+					                  const double MassWindowECAL1,
+					                  const double MassWindowECAL2,
+					                  const double MassWindowECALMixed)
+					{
+						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
+							return MassWindowECAL1;
+						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
+							return MassWindowECAL2;
+						} else if (   ((ECALIndex1 == 1) and (ECALIndex2 == 2))
+						           or ((ECALIndex1 == 2) and (ECALIndex2 == 1))) {
+							return MassWindowECALMixed;
+						}
+						std::stringstream errMsg;
+						errMsg << "At least one of the given ECAL indices (" << ECALIndex1 << ", " << ECALIndex2 << ") is unknown. Aborting...";
+						throw std::runtime_error(errMsg.str());
+					}
+
+				}
+
 
 				class GetPhotonPairParticles : public Function
 				{
@@ -608,11 +648,12 @@ namespace antok {
 					{
 						const size_t nmbPhotons = _PhotonLVs.size();
 						if (_ECALIndices.size() != nmbPhotons) {
+							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
 
-						_ResultParticles.reserve(nmbPhotons * nmbPhotons);
 						_ResultParticles.clear();
+						_ResultParticles.reserve(nmbPhotons * nmbPhotons);
 						_ResultHasParticles = 0;
 						if (nmbPhotons < 2) {
 							return true;
@@ -620,7 +661,8 @@ namespace antok {
 						for (size_t i = 0; i < nmbPhotons; ++i) {
 							for (size_t j = i + 1; j < nmbPhotons; ++j) {
 								const TLorentzVector candidate = _PhotonLVs[i] + _PhotonLVs[j];
-								if (std::fabs(candidate.M() - _NominalMass) < getECALResolution(_ECALIndices[i] == 1, _ECALIndices[j])) {
+								if (std::fabs(candidate.M() - _NominalMass)
+								    < getECALMassWindow(_ECALIndices[i], _ECALIndices[j], _MassWindowECAL1, _MassWindowECAL2, _MassWindowECALMixed)) {
 									_ResultParticles.push_back(candidate);
 								}
 							}
@@ -633,19 +675,6 @@ namespace antok {
 
 				private:
 
-					double getECALResolution(const int ECALIndex1,
-					                         const int ECALIndex2) const
-					{
-						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
-							return _MassWindowECAL1;
-						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
-							return _MassWindowECAL2;
-						} else if (ECALIndex1 != ECALIndex2) {
-							return _MassWindowECALMixed;
-						}
-						return std::numeric_limits<double>::quiet_NaN();
-					}
-
 					const std::vector<TLorentzVector>& _PhotonLVs;
 					const double                       _NominalMass;          // constant parameter, needs to be copied
 					const double                       _MassWindowECALMixed;  // constant parameter, needs to be copied
@@ -656,6 +685,7 @@ namespace antok {
 					int&                               _ResultHasParticles;
 
 				};
+
 
 				class GetPi0Pair : public Function
 				{
@@ -693,11 +723,12 @@ namespace antok {
 					{
 						const size_t nmbPhotons = _PhotonLVs.size();
 						if (_ECALIndices.size() != nmbPhotons) {
+							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
 
-						_ResultPi0PairLVs.reserve(2);
 						_ResultPi0PairLVs.clear();
+						_ResultPi0PairLVs.reserve(2);
 						_ResultPi0LV_0.SetPxPyPzE(0, 0, 0, 0);
 						_ResultPi0LV_1.SetPxPyPzE(0, 0, 0, 0);
 						_ResultGoodPi0Pair = 0;
@@ -719,7 +750,8 @@ namespace antok {
 									break;
 								}
 								const TLorentzVector pi0Candidate0 = _PhotonLVs[i] + _PhotonLVs[j];
-								if (std::fabs(pi0Candidate0.M() - _Pi0Mass) > getECALMassWindow(_ECALIndices[i], _ECALIndices[j])) {
+								if (std::fabs(pi0Candidate0.M() - _Pi0Mass)
+								    > getECALMassWindow(_ECALIndices[i], _ECALIndices[j], _MassWindowECAL1, _MassWindowECAL2, _MassWindowECALMixed)) {
 									continue;
 								}
 								for (size_t m = i + 1; m < nmbPhotons; ++m) {
@@ -734,7 +766,8 @@ namespace antok {
 											continue;
 										}
 										const TLorentzVector pi0Candidate1 = _PhotonLVs[m] + _PhotonLVs[n];
-										if (std::fabs(pi0Candidate1.M() - _Pi0Mass) > getECALMassWindow(_ECALIndices[m], _ECALIndices[n])) {
+										if (std::fabs(pi0Candidate1.M() - _Pi0Mass)
+										    > getECALMassWindow(_ECALIndices[m], _ECALIndices[n], _MassWindowECAL1, _MassWindowECAL2, _MassWindowECALMixed)) {
 											continue;
 										}
 										if (nmbCandidatePairs == 0) {
@@ -758,22 +791,6 @@ namespace antok {
 
 				private:
 
-					double getECALMassWindow(const int ECALIndex1,
-					                         const int ECALIndex2) const
-					{
-						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
-							return _MassWindowECAL1;
-						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
-							return _MassWindowECAL2;
-						} else if (   ((ECALIndex1 == 1) and (ECALIndex2 == 2))
-						           or ((ECALIndex1 == 2) and (ECALIndex2 == 1))) {
-							return _MassWindowECALMixed;
-						}
-						std::stringstream errMsg;
-						errMsg << "At least one of the given ECAL indices (" << ECALIndex1 << ", " << ECALIndex2 << ") is unknown. Aborting...";
-						throw std::runtime_error(errMsg.str());
-					}
-
 					const std::vector<TLorentzVector>& _PhotonLVs;
 					const std::vector<int>&            _ECALIndices;
 					const double                       _Pi0Mass;              // constant parameter, needs to be copied
@@ -787,6 +804,7 @@ namespace antok {
 					std::vector<int>&                  _ResultECALIndices;
 
 				};
+
 
 				class GetKinematicFittingMass : public Function
 				{
@@ -850,29 +868,30 @@ namespace antok {
 						    or (_ClusterPositionVariances.size() != sizeVec)
 						    or (_ClusterEnergies.size()          != sizeVec)
 						    or (_ClusterEnergyVariances.size()   != sizeVec)) {
+							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
 
-						_ResultLorentzVectors.reserve(2);
 						_ResultLorentzVectors.clear();
-						_ResultChi2s.reserve(2);
 						_ResultChi2s.clear();
-						_ResultPullsX0.reserve(2);
 						_ResultPullsX0.clear();
-						_ResultPullsY0.reserve(2);
 						_ResultPullsY0.clear();
-						_ResultPullsE0.reserve(2);
 						_ResultPullsE0.clear();
-						_ResultPullsX1.reserve(2);
 						_ResultPullsX1.clear();
-						_ResultPullsY1.reserve(2);
 						_ResultPullsY1.clear();
-						_ResultPullsE1.reserve(2);
 						_ResultPullsE1.clear();
-						_ResultPValues.reserve(2);
 						_ResultPValues.clear();
-						_ResultNmbIterations.reserve(2);
 						_ResultNmbIterations.clear();
+						_ResultLorentzVectors.reserve(2);
+						_ResultChi2s.reserve         (2);
+						_ResultPullsX0.reserve       (2);
+						_ResultPullsY0.reserve       (2);
+						_ResultPullsE0.reserve       (2);
+						_ResultPullsX1.reserve       (2);
+						_ResultPullsY1.reserve       (2);
+						_ResultPullsE1.reserve       (2);
+						_ResultPValues.reserve       (2);
+						_ResultNmbIterations.reserve (2);
 						_ResultSuccess = 0;
 
 						if (   (_ClusterIndices[0] == -1)
@@ -905,18 +924,18 @@ namespace antok {
 						                              _precisionGoal,
 						                              _whichEnergyVariance);
 						const bool success0 = neutralFit0.doFit();
-                        if (success0) {
-                            _ResultLorentzVectors.push_back(neutralFit0.getImprovedLVSum());
-                            _ResultPullsX0.push_back       (neutralFit0.pullValues()[0]);
-                            _ResultPullsY0.push_back       (neutralFit0.pullValues()[1]);
-                            _ResultPullsE0.push_back       (neutralFit0.pullValues()[2]);
-                            _ResultPullsX1.push_back       (neutralFit0.pullValues()[3]);
-                            _ResultPullsY1.push_back       (neutralFit0.pullValues()[4]);
-                            _ResultPullsE1.push_back       (neutralFit0.pullValues()[5]);
-                            _ResultChi2s.push_back         (neutralFit0.chi2Value());
-                            _ResultPValues.push_back       (neutralFit0.pValue());
-                            _ResultNmbIterations.push_back (neutralFit0.nmbIterations());
-                        }
+						if (success0) {
+							_ResultLorentzVectors.push_back(neutralFit0.getImprovedLVSum());
+							_ResultPullsX0.push_back       (neutralFit0.pullValues()[0]);
+							_ResultPullsY0.push_back       (neutralFit0.pullValues()[1]);
+							_ResultPullsE0.push_back       (neutralFit0.pullValues()[2]);
+							_ResultPullsX1.push_back       (neutralFit0.pullValues()[3]);
+							_ResultPullsY1.push_back       (neutralFit0.pullValues()[4]);
+							_ResultPullsE1.push_back       (neutralFit0.pullValues()[5]);
+							_ResultChi2s.push_back         (neutralFit0.chi2Value());
+							_ResultPValues.push_back       (neutralFit0.pValue());
+							_ResultNmbIterations.push_back (neutralFit0.nmbIterations());
+						}
 
 						antok::NeutralFit neutralFit1(_VertexPosition,
 						                              _ClusterPositions        [_ClusterIndices[2]],
@@ -934,17 +953,17 @@ namespace antok {
 						                              _whichEnergyVariance);
 						const bool success1 = neutralFit1.doFit();
 						if (success1) {
-                            _ResultLorentzVectors.push_back(neutralFit1.getImprovedLVSum());
-                            _ResultPullsX0.push_back       (neutralFit1.pullValues()[0]);
-                            _ResultPullsY0.push_back       (neutralFit1.pullValues()[1]);
-                            _ResultPullsE0.push_back       (neutralFit1.pullValues()[2]);
-                            _ResultPullsX1.push_back       (neutralFit1.pullValues()[3]);
-                            _ResultPullsY1.push_back       (neutralFit1.pullValues()[4]);
-                            _ResultPullsE1.push_back       (neutralFit1.pullValues()[5]);
-                            _ResultChi2s.push_back         (neutralFit1.chi2Value());
-                            _ResultPValues.push_back       (neutralFit1.pValue());
-                            _ResultNmbIterations.push_back (neutralFit1.nmbIterations());
-                        }
+							_ResultLorentzVectors.push_back(neutralFit1.getImprovedLVSum());
+							_ResultPullsX0.push_back       (neutralFit1.pullValues()[0]);
+							_ResultPullsY0.push_back       (neutralFit1.pullValues()[1]);
+							_ResultPullsE0.push_back       (neutralFit1.pullValues()[2]);
+							_ResultPullsX1.push_back       (neutralFit1.pullValues()[3]);
+							_ResultPullsY1.push_back       (neutralFit1.pullValues()[4]);
+							_ResultPullsE1.push_back       (neutralFit1.pullValues()[5]);
+							_ResultChi2s.push_back         (neutralFit1.chi2Value());
+							_ResultPValues.push_back       (neutralFit1.pValue());
+							_ResultNmbIterations.push_back (neutralFit1.nmbIterations());
+						}
 
 						if (success0 and success1) {
 							_ResultSuccess = 1;
@@ -978,6 +997,7 @@ namespace antok {
 					int&                         _ResultSuccess;
 
 				};
+
 
 				class GetOmega : public Function
 				{
@@ -1081,18 +1101,19 @@ namespace antok {
 
 				};
 
-                class GetFittedOmegaMassVsPrecisionGoal : public Function
+
+				class GetFittedOmegaMassVsPrecisionGoal : public Function
 				{
 
 				public:
 
 					GetFittedOmegaMassVsPrecisionGoal(const TVector3&              VertexPosition,
-                                                      const TLorentzVector&        ChargedPartLV_0,         // Lorentz vector of 1st charged particle
-					                                  const TLorentzVector&        ChargedPartLV_1,         // Lorentz vector of 2nd charged particle
-					                                  const TLorentzVector&        ChargedPartLV_2,         // Lorentz vector of 3rd charged particle
-					                                  const int&                   Charge_0,                // charge of 1st charged particle
-					                                  const int&                   Charge_1,                // charge of 2nd charged particle
-					                                  const int&                   Charge_2,                // charge of 3rd charged particle
+					                                  const TLorentzVector&        ChargedPartLV_0,  // Lorentz vector of 1st charged particle
+					                                  const TLorentzVector&        ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
+					                                  const TLorentzVector&        ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
+					                                  const int&                   Charge_0,         // charge of 1st charged particle
+					                                  const int&                   Charge_1,         // charge of 2nd charged particle
+					                                  const int&                   Charge_2,         // charge of 3rd charged particle
 					                                  const std::vector<TVector3>& ClusterPositions,
 					                                  const std::vector<TVector3>& ClusterPositionVariances,
 					                                  const std::vector<double>&   ClusterEnergies,
@@ -1110,7 +1131,7 @@ namespace antok {
 					                                  std::vector<int>&            ResultAcceptedOmegas,
 					                                  std::vector<double>&         ResultOmegaMasses)
 						: _VertexPosition          (VertexPosition),
-					      _ChargedPartLV_0         (ChargedPartLV_0),
+						  _ChargedPartLV_0         (ChargedPartLV_0),
 						  _ChargedPartLV_1         (ChargedPartLV_1),
 						  _ChargedPartLV_2         (ChargedPartLV_2),
 						  _Charge_0                (Charge_0),
@@ -1139,45 +1160,46 @@ namespace antok {
 					bool
 					operator() ()
 					{
-
-						size_t sizeVectors = TMath::Log(_precisionGoalLowerLimit / _precisionGoalUpperLimit);
-						_ResultPrecisionGoals.resize(sizeVectors);
+						const size_t sizeVectors = std::log(_precisionGoalLowerLimit / _precisionGoalUpperLimit);
 						_ResultAcceptedOmegas.resize(sizeVectors);
-						_ResultOmegaMasses   .resize(sizeVectors);
+						_ResultPrecisionGoals.resize(sizeVectors);
+						_ResultOmegaMasses.resize   (sizeVectors);
 						std::vector<TLorentzVector> PiLorentzVectors;
-                        std::vector<double>         PiChi2s;
-                        std::vector<double>         PiPullsX0;
-                        std::vector<double>         PiPullsY0;
-                        std::vector<double>         PiPullsE0;
-                        std::vector<double>         PiPullsX1;
-                        std::vector<double>         PiPullsY1;
-                        std::vector<double>         PiPullsE1;
-                        std::vector<double>         PiPValues;
-                        std::vector<int>            PiNmbIterations;
-                        int                         PiSuccess = 0;
-                        TLorentzVector              OmegaLV;
-					    int                         OmegaAccepted = 0;
-					    TLorentzVector              FinalPi0LV;
-					    TLorentzVector              FinalPiMinusLV;
-					    size_t index = 0;
-					    //TODO implement checks for safe use
+						std::vector<double>         PiChi2s;
+						std::vector<double>         PiPullsX0;
+						std::vector<double>         PiPullsY0;
+						std::vector<double>         PiPullsE0;
+						std::vector<double>         PiPullsX1;
+						std::vector<double>         PiPullsY1;
+						std::vector<double>         PiPullsE1;
+						std::vector<double>         PiPValues;
+						std::vector<int>            PiNmbIterations;
+						int                         PiSuccess = 0;
+						TLorentzVector              OmegaLV;
+						int                         OmegaAccepted = 0;
+						TLorentzVector              FinalPi0LV;
+						TLorentzVector              FinalPiMinusLV;
+						size_t index = 0;
+						//TODO implement checks for safe use
 						for (double PG = _precisionGoalLowerLimit; PG >= _precisionGoalUpperLimit; PG*= 0.1 ) {
-                            GetKinematicFittingMass* PiPairFit = new GetKinematicFittingMass( _VertexPosition, _ClusterPositions, _ClusterPositionVariances, _ClusterEnergies, _ClusterEnergyVariances,
-                                                                                              _ClusterIndices, _PiMass, _PiMassLowerLimit, _PiMassUpperLimit, PG, _whichEnergyVariance, PiLorentzVectors,
-                                                                                              PiChi2s, PiPullsX0, PiPullsY0, PiPullsE0, PiPullsX1, PiPullsY1, PiPullsE1, PiPValues, PiNmbIterations, PiSuccess);
-                            (*PiPairFit)();
-                            delete PiPairFit;
-                        	if (!PiSuccess) continue;
-                        	GetOmega* getOmega = new GetOmega( PiLorentzVectors[0], PiLorentzVectors[1], _ChargedPartLV_0, _ChargedPartLV_1, _ChargedPartLV_2, _Charge_0,
-                        	                                  _Charge_1, _Charge_2, _OmegaMass, _OmegaMasswindow, OmegaLV, OmegaAccepted, FinalPi0LV, FinalPiMinusLV);
-                        	(*getOmega)();
-                        	delete getOmega;
-                        	_ResultPrecisionGoals[index] = PG;
-                        	_ResultAcceptedOmegas[index] = OmegaAccepted;
-                        	_ResultOmegaMasses[index]    = OmegaLV.M();
-                        	++index;
-                        }
-                        return true;
+							GetKinematicFittingMass* PiPairFit = new GetKinematicFittingMass(_VertexPosition, _ClusterPositions, _ClusterPositionVariances, _ClusterEnergies, _ClusterEnergyVariances,
+							                                                                 _ClusterIndices, _PiMass, _PiMassLowerLimit, _PiMassUpperLimit, PG, _whichEnergyVariance, PiLorentzVectors,
+							                                                                 PiChi2s, PiPullsX0, PiPullsY0, PiPullsE0, PiPullsX1, PiPullsY1, PiPullsE1, PiPValues, PiNmbIterations, PiSuccess);
+							(*PiPairFit)();
+							delete PiPairFit;
+							if (not PiSuccess) {
+								continue;
+							}
+							GetOmega* getOmega = new GetOmega(PiLorentzVectors[0], PiLorentzVectors[1], _ChargedPartLV_0, _ChargedPartLV_1, _ChargedPartLV_2, _Charge_0,
+							                                  _Charge_1, _Charge_2, _OmegaMass, _OmegaMasswindow, OmegaLV, OmegaAccepted, FinalPi0LV, FinalPiMinusLV);
+							(*getOmega)();
+							delete getOmega;
+							_ResultPrecisionGoals[index] = PG;
+							_ResultAcceptedOmegas[index] = OmegaAccepted;
+							_ResultOmegaMasses   [index] = OmegaLV.M();
+							++index;
+						}
+						return true;
 					}
 
 				private:
@@ -1194,19 +1216,20 @@ namespace antok {
 					const std::vector<double>&   _ClusterEnergies;
 					const std::vector<double>&   _ClusterEnergyVariances;
 					const std::vector<int>&      _ClusterIndices;
-					const double                 _PiMass;                    // constant parameter, needs to be copied
-					const double                 _PiMassLowerLimit;          // constant parameter, needs to be copied
-					const double                 _PiMassUpperLimit;          // constant parameter, needs to be copied
-					const double                 _precisionGoalLowerLimit;   // constant parameter, needs to be copied
-					const double                 _precisionGoalUpperLimit;   // constant parameter, needs to be copied
-					const int                    _whichEnergyVariance;       // constant parameter, needs to be copied
-					const double                 _OmegaMass;                 // constant parameter, needs to be copied
-					const double                 _OmegaMasswindow;           // constant parameter, needs to be copied
+					const double                 _PiMass;                   // constant parameter, needs to be copied
+					const double                 _PiMassLowerLimit;         // constant parameter, needs to be copied
+					const double                 _PiMassUpperLimit;         // constant parameter, needs to be copied
+					const double                 _precisionGoalLowerLimit;  // constant parameter, needs to be copied
+					const double                 _precisionGoalUpperLimit;  // constant parameter, needs to be copied
+					const int                    _whichEnergyVariance;      // constant parameter, needs to be copied
+					const double                 _OmegaMass;                // constant parameter, needs to be copied
+					const double                 _OmegaMasswindow;          // constant parameter, needs to be copied
 					std::vector<double>&         _ResultPrecisionGoals;
 					std::vector<int>&            _ResultAcceptedOmegas;
 					std::vector<double>&         _ResultOmegaMasses;
 
 				};
+
 
 				class GetThreePionCombinationMass : public Function
 				{
@@ -1240,11 +1263,11 @@ namespace antok {
 					bool
 					operator() ()
 					{
-						_Result.reserve(4);
 						_Result.clear();
+						_Result.reserve(4);
 						const std::vector<const TLorentzVector*> Pi0LVs         = {&_Pi0LV_0, &_Pi0LV_1};
 						const std::vector<const TLorentzVector*> ChargedPartLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
-						const std::vector<int>                   Charges        = {_Charge_0, _Charge_1, _Charge_2};
+						const std::vector<int>                   Charges        = { _Charge_0,         _Charge_1,         _Charge_2};
 
 						for (size_t i = 0; i < Pi0LVs.size(); ++i) {
 							const TLorentzVector* Pi0LV = Pi0LVs[i];
