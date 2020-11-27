@@ -28,10 +28,10 @@ namespace antok {
 		inline
 		bool
 		getValue(const YAML::Node& node,
-		         T*                valPtr)  //TODO make this a reference
+		         T&                val)  //TODO make this a reference
 		{
 			try {
-				*valPtr = node.as<T>();
+				val = node.as<T>();
 				return true;
 			} catch (const YAML::TypedBadConversion<T>& e) {
 				return false;
