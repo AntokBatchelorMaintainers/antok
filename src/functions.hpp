@@ -685,7 +685,12 @@ namespace antok {
 				const size_t sizeVec = _in.size();
 				_out.resize(sizeVec);
 				for (size_t i = 0; i < sizeVec; ++i) {
-					_out[i] = std::log(_in[i]) / std::log(_base);
+					if (std::isnan(_base)) {
+						// default: natural logarithm
+						_out[i] = std::log(_in[i]);
+					} else {
+						_out[i] = std::log(_in[i]) / std::log(_base);
+					}
 				}
 				return true;
 			}
