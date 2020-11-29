@@ -36,8 +36,8 @@ namespace antok {
 		template <typename T> bool insertInputVariable(const std::string& name);
 
 		//TODO add const version of getAddr?
-		template <typename T> T* getAddr(const std::string& name);
-		std::string              getType(const std::string& name) const;
+		template <typename T> T* const getAddr(const std::string& name);
+		std::string                    getType(const std::string& name) const;
 
 		bool isInputVariable(const std::string& name) const;
 		bool isVector       (const std::string& name) const;

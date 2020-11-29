@@ -160,7 +160,7 @@ antok::generators::functionArgumentHandlerPossibleConst(vecPairString<T*>& args,
 				//const T val = node.as<T>();
 				//arg.second = new T(val);
 				// TODO test if new memory management works
-				const std::string name = "generators_" + functionName + "_" + variable_name;
+				const std::string name = "generators_" + variable_name;
 				const T val = node.as<T>();
 				data.insert<T>(name);
 				T* retval = data.getAddr<T>(name);

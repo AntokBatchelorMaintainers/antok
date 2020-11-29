@@ -20,7 +20,7 @@ namespace antok {
 
 
 	template <typename T>
-	T*
+	T* const
 	Data::getAddr(const std::string& name)
 	{
 		std::cerr << "Could not get address for variable of this type." << std::endl;
@@ -159,7 +159,7 @@ namespace antok {
 
 
 	template <>
-	int*
+	int* const
 	Data::getAddr<int>(const std::string& name)
 	{
 		auto it = _ints.find(name);
@@ -171,7 +171,7 @@ namespace antok {
 
 
 	template <>
-	Long64_t*
+	Long64_t* const
 	Data::getAddr<Long64_t>(const std::string& name)
 	{
 		auto it = _long64_ts.find(name);
@@ -183,7 +183,7 @@ namespace antok {
 
 
 	template <>
-	double*
+	double* const
 	Data::getAddr<double>(const std::string& name)
 	{
 		auto it = _doubles.find(name);
@@ -195,7 +195,7 @@ namespace antok {
 
 
 	template <>
-	TVector3*
+	TVector3* const
 	Data::getAddr<TVector3>(const std::string& name)
 	{
 		auto it = _vector3s.find(name);
@@ -207,7 +207,7 @@ namespace antok {
 
 
 	template <>
-	TLorentzVector*
+	TLorentzVector* const
 	Data::getAddr<TLorentzVector>(const std::string& name)
 	{
 		auto it = _lorentzVectors.find(name);
@@ -219,7 +219,7 @@ namespace antok {
 
 
 	template <>
-	std::vector<int>*
+	std::vector<int>* const
 	Data::getAddr<std::vector<int> >(const std::string& name)
 	{
 		auto it = _intVectors.find(name);
@@ -231,7 +231,7 @@ namespace antok {
 
 
 	template <>
-	std::vector<Long64_t>*
+	std::vector<Long64_t>* const
 	Data::getAddr<std::vector<Long64_t>>(const std::string& name)
 	{
 		auto it = _long64_tVectors.find(name);
@@ -243,7 +243,7 @@ namespace antok {
 
 
 	template <>
-	std::vector<double>*
+	std::vector<double>* const
 	Data::getAddr<std::vector<double> >(const std::string& name)
 	{
 		auto it = _doubleVectors.find(name);
@@ -255,7 +255,7 @@ namespace antok {
 
 
 	template <>
-	std::vector<TVector3>*
+	std::vector<TVector3>* const
 	Data::getAddr<std::vector<TVector3> >(const std::string& name)
 	{
 		auto it = _vector3Vectors.find(name);
@@ -267,7 +267,7 @@ namespace antok {
 
 
 	template <>
-	std::vector<TLorentzVector>*
+	std::vector<TLorentzVector>* const
 	Data::getAddr<std::vector<TLorentzVector> >(const std::string& name)
 	{
 		auto it = _lorentzVectorVectors.find(name);
