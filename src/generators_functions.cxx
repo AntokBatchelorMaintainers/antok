@@ -733,17 +733,31 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 		          << "to calculate variable '" << quantityName << "'." << std::endl;
 		return nullptr;
 	}
+	antok::Data& data = antok::ObjectManager::instance()->getData();
 	vecPairString<std::string> args;
-	std::map<std::string, double> constArgs = {{"M", 0}};
+	double* mAddr = nullptr;
+	if (defType == GetLorentzVec::XYZM or defType == GetLorentzVec::Vec3M) {
+		size_t nmb = 0;
+		// search for unused memory space
+		while (!data.insert<double>("__getLorentzVecMassVec" + nmb)) {
+			if (nmb > 10000) { // TODO arbitrary limit
+				std::cerr << "Could not allocate memory for __getLorentzVecMassVec in Function '" << functionName << "'.";
+			}
+			nmb++;
+		}
+		mAddr = data.getAddr<double>("__getLorentzVecMassVec" + nmb);
+		std::map<std::string, double> constArgs = {{"M", 0}};
+		if (not antok::generators::functionArgumentHandlerConst<double>(constArgs, function)) {
+			std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+			return nullptr;
+		}
+		(*mAddr) = constArgs["M"];
+	}
 	switch (defType) {
 		case GetLorentzVec::XYZM: {
 			args = {{"X", "double"},
 			        {"Y", "double"},
 			        {"Z", "double"}};
-			if (not antok::generators::functionArgumentHandlerConst<double>(constArgs, function)) {
-				std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
-				return nullptr;
-			}
 			break;
 		}
 		case GetLorentzVec::PxPyPzE:
@@ -754,10 +768,6 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 			break;
 		case GetLorentzVec::Vec3M: {
 			args = {{"Vec3", "TVector3"}};
-			if (not antok::generators::functionArgumentHandlerConst<double>(constArgs, function)) {
-				std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
-				return nullptr;
-			}
 			break;
 		}
 		case GetLorentzVec::Vec3E:
@@ -770,7 +780,6 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 		return nullptr;
 	}
 	// Register output variables
-	antok::Data& data = antok::ObjectManager::instance()->getData();
 	if (not data.insert<TLorentzVector>(quantityName)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return nullptr;
@@ -780,7 +789,7 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 			return new GetLorentzVec(*data.getAddr<double>(args[0].first),         // x
 			                         *data.getAddr<double>(args[1].first),         // y
 			                         *data.getAddr<double>(args[2].first),         // z
-			                         constArgs["M"],                               // m
+			                         *mAddr,                                       // m
 			                         *data.getAddr<TLorentzVector>(quantityName),  // out
 			                         defType);
 		case GetLorentzVec::PxPyPzE:
@@ -792,7 +801,7 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 			                         defType);
 		case GetLorentzVec::Vec3M:
 			return new GetLorentzVec(*data.getAddr<TVector3>(args[0].first),       // (x, y, z)^T
-			                         constArgs["M"],                               // m
+			                         *mAddr,                                       // m
 			                         *data.getAddr<TLorentzVector>(quantityName),  // out
 			                         defType);
 		case GetLorentzVec::Vec3E:
