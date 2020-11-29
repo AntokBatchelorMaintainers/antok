@@ -201,7 +201,7 @@ namespace antok {
 				public:
 
 					GetECALCorrectedEnergy(const std::vector<double>&                      Energies,                 // energies of ECAL clusters to be corrected
-					                       const std::vector<double>&                      ClusterIndices,           // Cluster Indices of ECAL hits
+					                       const std::vector<int>&                         ClusterIndices,           // Cluster Indices of ECAL hits
 					                       const int&                                      RunNumber,                // run number of the event
 					                       const std::map<int, std::pair<double, double>>& Corrections,              // energy-correction factors for ECAL1 and 2 by run number
 					                       std::vector<double>&                            ResultCorrectedEnergies)  // corrected energies of ECAL clusters
@@ -242,7 +242,7 @@ namespace antok {
 				private:
 
 					const std::vector<double>&                     _Energies;
-					const std::vector<double>&                     _ClusterIndices;
+					const std::vector<int>&                        _ClusterIndices;
 					const int&                                     _RunNumber;
 					const std::map<int, std::pair<double, double>> _Corrections;  // constant parameter, needs to be copied
 					std::vector<double>&                           _ResultCorrectedEnergies;
@@ -257,7 +257,7 @@ namespace antok {
 
 					GetECALCorrectedTiming(const std::vector<double>&                        Times,                 // times of ECAL clusters to be corrected
 					                       const std::vector<double>&                        Energies,              // energies of ECAL clusters
-					                       const std::vector<double>&                        ClusterIndices,        // ECAL cluster index
+					                       const std::vector<int>&                           ClusterIndices,        // ECAL cluster index
 					                       const std::map<std::string, std::vector<double>>& CalibrationCoeffs,     // calibration coefficients used to correct times
 					                       std::vector<double>&                              ResultCorrectedTimes)  // corrected times of ECAL clusters
 						: _Times               (Times),
@@ -305,7 +305,7 @@ namespace antok {
 
 					const std::vector<double>&                       _Times;
 					const std::vector<double>&                       _Energies;
-					const std::vector<double>&                       _ClusterIndices;
+					const std::vector<int>&                          _ClusterIndices;
 					const std::map<std::string, std::vector<double>> _CalibrationCoeffs;  // constant parameter, needs to be copied
 					std::vector<double>&                             _ResultCorrectedTimes;
 
@@ -322,7 +322,7 @@ namespace antok {
 					                       const std::vector<double>&   Times,                    // times of ECAL photon clusters
 					                       const std::vector<TVector3>& PositionVariances,        // position variances of ECAL photon clusters
 					                       const std::vector<double>&   EnergyVariances,          // energy variances of ECAL photon clusters
-					                       const std::vector<double>&   ECALIndices,              // ECAL indices
+					                       const std::vector<int>&      ECALIndices,              // ECAL indices
 					                       const double&                ThresholdEnergyECAL1,     // energy threshold applied to ECAL1 clusters
 					                       const double&                WindowTimingECAL1,        // window applied on ECAL1 cluster times
 					                       const double&                ThresholdEnergyECAL2,     // energy threshold applied to ECAL2 clusters
@@ -406,7 +406,7 @@ namespace antok {
 					const std::vector<double>&   _Times;
 					const std::vector<TVector3>& _PositionVariances;
 					const std::vector<double>&   _EnergyVariances;
-					const std::vector<double>&   _ECALIndices;
+					const std::vector<int>&      _ECALIndices;
 					const double                 _ThresholdEnergyECAL1;  // constant parameter, needs to be copied
 					const double                 _WindowTimingECAL1;     // constant parameter, needs to be copied
 					const double                 _ThresholdEnergyECAL2;  // constant parameter, needs to be copied
@@ -426,14 +426,14 @@ namespace antok {
 
 				public:
 
-					getECALVariables(const std::vector<double>&         clusterIndex,                   // Cluster Index of Detected photon
+					getECALVariables(const std::vector<int>&            clusterIndex,                   // Cluster Index of Detected photon
 					                 const std::vector<TVector3>&       clusterPosition,                // position of cluster
 					                 const std::vector<TVector3>&       clusterPositionVariance,        // Variance in position of cluster
 					                 const std::vector<double>&         clusterEnergy,                  // energy of cluster
 					                 const std::vector<double>&         clusterEnergyVariance,          // Variance in energy of cluster
 					                 const std::vector<double>&         clusterTime,                    // time of ECAL cluster
 					                 const int&                         ECALIndex,                      // Selected ECAL
-					                 std::vector<double>&               resultClusterIndex,             // Result cluster index
+					                 std::vector<int>&                  resultClusterIndex,             // Result cluster index
 					                 std::vector<TVector3>&             resultClusterPosition,          // Result position of cluster
 					                 std::vector<TVector3>&             resultClusterPositionVariance,  // Result variance in position of cluster
 					                 std::vector<double>&               resultClusterEnergy,            // Result energy of cluster
@@ -502,14 +502,14 @@ namespace antok {
 
 				private:
 
-					const std::vector<double>&         _clusterIndex;
+					const std::vector<int>&            _clusterIndex;
 					const std::vector<TVector3>&       _clusterPosition;
 					const std::vector<TVector3>&       _clusterPositionVariance;
 					const std::vector<double>&         _clusterEnergy;
 					const std::vector<double>&         _clusterEnergyVariance;
 					const std::vector<double>&         _clusterTime;
 					const int                          _ECALIndex;  // const paramerter, needs to be copied
-					std::vector<double>&               _resultClusterIndex;
+					std::vector<int>&                  _resultClusterIndex;
 					std::vector<TVector3>&             _resultClusterPosition;
 					std::vector<TVector3>&             _resultClusterPositionVariance;
 					std::vector<double>&               _resultClusterEnergy;

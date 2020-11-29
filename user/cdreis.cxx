@@ -224,7 +224,7 @@ antok::user::cdreis::generateGetECALCorrectedEnergy(const YAML::Node&           
 	// Get input variables
 	vecPairString<std::string> args
 		= {{"Energy",       "std::vector<double>"},
-		   {"ClusterIndex", "std::vector<double>"},
+		   {"ClusterIndex", "std::vector<int>"},
 		   {"RunNumber",    "int"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -271,7 +271,7 @@ antok::user::cdreis::generateGetECALCorrectedEnergy(const YAML::Node&           
 
 	return new antok::user::cdreis::functions::GetECALCorrectedEnergy(
 		*data.getAddr<std::vector<double>>(args[0].first),  // Energies
-		*data.getAddr<std::vector<double>>(args[1].first),  // ClusterIndices
+		*data.getAddr<std::vector<int>>   (args[1].first),  // ClusterIndices
 		*data.getAddr<int>                (args[2].first),  // RunNumber
 		Corrections,
 		*data.getAddr<std::vector<double>>(quantityName)    // ResultCorrectedEnergies
@@ -292,7 +292,7 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 	vecPairString<std::string> args
 		= {{"Timing",       "std::vector<double>"},
 		   {"Energy",       "std::vector<double>"},
-		   {"ClusterIndex", "std::vector<double>"}};
+		   {"ClusterIndex", "std::vector<int>"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -339,7 +339,7 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 	return new antok::user::cdreis::functions::GetECALCorrectedTiming(
 		*data.getAddr<std::vector<double>>(args[0].first),  // Times
 		*data.getAddr<std::vector<double>>(args[1].first),  // Energies
-		*data.getAddr<std::vector<double>>(args[2].first),  // ClusterIndices
+		*data.getAddr<std::vector<int>>   (args[2].first),  // ClusterIndices
 		CalibrationCoeffs,
 		*data.getAddr<std::vector<double>>(quantityName)    // ResultCorrectedTimes
 	);
@@ -362,7 +362,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		   {"VectorTime",             "std::vector<double>"},
 		   {"VectorPositionVariance", "std::vector<TVector3>"},
 		   {"VectorEnergyVariance",   "std::vector<double>"},
-		   {"VectorECALIndices",      "std::vector<double>"}};
+		   {"VectorECALIndices",      "std::vector<int>"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -410,7 +410,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		*data.getAddr<std::vector<double>>  (args[2].first),     // Times
 		*data.getAddr<std::vector<TVector3>>(args[3].first),     // Positions variance
 		*data.getAddr<std::vector<double>>  (args[4].first),     // Energies variance
-		*data.getAddr<std::vector<double>>  (args[5].first),     // ECAL index
+		*data.getAddr<std::vector<int>>     (args[5].first),     // ECAL index
 		constArgs["ThresholdEnergyECAL1"],                       // ThresholdEnergyECAL1
 		constArgs["ThresholdTimingECAL1"],                       // WindowTimingECAL1
 		constArgs["ThresholdEnergyECAL2"],                       // ThresholdEnergyECAL2
@@ -436,7 +436,7 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"ECAL_clusterIndex",            "std::vector<double>"},
+		= {{"ECAL_clusterIndex",            "std::vector<int>"},
 		   {"ECAL_clusterPosition",         "std::vector<TVector3>"},
 		   {"ECAL_clusterPositionVariance", "std::vector<TVector3>"},
 		   {"ECAL_clusterEnergy",           "std::vector<double>"},
@@ -456,7 +456,7 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	if (not data.insert<std::vector<double>>(quantityNames[0])) {
+	if (not data.insert<std::vector<int>>(quantityNames[0])) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[0]);
 		return nullptr;
 	}
@@ -474,14 +474,14 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 	}
 
 	return new antok::user::cdreis::functions::getECALVariables(
-		*data.getAddr<std::vector<double>>        (args[0].first),     // ClusterIndex
+		*data.getAddr<std::vector<int>>           (args[0].first),     // ClusterIndex
 		*data.getAddr<std::vector<TVector3>>      (args[1].first),     // ClusterPosition
 		*data.getAddr<std::vector<TVector3>>      (args[2].first),     // ClusterPositionVariance
 		*data.getAddr<std::vector<double>>        (args[3].first),     // ClusterEnergy
 		*data.getAddr<std::vector<double>>        (args[4].first),     // ClusterEnergyVariance
 		*data.getAddr<std::vector<double>>        (args[5].first),     // ClusterTime
 		constArgsInt["ECALIndex"],                                     // SelectedECALIndex
-		*data.getAddr<std::vector<double>>        (quantityNames[0]),  // ResultClusterIndex
+		*data.getAddr<std::vector<int>>           (quantityNames[0]),  // ResultClusterIndex
 		*data.getAddr<std::vector<TVector3>>      (quantityNames[1]),  // ResultClusterPosition
 		*data.getAddr<std::vector<TVector3>>      (quantityNames[2]),  // ResultClusterPositionVariance
 		*data.getAddr<std::vector<double>>        (quantityNames[3]),  // ResultClusterEnergy
