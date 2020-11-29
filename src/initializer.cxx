@@ -362,6 +362,14 @@ antok::Initializer::initializeData()
 							return false;
 						}
 					}
+				} else if (type == "std::vector<int>") {
+					for (size_t i = 0; i < nParticles; ++i) {
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<std::vector<int>>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
+							return false;
+						}
+					}
 				} else if (type == "TLorentzVector") {
 					for (size_t i = 0; i < nParticles; ++i) {
 						const std::string varName = variableName(baseName, i + 1);
@@ -440,6 +448,15 @@ antok::Initializer::initializeInput()
 			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
 		/*if (it.second != oldPtr) {  //TODO unclear why this obscure test is needed
 			std::cout << "Pointer address of vector<double> '" << it.first << "' has changed while opening a new file." << std::endl;
+			return false;
+		*/
+	}
+	for (auto& it : data._intVectors) {
+		//std::vector<int>* const oldPtr = it.second;  // SetBranchAddress is not allowed to change when opening a (new) file
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
+		/*if (it.second != oldPtr) {  //TODO unclear why this obscure test is needed
+			std::cout << "Pointer address of vector<int> '" << it.first << "' has changed while opening a new file." << std::endl;
 			return false;
 		*/
 	}
@@ -758,6 +775,7 @@ createOutTree(TTree* const      inTree,
 				else if (variableType == "TVector3")            addToOutputBranch<TVector3>           (outTree, data, variableName);
 				else if (variableType == "TLorentzVector")      addToOutputBranch<TLorentzVector>     (outTree, data, variableName);
 				else if (variableType == "std::vector<double>") addToOutputBranch<std::vector<double>>(outTree, data, variableName);
+				else if (variableType == "std::vector<int>")    addToOutputBranch<std::vector<int>>   (outTree, data, variableName);
 				else {
 					std::cerr << "Variable type '" << variableType << "' of variable '"
 					          << variableName << "' not implemented for own output tree." << std::endl;
