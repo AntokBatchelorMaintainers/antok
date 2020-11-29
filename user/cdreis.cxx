@@ -551,10 +551,10 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 
 	// Get constant arguments
 	std::map<std::string, double> constArgs
-		= {{"ECALResolution",  0},
-		   {"ECAL1Resolution", 0},
-		   {"ECAL2Resolution", 0},
-		   {"Mass",            0}};
+		= {{"MassWindowECALMixed", 0},
+		   {"MassWindowECAL2",     0},
+		   {"MassWindowECAL2",     0},
+		   {"NominalMass",         0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -575,11 +575,10 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 
 	return new antok::user::cdreis::functions::GetPhotonPairParticles(
 		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // PhotonLVs
-		//TODO improve YAML names
-		constArgs["Mass"],                                          // NominalMass,
-		constArgs["ECALResolution"],                                // MassWindowECALMixed,
-		constArgs["ECAL1Resolution"],                               // MassWindowECAL1,
-		constArgs["ECAL2Resolution"],                               // MassWindowECAL2,
+		constArgs["NominalMass"],                                   // NominalMass,
+		constArgs["MassWindowECALMixed"],                           // MassWindowECALMixed,
+		constArgs["MassWindowECAL1"],                               // MassWindowECAL1,
+		constArgs["MassWindowECAL2"],                               // MassWindowECAL2,
 		*data.getAddr<std::vector<int>>           (args[1].first),  // ECALindices
 		*data.getAddr<std::vector<TLorentzVector>>(ResultParticleLVs),
 		*data.getAddr<int>                        (ResultHasParticles)
@@ -607,10 +606,10 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 
 	// Get constant arguments
 	std::map<std::string, double> constArgs
-		= {{"Mass",            0},
-		   {"ECALResolution",  0},
-		   {"ECAL1Resolution", 0},
-		   {"ECAL2Resolution", 0}};
+		= {{"Pi0Mass",             0},
+		   {"MassWindowECALMixed", 0},
+		   {"MassWindowECAL1",     0},
+		   {"MassWindowECAL2",     0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -647,11 +646,10 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 	return new antok::user::cdreis::functions::GetPi0Pair(
 		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // PhotonLVs
 		*data.getAddr<std::vector<int>>           (args[1].first),  // ECALIndices
-		//TODO improve YAML names
-		constArgs["Mass"],                                          // Pi0Mass
-		constArgs["ECALResolution"],                                // MassWindowECALMixed
-		constArgs["ECAL1Resolution"],                               // MassWindowECAL1
-		constArgs["ECAL2Resolution"],                               // MassWindowECAL2
+		constArgs["Pi0Mass"],                                       // Pi0Mass
+		constArgs["MassWindowECALMixed"],                           // MassWindowECALMixed
+		constArgs["MassWindowECAL1"],                               // MassWindowECAL1
+		constArgs["MassWindowECAL2"],                               // MassWindowECAL2
 		*data.getAddr<std::vector<TLorentzVector>>(ResultPi0PairLVs),
 		*data.getAddr<TLorentzVector>             (ResultPi0LV_0),
 		*data.getAddr<TLorentzVector>             (ResultPi0LV_1),
@@ -771,15 +769,14 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"Pi0_0"     , "TLorentzVector"},
-		   {"Pi0_1"     , "TLorentzVector"},
-		   //TODO improve YAML names
-		   {"Scattered0", "TLorentzVector"},
-		   {"Scattered1", "TLorentzVector"},
-		   {"Scattered2", "TLorentzVector"},
-		   {"Charge0"   , "int"},
-		   {"Charge1"   , "int"},
-		   {"Charge2"   , "int"}};
+		= {{"Pi0LV_0",         "TLorentzVector"},
+		   {"Pi0LV_1",         "TLorentzVector"},
+		   {"ChargedPartLV_0", "TLorentzVector"},
+		   {"ChargedPartLV_1", "TLorentzVector"},
+		   {"ChargedPartLV_2", "TLorentzVector"},
+		   {"Charge_0",        "int"},
+		   {"Charge_1",        "int"},
+		   {"Charge_2",        "int"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
