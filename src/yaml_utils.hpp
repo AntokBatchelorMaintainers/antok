@@ -54,6 +54,7 @@ namespace antok {
 				data.insert<T>(name);
 				retval = data.getAddr<T>(name);
 				*retval = val;
+				//T val = node.as<T>();
 				//retval = new T(val); // previous returned address
 			} catch (const YAML::TypedBadConversion<T>& e) {
 				// not bad yet, could be a variable name there

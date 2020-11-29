@@ -154,12 +154,19 @@ antok::generators::functionArgumentHandlerPossibleConst(vecPairString<T*>& args,
 	for (auto& arg : args) {
 		if (hasNodeKey(function, arg.first)) {
 			const YAML::Node& node = function[arg.first];
+			std::string variable_name = antok::YAMLUtils::getString(node);
 			try {
+				//previous code
+				//const T val = node.as<T>();
+				//arg.second = new T(val);
+				// TODO test if new memory management works
+				const std::string name = "generators_" + functionName + "_" + variable_name;
 				const T val = node.as<T>();
-				//TODO potential memory leak
-				arg.second = new T(val);
+				data.insert<T>(name);
+				T* retval = data.getAddr<T>(name);
+				*retval = val;
+				arg.second = retval;
 			} catch (const YAML::TypedBadConversion<T>& e) {  // test if variable is a variable name
-				std::string variable_name = antok::YAMLUtils::getString(node);
 				if (variable_name == "") {
 					std::cerr << "Entry has to be either a variable name or a convertible type." << std::endl;
 					return false;
@@ -707,7 +714,6 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
-
 	// Get input variables
 	const YAML::Node&  functionName = function["Name"];
 	const std::string& quantityName = quantityNames[0];
@@ -728,20 +734,16 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 		return nullptr;
 	}
 	vecPairString<std::string> args;
-	double* mAddr = nullptr;
+	std::map<std::string, double> constArgs = {{"M", 0}};
 	switch (defType) {
 		case GetLorentzVec::XYZM: {
 			args = {{"X", "double"},
 			        {"Y", "double"},
 			        {"Z", "double"}};
-			std::map<std::string, double> constArgs = {{"M", 0}};
 			if (not antok::generators::functionArgumentHandlerConst<double>(constArgs, function)) {
 				std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 				return nullptr;
 			}
-			//TODO potential memory leak
-			mAddr    = new double();
-			(*mAddr) = constArgs["M"];
 			break;
 		}
 		case GetLorentzVec::PxPyPzE:
@@ -752,14 +754,10 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 			break;
 		case GetLorentzVec::Vec3M: {
 			args = {{"Vec3", "TVector3"}};
-			std::map<std::string, double> constArgs = {{"M", 0}};
 			if (not antok::generators::functionArgumentHandlerConst<double>(constArgs, function)) {
 				std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 				return nullptr;
 			}
-			//TODO potential memory leak
-			mAddr    = new double();
-			(*mAddr) = constArgs["M"];
 			break;
 		}
 		case GetLorentzVec::Vec3E:
@@ -771,20 +769,18 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
-
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	if (not data.insert<TLorentzVector>(quantityName)) {
 		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 		return nullptr;
 	}
-
 	switch (defType) {
 		case GetLorentzVec::XYZM:
 			return new GetLorentzVec(*data.getAddr<double>(args[0].first),         // x
 			                         *data.getAddr<double>(args[1].first),         // y
 			                         *data.getAddr<double>(args[2].first),         // z
-			                         *mAddr,                                       // m
+			                         constArgs["M"],                               // m
 			                         *data.getAddr<TLorentzVector>(quantityName),  // out
 			                         defType);
 		case GetLorentzVec::PxPyPzE:
@@ -796,7 +792,7 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 			                         defType);
 		case GetLorentzVec::Vec3M:
 			return new GetLorentzVec(*data.getAddr<TVector3>(args[0].first),       // (x, y, z)^T
-			                         *mAddr,                                       // m
+			                         constArgs["M"],                               // m
 			                         *data.getAddr<TLorentzVector>(quantityName),  // out
 			                         defType);
 		case GetLorentzVec::Vec3E:
