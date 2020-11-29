@@ -282,6 +282,11 @@ antok::Initializer::initializeData()
 					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
+			} else if (type == "std::vector<int>") {
+				if (not data.insertInputVariable<std::vector<int>>(name)) {
+					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
 			} else if (type == "TLorentzVector") {
 				if (not data.insertInputVariable<TLorentzVector>(name)) {
 					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
