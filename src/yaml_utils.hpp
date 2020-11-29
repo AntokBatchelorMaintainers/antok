@@ -28,7 +28,7 @@ namespace antok {
 		inline
 		bool
 		getValue(const YAML::Node& node,
-		         T&                val)  //TODO make this a reference
+		         T&                val)
 		{
 			try {
 				val = node.as<T>();
@@ -44,15 +44,21 @@ namespace antok {
 		T*
 		getAddress(const YAML::Node& node)
 		{
+			antok::Data& data = antok::ObjectManager::instance()->getData();
 			T* retval = nullptr;
 			try {
+				// use data memory management to add new adress
+				//TODO test for memory leaks in new system
+				const std::string name = "YAMLUtils_" + antok::YAMLUtils::getString(node);
 				T val = node.as<T>();
-				retval = new T(val);  //TODO potential memory leak if calling code does not take care of freeing
+				data.insert<T>(name);
+				retval = data.getAddr<T>(name);
+				*retval = val;
+				//retval = new T(val); // previous returned address
 			} catch (const YAML::TypedBadConversion<T>& e) {
 				// not bad yet, could be a variable name there
 			}
 			if (retval == nullptr) {
-				antok::Data& data = antok::ObjectManager::instance()->getData();
 				const std::string name = antok::YAMLUtils::getString(node);
 				if (name == "") {
 					std::cerr << "Entry has to be either a variable name or a convertible type." << std::endl;
