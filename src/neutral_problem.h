@@ -47,6 +47,30 @@ namespace antok {
 		const double _precisionGoal;  //!< sets the limit for which fit is accepted as converged
 
 	};
+	// short helping class to access physical quantities with meaningfull name
+	class QuantitiyHelper {
+
+	public:
+		QuantitiyHelper(const TVectorD& eta) : x_1(eta[0]),
+											   y_1(eta[1]),
+		                                       z_1(sqrt(1 - x_1 * x_1 - y_1 * y_1)),
+		                                       E_1(eta[2]),
+		                                       x_2(eta[3]),
+		                                       y_2(eta[4]),
+		                                       z_2(sqrt(1 - x_2 * x_2 - y_2 * y_2)),
+		                                       E_2(eta[5])
+		{ }
+
+		const double x_1;
+		const double y_1;
+		const double z_1;
+		const double E_1;
+		const double x_2;
+		const double y_2;
+		const double z_2;
+		const double E_2;
+	private:
+	};
 
 }
 
