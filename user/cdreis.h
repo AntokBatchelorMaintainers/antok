@@ -3,6 +3,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "data.h"
+
 namespace antok {
 
 	class Function;
@@ -30,6 +32,8 @@ namespace antok {
 			FUNCTION_PROTOTYPE(generateGetOmega);
 			FUNCTION_PROTOTYPE(generateGetFittedOmegaMassVsPrecisionGoal);
 			FUNCTION_PROTOTYPE(generateGetThreePionCombinationMass);
+
+			const bool registerOutputVarTypes (antok::Data& data, const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes);
 		}
 
 	}
