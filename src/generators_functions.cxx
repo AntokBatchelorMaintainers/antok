@@ -156,14 +156,16 @@ antok::generators::functionArgumentHandlerPossibleConst(vecPairString<T*>& args,
 			const YAML::Node& node = function[arg.first];
 			std::string variable_name = antok::YAMLUtils::getString(node);
 			try {
-				//previous code
-				//const T val = node.as<T>();
-				//arg.second = new T(val);
-				// TODO test if new memory management works
-				const std::string name = "generators_" + variable_name;
+				// find unused name in antok::Data memory allocation
 				const T val = node.as<T>();
-				data.insert<T>(name);
-				T* retval = data.getAddr<T>(name);
+				size_t nmb = 0;
+				while (!data.insert<T>("__generatorsFunctionsConst" + std::to_string(nmb))) {
+					if (nmb > 10000) { // TODO arbitrary limit
+						std::cerr << "Could not allocate memory for antok::generators::functionArgumentHandlerPossibleConst in Function '" << functionName << "'.";
+					}
+					nmb++;
+				}
+				T* retval = data.getAddr<T>("__generatorsFunctionsConst" + std::to_string(nmb));
 				*retval = val;
 				arg.second = retval;
 			} catch (const YAML::TypedBadConversion<T>& e) {  // test if variable is a variable name
@@ -739,13 +741,13 @@ antok::generators::generateGetLorentzVec(const YAML::Node&               functio
 	if (defType == GetLorentzVec::XYZM or defType == GetLorentzVec::Vec3M) {
 		size_t nmb = 0;
 		// search for unused memory space
-		while (!data.insert<double>("__getLorentzVecMassVec" + nmb)) {
+		while (!data.insert<double>("__getLorentzVecMassVec" + std::to_string(nmb))) {
 			if (nmb > 10000) { // TODO arbitrary limit
 				std::cerr << "Could not allocate memory for __getLorentzVecMassVec in Function '" << functionName << "'.";
 			}
 			nmb++;
 		}
-		mAddr = data.getAddr<double>("__getLorentzVecMassVec" + nmb);
+		mAddr = data.getAddr<double>("__getLorentzVecMassVec" + std::to_string(nmb));
 		std::map<std::string, double> constArgs = {{"M", 0}};
 		if (not antok::generators::functionArgumentHandlerConst<double>(constArgs, function)) {
 			std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);

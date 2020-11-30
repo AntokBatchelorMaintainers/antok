@@ -47,15 +47,17 @@ namespace antok {
 			antok::Data& data = antok::ObjectManager::instance()->getData();
 			T* retval = nullptr;
 			try {
-				// use data memory management to add new adress
-				//TODO test for memory leaks in new system
-				const std::string name = "YAMLUtils_" + antok::YAMLUtils::getString(node);
+				// use antok::Data memory management to get new adress
 				T val = node.as<T>();
-				data.insert<T>(name);
-				retval = data.getAddr<T>(name);
+				size_t nmb = 0;
+				while (!data.insert<T>("__YAMLUtilsAddress" + std::to_string(nmb))) {
+					if (nmb > 10000) { // TODO arbitrary limit
+						std::cerr << "Could not allocate memory for YAMLUtils::getAddress.";
+					}
+					nmb++;
+				}
+				retval = data.getAddr<T>("__YAMLUtilsAddress" + std::to_string(nmb));
 				*retval = val;
-				//T val = node.as<T>();
-				//retval = new T(val); // previous returned address
 			} catch (const YAML::TypedBadConversion<T>& e) {
 				// not bad yet, could be a variable name there
 			}
