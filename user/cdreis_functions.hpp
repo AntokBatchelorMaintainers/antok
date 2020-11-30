@@ -1139,7 +1139,7 @@ namespace antok {
 					bool
 					operator() ()
 					{
-						const size_t sizeVectors = std::log(_precisionGoalLowerLimit / _precisionGoalUpperLimit);
+						const size_t sizeVectors = std::log(_precisionGoalUpperLimit / _precisionGoalLowerLimit);
 						_ResultAcceptedOmegas.resize(sizeVectors);
 						_ResultPrecisionGoals.resize(sizeVectors);
 						_ResultOmegaMasses.resize   (sizeVectors);
@@ -1159,8 +1159,10 @@ namespace antok {
 						TLorentzVector              FinalPi0LV;
 						TLorentzVector              FinalPiMinusLV;
 						size_t index = 0;
-						//TODO implement checks for safe use
-						for (double PG = _precisionGoalLowerLimit; PG >= _precisionGoalUpperLimit; PG*= 0.1 ) {
+						if (_precisionGoalLowerLimit > _precisionGoalUpperLimit) {
+							std::cerr << "_precisionGoalLowerLimit is larger than _precisionGoalUpperLimit: " << _precisionGoalLowerLimit << ">" << _precisionGoalUpperLimit << ".\n";
+						}
+						for (double PG = _precisionGoalLowerLimit; PG <= _precisionGoalUpperLimit; PG*= 10 ) {
 						GetKinematicFittingMass* PiPairFit = new GetKinematicFittingMass(_VertexPosition, _ClusterPositions, _ClusterPositionVariances, _ClusterEnergies, _ClusterEnergyVariances,
 							                                                                 _ClusterIndices, _PiMass, _PiMassLowerLimit, _PiMassUpperLimit, PG, _whichEnergyVariance, PiLorentzVectors,
 							                                                                 PiChi2s, PiPValues, PiNmbIterations, PiSuccess, PiPullsX0, PiPullsY0, PiPullsE0, PiPullsX1, PiPullsY1, PiPullsE1);

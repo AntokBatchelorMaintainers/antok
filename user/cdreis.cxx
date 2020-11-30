@@ -656,7 +656,6 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	}
 
 	// Register output variables
-	// TODO order ourput variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>", // ResultLorentzVectors
 	                                           "std::vector<double>",         // ResultChi2s
