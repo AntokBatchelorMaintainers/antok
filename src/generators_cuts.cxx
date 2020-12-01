@@ -25,7 +25,7 @@ namespace {
 	                             const std::string& longName,
 	                             const std::string& abbreviation,
 	                             bool* const result,
-	                             int mode)
+	                             antok::cuts::equalityMethod mode)
 	{
 
 		T* value = antok::YAMLUtils::getAddress<T>(cut["Value"]);
@@ -47,7 +47,7 @@ namespace {
 	                             const std::string& longName,
 	                             const std::string& abbreviation,
 	                             bool* const result,
-	                             int mode)
+	                             antok::cuts::ellipticMethod mode)
 	{
 
 
@@ -118,7 +118,7 @@ namespace {
 			std::cerr<<"A required entry is missing for \"Range\" cut \""<<shortName<<"\" (either \"Type\" or \"Variable\")"<<std::endl;
 			return 0;
 		}
-		int method = -1;
+		int method = antok::cuts::rangeFail;
 		T* lowerBoundOrCentralValue = 0;
 		T* upperBoundOrRange = 0;
 
@@ -144,7 +144,7 @@ namespace {
 				std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type T."<<std::endl;
 				return 0;
 			}
-			method = 0;
+			method = antok::cuts::rangeExcl;
 		} else if (hasNodeKey(cut, "CentralValue") and hasNodeKey(cut, "Range") ){
 			lowerBoundOrCentralValue = antok::YAMLUtils::getAddress<T>(cut["CentralValue"]);
 			upperBoundOrRange = antok::YAMLUtils::getAddress<T>(cut["Range"]);
@@ -152,28 +152,28 @@ namespace {
 				std::cerr<<"Entries \"CentralValue\"/\"Range\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
 				return 0;
 			}
-			method = 6;
+			method = antok::cuts::centralValExcl;
 		} else if(hasNodeKey(cut, "LowerBound")) {
 			lowerBoundOrCentralValue = antok::YAMLUtils::getAddress<T>(cut["LowerBound"]);
 			if(lowerBoundOrCentralValue == 0) {
 				std::cerr<<"Entry \"LowerBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type T."<<std::endl;
 				return 0;
 			}
-			method = 4;
+			method = antok::cuts::rangeOpenHighExcl;
 		} else if(hasNodeKey(cut, "UpperBound")) {
 			upperBoundOrRange = antok::YAMLUtils::getAddress<T>(cut["UpperBound"]);
 			if(upperBoundOrRange == 0) {
 				std::cerr<<"Entries \"LowerBound\"/\"UpperBound\" invalid in \"Range\" cut \""<<shortName<<"\", has to be either a variable name or of type double."<<std::endl;
 				return 0;
 			}
-			method = 2;
+			method = antok::cuts::rangeOpenLowExcl;
 		} else {
 			std::cerr<<"Either \"LowerBound\" or \"UpperBound\" has to be present in \"Range\" cut \""<<shortName<<"\"."<<std::endl;
 			return 0;
 		}
 		std::string type = antok::YAMLUtils::getString(cut["Type"]);
 		if(type == "Inclusive") {
-			++method;
+			method = method + 1; // change method to inclusive version
 		} else if(type == "Exclusive") {
 			// nothing to do
 		} else if(type == "") {
@@ -195,7 +195,7 @@ namespace {
 			std::cerr<<"Could not find \"Range\" cut \""<<shortName<<"\"'s \"Variable\" entry \""<<varName<<"\" in Data."<<std::endl;
 			return 0;
 		}
-		return (new antok::cuts::RangeCut<T>(shortName, longName, abbreviation, result, lowerBoundOrCentralValue, upperBoundOrRange, variable, method));
+		return (new antok::cuts::RangeCut<T>(shortName, longName, abbreviation, result, lowerBoundOrCentralValue, upperBoundOrRange, variable, (antok::cuts::rangeMethod) method));
 
 	};
 	antok::Cut* __generateRangeCut(const YAML::Node& cut,
@@ -233,11 +233,11 @@ namespace {
 			return 0;
 		}
 
-		int mode = -1;
+		antok::cuts::equalityMethod mode = antok::cuts::eqFail;
 		if(type == "==") {
-			mode = 0;
+			mode = antok::cuts::equality;
 		} else if (type == "!=") {
-			mode = 1;
+			mode = antok::cuts::inequality;
 		} else {
 			std::cerr<<"\"Type\" \""<<type<<"\" not supported by \"Equality\" cut."<<std::endl;
 			return 0;
@@ -292,11 +292,11 @@ namespace {
 			return 0;
 		}
 
-		int mode = -1;
+		antok::cuts::ellipticMethod mode = antok::cuts::ellipticFail;
 		if(type == "Inclusive") {
-			mode = 0;
+			mode = antok::cuts::ellipticInclusive;
 		} else if (type == "Exclusive") {
-			mode = 1;
+			mode = antok::cuts::ellipticExclusive;
 		} else {
 			std::cerr<<"\"Type\" \""<<type<<"\" not supported by \"Elliptic\" cut."<<std::endl;
 			return 0;
@@ -390,13 +390,13 @@ namespace {
 		}
 
 		std::string type = antok::YAMLUtils::getString(cut["Type"]);
-		int mode;
+		antok::cuts::groupMethod mode = antok::cuts::groupFail;
 		if(type == "And") {
-			mode = 0;
+			mode = antok::cuts::groupAnd;
 		} else if (type == "Or") {
-			mode = 1;
+			mode = antok::cuts::groupOr;
 		} else if (type == "Nand") {
-			mode = 2;
+			mode = antok::cuts::groupNand;
 		} else if (type == "") {
 			std::cerr<<"Could not convert \"GroupCut\" \""<<shortName<<"\"'s \"Type\" to std::string."<<std::endl;
 			return 0;
