@@ -19,9 +19,9 @@ using vecPairString = std::vector<std::pair<std::string, T>>;
 
 
 antok::Function*
-antok::user::cdreis::getUserFunction(const YAML::Node&                function,
-                                     const std::vector<std::string>&  quantityNames,
-                                     int                              index)
+antok::user::cdreis::getUserFunction(const YAML::Node&               function,
+                                     const std::vector<std::string>& quantityNames,
+                                     int                             index)
 {
 	const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
 	if        (functionName == "getVector3VectorAttributes") {
@@ -77,18 +77,19 @@ antok::user::cdreis::generateGetVector3VectorAttributes(const YAML::Node&       
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<double>",  // ResultXComponents
-	                                           "std::vector<double>",  // ResultYComponents
-	                                           "std::vector<double>"}; // ResultYComponents
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<double>",   // ResultXComponents
+		   "std::vector<double>",   // ResultYComponents
+		   "std::vector<double>"};  // ResultYComponents
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetVector3VectorAttributes(
-		*data.getAddr<std::vector<TVector3>>(args[0].first),  // TVector3s
-		*data.getAddr<std::vector<double>>(quantityNames[0]), // ResultXComponents
-		*data.getAddr<std::vector<double>>(quantityNames[1]), // ResultYComponents
-		*data.getAddr<std::vector<double>>(quantityNames[2])  // ResultZComponents
+		*data.getAddr<std::vector<TVector3>>(args[0].first),   // TVector3s
+		*data.getAddr<std::vector<double>>(quantityNames[0]),  // ResultXComponents
+		*data.getAddr<std::vector<double>>(quantityNames[1]),  // ResultYComponents
+		*data.getAddr<std::vector<double>>(quantityNames[2])   // ResultZComponents
 	);
 }
 
@@ -111,26 +112,27 @@ antok::user::cdreis::generateGetVectorLorentzVectorAttributes(const YAML::Node& 
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<double>",  // ResultXComponents
-	                                           "std::vector<double>",  // ResultYComponents
-	                                           "std::vector<double>",  // ResultZComponents
-	                                           "std::vector<double>",  // ResultEnergies
-	                                           "std::vector<double>",  // ResultThetas
-	                                           "std::vector<double>",  // ResultPhis
-	                                           "std::vector<double>"}; // ResultMags
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<double>",   // ResultXComponents
+		   "std::vector<double>",   // ResultYComponents
+		   "std::vector<double>",   // ResultZComponents
+		   "std::vector<double>",   // ResultEnergies
+		   "std::vector<double>",   // ResultThetas
+		   "std::vector<double>",   // ResultPhis
+		   "std::vector<double>"};  // ResultMags
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetVectorLorentzVectorAttributes(
-			*data.getAddr<std::vector<TLorentzVector>>(args[0].first), // LVs
-			*data.getAddr<std::vector<double>>(quantityNames[0]),      // ResultXComponents
-			*data.getAddr<std::vector<double>>(quantityNames[1]),      // ResultYComponents
-			*data.getAddr<std::vector<double>>(quantityNames[2]),      // ResultZComponents
-			*data.getAddr<std::vector<double>>(quantityNames[3]),      // ResultEnergies
-			*data.getAddr<std::vector<double>>(quantityNames[4]),      // ResultThetas
-			*data.getAddr<std::vector<double>>(quantityNames[5]),      // ResultPhis
-			*data.getAddr<std::vector<double>>(quantityNames[6])       // ResultMags
+			*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // LVs
+			*data.getAddr<std::vector<double>>(quantityNames[0]),       // ResultXComponents
+			*data.getAddr<std::vector<double>>(quantityNames[1]),       // ResultYComponents
+			*data.getAddr<std::vector<double>>(quantityNames[2]),       // ResultZComponents
+			*data.getAddr<std::vector<double>>(quantityNames[3]),       // ResultEnergies
+			*data.getAddr<std::vector<double>>(quantityNames[4]),       // ResultThetas
+			*data.getAddr<std::vector<double>>(quantityNames[5]),       // ResultPhis
+			*data.getAddr<std::vector<double>>(quantityNames[6])        // ResultMags
 	);
 }
 
@@ -159,15 +161,15 @@ antok::user::cdreis::generateGetNominalMassDifferences(const YAML::Node&        
 
     // Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<double>"}; // ResultMassDifferences
+	const std::vector<std::string> outputVarTypes = {"std::vector<double>"};  // ResultMassDifferences
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::getNominalMassDifferences(
-		*data.getAddr<std::vector<TLorentzVector>>(args[0].first), // VectorLV
-		constArgs["NominalMass"],                                  // NominalMass
-		*data.getAddr<std::vector<double>>(quantityNames[0])       // ResultMassDifferences
+		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // VectorLV
+		constArgs["NominalMass"],                                   // NominalMass
+		*data.getAddr<std::vector<double>>(quantityNames[0])        // ResultMassDifferences
 	);
 }
 
@@ -199,16 +201,16 @@ antok::user::cdreis::generateGetRecoilLorentzVec(const YAML::Node&              
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"TLorentzVector"}; // ResultRecoilLV
+	const std::vector<std::string> outputVarTypes = {"TLorentzVector"};  // ResultRecoilLV
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetRecoilLorentzVec(
-		*data.getAddr<TLorentzVector>(args[0].first),   // BeamLV
-		*data.getAddr<TLorentzVector>(args[1].first),   // XLV
+		*data.getAddr<TLorentzVector>(args[0].first),    // BeamLV
+		*data.getAddr<TLorentzVector>(args[1].first),    // XLV
 		constArgs["RecoilMass"],
-		*data.getAddr<TLorentzVector>(quantityNames[0]) // ResultRecoilLV
+		*data.getAddr<TLorentzVector>(quantityNames[0])  // ResultRecoilLV
 	);
 }
 
@@ -265,17 +267,17 @@ antok::user::cdreis::generateGetECALCorrectedEnergy(const YAML::Node&           
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<double>"}; // ResultCorrectedEnergies
+	const std::vector<std::string> outputVarTypes = {"std::vector<double>"};  // ResultCorrectedEnergies
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetECALCorrectedEnergy(
-		*data.getAddr<std::vector<double>>(args[0].first),   // Energies
-		*data.getAddr<std::vector<int>>   (args[1].first),   // ClusterIndices
-		*data.getAddr<int>                (args[2].first),   // RunNumber
+		*data.getAddr<std::vector<double>>(args[0].first),    // Energies
+		*data.getAddr<std::vector<int>>   (args[1].first),    // ClusterIndices
+		*data.getAddr<int>                (args[2].first),    // RunNumber
 		Corrections,
-		*data.getAddr<std::vector<double>>(quantityNames[0]) // ResultCorrectedEnergies
+		*data.getAddr<std::vector<double>>(quantityNames[0])  // ResultCorrectedEnergies
 	);
 }
 
@@ -332,17 +334,17 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<double>"}; // ResultCorrectedTimes
+	const std::vector<std::string> outputVarTypes = {"std::vector<double>"};  // ResultCorrectedTimes
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetECALCorrectedTiming(
-		*data.getAddr<std::vector<double>>(args[0].first),   // Times
-		*data.getAddr<std::vector<double>>(args[1].first),   // Energies
-		*data.getAddr<std::vector<int>>   (args[2].first),   // ClusterIndices
+		*data.getAddr<std::vector<double>>(args[0].first),    // Times
+		*data.getAddr<std::vector<double>>(args[1].first),    // Energies
+		*data.getAddr<std::vector<int>>   (args[2].first),    // ClusterIndices
 		CalibrationCoeffs,
-		*data.getAddr<std::vector<double>>(quantityNames[0]) // ResultCorrectedTimes
+		*data.getAddr<std::vector<double>>(quantityNames[0])  // ResultCorrectedTimes
 	);
 }
 
@@ -382,33 +384,34 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<TVector3>", // ResultPositions
-	                                           "std::vector<double>",   // ResultEnergies
-	                                           "std::vector<double>",   // ResultTimes
-	                                           "std::vector<TVector3>", // ResultPosition variances
-	                                           "std::vector<double>",   // ResultEnergie variances
-	                                           "std::vector<int>"};     // ResultECALIndices
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<TVector3>",  // ResultPositions
+		   "std::vector<double>",    // ResultEnergies
+		   "std::vector<double>",    // ResultTimes
+		   "std::vector<TVector3>",  // ResultPosition variances
+		   "std::vector<double>",    // ResultEnergie variances
+		   "std::vector<int>"};      // ResultECALIndices
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetCleanedEcalClusters(
-		*data.getAddr<std::vector<TVector3>>(args[0].first),    // Positions
-		*data.getAddr<std::vector<double>>  (args[1].first),    // Energies
-		*data.getAddr<std::vector<double>>  (args[2].first),    // Times
-		*data.getAddr<std::vector<TVector3>>(args[3].first),    // Positions variance
-		*data.getAddr<std::vector<double>>  (args[4].first),    // Energies variance
-		*data.getAddr<std::vector<int>>     (args[5].first),    // ECAL index
-		constArgs["ThresholdEnergyECAL1"],                      // ThresholdEnergyECAL1
-		constArgs["ThresholdTimingECAL1"],                      // WindowTimingECAL1
-		constArgs["ThresholdEnergyECAL2"],                      // ThresholdEnergyECAL2
-		constArgs["ThresholdTimingECAL2"],                      // WindowTimingECAL2
-		*data.getAddr<std::vector<TVector3>>(quantityNames[0]), // ResultPositions
-		*data.getAddr<std::vector<double>>  (quantityNames[1]), // ResultEnergies
-		*data.getAddr<std::vector<double>>  (quantityNames[2]), // ResultTimes
-		*data.getAddr<std::vector<TVector3>>(quantityNames[3]), // ResultPosition variances
-		*data.getAddr<std::vector<double>>  (quantityNames[4]), // ResultEnergie variances
-		*data.getAddr<std::vector<int>>     (quantityNames[5])  // ResultECALIndices
+		*data.getAddr<std::vector<TVector3>>(args[0].first),     // Positions
+		*data.getAddr<std::vector<double>>  (args[1].first),     // Energies
+		*data.getAddr<std::vector<double>>  (args[2].first),     // Times
+		*data.getAddr<std::vector<TVector3>>(args[3].first),     // Positions variance
+		*data.getAddr<std::vector<double>>  (args[4].first),     // Energies variance
+		*data.getAddr<std::vector<int>>     (args[5].first),     // ECAL index
+		constArgs["ThresholdEnergyECAL1"],                       // ThresholdEnergyECAL1
+		constArgs["ThresholdTimingECAL1"],                       // WindowTimingECAL1
+		constArgs["ThresholdEnergyECAL2"],                       // ThresholdEnergyECAL2
+		constArgs["ThresholdTimingECAL2"],                       // WindowTimingECAL2
+		*data.getAddr<std::vector<TVector3>>(quantityNames[0]),  // ResultPositions
+		*data.getAddr<std::vector<double>>  (quantityNames[1]),  // ResultEnergies
+		*data.getAddr<std::vector<double>>  (quantityNames[2]),  // ResultTimes
+		*data.getAddr<std::vector<TVector3>>(quantityNames[3]),  // ResultPosition variances
+		*data.getAddr<std::vector<double>>  (quantityNames[4]),  // ResultEnergie variances
+		*data.getAddr<std::vector<int>>     (quantityNames[5])   // ResultECALIndices
 	);
 }
 
@@ -444,30 +447,31 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<int>",      // ResultClusterIndex
-	                                           "std::vector<TVector3>", // ResultClusterPosition
-	                                           "std::vector<TVector3>", // ResultClusterPositionVariance
-	                                           "std::vector<double>",   // ResultClusterEnergy
-	                                           "std::vector<double>",   // ResultClusterEnergyVariances
-	                                           "std::vector<double>"};  // ResultClusterTime
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<int>",       // ResultClusterIndex
+		   "std::vector<TVector3>",  // ResultClusterPosition
+		   "std::vector<TVector3>",  // ResultClusterPositionVariance
+		   "std::vector<double>",    // ResultClusterEnergy
+		   "std::vector<double>",    // ResultClusterEnergyVariances
+		   "std::vector<double>"};   // ResultClusterTime
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::getECALVariables(
-		*data.getAddr<std::vector<int>>           (args[0].first),    // ClusterIndex
-		*data.getAddr<std::vector<TVector3>>      (args[1].first),    // ClusterPosition
-		*data.getAddr<std::vector<TVector3>>      (args[2].first),    // ClusterPositionVariance
-		*data.getAddr<std::vector<double>>        (args[3].first),    // ClusterEnergy
-		*data.getAddr<std::vector<double>>        (args[4].first),    // ClusterEnergyVariance
-		*data.getAddr<std::vector<double>>        (args[5].first),    // ClusterTime
-		constArgsInt["ECALIndex"],                                    // SelectedECALIndex
-		*data.getAddr<std::vector<int>>           (quantityNames[0]), // ResultClusterIndex
-		*data.getAddr<std::vector<TVector3>>      (quantityNames[1]), // ResultClusterPosition
-		*data.getAddr<std::vector<TVector3>>      (quantityNames[2]), // ResultClusterPositionVariance
-		*data.getAddr<std::vector<double>>        (quantityNames[3]), // ResultClusterEnergy
-		*data.getAddr<std::vector<double>>        (quantityNames[4]), // ResultClusterEnergyVariance
-		*data.getAddr<std::vector<double>>        (quantityNames[5])  // ResultClusterTime
+		*data.getAddr<std::vector<int>>     (args[0].first),     // ClusterIndex
+		*data.getAddr<std::vector<TVector3>>(args[1].first),     // ClusterPosition
+		*data.getAddr<std::vector<TVector3>>(args[2].first),     // ClusterPositionVariance
+		*data.getAddr<std::vector<double>>  (args[3].first),     // ClusterEnergy
+		*data.getAddr<std::vector<double>>  (args[4].first),     // ClusterEnergyVariance
+		*data.getAddr<std::vector<double>>  (args[5].first),     // ClusterTime
+		constArgsInt["ECALIndex"],                               // SelectedECALIndex
+		*data.getAddr<std::vector<int>>     (quantityNames[0]),  // ResultClusterIndex
+		*data.getAddr<std::vector<TVector3>>(quantityNames[1]),  // ResultClusterPosition
+		*data.getAddr<std::vector<TVector3>>(quantityNames[2]),  // ResultClusterPositionVariance
+		*data.getAddr<std::vector<double>>  (quantityNames[3]),  // ResultClusterEnergy
+		*data.getAddr<std::vector<double>>  (quantityNames[4]),  // ResultClusterEnergyVariance
+		*data.getAddr<std::vector<double>>  (quantityNames[5])   // ResultClusterTime
 	);
 }
 
@@ -495,18 +499,18 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"}; // ResultLorentzVecs
+	const std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"};  // ResultPhotonLVs
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetPhotonLorentzVecs(
-		*data.getAddr<std::vector<TVector3>>(args[0].first),         // Positions
-		*data.getAddr<std::vector<double>>  (args[1].first),         // Energies
-		*data.getAddr<std::vector<double>>  (args[2].first),         // Times
-		*data.getAddr<std::vector<int>>     (args[3].first),         // Cluster Indices
-		*data.getAddr<TVector3>             (args[4].first),         // PV
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]) // ResultLorentzVecs
+		*data.getAddr<std::vector<TVector3>>(args[0].first),          // Positions
+		*data.getAddr<std::vector<double>>  (args[1].first),          // Energies
+		*data.getAddr<std::vector<double>>  (args[2].first),          // Times
+		*data.getAddr<std::vector<int>>     (args[3].first),          // ECALIndices
+		*data.getAddr<TVector3>             (args[4].first),          // VertexPosition
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0])  // ResultPhotonLVs
 	);
 }
 
@@ -542,21 +546,22 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>", // ResultParticleLVs
-	                                           "int"};                        // ResultHasParticles
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<TLorentzVector>",  // ResultParticleLVs
+		   "int"};                         // ResultHasParticles
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetPhotonPairParticles(
-		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),    // PhotonLVs
-		constArgs["NominalMass"],                                     // NominalMass,
-		constArgs["MassWindowECALMixed"],                             // MassWindowECALMixed,
-		constArgs["MassWindowECAL1"],                                 // MassWindowECAL1,
-		constArgs["MassWindowECAL2"],                                 // MassWindowECAL2,
-		*data.getAddr<std::vector<int>>           (args[1].first),    // ECALindices
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // ResultParticleLVs
-		*data.getAddr<int>                        (quantityNames[1])  // ResultHasParticles
+		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),     // PhotonLVs
+		constArgs["NominalMass"],                                      // NominalMass,
+		constArgs["MassWindowECALMixed"],                              // MassWindowECALMixed,
+		constArgs["MassWindowECAL1"],                                  // MassWindowECAL1,
+		constArgs["MassWindowECAL2"],                                  // MassWindowECAL2,
+		*data.getAddr<std::vector<int>>           (args[1].first),     // ECALindices
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultParticleLVs
+		*data.getAddr<int>                        (quantityNames[1])   // ResultHasParticles
 	);
 }
 
@@ -592,27 +597,28 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>", // ResultPi0PairLVs
-	                                           "TLorentzVector",              // ResultPi0LV_0
-	                                           "TLorentzVector",              // ResultPi0LV_1
-	                                           "int",                         // ResultGoodPi0Pair
-	                                           "std::vector<int>"};           // ResultECALIndices
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<TLorentzVector>",  // ResultPi0PairLVs
+		   "TLorentzVector",               // ResultPi0LV_0
+		   "TLorentzVector",               // ResultPi0LV_1
+		   "int",                          // ResultGoodPi0Pair
+		   "std::vector<int>"};            // ResultECALIndices
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetPi0Pair(
-		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),    // PhotonLVs
-		*data.getAddr<std::vector<int>>           (args[1].first),    // ECALIndices
-		constArgs["Pi0Mass"],                                         // Pi0Mass
-		constArgs["MassWindowECALMixed"],                             // MassWindowECALMixed
-		constArgs["MassWindowECAL1"],                                 // MassWindowECAL1
-		constArgs["MassWindowECAL2"],                                 // MassWindowECAL2
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // ResultPi0PairLVs
-		*data.getAddr<TLorentzVector>             (quantityNames[1]), // ResultPi0LV_0
-		*data.getAddr<TLorentzVector>             (quantityNames[2]), // ResultPi0LV_1
-		*data.getAddr<int>                        (quantityNames[3]), // ResultGoodPi0Pair
-		*data.getAddr<std::vector<int>>           (quantityNames[4])  // ResultECALIndices
+		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),     // PhotonLVs
+		*data.getAddr<std::vector<int>>           (args[1].first),     // ECALIndices
+		constArgs["Pi0Mass"],                                          // Pi0Mass
+		constArgs["MassWindowECALMixed"],                              // MassWindowECALMixed
+		constArgs["MassWindowECAL1"],                                  // MassWindowECAL1
+		constArgs["MassWindowECAL2"],                                  // MassWindowECAL2
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultPi0PairLVs
+		*data.getAddr<TLorentzVector>             (quantityNames[1]),  // ResultPi0LV_0
+		*data.getAddr<TLorentzVector>             (quantityNames[2]),  // ResultPi0LV_1
+		*data.getAddr<int>                        (quantityNames[3]),  // ResultGoodPi0Pair
+		*data.getAddr<std::vector<int>>           (quantityNames[4])   // ResultECALIndices
 	);
 }
 
@@ -657,45 +663,46 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>", // ResultLorentzVectors
-	                                           "std::vector<double>",         // ResultChi2s
-	                                           "std::vector<double>",         // ResultPValues
-	                                           "std::vector<int>",            // ResultNmbIterations
-	                                           "int",                         // ResultSuccess
-	                                           "std::vector<double>",         // ResultPullsX0
-	                                           "std::vector<double>",         // ResultPullsY0
-	                                           "std::vector<double>",         // ResultPullsE0
-	                                           "std::vector<double>",         // ResultPullsX1
-	                                           "std::vector<double>",         // ResultPullsY1
-	                                           "std::vector<double>"};        // ResultPullsE1
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<TLorentzVector>",  // ResultLorentzVectors
+		   "std::vector<double>",          // ResultChi2s
+		   "std::vector<double>",          // ResultPValues
+		   "std::vector<int>",             // ResultNmbIterations
+		   "int",                          // ResultSuccess
+		   "std::vector<double>",          // ResultPullsX0
+		   "std::vector<double>",          // ResultPullsY0
+		   "std::vector<double>",          // ResultPullsE0
+		   "std::vector<double>",          // ResultPullsX1
+		   "std::vector<double>",          // ResultPullsY1
+		   "std::vector<double>"};         // ResultPullsE1
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 
 	return new antok::user::cdreis::functions::GetKinematicFittingMass(
-		*data.getAddr<TVector3>             (args[0].first),          // VertexPosition
-		*data.getAddr<std::vector<TVector3>>(args[1].first),          // ClusterPositions
-		*data.getAddr<std::vector<TVector3>>(args[2].first),          // ClusterPositionVariances
-		*data.getAddr<std::vector<double>>  (args[3].first),          // ClusterEnergies
-		*data.getAddr<std::vector<double>>  (args[4].first),          // ClusterEnergieVariances
-		*data.getAddr<std::vector<int>>     (args[5].first),          // ClusterIndices
-		constArgsDouble["Mass"],                                      // Mass
-		constArgsDouble["MassLowerLimit"],                            // massLowerLimit,
-		constArgsDouble["MassUpperLimit"],                            // massUpperLimit,
-		constArgsDouble["PrecisionGoal"],                             // limit to determine convergence
-		constArgsInt   ["ErrorEstimateType"],                         // whichEnergyVariance,
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // ResultLorentzVectors
-		*data.getAddr<std::vector<double>>        (quantityNames[1]), // ResultChi2s
-		*data.getAddr<std::vector<double>>        (quantityNames[2]), // ResultPValues
-		*data.getAddr<std::vector<int>>           (quantityNames[3]), // ResultNmbIterations
-		*data.getAddr<int>                        (quantityNames[4]), // ResultSuccess
-		*data.getAddr<std::vector<double>>        (quantityNames[5]), // ResultPullsX0
-		*data.getAddr<std::vector<double>>        (quantityNames[6]), // ResultPullsY0
-		*data.getAddr<std::vector<double>>        (quantityNames[7]), // ResultPullsE0
-		*data.getAddr<std::vector<double>>        (quantityNames[8]), // ResultPullsX1
-		*data.getAddr<std::vector<double>>        (quantityNames[9]), // ResultPullsY1
-		*data.getAddr<std::vector<double>>        (quantityNames[10]) // ResultPullsE1
+		*data.getAddr<TVector3>             (args[0].first),           // VertexPosition
+		*data.getAddr<std::vector<TVector3>>(args[1].first),           // ClusterPositions
+		*data.getAddr<std::vector<TVector3>>(args[2].first),           // ClusterPositionVariances
+		*data.getAddr<std::vector<double>>  (args[3].first),           // ClusterEnergies
+		*data.getAddr<std::vector<double>>  (args[4].first),           // ClusterEnergieVariances
+		*data.getAddr<std::vector<int>>     (args[5].first),           // ClusterIndices
+		constArgsDouble["Mass"],                                       // Mass
+		constArgsDouble["MassLowerLimit"],                             // massLowerLimit,
+		constArgsDouble["MassUpperLimit"],                             // massUpperLimit,
+		constArgsDouble["PrecisionGoal"],                              // limit to determine convergence
+		constArgsInt   ["ErrorEstimateType"],                          // whichEnergyVariance,
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultLorentzVectors
+		*data.getAddr<std::vector<double>>        (quantityNames[1]),  // ResultChi2s
+		*data.getAddr<std::vector<double>>        (quantityNames[2]),  // ResultPValues
+		*data.getAddr<std::vector<int>>           (quantityNames[3]),  // ResultNmbIterations
+		*data.getAddr<int>                        (quantityNames[4]),  // ResultSuccess
+		*data.getAddr<std::vector<double>>        (quantityNames[5]),  // ResultPullsX0
+		*data.getAddr<std::vector<double>>        (quantityNames[6]),  // ResultPullsY0
+		*data.getAddr<std::vector<double>>        (quantityNames[7]),  // ResultPullsE0
+		*data.getAddr<std::vector<double>>        (quantityNames[8]),  // ResultPullsX1
+		*data.getAddr<std::vector<double>>        (quantityNames[9]),  // ResultPullsY1
+		*data.getAddr<std::vector<double>>        (quantityNames[10])  // ResultPullsE1
 	);
 }
 
@@ -735,29 +742,30 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"TLorentzVector",  // ResultOmegaLV
-	                                           "int",             // ResultAccepted
-	                                           "TLorentzVector",  // ResultNotUsedPi0LV
-	                                           "TLorentzVector"}; // ResultNotUsedPiMinusLV
+	const std::vector<std::string> outputVarTypes
+		= {"TLorentzVector",   // ResultOmegaLV
+		   "int",              // ResultAccepted
+		   "TLorentzVector",   // ResultNotUsedPi0LV
+		   "TLorentzVector"};  // ResultNotUsedPiMinusLV
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetOmega(
-		*data.getAddr<TLorentzVector>(args[0].first),    // Pi0LV_0
-		*data.getAddr<TLorentzVector>(args[1].first),    // Pi0LV_1
-		*data.getAddr<TLorentzVector>(args[2].first),    // ChargedPartLV_0
-		*data.getAddr<TLorentzVector>(args[3].first),    // ChargedPartLV_1
-		*data.getAddr<TLorentzVector>(args[4].first),    // ChargedPartLV_2
-		*data.getAddr<int>           (args[5].first),    // Charge_0
-		*data.getAddr<int>           (args[6].first),    // Charge_1
-		*data.getAddr<int>           (args[7].first),    // Charge_2
-		constArgs["Mass"],                               // OmegaMass,
-		constArgs["ResolutionOmega"],                    // MassWindowOmega,
-		*data.getAddr<TLorentzVector>(quantityNames[0]), // ResultOmegaLV
-		*data.getAddr<int>           (quantityNames[1]), // ResultAccepted
-		*data.getAddr<TLorentzVector>(quantityNames[2]), // ResultNotUsedPi0LV
-		*data.getAddr<TLorentzVector>(quantityNames[3])  // ResultNotUsedPiMinusLV
+		*data.getAddr<TLorentzVector>(args[0].first),     // Pi0LV_0
+		*data.getAddr<TLorentzVector>(args[1].first),     // Pi0LV_1
+		*data.getAddr<TLorentzVector>(args[2].first),     // ChargedPartLV_0
+		*data.getAddr<TLorentzVector>(args[3].first),     // ChargedPartLV_1
+		*data.getAddr<TLorentzVector>(args[4].first),     // ChargedPartLV_2
+		*data.getAddr<int>           (args[5].first),     // Charge_0
+		*data.getAddr<int>           (args[6].first),     // Charge_1
+		*data.getAddr<int>           (args[7].first),     // Charge_2
+		constArgs["Mass"],                                // OmegaMass,
+		constArgs["ResolutionOmega"],                     // MassWindowOmega,
+		*data.getAddr<TLorentzVector>(quantityNames[0]),  // ResultOmegaLV
+		*data.getAddr<int>           (quantityNames[1]),  // ResultAccepted
+		*data.getAddr<TLorentzVector>(quantityNames[2]),  // ResultNotUsedPi0LV
+		*data.getAddr<TLorentzVector>(quantityNames[3])   // ResultNotUsedPiMinusLV
 	);
 }
 
@@ -812,9 +820,10 @@ antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(const YAML::Node&
 
     // Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<double>",  // ResultPrecisionGoals
-	                                           "std::vector<int>",     // ResultAcceptedOmegas
-	                                           "std::vector<double>"}; // ResultOmegaMasses
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<double>",    // ResultPrecisionGoals
+		    "std::vector<int>",      // ResultAcceptedOmegas
+		    "std::vector<double>"};  // ResultOmegaMasses
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
@@ -880,86 +889,91 @@ antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&      
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<double>"}; // Result Masses or squared Masses
+	const std::vector<std::string> outputVarTypes = {"std::vector<double>"};  // Result Masses or squared Masses
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
 	return new antok::user::cdreis::functions::GetThreePionCombinationMass(
-		*data.getAddr<TLorentzVector>(args[0].first),        // Pi0LV_0
-		*data.getAddr<TLorentzVector>(args[1].first),        // Pi0LV_1
-		*data.getAddr<TLorentzVector>(args[2].first),        // ChargedPartLV_0
-		*data.getAddr<TLorentzVector>(args[3].first),        // ChargedPartLV_1
-		*data.getAddr<TLorentzVector>(args[4].first),        // ChargedPartLV_2
-		*data.getAddr<int>           (args[5].first),        // Charge_0
-		*data.getAddr<int>           (args[6].first),        // Charge_1
-		*data.getAddr<int>           (args[7].first),        // Charge_2
-		constArgs["UseSquared"],                             // UseMassSquared,
-		*data.getAddr<std::vector<double>>(quantityNames[0]) // Result
+		*data.getAddr<TLorentzVector>(args[0].first),         // Pi0LV_0
+		*data.getAddr<TLorentzVector>(args[1].first),         // Pi0LV_1
+		*data.getAddr<TLorentzVector>(args[2].first),         // ChargedPartLV_0
+		*data.getAddr<TLorentzVector>(args[3].first),         // ChargedPartLV_1
+		*data.getAddr<TLorentzVector>(args[4].first),         // ChargedPartLV_2
+		*data.getAddr<int>           (args[5].first),         // Charge_0
+		*data.getAddr<int>           (args[6].first),         // Charge_1
+		*data.getAddr<int>           (args[7].first),         // Charge_2
+		constArgs["UseSquared"],                              // UseMassSquared,
+		*data.getAddr<std::vector<double>>(quantityNames[0])  // Result
 	);
 }
 
-const bool
-antok::user::cdreis::registerOutputVarTypes(antok::Data& data, const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes) {
+
+bool
+antok::user::cdreis::registerOutputVarTypes(antok::Data&                    data,
+                                            const std::vector<std::string>& quantityNames,
+                                            const std::vector<std::string>& outputVarTypes)
+{
 	for (size_t i = 0; i < outputVarTypes.size(); ++i) {
-		const std::string typeName = outputVarTypes[i];
+		const std::string& typeName     = outputVarTypes[i];
+		const std::string& quantityName = quantityNames[i];
 		if (typeName == "int") {
-			if (not data.insert<int>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<int>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
 		if (typeName == "Long64_t") {
-			if (not data.insert<Long64_t>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<Long64_t>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
 		if (typeName == "double") {
-			if (not data.insert<double>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<double>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
 		if (typeName == "TVector3") {
-			if (not data.insert<TVector3>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<TVector3>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
 		if (typeName == "TLorentzVector") {
-			if (not data.insert<TLorentzVector>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<TLorentzVector>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
 		if (typeName == "std::vector<int>") {
-			if (not data.insert<std::vector<int>>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<std::vector<int>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
 		if (typeName == "std::vector<Long64_t>") {
-			if (not data.insert<std::vector<Long64_t>>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<std::vector<Long64_t>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
 		if (typeName == "std::vector<double>") {
-			if (not data.insert<std::vector<double>>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<std::vector<double>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
 		if (typeName == "std::vector<TVector3>") {
-			if (not data.insert<std::vector<TVector3>>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<std::vector<TVector3>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
 		if (typeName == "std::vector<TLorentzVector>") {
-			if (not data.insert<std::vector<TLorentzVector>>(quantityNames[i])) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames[i]);
+			if (not data.insert<std::vector<TLorentzVector>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
 				return false;
 			}
 		}
