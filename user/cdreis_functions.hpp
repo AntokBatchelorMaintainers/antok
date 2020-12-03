@@ -26,10 +26,10 @@ namespace antok {
 
 				public:
 
-					GetVector3VectorAttributes(const std::vector<TVector3>& Vector3s,          // TVector3 vectors
-					                                 std::vector<double>&   ResultXComponents, // x components of TVector3 vectors
-					                                 std::vector<double>&   ResultYComponents, // y components of TVector3 vectors
-					                                 std::vector<double>&   ResultZComponents) // z components of TVector3 vectors
+					GetVector3VectorAttributes(const std::vector<TVector3>& Vector3s,           // TVector3 vectors
+					                                 std::vector<double>&   ResultXComponents,  // x components of TVector3 vectors
+					                                 std::vector<double>&   ResultYComponents,  // y components of TVector3 vectors
+					                                 std::vector<double>&   ResultZComponents)  // z components of TVector3 vectors
 						: _Vector3s         (Vector3s),
 						  _ResultXComponents(ResultXComponents),
 						  _ResultYComponents(ResultYComponents),
@@ -70,14 +70,14 @@ namespace antok {
 
 				public:
 
-					GetVectorLorentzVectorAttributes(const std::vector<TLorentzVector>& LVs,               // Lorentz vectors
-					                                 std::vector<double>&               ResultXComponents, // x components of Lorentz vectors
-					                                 std::vector<double>&               ResultYComponents, // y components of Lorentz vectors
-					                                 std::vector<double>&               ResultZComponents, // z components of Lorentz vectors
-					                                 std::vector<double>&               ResultEnergies,    // energies of Lorentz vectors
-					                                 std::vector<double>&               ResultThetas,      // polar angles of Lorentz vectors
-					                                 std::vector<double>&               ResultPhis,        // azimuthal angles of Lorentz vectors
-					                                 std::vector<double>&               ResultMags)        // magnitudes of Lorentz vectors
+					GetVectorLorentzVectorAttributes(const std::vector<TLorentzVector>& LVs,                // Lorentz vectors
+					                                 std::vector<double>&               ResultXComponents,  // x components of Lorentz vectors
+					                                 std::vector<double>&               ResultYComponents,  // y components of Lorentz vectors
+					                                 std::vector<double>&               ResultZComponents,  // z components of Lorentz vectors
+					                                 std::vector<double>&               ResultEnergies,     // energies of Lorentz vectors
+					                                 std::vector<double>&               ResultThetas,       // polar angles of Lorentz vectors
+					                                 std::vector<double>&               ResultPhis,         // azimuthal angles of Lorentz vectors
+					                                 std::vector<double>&               ResultMags)         // magnitudes of Lorentz vectors
 						: _LVs              (LVs),
 						  _ResultXComponents(ResultXComponents),
 						  _ResultYComponents(ResultYComponents),
@@ -166,10 +166,10 @@ namespace antok {
 
 				public:
 
-					GetRecoilLorentzVec(const TLorentzVector& BeamLV,         // Lorentz vector of beam particle
-					                    const TLorentzVector& XLV,            // Lorentz vector of X intermediate state
-					                    const double&         RecoilMass,     // mass of recoil particle
-					                    TLorentzVector&       ResultRecoilLV) // Lorentz vector of recoil particle
+					GetRecoilLorentzVec(const TLorentzVector& BeamLV,          // Lorentz vector of beam particle
+					                    const TLorentzVector& XLV,             // Lorentz vector of X intermediate state
+					                    const double&         RecoilMass,      // mass of recoil particle
+					                    TLorentzVector&       ResultRecoilLV)  // Lorentz vector of recoil particle
 						: _BeamLV        (BeamLV),
 						  _XLV           (XLV),
 						  _RecoilMass    (RecoilMass),
@@ -189,7 +189,7 @@ namespace antok {
 
 					const TLorentzVector& _BeamLV;
 					const TLorentzVector& _XLV;
-					const double          _RecoilMass; // constant parameter, needs to be copied
+					const double          _RecoilMass;  // constant parameter, needs to be copied
 					TLorentzVector&       _ResultRecoilLV;
 
 				};
@@ -200,11 +200,11 @@ namespace antok {
 
 				public:
 
-					GetECALCorrectedEnergy(const std::vector<double>&                      Energies,                // energies of ECAL clusters to be corrected
-					                       const std::vector<int>&                         ClusterIndices,          // Cluster Indices of ECAL hits
-					                       const int&                                      RunNumber,               // run number of the event
-					                       const std::map<int, std::pair<double, double>>& Corrections,             // energy-correction factors for ECAL1 and 2 by run number
-					                       std::vector<double>&                            ResultCorrectedEnergies) // corrected energies of ECAL clusters
+					GetECALCorrectedEnergy(const std::vector<double>&                      Energies,                 // energies of ECAL clusters to be corrected
+					                       const std::vector<int>&                         ClusterIndices,           // Cluster Indices of ECAL hits
+					                       const int&                                      RunNumber,                // run number of the event
+					                       const std::map<int, std::pair<double, double>>& Corrections,              // energy-correction factors for ECAL1 and 2 by run number
+					                       std::vector<double>&                            ResultCorrectedEnergies)  // corrected energies of ECAL clusters
 						: _Energies               (Energies),
 						  _ClusterIndices         (ClusterIndices),
 						  _RunNumber              (RunNumber),
@@ -218,13 +218,14 @@ namespace antok {
 					{
 						const size_t nmbClusters = _Energies.size();
 						if (_ClusterIndices.size() != nmbClusters) {
+							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
 
 						_ResultCorrectedEnergies.resize(nmbClusters);
 						for (size_t i = 0; i < nmbClusters; ++i) {
-							double correction = 1;
-							auto it = _Corrections.find(_RunNumber);
+							double correction = 1;  // default: no correction
+							const auto& it = _Corrections.find(_RunNumber);
 							if (it != _Corrections.end()) {
 								if        (_ClusterIndices[i] == 1) {
 									correction = it->second.first;
@@ -232,6 +233,7 @@ namespace antok {
 									correction = it->second.second;
 								} else {
 									std::cerr << "_ClusterIndices[i] " << _ClusterIndices[i] << " is neither 1 nor 2." ;
+									return false;
 								}
 							}
 							_ResultCorrectedEnergies[i] = correction * _Energies[i];
@@ -244,22 +246,25 @@ namespace antok {
 					const std::vector<double>&                     _Energies;
 					const std::vector<int>&                        _ClusterIndices;
 					const int&                                     _RunNumber;
-					const std::map<int, std::pair<double, double>> _Corrections; // constant parameter, needs to be copied
+					const std::map<int, std::pair<double, double>> _Corrections;  // constant parameter, needs to be copied
 					std::vector<double>&                           _ResultCorrectedEnergies;
 
 				};
 
 
+				// taken from Sebastian Uhl's analysis of pi-pi0pi0
+				// http://wwwcompass.cern.ch/compass/publications/theses/2016_phd_uhl.pdf
+				// see line 505ff in /nfs/freenas/tuph/e18/project/compass/analysis/suhl/scripts/FinalState_3pi.-00/KinematicPlots.C
 				class GetECALCorrectedTiming : public Function
 				{
 
 				public:
 
-					GetECALCorrectedTiming(const std::vector<double>&                        Times,                // times of ECAL clusters to be corrected
-					                       const std::vector<double>&                        Energies,             // energies of ECAL clusters
-					                       const std::vector<int>&                           ClusterIndices,       // ECAL cluster index
-					                       const std::map<std::string, std::vector<double>>& CalibrationCoeffs,    // calibration coefficients used to correct times
-					                       std::vector<double>&                              ResultCorrectedTimes) // corrected times of ECAL clusters
+					GetECALCorrectedTiming(const std::vector<double>&                        Times,                 // times of ECAL clusters to be corrected
+					                       const std::vector<double>&                        Energies,              // energies of ECAL clusters
+					                       const std::vector<int>&                           ClusterIndices,        // ECAL indices of clusters
+					                       const std::map<std::string, std::vector<double>>& CalibrationCoeffs,     // calibration coefficients used to correct times
+					                       std::vector<double>&                              ResultCorrectedTimes)  // corrected times of ECAL clusters
 						: _Times               (Times),
 						  _Energies            (Energies),
 						  _ClusterIndices      (ClusterIndices),
@@ -283,18 +288,19 @@ namespace antok {
 							const double energy  = _Energies[i];
 							const double energy2 = energy * energy;
 							double correction = 0;
-							if (_ClusterIndices[i] == 1) {
+							if        (_ClusterIndices[i] == 1) {
 								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL1");
-								correction = coefficients[0] + coefficients[1] / energy  - coefficients[2] * energy
-								                             - coefficients[3] / energy2 + coefficients[4] * energy2;
+								correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
+								                             + coefficients[3] / energy2 + coefficients[4] * energy2;
 							} else if (_ClusterIndices[i] == 2) {
 							  const double energy3 = energy * energy2;
 								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL2");
 								correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
-								                             - coefficients[3] / energy2 - coefficients[4] * energy2
+								                             + coefficients[3] / energy2 + coefficients[4] * energy2
 								                             + coefficients[5] / energy3 + coefficients[6] * energy3;
 							} else {
 								std::cerr << "_ClusterIndices[i] " << _ClusterIndices[i] << " is neither 1 nor 2.";
+								return false;
 							}
 							_ResultCorrectedTimes[i] = _Times[i] - correction;
 						}
@@ -306,7 +312,7 @@ namespace antok {
 					const std::vector<double>&                       _Times;
 					const std::vector<double>&                       _Energies;
 					const std::vector<int>&                          _ClusterIndices;
-					const std::map<std::string, std::vector<double>> _CalibrationCoeffs; // constant parameter, needs to be copied
+					const std::map<std::string, std::vector<double>> _CalibrationCoeffs;  // constant parameter, needs to be copied
 					std::vector<double>&                             _ResultCorrectedTimes;
 
 				};
