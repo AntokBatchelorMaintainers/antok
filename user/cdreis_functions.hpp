@@ -346,9 +346,9 @@ namespace antok {
 						  _EnergyVariances        (EnergyVariances),
 						  _ECALIndices            (ECALIndices),
 						  _ThresholdEnergyECAL1   (ThresholdEnergyECAL1),
-						  _WindowTimingECAL1      (WindowTimingECAL1),
+						  _WindowTimingECAL1      (WindowTimingECAL1),  //TODO replace by coefficients that describe energy-dependent time resolution
 						  _ThresholdEnergyECAL2   (ThresholdEnergyECAL2),
-						  _WindowTimingECAL2      (WindowTimingECAL2),
+						  _WindowTimingECAL2      (WindowTimingECAL2),  //TODO replace by coefficients that describe energy-dependent time resolution
 						  _ResultPositions        (ResultPositions),
 						  _ResultEnergies         (ResultEnergies),
 						  _ResultTimes            (ResultTimes),
@@ -362,6 +362,11 @@ namespace antok {
 					bool
 					operator() ()
 					{
+						//TODO make this a member variable and constructor argument
+						static const std::map<std::string, std::vector<double>> _ResolutionCoeffs
+							= {{"ECAL1", {1.08802821215785506e+00, 4.66599785813426371e-01, 2.81147454811999709e-01, 0,                        0}},
+							   {"ECAL2", {6.62115374914818755e-01, 1.13943601918724258e+00, 6.78607210496796551e-03, 2.93607669155196871e-01, -3.21822074865442943e-05}}};
+
 						const size_t nmbPhotons = _Positions.size();
 						if (   (_Energies.size()          != nmbPhotons)
 						    or (_Times.size()             != nmbPhotons)
@@ -385,13 +390,39 @@ namespace antok {
 						_ResultEnergyVariances.reserve  (nmbPhotons);
 						_ResultECALIndices.reserve      (nmbPhotons);
 						for (size_t i = 0; i < nmbPhotons; ++i) {
-							if        (_ECALIndices[i] == 1) {
-								if ((_Energies[i] < _ThresholdEnergyECAL1) or (fabs(_Times[i]) > _WindowTimingECAL1)) {
+							const double energy  = _Energies[i];
+							const double energy2 = energy * energy;
+							if (_ECALIndices[i] == 1) {
+								// apply energy threshold
+								if (energy < _ThresholdEnergyECAL1) {
+									continue;
+								}
+								// apply energy-dependent cut on cluster time
+								// taken from Sebastian Uhl's analysis of pi-pi0pi0
+								// http://wwwcompass.cern.ch/compass/publications/theses/2016_phd_uhl.pdf
+								// see line 553ff in /nfs/freenas/tuph/e18/project/compass/analysis/suhl/scripts/FinalState_3pi.-00/KinematicPlots.C
+								//TODO put coefficients into a text file and read this file in
+								//     antok::user::cdreis::generateGetCleanedEcalClusters()
+								//     similar to how it is done in
+								//     antok::user::cdreis::generateGetECALCorrectedTiming()
+								const std::vector<double>& coefficients = _ResolutionCoeffs.at("ECAL1");
+								const double sigmaT = sqrt(coefficients[0] + coefficients[1] / energy
+								                                           + coefficients[2] / energy2);
+								if (fabs(_Times[i]) > 3 * sigmaT) {
 									continue;
 								}
 								_ResultECALIndices.push_back(1);
 							} else if (_ECALIndices[i] == 2) {
-								if ((_Energies[i] < _ThresholdEnergyECAL2) or (fabs(_Times[i]) > _WindowTimingECAL2)) {
+								// apply energy threshold
+								if (energy < _ThresholdEnergyECAL2) {
+									continue;
+								}
+								// apply energy-dependent cut on cluster time; see ECAL1 case above
+								//TODO see above
+								const std::vector<double>& coefficients = _ResolutionCoeffs.at("ECAL1");
+								const double sigmaT = sqrt(coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
+								                                           + coefficients[3] / energy2 + coefficients[4] * energy2);
+								if (fabs(_Times[i]) > 3 * sigmaT) {
 									continue;
 								}
 								_ResultECALIndices.push_back(2);
@@ -400,7 +431,7 @@ namespace antok {
 								return false;
 							}
 							_ResultPositions.push_back        (_Positions[i]);
-							_ResultEnergies.push_back         (_Energies[i]);
+							_ResultEnergies.push_back         (energy);
 							_ResultTimes.push_back            (_Times[i]);
 							_ResultPositionVariances.push_back(_PositionVariances[i]);
 							_ResultEnergyVariances.push_back  (_EnergyVariances[i]);
