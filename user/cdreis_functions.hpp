@@ -201,12 +201,12 @@ namespace antok {
 				public:
 
 					GetECALCorrectedEnergy(const std::vector<double>&                      Energies,                // energies of ECAL clusters to be corrected
-					                       const std::vector<int>&                         ClusterIndices,          // Cluster Indices of ECAL hits
+					                       const std::vector<int>&                         ECALClusterIndices,      // Cluster Indices of ECAL hits
 					                       const int&                                      RunNumber,               // run number of the event
 					                       const std::map<int, std::pair<double, double>>& Corrections,             // energy-correction factors for ECAL1 and 2 by run number
 					                       std::vector<double>&                            ResultCorrectedEnergies) // corrected energies of ECAL clusters
 						: _Energies               (Energies),
-						  _ClusterIndices         (ClusterIndices),
+						  _ECALClusterIndices     (ECALClusterIndices),
 						  _RunNumber              (RunNumber),
 						  _Corrections            (Corrections),
 						  _ResultCorrectedEnergies(ResultCorrectedEnergies)
@@ -217,7 +217,7 @@ namespace antok {
 					bool operator() ()
 					{
 						const size_t nmbClusters = _Energies.size();
-						if (_ClusterIndices.size() != nmbClusters) {
+						if (_ECALClusterIndices.size() != nmbClusters) {
 							return false;
 						}
 
@@ -226,12 +226,12 @@ namespace antok {
 							double correction = 1;
 							auto it = _Corrections.find(_RunNumber);
 							if (it != _Corrections.end()) {
-								if        (_ClusterIndices[i] == 1) {
+								if        (_ECALClusterIndices[i] == 1) {
 									correction = it->second.first;
-								} else if (_ClusterIndices[i] == 2) {
+								} else if (_ECALClusterIndices[i] == 2) {
 									correction = it->second.second;
 								} else {
-									std::cerr << "_ClusterIndices[i] " << _ClusterIndices[i] << " is neither 1 nor 2." ;
+									std::cerr << "_ECALClusterIndices[i] " << _ECALClusterIndices[i] << " is neither 1 nor 2." ;
 								}
 							}
 							_ResultCorrectedEnergies[i] = correction * _Energies[i];
@@ -242,7 +242,7 @@ namespace antok {
 				private:
 
 					const std::vector<double>&                     _Energies;
-					const std::vector<int>&                        _ClusterIndices;
+					const std::vector<int>&                        _ECALClusterIndices;
 					const int&                                     _RunNumber;
 					const std::map<int, std::pair<double, double>> _Corrections; // constant parameter, needs to be copied
 					std::vector<double>&                           _ResultCorrectedEnergies;
@@ -257,13 +257,13 @@ namespace antok {
 
 					GetECALCorrectedTiming(const std::vector<double>&                        Times,                // times of ECAL clusters to be corrected
 					                       const std::vector<double>&                        Energies,             // energies of ECAL clusters
-					                       const std::vector<int>&                           ClusterIndices,       // ECAL cluster index
-					                       const std::map<std::string, std::vector<double>>& CalibrationCoeffs,    // calibration coefficients used to correct times
+					                       const std::vector<int>&                           ECALClusterIndices,   // ECAL cluster index
+					                       const std::map<std::string, std::vector<double>>& Calibration,          // calibration coefficients used to correct times
 					                       std::vector<double>&                              ResultCorrectedTimes) // corrected times of ECAL clusters
 						: _Times               (Times),
 						  _Energies            (Energies),
-						  _ClusterIndices      (ClusterIndices),
-						  _CalibrationCoeffs   (CalibrationCoeffs),
+						  _ECALClusterIndices  (ECALClusterIndices),
+						  _Calibration         (Calibration),
 						  _ResultCorrectedTimes(ResultCorrectedTimes)
 					{ }
 
@@ -273,7 +273,7 @@ namespace antok {
 					operator() ()
 					{
 						const size_t nmbClusters = _Times.size();
-						if ((_Energies.size() != nmbClusters) or (_ClusterIndices.size() != nmbClusters)) {
+						if ((_Energies.size() != nmbClusters) or (_ECALClusterIndices.size() != nmbClusters)) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
@@ -283,18 +283,18 @@ namespace antok {
 							const double energy  = _Energies[i];
 							const double energy2 = energy * energy;
 							double correction = 0;
-							if (_ClusterIndices[i] == 1) {
-								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL1");
+							if (_ECALClusterIndices[i] == 1) {
+								const std::vector<double>& coefficients = _Calibration.at("ECAL1");
 								correction = coefficients[0] + coefficients[1] / energy  - coefficients[2] * energy
 								                             - coefficients[3] / energy2 + coefficients[4] * energy2;
-							} else if (_ClusterIndices[i] == 2) {
+							} else if (_ECALClusterIndices[i] == 2) {
 							  const double energy3 = energy * energy2;
-								const std::vector<double>& coefficients = _CalibrationCoeffs.at("ECAL2");
+								const std::vector<double>& coefficients = _Calibration.at("ECAL2");
 								correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
 								                             - coefficients[3] / energy2 - coefficients[4] * energy2
 								                             + coefficients[5] / energy3 + coefficients[6] * energy3;
 							} else {
-								std::cerr << "_ClusterIndices[i] " << _ClusterIndices[i] << " is neither 1 nor 2.";
+								std::cerr << "_ECALClusterIndices[i] " << _ECALClusterIndices[i] << " is neither 1 nor 2.";
 							}
 							_ResultCorrectedTimes[i] = _Times[i] - correction;
 						}
@@ -305,8 +305,8 @@ namespace antok {
 
 					const std::vector<double>&                       _Times;
 					const std::vector<double>&                       _Energies;
-					const std::vector<int>&                          _ClusterIndices;
-					const std::map<std::string, std::vector<double>> _CalibrationCoeffs; // constant parameter, needs to be copied
+					const std::vector<int>&                          _ECALClusterIndices;
+					const std::map<std::string, std::vector<double>> _Calibration; // constant parameter, needs to be copied
 					std::vector<double>&                             _ResultCorrectedTimes;
 
 				};
@@ -317,38 +317,38 @@ namespace antok {
 
 				public:
 
-					GetCleanedEcalClusters(const std::vector<TVector3>& Positions,               // positions of ECAL photon clusters
-					                       const std::vector<double>&   Energies,                // energies of ECAL photon clusters
-					                       const std::vector<double>&   Times,                   // times of ECAL photon clusters
-					                       const std::vector<TVector3>& PositionVariances,       // position variances of ECAL photon clusters
-					                       const std::vector<double>&   EnergyVariances,         // energy variances of ECAL photon clusters
-					                       const std::vector<int>&      ECALIndices,             // ECAL indices
-					                       const double&                ThresholdEnergyECAL1,    // energy threshold applied to ECAL1 clusters
-					                       const double&                WindowTimingECAL1,       // window applied on ECAL1 cluster times
-					                       const double&                ThresholdEnergyECAL2,    // energy threshold applied to ECAL2 clusters
-					                       const double&                WindowTimingECAL2,       // window applied on ECAL1 cluster times
-					                       std::vector<TVector3>&       ResultPositions,         // positions of ECAL photon clusters
-					                       std::vector<double>&         ResultEnergies,          // energies of ECAL photon clusters
-					                       std::vector<double>&         ResultTimes,             // times of ECAL photon clusters
-					                       std::vector<TVector3>&       ResultPositionVariances, // position variances of ECAL photon clusters
-					                       std::vector<double>&         ResultEnergyVariances,   // energy variances of ECAL photon clusters
-					                       std::vector<int>&            ResultECALIndices)       // indices of the ECAL that measured the photons
-						: _Positions              (Positions),
-						  _Energies               (Energies),
-						  _Times                  (Times),
-						  _PositionVariances      (PositionVariances),
-						  _EnergyVariances        (EnergyVariances),
-						  _ECALIndices            (ECALIndices),
-						  _ThresholdEnergyECAL1   (ThresholdEnergyECAL1),
-						  _WindowTimingECAL1      (WindowTimingECAL1),
-						  _ThresholdEnergyECAL2   (ThresholdEnergyECAL2),
-						  _WindowTimingECAL2      (WindowTimingECAL2),
-						  _ResultPositions        (ResultPositions),
-						  _ResultEnergies         (ResultEnergies),
-						  _ResultTimes            (ResultTimes),
-						  _ResultPositionVariances(ResultPositionVariances),
-						  _ResultEnergyVariances  (ResultEnergyVariances),
-						  _ResultECALIndices      (ResultECALIndices)
+					GetCleanedEcalClusters(const std::vector<TVector3>& Positions,                // positions of ECAL photon clusters
+					                       const std::vector<TVector3>& PositionVariances,        // position variances of ECAL photon clusters
+					                       const std::vector<double>&   Energies,                 // energies of ECAL photon clusters
+					                       const std::vector<double>&   EnergyVariances,          // energy variances of ECAL photon clusters
+					                       const std::vector<double>&   Times,                    // times of ECAL photon clusters
+					                       const std::vector<int>&      ECALClusterIndices,       // ECAL cluster indices
+					                       const double&                ECAL1ThresholdEnergy,     // energy threshold applied to ECAL1 clusters
+					                       const double&                ECAL1ThresholdTiming,     // threshold applied on ECAL1 cluster times
+					                       const double&                ECAL2ThresholdEnergy,     // energy threshold applied to ECAL2 clusters
+					                       const double&                ECAL2ThresholdTiming,     // threshold applied on ECAL1 cluster times
+					                       std::vector<TVector3>&       ResultPositions,          // positions of ECAL photon clusters
+					                       std::vector<TVector3>&       ResultPositionVariances,  // position variances of ECAL photon clusters
+					                       std::vector<double>&         ResultEnergies,           // energies of ECAL photon clusters
+					                       std::vector<double>&         ResultEnergyVariances,    // energy variances of ECAL photon clusters
+					                       std::vector<double>&         ResultTimes,              // times of ECAL photon clusters
+					                       std::vector<int>&            ResultECALClusterIndices) // indices of the ECAL that measured the photons
+						: _Positions               (Positions),
+						  _PositionVariances       (PositionVariances),
+						  _Energies                (Energies),
+						  _EnergyVariances         (EnergyVariances),
+						  _Times                   (Times),
+						  _ECALClusterIndices      (ECALClusterIndices),
+						  _ECAL1ThresholdEnergy    (ECAL1ThresholdEnergy),
+						  _ECAL1ThresholdTiming    (ECAL1ThresholdTiming),
+						  _ECAL2ThresholdEnergy    (ECAL2ThresholdEnergy),
+						  _ECAL2ThresholdTiming    (ECAL2ThresholdTiming),
+						  _ResultPositions         (ResultPositions),
+						  _ResultPositionVariances (ResultPositionVariances),
+						  _ResultEnergies          (ResultEnergies),
+						  _ResultEnergyVariances   (ResultEnergyVariances),
+						  _ResultTimes             (ResultTimes),
+						  _ResultECALClusterIndices(ResultECALClusterIndices)
 					{ }
 
 					virtual ~GetCleanedEcalClusters() { }
@@ -357,44 +357,44 @@ namespace antok {
 					operator() ()
 					{
 						const size_t nmbPhotons = _Positions.size();
-						if (   (_Energies.size()          != nmbPhotons)
-						    or (_Times.size()             != nmbPhotons)
-						    or (_PositionVariances.size() != nmbPhotons)
-						    or (_EnergyVariances.size()   != nmbPhotons)
-						    or (_ECALIndices.size()       != nmbPhotons)) {
+						if (   (_PositionVariances.size()  != nmbPhotons)
+						    or (_Energies.size()           != nmbPhotons)
+						    or (_EnergyVariances.size()    != nmbPhotons)
+						    or (_Times.size()              != nmbPhotons)
+						    or (_ECALClusterIndices.size() != nmbPhotons)) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
 
 						_ResultPositions.clear();
-						_ResultEnergies.clear();
-						_ResultTimes.clear();
 						_ResultPositionVariances.clear();
+						_ResultEnergies.clear();
 						_ResultEnergyVariances.clear();
-						_ResultECALIndices.clear();
-						_ResultPositions.reserve        (nmbPhotons);
-						_ResultEnergies.reserve         (nmbPhotons);
-						_ResultTimes.reserve            (nmbPhotons);
-						_ResultPositionVariances.reserve(nmbPhotons);
-						_ResultEnergyVariances.reserve  (nmbPhotons);
-						_ResultECALIndices.reserve      (nmbPhotons);
+						_ResultTimes.clear();
+						_ResultECALClusterIndices.clear();
+						_ResultPositions.reserve         (nmbPhotons);
+						_ResultPositionVariances.reserve (nmbPhotons);
+						_ResultEnergies.reserve          (nmbPhotons);
+						_ResultEnergyVariances.reserve   (nmbPhotons);
+						_ResultTimes.reserve             (nmbPhotons);
+						_ResultECALClusterIndices.reserve(nmbPhotons);
 						for (size_t i = 0; i < nmbPhotons; ++i) {
-							if        (_ECALIndices[i] == 1) {
-								if ((_Energies[i] < _ThresholdEnergyECAL1) or (fabs(_Times[i]) > _WindowTimingECAL1)) {
+							if        (_ECALClusterIndices[i] == 1) {
+								if ((_Energies[i] < _ECAL1ThresholdEnergy) or (fabs(_Times[i]) > _ECAL1ThresholdTiming)) {
 									continue;
 								}
-								_ResultECALIndices.push_back(1);
-							} else if (_ECALIndices[i] == 2) {
-								if ((_Energies[i] < _ThresholdEnergyECAL2) or (fabs(_Times[i]) > _WindowTimingECAL2)) {
+								_ResultECALClusterIndices.push_back(1);
+							} else if (_ECALClusterIndices[i] == 2) {
+								if ((_Energies[i] < _ECAL2ThresholdEnergy) or (fabs(_Times[i]) > _ECAL2ThresholdTiming)) {
 									continue;
 								}
-								_ResultECALIndices.push_back(2);
+								_ResultECALClusterIndices.push_back(2);
 							}
 							_ResultPositions.push_back        (_Positions[i]);
-							_ResultEnergies.push_back         (_Energies[i]);
-							_ResultTimes.push_back            (_Times[i]);
 							_ResultPositionVariances.push_back(_PositionVariances[i]);
+							_ResultEnergies.push_back         (_Energies[i]);
 							_ResultEnergyVariances.push_back  (_EnergyVariances[i]);
+							_ResultTimes.push_back            (_Times[i]);
 						}
 						return true;
 					}
@@ -402,21 +402,21 @@ namespace antok {
 				private:
 
 					const std::vector<TVector3>& _Positions;
-					const std::vector<double>&   _Energies;
-					const std::vector<double>&   _Times;
 					const std::vector<TVector3>& _PositionVariances;
+					const std::vector<double>&   _Energies;
 					const std::vector<double>&   _EnergyVariances;
-					const std::vector<int>&      _ECALIndices;
-					const double                 _ThresholdEnergyECAL1; // constant parameter, needs to be copied
-					const double                 _WindowTimingECAL1;    // constant parameter, needs to be copied
-					const double                 _ThresholdEnergyECAL2; // constant parameter, needs to be copied
-					const double                 _WindowTimingECAL2;    // constant parameter, needs to be copied
+					const std::vector<double>&   _Times;
+					const std::vector<int>&      _ECALClusterIndices;
+					const double                 _ECAL1ThresholdEnergy; // constant parameter, needs to be copied
+					const double                 _ECAL1ThresholdTiming; // constant parameter, needs to be copied
+					const double                 _ECAL2ThresholdEnergy; // constant parameter, needs to be copied
+					const double                 _ECAL2ThresholdTiming; // constant parameter, needs to be copied
 					std::vector<TVector3>&       _ResultPositions;
-					std::vector<double>&         _ResultEnergies;
-					std::vector<double>&         _ResultTimes;
 					std::vector<TVector3>&       _ResultPositionVariances;
+					std::vector<double>&         _ResultEnergies;
 					std::vector<double>&         _ResultEnergyVariances;
-					std::vector<int>&            _ResultECALIndices;
+					std::vector<double>&         _ResultTimes;
+					std::vector<int>&            _ResultECALClusterIndices;
 
 				};
 
@@ -426,32 +426,32 @@ namespace antok {
 
 				public:
 
-					getECALVariables(const std::vector<int>&            clusterIndex,                  // Cluster Index of Detected photon
-					                 const std::vector<TVector3>&       clusterPosition,               // position of cluster
-					                 const std::vector<TVector3>&       clusterPositionVariance,       // Variance in position of cluster
-					                 const std::vector<double>&         clusterEnergy,                 // energy of cluster
-					                 const std::vector<double>&         clusterEnergyVariance,         // Variance in energy of cluster
-					                 const std::vector<double>&         clusterTime,                   // time of ECAL cluster
-					                 const int&                         ECALIndex,                     // Selected ECAL
-					                 std::vector<int>&                  resultClusterIndex,            // Result cluster index
-					                 std::vector<TVector3>&             resultClusterPosition,         // Result position of cluster
-					                 std::vector<TVector3>&             resultClusterPositionVariance, // Result variance in position of cluster
-					                 std::vector<double>&               resultClusterEnergy,           // Result energy of cluster
-					                 std::vector<double>&               resultClusterEnergyVariance,   // Result variance in energy of cluster
-					                 std::vector<double>&               resultClusterTime )            // Result time of ECAL cluster
-						: _clusterIndex                 (clusterIndex),
-						  _clusterPosition              (clusterPosition),
-						  _clusterPositionVariance      (clusterPositionVariance),
-						  _clusterEnergy                (clusterEnergy),
-						  _clusterEnergyVariance        (clusterEnergyVariance),
-						  _clusterTime                  (clusterTime),
-						  _ECALIndex                    (ECALIndex),
-						  _resultClusterIndex           (resultClusterIndex),
-						  _resultClusterPosition        (resultClusterPosition),
-						  _resultClusterPositionVariance(resultClusterPositionVariance),
-						  _resultClusterEnergy          (resultClusterEnergy),
-						  _resultClusterEnergyVariance  (resultClusterEnergyVariance),
-						  _resultClusterTime            (resultClusterTime)
+					getECALVariables(const std::vector<int>&            ECALClusterIndices,       // ECAL Cluster Indices of Detected photons
+					                 const std::vector<TVector3>&       Positions,                // positions of clusters
+					                 const std::vector<TVector3>&       PositionVariances,        // Variances in position of clusters
+					                 const std::vector<double>&         Energies,                 // energies of clusters
+					                 const std::vector<double>&         EnergyVariances,          // Variance in energy of clusters
+					                 const std::vector<double>&         Times,                    // times of ECAL clusters
+					                 const int&                         ECALIndex,                // Selected ECAL
+					                 std::vector<int>&                  ResultECALClusterIndices, // Result cluster indices
+					                 std::vector<TVector3>&             ResultPositions,          // Result positions of clusters
+					                 std::vector<TVector3>&             ResultPositionVariances,  // Result variances in positions of clusters
+					                 std::vector<double>&               ResultEnergies,           // Result energies of clusters
+					                 std::vector<double>&               ResultEnergyVariances,    // Result variances in energy of clusters
+					                 std::vector<double>&               ResultTimes)              // Result times of ECAL clusters
+						: _ECALClusterIndices      (ECALClusterIndices),
+						  _Positions               (Positions),
+						  _PositionVariances       (PositionVariances),
+						  _Energies                (Energies),
+						  _EnergyVariances         (EnergyVariances),
+						  _Times                   (Times),
+						  _ECALIndex               (ECALIndex),
+						  _ResultECALClusterIndices(ResultECALClusterIndices),
+						  _ResultPositions         (ResultPositions),
+						  _ResultPositionVariances (ResultPositionVariances),
+						  _ResultEnergies          (ResultEnergies),
+						  _ResultEnergyVariances   (ResultEnergyVariances),
+						  _ResultTimes             (ResultTimes)
 					{ }
 
 					virtual ~getECALVariables() { }
@@ -460,12 +460,12 @@ namespace antok {
 					operator() ()
 					{
 						// check if all vectors have the same size
-						const size_t nmbClusters = _clusterIndex.size();
-						if (   (_clusterPosition.size()         != nmbClusters)
-						    or (_clusterPositionVariance.size() != nmbClusters)
-						    or (_clusterEnergy.size()           != nmbClusters)
-						    or (_clusterEnergyVariance.size()   != nmbClusters)
-						    or (_clusterTime.size()             != nmbClusters)) {
+						const size_t nmbClusters = _ECALClusterIndices.size();
+						if (   (_Positions.size()         != nmbClusters)
+						    or (_PositionVariances.size() != nmbClusters)
+						    or (_Energies.size()          != nmbClusters)
+						    or (_EnergyVariances.size()   != nmbClusters)
+						    or (_Times.size()             != nmbClusters)) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
@@ -473,27 +473,27 @@ namespace antok {
 						// get number of clusters in given ECAL
 						size_t nmbResultClusters = 0;
 						for (size_t i = 0; i < nmbClusters; ++i) {
-							if (_clusterIndex[i] == _ECALIndex) {
+							if (_ECALClusterIndices[i] == _ECALIndex) {
 								++nmbResultClusters;
 							}
 						}
-						_resultClusterIndex.resize           (nmbResultClusters);
-						_resultClusterPosition.resize        (nmbResultClusters);
-						_resultClusterPositionVariance.resize(nmbResultClusters);
-						_resultClusterEnergy.resize          (nmbResultClusters);
-						_resultClusterEnergyVariance.resize  (nmbResultClusters);
-						_resultClusterTime.resize            (nmbResultClusters);
+						_ResultECALClusterIndices.resize(nmbResultClusters);
+						_ResultPositions.resize         (nmbResultClusters);
+						_ResultPositionVariances.resize (nmbResultClusters);
+						_ResultEnergies.resize          (nmbResultClusters);
+						_ResultEnergyVariances.resize   (nmbResultClusters);
+						_ResultTimes.resize             (nmbResultClusters);
 
 						// loop over clusters and save information if cluster is in required ECAL
 						int nmbAccepted = 0;
 						for (size_t i = 0; i < nmbClusters; ++i) {
-							if (_clusterIndex[i] == _ECALIndex) {
-								_resultClusterIndex           [nmbAccepted] = _clusterIndex           [i];
-								_resultClusterPosition        [nmbAccepted] = _clusterPosition        [i];
-								_resultClusterPositionVariance[nmbAccepted] = _clusterPositionVariance[i];
-								_resultClusterEnergy          [nmbAccepted] = _clusterEnergy          [i];
-								_resultClusterEnergyVariance  [nmbAccepted] = _clusterEnergyVariance  [i];
-								_resultClusterTime            [nmbAccepted] = _clusterTime            [i];
+							if (_ECALClusterIndices[i] == _ECALIndex) {
+								_ResultECALClusterIndices[nmbAccepted] = _ECALClusterIndices[i];
+								_ResultPositions         [nmbAccepted] = _Positions         [i];
+								_ResultPositionVariances [nmbAccepted] = _PositionVariances [i];
+								_ResultEnergies          [nmbAccepted] = _Energies          [i];
+								_ResultEnergyVariances   [nmbAccepted] = _EnergyVariances   [i];
+								_ResultTimes             [nmbAccepted] = _Times             [i];
 								++nmbAccepted;
 							}
 						}
@@ -502,19 +502,19 @@ namespace antok {
 
 				private:
 
-					const std::vector<int>&            _clusterIndex;
-					const std::vector<TVector3>&       _clusterPosition;
-					const std::vector<TVector3>&       _clusterPositionVariance;
-					const std::vector<double>&         _clusterEnergy;
-					const std::vector<double>&         _clusterEnergyVariance;
-					const std::vector<double>&         _clusterTime;
+					const std::vector<int>&            _ECALClusterIndices;
+					const std::vector<TVector3>&       _Positions;
+					const std::vector<TVector3>&       _PositionVariances;
+					const std::vector<double>&         _Energies;
+					const std::vector<double>&         _EnergyVariances;
+					const std::vector<double>&         _Times;
 					const int                          _ECALIndex;  // const paramerter, needs to be copied
-					std::vector<int>&                  _resultClusterIndex;
-					std::vector<TVector3>&             _resultClusterPosition;
-					std::vector<TVector3>&             _resultClusterPositionVariance;
-					std::vector<double>&               _resultClusterEnergy;
-					std::vector<double>&               _resultClusterEnergyVariance;
-					std::vector<double>&               _resultClusterTime;
+					std::vector<int>&                  _ResultECALClusterIndices;
+					std::vector<TVector3>&             _ResultPositions;
+					std::vector<TVector3>&             _ResultPositionVariances;
+					std::vector<double>&               _ResultEnergies;
+					std::vector<double>&               _ResultEnergyVariances;
+					std::vector<double>&               _ResultTimes;
 
 				};
 
@@ -524,18 +524,18 @@ namespace antok {
 
 				public:
 
-					GetPhotonLorentzVecs(const std::vector<TVector3>& Positions,      // positions of ECAL photon clusters
-					                     const std::vector<double>&   Energies,       // energies of ECAL photon clusters
-					                     const std::vector<double>&   Times,          // times of ECAL photon clusters
-					                     const std::vector<int>&      ClusterIndices, // cluster Index of ECAL photon clusters
-					                     const TVector3&              PV,             // x positions of primary vertex
-					                     std::vector<TLorentzVector>& ResultLVs)      // photon Lorentz vectors
-						: _Positions        (Positions),
-						  _Energies         (Energies),
-						  _Times            (Times),
-						  _ClusterIndices   (ClusterIndices),
-						  _PV               (PV),
-						  _ResultLVs        (ResultLVs)
+					GetPhotonLorentzVecs(const std::vector<TVector3>& Positions,          // positions of ECAL photon clusters
+					                     const std::vector<double>&   Energies,           // energies of ECAL photon clusters
+					                     const std::vector<double>&   Times,              // times of ECAL photon clusters
+					                     const std::vector<int>&      ECALClusterIndices, // cluster Index of ECAL photon clusters
+					                     const TVector3&              PV,                 // x positions of primary vertex
+					                     std::vector<TLorentzVector>& ResultLVs)          // photon Lorentz vectors
+						: _Positions         (Positions),
+						  _Energies          (Energies),
+						  _Times             (Times),
+						  _ECALClusterIndices(ECALClusterIndices),
+						  _PV                (PV),
+						  _ResultLVs         (ResultLVs)
 					{ }
 
 					virtual ~GetPhotonLorentzVecs() { }
@@ -544,14 +544,14 @@ namespace antok {
 					operator() ()
 					{
 						const size_t nmbPhotons = _Positions.size();
-						if (   (_Energies.size()       != nmbPhotons)
-						    or (_Times.size()          != nmbPhotons)
-						    or (_ClusterIndices.size() != nmbPhotons)) {
+						if (   (_Energies.size()           != nmbPhotons)
+						    or (_Times.size()              != nmbPhotons)
+						    or (_ECALClusterIndices.size() != nmbPhotons)) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
 
-						_ResultLVs.resize        (nmbPhotons);
+						_ResultLVs.resize(nmbPhotons);
 						for (size_t i = 0; i < nmbPhotons; ++i) {
 							TVector3 mom = _Positions[i] - _PV;
 							mom.SetMag(_Energies[i]);
@@ -565,7 +565,7 @@ namespace antok {
 					const std::vector<TVector3>& _Positions;
 					const std::vector<double>&   _Energies;
 					const std::vector<double>&   _Times;
-					const std::vector<int>&      _ClusterIndices;
+					const std::vector<int>&      _ECALClusterIndices;
 					const TVector3&              _PV;
 					std::vector<TLorentzVector>& _ResultLVs;
 
@@ -577,17 +577,17 @@ namespace antok {
 					double
 					getECALMassWindow(const int    ECALIndex1,
 					                  const int    ECALIndex2,
-					                  const double MassWindowECAL1,
-					                  const double MassWindowECAL2,
-					                  const double MassWindowECALMixed)
+					                  const double ECAL1MassWindow,
+					                  const double ECAL2MassWindow,
+					                  const double ECALMixedMassWindow)
 					{
 						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
-							return MassWindowECAL1;
+							return ECAL1MassWindow;
 						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
-							return MassWindowECAL2;
+							return ECAL2MassWindow;
 						} else if (   ((ECALIndex1 == 1) and (ECALIndex2 == 2))
 						           or ((ECALIndex1 == 2) and (ECALIndex2 == 1))) {
-							return MassWindowECALMixed;
+							return ECALMixedMassWindow;
 						}
 						std::stringstream errMsg;
 						errMsg << "At least one of the given ECAL indices (" << ECALIndex1 << ", " << ECALIndex2 << ") is unknown. Aborting...";
@@ -603,19 +603,19 @@ namespace antok {
 				public:
 
 					GetPhotonPairParticles(const std::vector<TLorentzVector>& PhotonLVs,           // Lorentz vectors of photons
+					                       const std::vector<int>&            ECALClusterIndices,  // indices of the ECAL that measured the photons
 					                       const double&                      NominalMass,         // nominal mass of photon pair
-					                       const double&                      MassWindowECALMixed, // m(gamma gamma) cut applied around NominalMass when the photon pair is in ECAL1 and 2
-					                       const double&                      MassWindowECAL1,     // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL1
-					                       const double&                      MassWindowECAL2,     // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL2
-					                       const std::vector<int>&            ECALIndices,         // indices of the ECAL that measured the photons
+					                       const double&                      ECALMixedMassWindow, // m(gamma gamma) cut applied around NominalMass when the photon pair is in ECAL1 and 2
+					                       const double&                      ECAL1MassWindow,     // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL1
+					                       const double&                      ECAL2MassWindow,     // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL2
 					                       std::vector<TLorentzVector>&       ResultParticleLVs,   // Lorentz vectors of all particles reconstructed from photon pairs
 					                       int&                               ResultHasParticles)  // 1 if at least one photon pair was found; else 0
 						: _PhotonLVs          (PhotonLVs),
+						  _ECALClusterIndices (ECALClusterIndices),
 						  _NominalMass        (NominalMass),
-						  _MassWindowECALMixed(MassWindowECALMixed),
-						  _MassWindowECAL1    (MassWindowECAL1),
-						  _MassWindowECAL2    (MassWindowECAL2),
-						  _ECALIndices        (ECALIndices),
+						  _ECALMixedMassWindow(ECALMixedMassWindow),
+						  _ECAL1MassWindow    (ECAL1MassWindow),
+						  _ECAL2MassWindow    (ECAL2MassWindow),
 						  _ResultParticles    (ResultParticleLVs),
 						  _ResultHasParticles (ResultHasParticles)
 					{ }
@@ -626,7 +626,7 @@ namespace antok {
 					operator() ()
 					{
 						const size_t nmbPhotons = _PhotonLVs.size();
-						if (_ECALIndices.size() != nmbPhotons) {
+						if (_ECALClusterIndices.size() != nmbPhotons) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
@@ -641,7 +641,7 @@ namespace antok {
 							for (size_t j = i + 1; j < nmbPhotons; ++j) {
 								const TLorentzVector candidate = _PhotonLVs[i] + _PhotonLVs[j];
 								if (std::fabs(candidate.M() - _NominalMass)
-								    < getECALMassWindow(_ECALIndices[i], _ECALIndices[j], _MassWindowECAL1, _MassWindowECAL2, _MassWindowECALMixed)) {
+								    < getECALMassWindow(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
 									_ResultParticles.push_back(candidate);
 								}
 							}
@@ -655,11 +655,11 @@ namespace antok {
 				private:
 
 					const std::vector<TLorentzVector>& _PhotonLVs;
+					const std::vector<int>&            _ECALClusterIndices;
 					const double                       _NominalMass;         // constant parameter, needs to be copied
-					const double                       _MassWindowECALMixed; // constant parameter, needs to be copied
-					const double                       _MassWindowECAL1;     // constant parameter, needs to be copied
-					const double                       _MassWindowECAL2;     // constant parameter, needs to be copied
-					const std::vector<int>&            _ECALIndices;
+					const double                       _ECALMixedMassWindow; // constant parameter, needs to be copied
+					const double                       _ECAL1MassWindow;     // constant parameter, needs to be copied
+					const double                       _ECAL2MassWindow;     // constant parameter, needs to be copied
 					std::vector<TLorentzVector>&       _ResultParticles;
 					int&                               _ResultHasParticles;
 
@@ -670,29 +670,29 @@ namespace antok {
 				{
 
 				public:
-
-					GetPi0Pair(const std::vector<TLorentzVector>& PhotonLVs,           // Lorentz vectors of photons
-					           const std::vector<int>&            ECALIndices,         // indices of the ECAL that measured the photons
-					           const double&                      Pi0Mass,             // nominal pi^0 mass
-					           const double&                      MassWindowECALMixed, // m(gamma gamma) cut applied around Pi0Mass when the photon pair is in ECAL1 and 2
-					           const double&                      MassWindowECAL1,     // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
-					           const double&                      MassWindowECAL2,     // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
-					           std::vector<TLorentzVector>&       ResultPi0PairLVs,    // Lorentz vectors of the two pi^0 in the first found pair
-					           TLorentzVector&                    ResultPi0LV_0,       // Lorentz vectors of the 1st pi^0 in the first found pair
-					           TLorentzVector&                    ResultPi0LV_1,       // Lorentz vectors of the 2nd pi^0 in the first found pair
-					           int&                               ResultGoodPi0Pair,   // 1 if exactly one pi^0 pair was found; else 0
-					           std::vector<int>&                  ResultECALIndices)   // indices of the ECAL that measured the selected photons
-						: _PhotonLVs          (PhotonLVs),
-						  _ECALIndices        (ECALIndices),
-						  _Pi0Mass            (Pi0Mass),
-						  _MassWindowECALMixed(MassWindowECALMixed),
-						  _MassWindowECAL1    (MassWindowECAL1),
-						  _MassWindowECAL2    (MassWindowECAL2),
-						  _ResultPi0PairLVs   (ResultPi0PairLVs),
-						  _ResultPi0LV_0      (ResultPi0LV_0),
-						  _ResultPi0LV_1      (ResultPi0LV_1),
-						  _ResultGoodPi0Pair  (ResultGoodPi0Pair),
-						  _ResultECALIndices  (ResultECALIndices)
+     
+					GetPi0Pair(const std::vector<TLorentzVector>& PhotonLVs,                // Lorentz vectors of photons
+					           const std::vector<int>&            ECALClusterIndices,       // indices of the ECAL that measured the photons
+					           const double&                      Pi0Mass,                  // nominal pi^0 mass
+					           const double&                      ECALMixedMassWindow,      // m(gamma gamma) cut applied around Pi0Mass when the photon pair is in ECAL1 and 2
+					           const double&                      ECAL1MassWindow,          // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
+					           const double&                      ECAL2MassWindow,          // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
+					           std::vector<TLorentzVector>&       ResultPi0PairLVs,         // Lorentz vectors of the two pi^0 in the first found pair
+					           TLorentzVector&                    ResultPi0LV_0,            // Lorentz vectors of the 1st pi^0 in the first found pair
+					           TLorentzVector&                    ResultPi0LV_1,            // Lorentz vectors of the 2nd pi^0 in the first found pair
+					           int&                               ResultGoodPi0Pair,        // 1 if exactly one pi^0 pair was found; else 0
+					           std::vector<int>&                  ResultECALClusterIndices) // indices of the ECAL that measured the selected photons
+						: _PhotonLVs                 (PhotonLVs),
+						  _ECALClusterIndices        (ECALClusterIndices),
+						  _Pi0Mass                   (Pi0Mass),
+						  _ECALMixedMassWindow       (ECALMixedMassWindow),
+						  _ECAL1MassWindow           (ECAL1MassWindow),
+						  _ECAL2MassWindow           (ECAL2MassWindow),
+						  _ResultPi0PairLVs          (ResultPi0PairLVs),
+						  _ResultPi0LV_0             (ResultPi0LV_0),
+						  _ResultPi0LV_1             (ResultPi0LV_1),
+						  _ResultGoodPi0Pair         (ResultGoodPi0Pair),
+						  _ResultECALClusterIndices  (ResultECALClusterIndices)
 					{ }
 
 					virtual ~GetPi0Pair() { }
@@ -701,7 +701,7 @@ namespace antok {
 					operator() ()
 					{
 						const size_t nmbPhotons = _PhotonLVs.size();
-						if (_ECALIndices.size() != nmbPhotons) {
+						if (_ECALClusterIndices.size() != nmbPhotons) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
@@ -711,7 +711,7 @@ namespace antok {
 						_ResultPi0LV_0.SetPxPyPzE(0, 0, 0, 0);
 						_ResultPi0LV_1.SetPxPyPzE(0, 0, 0, 0);
 						_ResultGoodPi0Pair = 0;
-						_ResultECALIndices = {-1, -1, -1, -1};
+						_ResultECALClusterIndices = {-1, -1, -1, -1};
 						if (nmbPhotons < 2) {
 							return true;
 						}
@@ -730,7 +730,7 @@ namespace antok {
 								}
 								const TLorentzVector pi0Candidate0 = _PhotonLVs[i] + _PhotonLVs[j];
 								if (std::fabs(pi0Candidate0.M() - _Pi0Mass)
-								    > getECALMassWindow(_ECALIndices[i], _ECALIndices[j], _MassWindowECAL1, _MassWindowECAL2, _MassWindowECALMixed)) {
+								    > getECALMassWindow(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
 									continue;
 								}
 								for (size_t m = i + 1; m < nmbPhotons; ++m) {
@@ -746,15 +746,15 @@ namespace antok {
 										}
 										const TLorentzVector pi0Candidate1 = _PhotonLVs[m] + _PhotonLVs[n];
 										if (std::fabs(pi0Candidate1.M() - _Pi0Mass)
-										    > getECALMassWindow(_ECALIndices[m], _ECALIndices[n], _MassWindowECAL1, _MassWindowECAL2, _MassWindowECALMixed)) {
+										    > getECALMassWindow(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
 											continue;
 										}
 										if (nmbCandidatePairs == 0) {
 											_ResultPi0PairLVs.push_back(pi0Candidate0);
 											_ResultPi0PairLVs.push_back(pi0Candidate1);
-											_ResultPi0LV_0     = pi0Candidate0;
-											_ResultPi0LV_1     = pi0Candidate1;
-											_ResultECALIndices = {(int)i, (int)j, (int)m, (int)n};
+											_ResultPi0LV_0            = pi0Candidate0;
+											_ResultPi0LV_1            = pi0Candidate1;
+											_ResultECALClusterIndices = {(int)i, (int)j, (int)m, (int)n};
 										}
 										nmbCandidatePairs++;
 									}
@@ -771,16 +771,16 @@ namespace antok {
 				private:
 
 					const std::vector<TLorentzVector>& _PhotonLVs;
-					const std::vector<int>&            _ECALIndices;
+					const std::vector<int>&            _ECALClusterIndices;
 					const double                       _Pi0Mass;             // constant parameter, needs to be copied
-					const double                       _MassWindowECALMixed; // constant parameter, needs to be copied
-					const double                       _MassWindowECAL1;     // constant parameter, needs to be copied
-					const double                       _MassWindowECAL2;     // constant parameter, needs to be copied
+					const double                       _ECALMixedMassWindow; // constant parameter, needs to be copied
+					const double                       _ECAL1MassWindow;     // constant parameter, needs to be copied
+					const double                       _ECAL2MassWindow;     // constant parameter, needs to be copied
 					std::vector<TLorentzVector>&       _ResultPi0PairLVs;
 					TLorentzVector&                    _ResultPi0LV_0;
 					TLorentzVector&                    _ResultPi0LV_1;
 					int&                               _ResultGoodPi0Pair;
-					std::vector<int>&                  _ResultECALIndices;
+					std::vector<int>&                  _ResultECALClusterIndices;
 
 				};
 
@@ -797,10 +797,10 @@ namespace antok {
 					                        const std::vector<double>&   ClusterEnergyVariances,
 					                        const std::vector<int>&      ClusterIndices,
 					                        const double&                Mass,
-					                        const double&                massLowerLimit,
-					                        const double&                massUpperLimit,
-					                        const double&                precisionGoal,
-					                        const int&                   whichEnergyVariance,
+					                        const double&                MassLowerLimit,
+					                        const double&                MassUpperLimit,
+					                        const double&                PrecisionGoal,
+					                        const int&                   WhichEnergyVariance,
 					                        std::vector<TLorentzVector>& ResultLorentzVectors,
 					                        std::vector<double>&         ResultChi2s,
 					                        std::vector<double>&         ResultPValues,
@@ -819,10 +819,10 @@ namespace antok {
 						  _ClusterEnergyVariances  (ClusterEnergyVariances),
 						  _ClusterIndices          (ClusterIndices),
 						  _Mass                    (Mass),
-						  _massLowerLimit          (massLowerLimit),
-						  _massUpperLimit          (massUpperLimit),
-						  _precisionGoal           (precisionGoal),
-						  _whichEnergyVariance     (whichEnergyVariance),
+						  _MassLowerLimit          (MassLowerLimit),
+						  _MassUpperLimit          (MassUpperLimit),
+						  _PrecisionGoal           (PrecisionGoal),
+						  _WhichEnergyVariance     (WhichEnergyVariance),
 						  _ResultLorentzVectors    (ResultLorentzVectors),
 						  _ResultChi2s             (ResultChi2s),
 						  _ResultPValues           (ResultPValues),
@@ -898,10 +898,10 @@ namespace antok {
 						                              _ClusterEnergyVariances  [_ClusterIndices[0]],
 						                              _ClusterEnergyVariances  [_ClusterIndices[1]],
 						                              _Mass,
-						                              _massLowerLimit,
-						                              _massUpperLimit,
-						                              _precisionGoal,
-						                              _whichEnergyVariance);
+						                              _MassLowerLimit,
+						                              _MassUpperLimit,
+						                              _PrecisionGoal,
+						                              _WhichEnergyVariance);
 						const bool success0 = neutralFit0.doFit();
 						if (success0) {
 							_ResultLorentzVectors.push_back(neutralFit0.getImprovedLVSum());
@@ -926,10 +926,10 @@ namespace antok {
 						                              _ClusterEnergyVariances  [_ClusterIndices[2]],
 						                              _ClusterEnergyVariances  [_ClusterIndices[3]],
 						                              _Mass,
-						                              _massLowerLimit,
-						                              _massUpperLimit,
-						                              _precisionGoal,
-						                              _whichEnergyVariance);
+						                              _MassLowerLimit,
+						                              _MassUpperLimit,
+						                              _PrecisionGoal,
+						                              _WhichEnergyVariance);
 						const bool success1 = neutralFit1.doFit();
 						if (success1) {
 							_ResultLorentzVectors.push_back(neutralFit1.getImprovedLVSum());
@@ -959,10 +959,10 @@ namespace antok {
 					const std::vector<double>&   _ClusterEnergyVariances;
 					const std::vector<int>&      _ClusterIndices;
 					const double                 _Mass;                // constant parameter, needs to be copied
-					const double                 _massLowerLimit;      // constant parameter, needs to be copied
-					const double                 _massUpperLimit;      // constant parameter, needs to be copied
-					const double                 _precisionGoal;       // constant parameter, needs to be copied
-					const int                    _whichEnergyVariance; // constant parameter, needs to be copied
+					const double                 _MassLowerLimit;      // constant parameter, needs to be copied
+					const double                 _MassUpperLimit;      // constant parameter, needs to be copied
+					const double                 _PrecisionGoal;       // constant parameter, needs to be copied
+					const int                    _WhichEnergyVariance; // constant parameter, needs to be copied
 					std::vector<TLorentzVector>& _ResultLorentzVectors;
 					std::vector<double>&         _ResultChi2s;
 					std::vector<double>&         _ResultPValues;

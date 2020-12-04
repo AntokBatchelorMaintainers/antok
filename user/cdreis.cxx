@@ -224,9 +224,9 @@ antok::user::cdreis::generateGetECALCorrectedEnergy(const YAML::Node&           
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"Energy",       "std::vector<double>"},
-		   {"ClusterIndex", "std::vector<int>"},
-		   {"RunNumber",    "int"}};
+		= {{"Energies",           "std::vector<double>"},
+		   {"ECALClusterIndices", "std::vector<int>"},
+		   {"RunNumber",          "int"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -272,7 +272,7 @@ antok::user::cdreis::generateGetECALCorrectedEnergy(const YAML::Node&           
 
 	return new antok::user::cdreis::functions::GetECALCorrectedEnergy(
 		*data.getAddr<std::vector<double>>(args[0].first),   // Energies
-		*data.getAddr<std::vector<int>>   (args[1].first),   // ClusterIndices
+		*data.getAddr<std::vector<int>>   (args[1].first),   // ECALClusterIndices
 		*data.getAddr<int>                (args[2].first),   // RunNumber
 		Corrections,
 		*data.getAddr<std::vector<double>>(quantityNames[0]) // ResultCorrectedEnergies
@@ -291,9 +291,9 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"Timing",       "std::vector<double>"},
-		   {"Energy",       "std::vector<double>"},
-		   {"ClusterIndex", "std::vector<int>"}};
+		= {{"Times",              "std::vector<double>"},
+		   {"Energies",           "std::vector<double>"},
+		   {"ECALClusterIndices", "std::vector<int>"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -358,12 +358,12 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"VectorPosition",         "std::vector<TVector3>"},
-		   {"VectorEnergy",           "std::vector<double>"},
-		   {"VectorTime",             "std::vector<double>"},
-		   {"VectorPositionVariance", "std::vector<TVector3>"},
-		   {"VectorEnergyVariance",   "std::vector<double>"},
-		   {"VectorECALIndices",      "std::vector<int>"}};
+		= {{"Positions",          "std::vector<TVector3>"},
+		   {"PositionVariances",  "std::vector<TVector3>"},
+		   {"Energies",           "std::vector<double>"},
+		   {"EnergyVariances",    "std::vector<double>"},
+		   {"Times",              "std::vector<double>"},
+		   {"ECALClusterIndices", "std::vector<int>"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -371,10 +371,10 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 
 	// Get constant arguments
 	std::map<std::string, double> constArgs
-		= {{"ThresholdEnergyECAL1", 0},
-		   {"ThresholdTimingECAL1", 0},
-		   {"ThresholdEnergyECAL2", 0},
-		   {"ThresholdTimingECAL2", 0}};
+		= {{"ECAL1ThresholdEnergy", 0},
+		   {"ECAL1ThresholdTiming", 0},
+		   {"ECAL2ThresholdEnergy", 0},
+		   {"ECAL2ThresholdTiming", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -383,10 +383,10 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	std::vector<std::string> outputVarTypes = {"std::vector<TVector3>", // ResultPositions
-	                                           "std::vector<double>",   // ResultEnergies
-	                                           "std::vector<double>",   // ResultTimes
 	                                           "std::vector<TVector3>", // ResultPosition variances
+	                                           "std::vector<double>",   // ResultEnergies
 	                                           "std::vector<double>",   // ResultEnergie variances
+	                                           "std::vector<double>",   // ResultTimes
 	                                           "std::vector<int>"};     // ResultECALIndices
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
@@ -394,21 +394,21 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 
 	return new antok::user::cdreis::functions::GetCleanedEcalClusters(
 		*data.getAddr<std::vector<TVector3>>(args[0].first),    // Positions
-		*data.getAddr<std::vector<double>>  (args[1].first),    // Energies
-		*data.getAddr<std::vector<double>>  (args[2].first),    // Times
-		*data.getAddr<std::vector<TVector3>>(args[3].first),    // Positions variance
-		*data.getAddr<std::vector<double>>  (args[4].first),    // Energies variance
-		*data.getAddr<std::vector<int>>     (args[5].first),    // ECAL index
-		constArgs["ThresholdEnergyECAL1"],                      // ThresholdEnergyECAL1
-		constArgs["ThresholdTimingECAL1"],                      // WindowTimingECAL1
-		constArgs["ThresholdEnergyECAL2"],                      // ThresholdEnergyECAL2
-		constArgs["ThresholdTimingECAL2"],                      // WindowTimingECAL2
+		*data.getAddr<std::vector<TVector3>>(args[1].first),    // Positions variances
+		*data.getAddr<std::vector<double>>  (args[2].first),    // Energies
+		*data.getAddr<std::vector<double>>  (args[3].first),    // Energies variances
+		*data.getAddr<std::vector<double>>  (args[4].first),    // Times
+		*data.getAddr<std::vector<int>>     (args[5].first),    // ECAL Cluster Indices
+		constArgs["ECAL1ThresholdEnergy"],                      // ECAL1ThresholdEnergy
+		constArgs["ECAL1ThresholdTiming"],                      // ECAL1ThresholdTiming
+		constArgs["ECAL2ThresholdEnergy"],                      // ECAL2ThresholdEnergy
+		constArgs["ECAL2ThresholdTiming"],                      // ECAL2ThresholdTiming
 		*data.getAddr<std::vector<TVector3>>(quantityNames[0]), // ResultPositions
-		*data.getAddr<std::vector<double>>  (quantityNames[1]), // ResultEnergies
-		*data.getAddr<std::vector<double>>  (quantityNames[2]), // ResultTimes
-		*data.getAddr<std::vector<TVector3>>(quantityNames[3]), // ResultPosition variances
-		*data.getAddr<std::vector<double>>  (quantityNames[4]), // ResultEnergie variances
-		*data.getAddr<std::vector<int>>     (quantityNames[5])  // ResultECALIndices
+		*data.getAddr<std::vector<TVector3>>(quantityNames[1]), // ResultPositionVariances
+		*data.getAddr<std::vector<double>>  (quantityNames[2]), // ResultEnergies
+		*data.getAddr<std::vector<double>>  (quantityNames[3]), // ResultEnergyVariances
+		*data.getAddr<std::vector<double>>  (quantityNames[4]), // ResultTimes
+		*data.getAddr<std::vector<int>>     (quantityNames[5])  // ResultECALClusterIndices
 	);
 }
 
@@ -424,12 +424,12 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"ECAL_clusterIndex",            "std::vector<int>"},
-		   {"ECAL_clusterPosition",         "std::vector<TVector3>"},
-		   {"ECAL_clusterPositionVariance", "std::vector<TVector3>"},
-		   {"ECAL_clusterEnergy",           "std::vector<double>"},
-		   {"ECAL_clusterEnergyVariance",   "std::vector<double>"},
-		   {"ECAL_clusterTime",             "std::vector<double>"}};
+		= {{"ECALClusterIndices", "std::vector<int>"},
+		   {"Positions",          "std::vector<TVector3>"},
+		   {"PositionVariances",  "std::vector<TVector3>"},
+		   {"Energies",           "std::vector<double>"},
+		   {"EnergyVariances",    "std::vector<double>"},
+		   {"Times",              "std::vector<double>"}};
 	if (not antok::generators::functionArgumentHandler(args, function, index)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -444,7 +444,7 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<int>",      // ResultClusterIndex
+	std::vector<std::string> outputVarTypes = {"std::vector<int>",      // ResultECALClusterIndex
 	                                           "std::vector<TVector3>", // ResultClusterPosition
 	                                           "std::vector<TVector3>", // ResultClusterPositionVariance
 	                                           "std::vector<double>",   // ResultClusterEnergy
@@ -455,19 +455,19 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 	}
 
 	return new antok::user::cdreis::functions::getECALVariables(
-		*data.getAddr<std::vector<int>>           (args[0].first),    // ClusterIndex
-		*data.getAddr<std::vector<TVector3>>      (args[1].first),    // ClusterPosition
-		*data.getAddr<std::vector<TVector3>>      (args[2].first),    // ClusterPositionVariance
-		*data.getAddr<std::vector<double>>        (args[3].first),    // ClusterEnergy
-		*data.getAddr<std::vector<double>>        (args[4].first),    // ClusterEnergyVariance
-		*data.getAddr<std::vector<double>>        (args[5].first),    // ClusterTime
+		*data.getAddr<std::vector<int>>           (args[0].first),    // ECALClusterIndices
+		*data.getAddr<std::vector<TVector3>>      (args[1].first),    // Positions
+		*data.getAddr<std::vector<TVector3>>      (args[2].first),    // PositionVariances
+		*data.getAddr<std::vector<double>>        (args[3].first),    // Energies
+		*data.getAddr<std::vector<double>>        (args[4].first),    // EnergyVariances
+		*data.getAddr<std::vector<double>>        (args[5].first),    // Times
 		constArgsInt["ECALIndex"],                                    // SelectedECALIndex
-		*data.getAddr<std::vector<int>>           (quantityNames[0]), // ResultClusterIndex
-		*data.getAddr<std::vector<TVector3>>      (quantityNames[1]), // ResultClusterPosition
-		*data.getAddr<std::vector<TVector3>>      (quantityNames[2]), // ResultClusterPositionVariance
-		*data.getAddr<std::vector<double>>        (quantityNames[3]), // ResultClusterEnergy
-		*data.getAddr<std::vector<double>>        (quantityNames[4]), // ResultClusterEnergyVariance
-		*data.getAddr<std::vector<double>>        (quantityNames[5])  // ResultClusterTime
+		*data.getAddr<std::vector<int>>           (quantityNames[0]), // ResultECALClusterIndices
+		*data.getAddr<std::vector<TVector3>>      (quantityNames[1]), // ResultPositions
+		*data.getAddr<std::vector<TVector3>>      (quantityNames[2]), // ResultPositionVariances
+		*data.getAddr<std::vector<double>>        (quantityNames[3]), // ResultEnergies
+		*data.getAddr<std::vector<double>>        (quantityNames[4]), // ResultEnergyVariances
+		*data.getAddr<std::vector<double>>        (quantityNames[5])  // ResultTimes
 	);
 }
 
@@ -483,11 +483,11 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"Positions",      "std::vector<TVector3>"},
-		   {"Energies",       "std::vector<double>"},
-		   {"Times",          "std::vector<double>"},
-		   {"ClusterIndices", "std::vector<int>"},
-		   {"PV",             "TVector3"}};
+		= {{"Positions",          "std::vector<TVector3>"},
+		   {"Energies",           "std::vector<double>"},
+		   {"Times",              "std::vector<double>"},
+		   {"ECALClusterIndices", "std::vector<int>"},
+		   {"PV",                 "TVector3"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -495,7 +495,7 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"}; // ResultLorentzVecs
+	std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"}; // ResultLVs
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
@@ -504,9 +504,9 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
 		*data.getAddr<std::vector<TVector3>>(args[0].first),         // Positions
 		*data.getAddr<std::vector<double>>  (args[1].first),         // Energies
 		*data.getAddr<std::vector<double>>  (args[2].first),         // Times
-		*data.getAddr<std::vector<int>>     (args[3].first),         // Cluster Indices
+		*data.getAddr<std::vector<int>>     (args[3].first),         // ECALClusterIndices
 		*data.getAddr<TVector3>             (args[4].first),         // PV
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]) // ResultLorentzVecs
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]) // ResultLVs
 	);
 }
 
@@ -522,8 +522,8 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"Photons",   "std::vector<TLorentzVector>"},
-		   {"ECALIndex", "std::vector<int>"}};
+		= {{"PhotonLVs",          "std::vector<TLorentzVector>"},
+		   {"ECALClusterIndices", "std::vector<int>"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -531,10 +531,10 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 
 	// Get constant arguments
 	std::map<std::string, double> constArgs
-		= {{"MassWindowECALMixed", 0},
-		   {"MassWindowECAL2",     0},
-		   {"MassWindowECAL2",     0},
-		   {"NominalMass",         0}};
+		= {{"NominalMass",         0},
+		   {"ECALMixedMassWindow", 0},
+		   {"ECAL1MassWindow",     0},
+		   {"ECAL2MassWindow",     0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -550,11 +550,11 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 
 	return new antok::user::cdreis::functions::GetPhotonPairParticles(
 		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),    // PhotonLVs
-		constArgs["NominalMass"],                                     // NominalMass,
-		constArgs["MassWindowECALMixed"],                             // MassWindowECALMixed,
-		constArgs["MassWindowECAL1"],                                 // MassWindowECAL1,
-		constArgs["MassWindowECAL2"],                                 // MassWindowECAL2,
-		*data.getAddr<std::vector<int>>           (args[1].first),    // ECALindices
+		*data.getAddr<std::vector<int>>           (args[1].first),    // ECALClusterIndices
+		constArgs["NominalMass"],                                     // NominalMass
+		constArgs["MassWindowECALMixed"],                             // ECALMixedMassWindow
+		constArgs["MassWindowECAL1"],                                 // ECAL1MassWindow
+		constArgs["MassWindowECAL2"],                                 // ECAL2MassWindow
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // ResultParticleLVs
 		*data.getAddr<int>                        (quantityNames[1])  // ResultHasParticles
 	);
@@ -572,8 +572,8 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"VectorLV" , "std::vector<TLorentzVector>"},
-		   {"ECALIndex", "std::vector<int>"}};
+		= {{"PhotonLVs",          "std::vector<TLorentzVector>"},
+		   {"ECALClusterIndices", "std::vector<int>"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -582,9 +582,9 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 	// Get constant arguments
 	std::map<std::string, double> constArgs
 		= {{"Pi0Mass",             0},
-		   {"MassWindowECALMixed", 0},
-		   {"MassWindowECAL1",     0},
-		   {"MassWindowECAL2",     0}};
+		   {"ECALMixedMassWindow", 0},
+		   {"ECAL1MassWindow",     0},
+		   {"ECAL2MassWindow",     0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -603,16 +603,16 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 
 	return new antok::user::cdreis::functions::GetPi0Pair(
 		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),    // PhotonLVs
-		*data.getAddr<std::vector<int>>           (args[1].first),    // ECALIndices
+		*data.getAddr<std::vector<int>>           (args[1].first),    // ECALClusterIndices
 		constArgs["Pi0Mass"],                                         // Pi0Mass
-		constArgs["MassWindowECALMixed"],                             // MassWindowECALMixed
-		constArgs["MassWindowECAL1"],                                 // MassWindowECAL1
-		constArgs["MassWindowECAL2"],                                 // MassWindowECAL2
+		constArgs["ECALMixedMassWindow"],                             // ECALMixedMassWindow
+		constArgs["ECAL1MassWindow"],                                 // ECAL1MassWindow
+		constArgs["ECAL2MassWindow"],                                 // ECAL2MassWindow
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // ResultPi0PairLVs
 		*data.getAddr<TLorentzVector>             (quantityNames[1]), // ResultPi0LV_0
 		*data.getAddr<TLorentzVector>             (quantityNames[2]), // ResultPi0LV_1
 		*data.getAddr<int>                        (quantityNames[3]), // ResultGoodPi0Pair
-		*data.getAddr<std::vector<int>>           (quantityNames[4])  // ResultECALIndices
+		*data.getAddr<std::vector<int>>           (quantityNames[4])  // ResultECALClusterIndices
 	);
 }
 
@@ -640,7 +640,7 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	}
 
 	// Get constant arguments
-	std::map<std::string, int> constArgsInt = {{"ErrorEstimateType", 0}};
+	std::map<std::string, int> constArgsInt = {{"WhichEnergyVariance", 0}};
 	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -681,10 +681,10 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 		*data.getAddr<std::vector<double>>  (args[4].first),          // ClusterEnergieVariances
 		*data.getAddr<std::vector<int>>     (args[5].first),          // ClusterIndices
 		constArgsDouble["Mass"],                                      // Mass
-		constArgsDouble["MassLowerLimit"],                            // massLowerLimit,
-		constArgsDouble["MassUpperLimit"],                            // massUpperLimit,
-		constArgsDouble["PrecisionGoal"],                             // limit to determine convergence
-		constArgsInt   ["ErrorEstimateType"],                         // whichEnergyVariance,
+		constArgsDouble["MassLowerLimit"],                            // MassLowerLimit,
+		constArgsDouble["MassUpperLimit"],                            // MassUpperLimit,
+		constArgsDouble["PrecisionGoal"],                             // PrecisionGoal
+		constArgsInt   ["WhichEnergyVariance"],                       // WhichEnergyVariance,
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // ResultLorentzVectors
 		*data.getAddr<std::vector<double>>        (quantityNames[1]), // ResultChi2s
 		*data.getAddr<std::vector<double>>        (quantityNames[2]), // ResultPValues
@@ -726,8 +726,8 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 
 	// Get constant arguments
 	std::map<std::string, double> constArgs
-		= {{"Mass",            0},
-		   {"ResolutionOmega", 0}};
+		= {{"OmegaMass",       0},
+		   {"OmegaMassWindow", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -752,8 +752,8 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 		*data.getAddr<int>           (args[5].first),    // Charge_0
 		*data.getAddr<int>           (args[6].first),    // Charge_1
 		*data.getAddr<int>           (args[7].first),    // Charge_2
-		constArgs["Mass"],                               // OmegaMass,
-		constArgs["ResolutionOmega"],                    // MassWindowOmega,
+		constArgs["OmegaMass"],                          // OmegaMass,
+		constArgs["OmegaMassWindow"],                    // MassWindowOmega,
 		*data.getAddr<TLorentzVector>(quantityNames[0]), // ResultOmegaLV
 		*data.getAddr<int>           (quantityNames[1]), // ResultAccepted
 		*data.getAddr<TLorentzVector>(quantityNames[2]), // ResultNotUsedPi0LV
@@ -774,12 +774,12 @@ antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(const YAML::Node&
 	// Get input variables
 	vecPairString<std::string> args
 		= {{"VertexPosition",           "TVector3"},
-		   {"Scattered0",               "TLorentzVector"},
-		   {"Scattered1",               "TLorentzVector"},
-		   {"Scattered2",               "TLorentzVector"},
-		   {"Charge0",                  "int"},
-		   {"Charge1",                  "int"},
-		   {"Charge2",                  "int"},
+		   {"ChargedPartLV_0",          "TLorentzVector"},
+		   {"ChargedPartLV_1",          "TLorentzVector"},
+		   {"ChargedPartLV_2",          "TLorentzVector"},
+		   {"Charge_0",                 "int"},
+		   {"Charge_1",                 "int"},
+		   {"Charge_2",                 "int"},
 		   {"ClusterPositions",         "std::vector<TVector3>"},
 		   {"ClusterPositionsVariance", "std::vector<TVector3>"},
 		   {"ClusterEnergies",          "std::vector<double>"},
@@ -858,21 +858,21 @@ antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&      
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"Pi0_0",      "TLorentzVector"},
-		   {"Pi0_1",      "TLorentzVector"},
-		   {"Scattered0", "TLorentzVector"},
-		   {"Scattered1", "TLorentzVector"},
-		   {"Scattered2", "TLorentzVector"},
-		   {"Charge0",    "int"},
-		   {"Charge1",    "int"},
-		   {"Charge2",    "int"}};
+		= {{"Pi0_0",           "TLorentzVector"},
+		   {"Pi0_1",           "TLorentzVector"},
+		   {"ChargedPartLV_0", "TLorentzVector"},
+		   {"ChargedPartLV_1", "TLorentzVector"},
+		   {"ChargedPartLV_2", "TLorentzVector"},
+		   {"Charge_0",        "int"},
+		   {"Charge_1",        "int"},
+		   {"Charge_2",        "int"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
 	// Get constant arguments
-	std::map<std::string, int> constArgs = {{"UseSquared", 0}};
+	std::map<std::string, int> constArgs = {{"UseMassSquared", 0}};
 	if (not functionArgumentHandlerConst<int>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -894,7 +894,7 @@ antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&      
 		*data.getAddr<int>           (args[5].first),        // Charge_0
 		*data.getAddr<int>           (args[6].first),        // Charge_1
 		*data.getAddr<int>           (args[7].first),        // Charge_2
-		constArgs["UseSquared"],                             // UseMassSquared,
+		constArgs["UseMassSquared"],                         // UseMassSquared,
 		*data.getAddr<std::vector<double>>(quantityNames[0]) // Result
 	);
 }
