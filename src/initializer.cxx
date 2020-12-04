@@ -801,7 +801,9 @@ antok::Initializer::getFunction(const YAML::Node&               function,
 	if        (functionName == "abs") {
 		return antok::generators::generateAbs                       (function, quantityNames, index);
 	} else if (functionName == "log") {
-		return antok::generators::generateLog                       (function, quantityNames, index);
+	  return antok::generators::generateLog                         (function, quantityNames, index);
+	} else if (functionName == "Sqrt") {
+	  return antok::generators::generateSqrt                        (function, quantityNames, index);
 	} else if (functionName == "convertIntToDouble") {
 		return antok::generators::generateConvertIntToDouble        (function, quantityNames, index);
 	} else if (functionName == "diff") {

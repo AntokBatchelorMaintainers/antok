@@ -330,6 +330,58 @@ antok::generators::generateLog(const YAML::Node&               function,
 
 
 antok::Function*
+antok::generators::generateSqrt(const YAML::Node&               function,
+							    const std::vector<std::string>& quantityNames,
+							    const int                       index)
+{
+  if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+	return nullptr;
+  }
+  
+  // Get input variables
+  const std::string argName     = "Arg";
+  const std::string argTypeName = antok::generators::getTypeOfArg(function, index, argName);
+  vecPairString<std::string> args = {{argName, argTypeName}};
+  if (not antok::generators::functionArgumentHandler(args, function, index)) {
+	std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+	return nullptr;
+  }
+  
+  // Register output variables
+  //TODO reduce boiler-plate code using helper function similar to __generateDiffHelper()
+  const std::string& quantityName = quantityNames[0];
+  antok::Data&       data         = antok::ObjectManager::instance()->getData();
+  if (argTypeName == "std::vector<double>") {
+	if (not data.insert<std::vector<double>>(quantityName)) {
+	  std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+	  return nullptr;
+	}
+  }	else {
+	if (not data.insert<double>(quantityName)) {
+	  std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+	  return nullptr;
+	}
+  }
+  
+  using antok::functions::Sqrt;
+  if        (argTypeName == "double") {
+	return new Sqrt<double>             (*data.getAddr<double>(args[0].first),
+	                                     *data.getAddr<double>(quantityName));
+  } else if (argTypeName == "int") {
+	return new Sqrt<int>                (*data.getAddr<int>(args[0].first),
+	                                     *data.getAddr<double>(quantityName));
+  } else if (argTypeName == "std::vector<double>") {
+	return new Sqrt<std::vector<double>>(*data.getAddr<std::vector<double>>(args[0].first),
+	                                     *data.getAddr<std::vector<double>>(quantityName));
+  } else {
+	std::cerr << "'" << function["Name"] << "' is not (yet) implemented for input type '" << argTypeName << "'." << std::endl;
+  }
+  return nullptr;
+  
+}
+
+
+antok::Function*
 antok::generators::generateConvertIntToDouble(const YAML::Node&               function,
                                               const std::vector<std::string>& quantityNames,
                                               const int                       index)

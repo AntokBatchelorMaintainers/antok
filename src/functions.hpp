@@ -704,6 +704,68 @@ namespace antok {
 		};
 
 
+		template <typename T>
+		class Sqrt : public Function
+		{
+
+		public:
+
+			Sqrt(const T& in,
+			     double&  out)
+				 : _in (in),
+				   _out(out)
+			{ }
+
+			virtual ~Sqrt() { }
+
+			bool
+			operator() ()
+			{
+				_out = std::sqrt(_in);
+				return true;
+			}
+
+		private:
+
+			const T& _in;
+			double&  _out;
+
+		};
+
+
+		template <>
+		class Sqrt<std::vector<double>>: public Function
+		{
+
+		public:
+
+			Sqrt(const std::vector<double>& in,
+			     std::vector<double>&       out)
+				 : _in(in),
+				   _out(out)
+			{ }
+
+			virtual ~Sqrt() { }
+
+			bool
+			operator() ()
+			{
+				const size_t sizeVec = _in.size();
+				_out.resize(sizeVec);
+				for (size_t i = 0; i < sizeVec; ++i) {
+				    _out[i] = std::sqrt(_in[i]);
+				}
+				return true;
+			}
+
+		private:
+
+			const std::vector<double>& _in;
+			std::vector<double>&       _out;
+
+		};
+
+
 		class Energy : public Function
 		{
 
