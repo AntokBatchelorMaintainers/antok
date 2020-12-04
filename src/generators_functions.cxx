@@ -938,6 +938,7 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
 		        {"Y", "double"},
 		        {"Z", "double"}};
 	} else if (hasNodeKey(function,"VectorX")) {
+		//TODO better label would be 'fromLists' or 'fromArrays'; 'vector' is ambiguous
 		defType = fromVectors;
 		args = {{"VectorX", "std::vector<double>"},
 		        {"VectorY", "std::vector<double>"},

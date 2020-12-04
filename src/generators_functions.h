@@ -39,7 +39,7 @@ namespace antok {
 		std::string getFunctionArgumentHandlerErrorMsg(const std::vector<std::string>& quantityNames);
 
 		// macro for shorter prototyping of the antok functions
-		#define FUNCTION_PROTOTYPE(fctName) antok::Function* fctName (const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index)
+		#define FUNCTION_PROTOTYPE(fctName) antok::Function* fctName(const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index)
 		FUNCTION_PROTOTYPE(generateAbs);
 		FUNCTION_PROTOTYPE(generateLog);
 		FUNCTION_PROTOTYPE(generateSqrt);

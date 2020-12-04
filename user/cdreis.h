@@ -4,6 +4,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "data.h"
+#include "generators_functions.h"
 
 namespace antok {
 
@@ -13,8 +14,7 @@ namespace antok {
 
 		namespace cdreis {
 
-			// macro for shorter prototyping
-			#define FUNCTION_PROTOTYPE(fctName) antok::Function* fctName (const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index)
+			// reuse macro from generators_functions.h
 			FUNCTION_PROTOTYPE(getUserFunction);
 
 			FUNCTION_PROTOTYPE(generateGetVector3VectorAttributes);
@@ -33,7 +33,8 @@ namespace antok {
 			FUNCTION_PROTOTYPE(generateGetFittedOmegaMassVsPrecisionGoal);
 			FUNCTION_PROTOTYPE(generateGetThreePionCombinationMass);
 
-			const bool registerOutputVarTypes (antok::Data& data, const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes);
+			bool registerOutputVarTypes(antok::Data& data, const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes);
+
 		}
 
 	}
