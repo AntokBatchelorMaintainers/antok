@@ -287,11 +287,11 @@ namespace antok {
 					const double mT2   = (*_targetMassAddr) * (*_targetMassAddr);  // target mass squared
 					const double mX2   = _xLorentzVec.M2();  // X-state mass squared
 					const double mB2   = _beamLorentzVec.M2();  // beam mass squared
-					const double s     = mB2 + mT2 + 2.0 * EB_Lab * sqrt(mT2);
-					const double EB_CM = (s - mT2 + mB2) / (2.0 * sqrt(s));
-					const double EX_CM = (s + mX2 - mT2) / (2.0 * sqrt(s));
-					const double pB_CM = sqrt(EB_CM * EB_CM - mB2);
-					const double pX_CM = sqrt(EX_CM * EX_CM - mX2);
+					const double s     = mB2 + mT2 + 2.0 * EB_Lab * std::sqrt(mT2);
+					const double EB_CM = (s - mT2 + mB2) / (2.0 * std::sqrt(s));
+					const double EX_CM = (s + mX2 - mT2) / (2.0 * std::sqrt(s));
+					const double pB_CM = std::sqrt(EB_CM * EB_CM - mB2);
+					const double pX_CM = std::sqrt(EX_CM * EX_CM - mX2);
 					_tMin = -mB2 - mX2 + 2.0 * (EB_CM * EX_CM - pB_CM * pX_CM);
 				} else {
 					// use approximation
@@ -712,8 +712,8 @@ namespace antok {
 
 			Sqrt(const T& in,
 			     double&  out)
-				 : _in (in),
-				   _out(out)
+				: _in (in),
+				  _out(out)
 			{ }
 
 			virtual ~Sqrt() { }
@@ -741,8 +741,8 @@ namespace antok {
 
 			Sqrt(const std::vector<double>& in,
 			     std::vector<double>&       out)
-				 : _in(in),
-				   _out(out)
+				: _in(in),
+				  _out(out)
 			{ }
 
 			virtual ~Sqrt() { }
@@ -753,7 +753,7 @@ namespace antok {
 				const size_t sizeVec = _in.size();
 				_out.resize(sizeVec);
 				for (size_t i = 0; i < sizeVec; ++i) {
-				    _out[i] = std::sqrt(_in[i]);
+					_out[i] = std::sqrt(_in[i]);
 				}
 				return true;
 			}
