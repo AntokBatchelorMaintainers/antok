@@ -330,9 +330,8 @@ namespace antok {
 					                       const std::vector<double>&   Times,                     // times of ECAL clusters
 					                       const std::vector<int>&      ECALClusterIndices,        // ECAL indices of clusters
 					                       const double&                ECAL1ThresholdEnergy,      // energy threshold applied to ECAL1 clusters
-					                       const double&                ECAL1ThresholdTiming,      // threshold applied on ECAL1 cluster times
 					                       const double&                ECAL2ThresholdEnergy,      // energy threshold applied to ECAL2 clusters
-					                       const double&                ECAL2ThresholdTiming,      // threshold applied on ECAL1 cluster times
+					                       const std::map<std::string, std::vector<double>>& ResolutionCoeffs,           // calibration coefficients used to correct times
 					                       std::vector<TVector3>&       ResultPositions,           // positions of ECAL clusters
 					                       std::vector<TVector3>&       ResultPositionVariances,   // position variances of ECAL clusters
 					                       std::vector<double>&         ResultEnergies,            // energies of ECAL clusters
@@ -346,9 +345,8 @@ namespace antok {
 						  _Times                   (Times),
 						  _ECALClusterIndices      (ECALClusterIndices),
 						  _ECAL1ThresholdEnergy    (ECAL1ThresholdEnergy),
-						  _ECAL1ThresholdTiming    (ECAL1ThresholdTiming),  //TODO replace by coefficients that describe energy-dependent time resolution
 						  _ECAL2ThresholdEnergy    (ECAL2ThresholdEnergy),
-						  _ECAL2ThresholdTiming    (ECAL2ThresholdTiming),  //TODO replace by coefficients that describe energy-dependent time resolution
+						  _ResolutionCoeffs        (ResolutionCoeffs),
 						  _ResultPositions         (ResultPositions),
 						  _ResultPositionVariances (ResultPositionVariances),
 						  _ResultEnergies          (ResultEnergies),
@@ -362,11 +360,6 @@ namespace antok {
 					bool
 					operator() ()
 					{
-						//TODO make this a member variable and constructor argument
-						static const std::map<std::string, std::vector<double>> _ResolutionCoeffs
-							= {{"ECAL1", {1.08802821215785506e+00, 4.66599785813426371e-01, 2.81147454811999709e-01, 0,                        0}},
-							   {"ECAL2", {6.62115374914818755e-01, 1.13943601918724258e+00, 6.78607210496796551e-03, 2.93607669155196871e-01, -3.21822074865442943e-05}}};
-
 						const size_t nmbPhotons = _Positions.size();
 						if (   (_PositionVariances.size()  != nmbPhotons)
 						    or (_Energies.size()           != nmbPhotons)
@@ -401,13 +394,9 @@ namespace antok {
 								// taken from Sebastian Uhl's analysis of pi-pi0pi0
 								// http://wwwcompass.cern.ch/compass/publications/theses/2016_phd_uhl.pdf
 								// see line 553ff in /nfs/freenas/tuph/e18/project/compass/analysis/suhl/scripts/FinalState_3pi.-00/KinematicPlots.C
-								//TODO put coefficients into a text file and read this file in
-								//     antok::user::cdreis::generateGetCleanedEcalClusters()
-								//     similar to how it is done in
-								//     antok::user::cdreis::generateGetECALCorrectedTiming()
 								const std::vector<double>& coefficients = _ResolutionCoeffs.at("ECAL1");
-								const double sigmaT = sqrt(coefficients[0] + coefficients[1] / energy
-								                                           + coefficients[2] / energy2);
+								const double sigmaT = std::sqrt(coefficients[0] + coefficients[1] / energy
+								                                                + coefficients[2] / energy2);
 								if (fabs(_Times[i]) > 3 * sigmaT) {
 									continue;
 								}
@@ -417,11 +406,9 @@ namespace antok {
 								if (energy < _ECAL2ThresholdEnergy) {
 									continue;
 								}
-								// apply energy-dependent cut on cluster time; see ECAL1 case above
-								//TODO see above
-								const std::vector<double>& coefficients = _ResolutionCoeffs.at("ECAL1");
-								const double sigmaT = sqrt(coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
-								                                           + coefficients[3] / energy2 + coefficients[4] * energy2);
+								const std::vector<double>& coefficients = _ResolutionCoeffs.at("ECAL2");
+								const double sigmaT = std::sqrt(coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
+								                                                + coefficients[3] / energy2 + coefficients[4] * energy2);
 								if (fabs(_Times[i]) > 3 * sigmaT) {
 									continue;
 								}
@@ -447,10 +434,9 @@ namespace antok {
 					const std::vector<double>&   _EnergyVariances;
 					const std::vector<double>&   _Times;
 					const std::vector<int>&      _ECALClusterIndices;
-					const double                 _ECAL1ThresholdEnergy;  // constant parameter, needs to be copied
-					const double                 _ECAL1ThresholdTiming;  // constant parameter, needs to be copied
-					const double                 _ECAL2ThresholdEnergy;  // constant parameter, needs to be copied
-					const double                 _ECAL2ThresholdTiming;  // constant parameter, needs to be copied
+					const double                 _ECAL1ThresholdEnergy;                  // constant parameter, needs to be copied
+					const double                 _ECAL2ThresholdEnergy;                  // constant parameter, needs to be copied
+					const std::map<std::string, std::vector<double>> _ResolutionCoeffs;  // constant parameter, needs to be copied
 					std::vector<TVector3>&       _ResultPositions;
 					std::vector<TVector3>&       _ResultPositionVariances;
 					std::vector<double>&         _ResultEnergies;
@@ -881,12 +867,12 @@ namespace antok {
 					bool
 					operator() ()
 					{
+						if (_ClusterECALIndices.size() < 4) {
+							_ResultSuccess = 0;
+							return true;
+						}
 						size_t sizeVec = _ClusterPositions.size();
-						//TODO why is _ClusterECALIndices.size() treated differently here?
-						//     shouldn't we add a separate check that sizeVec >= 4 or even that sizeVec == 4?
-						if (   (_ClusterECALIndices.size()       != 4)
-						    or (_ClusterPositions.size()         != sizeVec)
-						    or (_ClusterPositionVariances.size() != sizeVec)
+						if (   (_ClusterPositionVariances.size() != sizeVec)
 						    or (_ClusterEnergies.size()          != sizeVec)
 						    or (_ClusterEnergyVariances.size()   != sizeVec)) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;

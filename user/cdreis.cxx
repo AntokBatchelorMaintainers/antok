@@ -374,12 +374,39 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 	// Get constant arguments
 	std::map<std::string, double> constArgs
 		= {{"ECAL1ThresholdEnergy", 0},
-		   {"ECAL1ThresholdTiming", 0},
-		   {"ECAL2ThresholdEnergy", 0},
-		   {"ECAL2ThresholdTiming", 0}};
+		   {"ECAL2ThresholdEnergy", 0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
+	}
+
+	std::map<std::string, std::string> constArgsString = {{"ResolutionCalibration", ""}};
+	if (not functionArgumentHandlerConst<std::string>(constArgsString, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+	// Read time resolution coefficients from file
+	const std::string& ResolutionFileName = constArgsString["ResolutionCalibration"];
+	std::map<std::string, std::vector<double>> ResolutionCoeffs;
+	{
+		std::ifstream ResolutionFile;
+		ResolutionFile.open(ResolutionFileName);
+		if (not ResolutionFile) {
+			std::cerr << "Could not open file at '" << ResolutionFileName << "' for 'ResolutionCalibration' in function '" << function["Name"] << "' "
+			          << "which is required for calculation of variable '" << quantityNames[0] << "'" << std::endl;
+			return nullptr;
+		}
+		std::string ECALName;
+		double      a, b, c, d, e;
+		while (ResolutionFile >> ECALName >> a >> b >> c >> d >> e) {
+			ResolutionCoeffs[ECALName] = {a, b, c, d, e};
+		}
+		if (not ResolutionFile.eof()) {
+			std::cerr << "ERROR: Invalid ECAL time-resolution entries at end of file '" << ResolutionFileName << "'; "
+			          << "last good entry for ECAL '" << ECALName << "'." << std::endl;
+			return nullptr;
+		}
+		ResolutionFile.close();
 	}
 
 	// Register output variables
@@ -403,9 +430,8 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		*data.getAddr<std::vector<double>>  (args[4].first),     // Times
 		*data.getAddr<std::vector<int>>     (args[5].first),     // ECAL Cluster Indices
 		constArgs["ECAL1ThresholdEnergy"],                       // ECAL1ThresholdEnergy
-		constArgs["ECAL1ThresholdTiming"],                       // ECAL1ThresholdTiming
 		constArgs["ECAL2ThresholdEnergy"],                       // ECAL2ThresholdEnergy
-		constArgs["ECAL2ThresholdTiming"],                       // ECAL2ThresholdTiming
+		ResolutionCoeffs,
 		*data.getAddr<std::vector<TVector3>>(quantityNames[0]),  // ResultPositions
 		*data.getAddr<std::vector<TVector3>>(quantityNames[1]),  // ResultPositionVariances
 		*data.getAddr<std::vector<double>>  (quantityNames[2]),  // ResultEnergies
