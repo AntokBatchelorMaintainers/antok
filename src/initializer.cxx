@@ -801,9 +801,9 @@ antok::Initializer::getFunction(const YAML::Node&               function,
 	if        (functionName == "abs") {
 		return antok::generators::generateAbs                       (function, quantityNames, index);
 	} else if (functionName == "log") {
-	  return antok::generators::generateLog                         (function, quantityNames, index);
+		return antok::generators::generateLog                       (function, quantityNames, index);
 	} else if (functionName == "Sqrt") {
-	  return antok::generators::generateSqrt                        (function, quantityNames, index);
+		return antok::generators::generateSqrt                      (function, quantityNames, index);
 	} else if (functionName == "convertIntToDouble") {
 		return antok::generators::generateConvertIntToDouble        (function, quantityNames, index);
 	} else if (functionName == "diff") {
@@ -844,7 +844,7 @@ antok::Initializer::getFunction(const YAML::Node&               function,
 	} else {
 		antok::Function* usrFunctionPtr = antok::user::getUserFunction(function, quantityNames, index);
 		if (usrFunctionPtr == nullptr) {
-		    std::cerr << "Function type '" << functionName << "' did not initialize correctly or is not supported." << std::endl;
+			std::cerr << "Function type '" << functionName << "' did not initialize correctly or is not supported." << std::endl;
 		}
 		return usrFunctionPtr;
 	}

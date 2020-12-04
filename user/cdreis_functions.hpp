@@ -458,7 +458,7 @@ namespace antok {
 					                 const std::vector<double>&         Energies,                  // energies of ECAL clusters
 					                 const std::vector<double>&         EnergyVariances,           // variance in energy of ECAL clusters
 					                 const std::vector<double>&         Times,                     // times of ECAL clusters
-					                 const int&                         SelectedECALIndex,         // index of slected ECAL
+					                 const int&                         SelectedECALIndex,         // index of selected ECAL
 					                 std::vector<int>&                  ResultECALClusterIndices,  // ECAL indices of cluster
 					                 std::vector<TVector3>&             ResultPositions,           // positions of ECAL clusters
 					                 std::vector<TVector3>&             ResultPositionVariances,   // variances in position of ECAL clusters
@@ -867,14 +867,15 @@ namespace antok {
 					bool
 					operator() ()
 					{
-						if (_ClusterECALIndices.size() < 4) {
+						if (_ClusterECALIndices.size() < 4) { //TODO may even set != 4
 							_ResultSuccess = 0;
 							return true;
 						}
-						size_t sizeVec = _ClusterPositions.size();
+						const size_t sizeVec = _ClusterPositions.size();
 						if (   (_ClusterPositionVariances.size() != sizeVec)
 						    or (_ClusterEnergies.size()          != sizeVec)
-						    or (_ClusterEnergyVariances.size()   != sizeVec)) {
+						    or (_ClusterEnergyVariances.size()   != sizeVec)
+						    or (_ClusterECALIndices.size()       != 4)) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
