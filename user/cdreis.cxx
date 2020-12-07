@@ -393,7 +393,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		ResolutionFile.open(ResolutionFileName);
 		if (not ResolutionFile) {
 			std::cerr << "Could not open file at '" << ResolutionFileName << "' for 'ResolutionCalibration' in function '" << function["Name"] << "' "
-			          << "which is required for calculation of variable '" << quantityNames[0] << "'" << std::endl;
+			          << "which is required for calculation of variables '" << quantityNames << "'" << std::endl;
 			return nullptr;
 		}
 		std::string ECALName;

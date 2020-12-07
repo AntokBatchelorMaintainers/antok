@@ -37,6 +37,24 @@ namespace antok {
 
 		}
 
+
+		// stream operator for std::vector
+		template<typename T>
+		inline
+		std::ostream&
+		operator << (std::ostream&         out,
+		             const std::vector<T>& vec)
+		{
+			const size_t vecSize = vec.size();
+			if (vecSize == 0) {
+				return out << "[]";
+			}
+			out << "[";
+			for (unsigned int i = 0; i < (vecSize - 1); ++i)
+				out << vec[i] << ", ";
+			return out << vec[vecSize - 1] << "]";
+		}
+
 	}
 
 }

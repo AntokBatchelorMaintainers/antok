@@ -238,7 +238,7 @@ antok::generators::generateAbs(const YAML::Node&               function,
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
 		}
-	}	else {
+	} else {
 		if (not data.insert<double>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
@@ -356,7 +356,7 @@ antok::generators::generateSqrt(const YAML::Node&               function,
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
 		}
-	}	else {
+	} else {
 		if (not data.insert<double>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
