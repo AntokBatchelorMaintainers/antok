@@ -867,8 +867,19 @@ namespace antok {
 					bool
 					operator() ()
 					{
+						_ResultLorentzVectors.resize(2);
+						_ResultChi2s.resize         (2);
+						_ResultPValues.resize       (2);
+						_ResultNmbIterations.resize (2);
+						_ResultPullsX0.resize       (2);
+						_ResultPullsY0.resize       (2);
+						_ResultPullsE0.resize       (2);
+						_ResultPullsX1.resize       (2);
+						_ResultPullsY1.resize       (2);
+						_ResultPullsE1.resize       (2);
+						_ResultSuccess = 0;
+						
 						if (_ClusterECALIndices.size() < 4) { //TODO may even set != 4
-							_ResultSuccess = 0;
 							return true;
 						}
 						const size_t sizeVec = _ClusterPositions.size();
@@ -880,29 +891,7 @@ namespace antok {
 							return false;
 						}
 
-						_ResultLorentzVectors.clear();
-						_ResultChi2s.clear();
-						_ResultPValues.clear();
-						_ResultNmbIterations.clear();
-						_ResultPullsX0.clear();
-						_ResultPullsY0.clear();
-						_ResultPullsE0.clear();
-						_ResultPullsX1.clear();
-						_ResultPullsY1.clear();
-						_ResultPullsE1.clear();
-						_ResultLorentzVectors.reserve(2);
-						_ResultChi2s.reserve         (2);
-						_ResultPValues.reserve       (2);
-						_ResultNmbIterations.reserve (2);
-						_ResultPullsX0.reserve       (2);
-						_ResultPullsY0.reserve       (2);
-						_ResultPullsE0.reserve       (2);
-						_ResultPullsX1.reserve       (2);
-						_ResultPullsY1.reserve       (2);
-						_ResultPullsE1.reserve       (2);
-						_ResultSuccess = 0;
-
-						if (   (_ClusterECALIndices[0] == -1)
+					if (   (_ClusterECALIndices[0] == -1)
 						    or (_ClusterECALIndices[1] == -1)
 						    or (_ClusterECALIndices[2] == -1)
 						    or (_ClusterECALIndices[3] == -1)) {
@@ -933,16 +922,16 @@ namespace antok {
 						                              _WhichEnergyVariance);
 						const bool success0 = neutralFit0.doFit();
 						if (success0) {
-							_ResultLorentzVectors.push_back(neutralFit0.getImprovedLVSum());
-							_ResultPullsX0.push_back       (neutralFit0.pullValues()[0]);
-							_ResultPullsY0.push_back       (neutralFit0.pullValues()[1]);
-							_ResultPullsE0.push_back       (neutralFit0.pullValues()[2]);
-							_ResultPullsX1.push_back       (neutralFit0.pullValues()[3]);
-							_ResultPullsY1.push_back       (neutralFit0.pullValues()[4]);
-							_ResultPullsE1.push_back       (neutralFit0.pullValues()[5]);
-							_ResultChi2s.push_back         (neutralFit0.chi2Value());
-							_ResultPValues.push_back       (neutralFit0.pValue());
-							_ResultNmbIterations.push_back (neutralFit0.nmbIterations());
+							_ResultLorentzVectors[0] = neutralFit0.getImprovedLVSum();
+							_ResultPullsX0[0]        = neutralFit0.pullValues()[0];
+							_ResultPullsY0[0]        = neutralFit0.pullValues()[1];
+							_ResultPullsE0[0]        = neutralFit0.pullValues()[2];
+							_ResultPullsX1[0]        = neutralFit0.pullValues()[3];
+							_ResultPullsY1[0]        = neutralFit0.pullValues()[4];
+							_ResultPullsE1[0]        = neutralFit0.pullValues()[5];
+							_ResultChi2s[0]          = neutralFit0.chi2Value();
+							_ResultPValues[0]        = neutralFit0.pValue();
+							_ResultNmbIterations[0]  = neutralFit0.nmbIterations();
 						}
 
 						antok::NeutralFit neutralFit1(_VertexPosition,
@@ -961,16 +950,16 @@ namespace antok {
 						                              _WhichEnergyVariance);
 						const bool success1 = neutralFit1.doFit();
 						if (success1) {
-							_ResultLorentzVectors.push_back(neutralFit1.getImprovedLVSum());
-							_ResultPullsX0.push_back       (neutralFit1.pullValues()[0]);
-							_ResultPullsY0.push_back       (neutralFit1.pullValues()[1]);
-							_ResultPullsE0.push_back       (neutralFit1.pullValues()[2]);
-							_ResultPullsX1.push_back       (neutralFit1.pullValues()[3]);
-							_ResultPullsY1.push_back       (neutralFit1.pullValues()[4]);
-							_ResultPullsE1.push_back       (neutralFit1.pullValues()[5]);
-							_ResultChi2s.push_back         (neutralFit1.chi2Value());
-							_ResultPValues.push_back       (neutralFit1.pValue());
-							_ResultNmbIterations.push_back (neutralFit1.nmbIterations());
+							_ResultLorentzVectors[1] = neutralFit1.getImprovedLVSum();
+							_ResultPullsX0[1]        = neutralFit1.pullValues()[0];
+							_ResultPullsY0[1]        = neutralFit1.pullValues()[1];
+							_ResultPullsE0[1]        = neutralFit1.pullValues()[2];
+							_ResultPullsX1[1]        = neutralFit1.pullValues()[3];
+							_ResultPullsY1[1]        = neutralFit1.pullValues()[4];
+							_ResultPullsE1[1]        = neutralFit1.pullValues()[5];
+							_ResultChi2s[1]          = neutralFit1.chi2Value();
+							_ResultPValues[1]        = neutralFit1.pValue();
+							_ResultNmbIterations[1]  = neutralFit1.nmbIterations();
 						}
 
 						if (success0 and success1) {
