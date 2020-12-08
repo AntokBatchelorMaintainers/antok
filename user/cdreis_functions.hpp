@@ -705,6 +705,7 @@ namespace antok {
 					           const double&                      ECAL1MassWindow,           // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
 					           const double&                      ECAL2MassWindow,           // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
 					           std::vector<TLorentzVector>&       ResultPi0PairLVs,          // Lorentz vectors of the two pi^0 in the first found pair
+					           //TODO remove ResultPi0LV_{0,1}; they contain exactly the same information as ResultPi0PairLVs
 					           TLorentzVector&                    ResultPi0LV_0,             // Lorentz vectors of the 1st pi^0 in the first found pair
 					           TLorentzVector&                    ResultPi0LV_1,             // Lorentz vectors of the 2nd pi^0 in the first found pair
 					           int&                               ResultGoodPi0Pair,         // 1 if exactly one pi^0 pair was found; else 0
@@ -755,7 +756,7 @@ namespace antok {
 								if (nmbCandidatePairs > 1) {
 									break;
 								}
-								// first photon pair
+								// photon pair 0
 								const TLorentzVector pi0Candidate0 = _PhotonLVs[i] + _PhotonLVs[j];
 								if (std::fabs(pi0Candidate0.M() - _Pi0Mass)
 								    > getECALMassWindow(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
@@ -769,10 +770,11 @@ namespace antok {
 										if (nmbCandidatePairs > 1) {
 											break;
 										}
-										// second photon pair
-										if ((m == j) or (n == j)) {
+										// exclude photon pairs that share photon(s) with pair 0
+										if (m == j or n == j) {
 											continue;
 										}
+										// photon pair 1
 										const TLorentzVector pi0Candidate1 = _PhotonLVs[m] + _PhotonLVs[n];
 										if (std::fabs(pi0Candidate1.M() - _Pi0Mass)
 										    > getECALMassWindow(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
@@ -814,33 +816,35 @@ namespace antok {
 				};
 
 
+				// perform kinematic fit of two photon pairs to given mass
 				class GetKinematicFittingMass : public Function
 				{
 
 				public:
 
-					GetKinematicFittingMass(const TVector3&              VertexPosition,
-					                        const std::vector<TVector3>& ClusterPositions,
-					                        const std::vector<TVector3>& ClusterPositionVariances,
-					                        const std::vector<double>&   ClusterEnergies,
-					                        const std::vector<double>&   ClusterEnergyVariances,
-					                        const std::vector<int>&      ClusterECALIndices,
-					                        const double&                Mass,
+					GetKinematicFittingMass(const TVector3&              VertexPosition,            // position of primary vertex
+					                        const std::vector<TVector3>& ClusterPositions,          // positions of ECAL clusters
+					                        const std::vector<TVector3>& ClusterPositionVariances,  // variances in position of ECAL clusters
+					                        const std::vector<double>&   ClusterEnergies,           // energies of ECAL clusters
+					                        const std::vector<double>&   ClusterEnergyVariances,    // variance in energy of ECAL clusters
+					                        const std::vector<int>&      ClusterECALIndices,        // indices in the arrays above of ECAL clusters in the two photon pairs
+					                        const double&                Mass,                      // mass that each of the two photon pairs is constrained to
+					                        //TODO think about what to do with the two arguments below; they are needed for antok::NeutralFit::massIsInWindow(), but this function is never used
 					                        const double&                MassLowerLimit,
 					                        const double&                MassUpperLimit,
-					                        const double&                PrecisionGoal,
-					                        const int&                   WhichEnergyVariance,
-					                        std::vector<TLorentzVector>& ResultLorentzVectors,
-					                        std::vector<double>&         ResultChi2s,
-					                        std::vector<double>&         ResultPValues,
-					                        std::vector<int>&            ResultNmbIterations,
-					                        int&                         ResultSuccess,
-					                        std::vector<double>&         ResultPullsX0,
-					                        std::vector<double>&         ResultPullsY0,
-					                        std::vector<double>&         ResultPullsE0,
-					                        std::vector<double>&         ResultPullsX1,
-					                        std::vector<double>&         ResultPullsY1,
-					                        std::vector<double>&         ResultPullsE1)
+					                        const double&                PrecisionGoal,             // defines convergence criterion for fit
+					                        const int&                   WhichEnergyVariance,       // defines how variance of ECAL energies is calculated; see src/neutral_fit.h
+					                        std::vector<TLorentzVector>& ResultLorentzVectors,      // Lorentz vectors of photon pairs after fit
+					                        std::vector<double>&         ResultChi2s,               // chi^2 values of fits
+					                        std::vector<double>&         ResultPValues,             // P-values of fits
+					                        std::vector<int>&            ResultNmbIterations,       // number of iterations required to reach PrecisionGoal
+					                        int&                         ResultSuccess,             // indicates whether fit was successful
+					                        std::vector<double>&         ResultPullsX0,             // pulls for x direction of first photon in pairs
+					                        std::vector<double>&         ResultPullsY0,             // pulls for y direction of first photon in pairs
+					                        std::vector<double>&         ResultPullsE0,             // pulls for energie of first photon in pairs
+					                        std::vector<double>&         ResultPullsX1,             // pulls for x direction of second photon in pairs
+					                        std::vector<double>&         ResultPullsY1,             // pulls for y direction of second photon in pairs
+					                        std::vector<double>&         ResultPullsE1)             // pulls for energy of second photon in pairs
 						: _VertexPosition          (VertexPosition),
 						  _ClusterPositions        (ClusterPositions),
 						  _ClusterPositionVariances(ClusterPositionVariances),
@@ -918,24 +922,28 @@ namespace antok {
 								return true;
 							}
 						}
-						// Fit cluster 0 and 1 and cluster 2 and 3 to Pi0 mass
-						std::vector<bool> successes;
+
+						// Fit clusters corresponding to first and second pair of indices in _ClusterECALIndices to given _Mass
+						std::vector<bool> successes = {false, false};
 						for (size_t i = 0; i < 2; ++i) {
-							antok::NeutralFit neutralFit(_VertexPosition,
-							                             _ClusterPositions        [_ClusterECALIndices[i*2]],
-							                             _ClusterPositions        [_ClusterECALIndices[i*2+1]],
-							                             _ClusterPositionVariances[_ClusterECALIndices[i*2]],
-							                             _ClusterPositionVariances[_ClusterECALIndices[i*2+1]],
-							                             _ClusterEnergies         [_ClusterECALIndices[i*2]],
-							                             _ClusterEnergies         [_ClusterECALIndices[i*2+1]],
-							                             _ClusterEnergyVariances  [_ClusterECALIndices[i*2]],
-							                             _ClusterEnergyVariances  [_ClusterECALIndices[i*2+1]],
-							                             _Mass,
-							                             _MassLowerLimit,
-							                             _MassUpperLimit,
-							                             _PrecisionGoal,
-							                             _WhichEnergyVariance);
-							successes.push_back(neutralFit.doFit());
+							const int clusterIndexA = _ClusterECALIndices[2 * i];
+							const int clusterIndexB = _ClusterECALIndices[2 * i + 1];
+							antok::NeutralFit neutralFit(
+								_VertexPosition,
+								_ClusterPositions        [clusterIndexA],
+								_ClusterPositions        [clusterIndexB],
+								_ClusterPositionVariances[clusterIndexA],
+								_ClusterPositionVariances[clusterIndexB],
+								_ClusterEnergies         [clusterIndexA],
+								_ClusterEnergies         [clusterIndexB],
+								_ClusterEnergyVariances  [clusterIndexA],
+								_ClusterEnergyVariances  [clusterIndexB],
+								_Mass,
+								_MassLowerLimit,
+								_MassUpperLimit,
+								_PrecisionGoal,
+								_WhichEnergyVariance);
+							successes[i] = neutralFit.doFit();
 							if (successes[i]) {
 								_ResultLorentzVectors[i] = neutralFit.getImprovedLVSum();
 								_ResultPullsX0       [i] = neutralFit.pullValues()[0];
