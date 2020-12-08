@@ -918,65 +918,38 @@ namespace antok {
 								return true;
 							}
 						}
-
-						//TODO avoid code repetition by using a for loop here
-						antok::NeutralFit neutralFit0(_VertexPosition,
-						                              _ClusterPositions        [_ClusterECALIndices[0]],
-						                              _ClusterPositions        [_ClusterECALIndices[1]],
-						                              _ClusterPositionVariances[_ClusterECALIndices[0]],
-						                              _ClusterPositionVariances[_ClusterECALIndices[1]],
-						                              _ClusterEnergies         [_ClusterECALIndices[0]],
-						                              _ClusterEnergies         [_ClusterECALIndices[1]],
-						                              _ClusterEnergyVariances  [_ClusterECALIndices[0]],
-						                              _ClusterEnergyVariances  [_ClusterECALIndices[1]],
-						                              _Mass,
-						                              _MassLowerLimit,
-						                              _MassUpperLimit,
-						                              _PrecisionGoal,
-						                              _WhichEnergyVariance);
-						const bool success0 = neutralFit0.doFit();
-						if (success0) {
-							_ResultLorentzVectors[0] = neutralFit0.getImprovedLVSum();
-							_ResultPullsX0       [0] = neutralFit0.pullValues()[0];
-							_ResultPullsY0       [0] = neutralFit0.pullValues()[1];
-							_ResultPullsE0       [0] = neutralFit0.pullValues()[2];
-							_ResultPullsX1       [0] = neutralFit0.pullValues()[3];
-							_ResultPullsY1       [0] = neutralFit0.pullValues()[4];
-							_ResultPullsE1       [0] = neutralFit0.pullValues()[5];
-							_ResultChi2s         [0] = neutralFit0.chi2Value();
-							_ResultPValues       [0] = neutralFit0.pValue();
-							_ResultNmbIterations [0] = neutralFit0.nmbIterations();
+						// Fit cluster 0 and 1 and cluster 2 and 3 to Pi0 mass
+						std::vector<bool> successes;
+						for (size_t i = 0; i < 2; ++i) {
+							antok::NeutralFit neutralFit(_VertexPosition,
+							                             _ClusterPositions        [_ClusterECALIndices[i*2]],
+							                             _ClusterPositions        [_ClusterECALIndices[i*2+1]],
+							                             _ClusterPositionVariances[_ClusterECALIndices[i*2]],
+							                             _ClusterPositionVariances[_ClusterECALIndices[i*2+1]],
+							                             _ClusterEnergies         [_ClusterECALIndices[i*2]],
+							                             _ClusterEnergies         [_ClusterECALIndices[i*2+1]],
+							                             _ClusterEnergyVariances  [_ClusterECALIndices[i*2]],
+							                             _ClusterEnergyVariances  [_ClusterECALIndices[i*2+1]],
+							                             _Mass,
+							                             _MassLowerLimit,
+							                             _MassUpperLimit,
+							                             _PrecisionGoal,
+							                             _WhichEnergyVariance);
+							successes.push_back(neutralFit.doFit());
+							if (successes[i]) {
+								_ResultLorentzVectors[i] = neutralFit.getImprovedLVSum();
+								_ResultPullsX0       [i] = neutralFit.pullValues()[0];
+								_ResultPullsY0       [i] = neutralFit.pullValues()[1];
+								_ResultPullsE0       [i] = neutralFit.pullValues()[2];
+								_ResultPullsX1       [i] = neutralFit.pullValues()[3];
+								_ResultPullsY1       [i] = neutralFit.pullValues()[4];
+								_ResultPullsE1       [i] = neutralFit.pullValues()[5];
+								_ResultChi2s         [i] = neutralFit.chi2Value();
+								_ResultPValues       [i] = neutralFit.pValue();
+								_ResultNmbIterations [i] = neutralFit.nmbIterations();
+							}
 						}
-
-						antok::NeutralFit neutralFit1(_VertexPosition,
-						                              _ClusterPositions        [_ClusterECALIndices[2]],
-						                              _ClusterPositions        [_ClusterECALIndices[3]],
-						                              _ClusterPositionVariances[_ClusterECALIndices[2]],
-						                              _ClusterPositionVariances[_ClusterECALIndices[3]],
-						                              _ClusterEnergies         [_ClusterECALIndices[2]],
-						                              _ClusterEnergies         [_ClusterECALIndices[3]],
-						                              _ClusterEnergyVariances  [_ClusterECALIndices[2]],
-						                              _ClusterEnergyVariances  [_ClusterECALIndices[3]],
-						                              _Mass,
-						                              _MassLowerLimit,
-						                              _MassUpperLimit,
-						                              _PrecisionGoal,
-						                              _WhichEnergyVariance);
-						const bool success1 = neutralFit1.doFit();
-						if (success1) {
-							_ResultLorentzVectors[1] = neutralFit1.getImprovedLVSum();
-							_ResultPullsX0       [1] = neutralFit1.pullValues()[0];
-							_ResultPullsY0       [1] = neutralFit1.pullValues()[1];
-							_ResultPullsE0       [1] = neutralFit1.pullValues()[2];
-							_ResultPullsX1       [1] = neutralFit1.pullValues()[3];
-							_ResultPullsY1       [1] = neutralFit1.pullValues()[4];
-							_ResultPullsE1       [1] = neutralFit1.pullValues()[5];
-							_ResultChi2s         [1] = neutralFit1.chi2Value();
-							_ResultPValues       [1] = neutralFit1.pValue();
-							_ResultNmbIterations [1] = neutralFit1.nmbIterations();
-						}
-
-						if (success0 and success1) {
+						if (successes[0] and successes[1]) {
 							_ResultSuccess = 1;
 						}
 						return true;
