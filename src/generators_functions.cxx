@@ -929,7 +929,7 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
 	const YAML::Node&  functionName = function["Name"];
 	const std::string& quantityName = quantityNames[0];
 	vecPairString<std::string> args;
-	enum vecDefType {fromCoords = 0, fromVectors = 1, fromTLorentzVector = 2};
+	enum vecDefType {fromCoords = 0, fromLists = 1, fromTLorentzVector = 2};
 	vecDefType defType;
 	if (hasNodeKey(function, "X")) {
 		defType = fromCoords;
@@ -938,7 +938,7 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
 		        {"Z", "double"}};
 	} else if (hasNodeKey(function,"VectorX")) {
 		//TODO better label would be 'fromLists' or 'fromArrays'; 'vector' is ambiguous
-		defType = fromVectors;
+		defType = fromLists;
 		args = {{"VectorX", "std::vector<double>"},
 		        {"VectorY", "std::vector<double>"},
 		        {"VectorZ", "std::vector<double>"}};
@@ -969,7 +969,7 @@ antok::generators::generateGetVector3(const YAML::Node&               function,
 			                                         *data.getAddr<double>(args[2].first),    // z
 			                                         *data.getAddr<TVector3>(quantityName));  // out
 		}
-		case fromVectors: {
+		case fromLists: {
 			if (not data.insert<std::vector<TVector3>>(quantityName)) {
 				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 				return nullptr;
