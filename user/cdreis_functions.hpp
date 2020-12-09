@@ -705,9 +705,6 @@ namespace antok {
 					           const double&                      ECAL1MassWindow,           // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
 					           const double&                      ECAL2MassWindow,           // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
 					           std::vector<TLorentzVector>&       ResultPi0PairLVs,          // Lorentz vectors of the two pi^0 in the first found pair
-					           //TODO remove ResultPi0LV_{0,1}; they contain exactly the same information as ResultPi0PairLVs
-					           TLorentzVector&                    ResultPi0LV_0,             // Lorentz vectors of the 1st pi^0 in the first found pair
-					           TLorentzVector&                    ResultPi0LV_1,             // Lorentz vectors of the 2nd pi^0 in the first found pair
 					           int&                               ResultGoodPi0Pair,         // 1 if exactly one pi^0 pair was found; else 0
 					           std::vector<int>&                  ResultECALClusterIndices)  // indices of the ECAL that measured the selected photons
 						: _PhotonLVs                 (PhotonLVs),
@@ -717,8 +714,6 @@ namespace antok {
 						  _ECAL1MassWindow           (ECAL1MassWindow),
 						  _ECAL2MassWindow           (ECAL2MassWindow),
 						  _ResultPi0PairLVs          (ResultPi0PairLVs),
-						  _ResultPi0LV_0             (ResultPi0LV_0),
-						  _ResultPi0LV_1             (ResultPi0LV_1),
 						  _ResultGoodPi0Pair         (ResultGoodPi0Pair),
 						  _ResultECALClusterIndices  (ResultECALClusterIndices)
 					{ }
@@ -736,8 +731,6 @@ namespace antok {
 
 						_ResultPi0PairLVs.clear();
 						_ResultPi0PairLVs.reserve(2);
-						_ResultPi0LV_0.SetPxPyPzE(0, 0, 0, 0);
-						_ResultPi0LV_1.SetPxPyPzE(0, 0, 0, 0);
 						_ResultGoodPi0Pair = 0;
 						_ResultECALClusterIndices = {-1, -1, -1, -1};
 						if (nmbPhotons < 4) {
@@ -783,8 +776,6 @@ namespace antok {
 										if (nmbCandidatePairs == 0) {
 											_ResultPi0PairLVs.push_back(pi0Candidate0);
 											_ResultPi0PairLVs.push_back(pi0Candidate1);
-											_ResultPi0LV_0            = pi0Candidate0;
-											_ResultPi0LV_1            = pi0Candidate1;
 											_ResultECALClusterIndices = {(int)i, (int)j, (int)m, (int)n};
 										}
 										nmbCandidatePairs++;
@@ -808,8 +799,6 @@ namespace antok {
 					const double                       _ECAL1MassWindow;      // constant parameter, needs to be copied
 					const double                       _ECAL2MassWindow;      // constant parameter, needs to be copied
 					std::vector<TLorentzVector>&       _ResultPi0PairLVs;
-					TLorentzVector&                    _ResultPi0LV_0;
-					TLorentzVector&                    _ResultPi0LV_1;
 					int&                               _ResultGoodPi0Pair;
 					std::vector<int>&                  _ResultECALClusterIndices;
 
@@ -829,9 +818,6 @@ namespace antok {
 					                        const std::vector<double>&   ClusterEnergyVariances,    // variance in energy of ECAL clusters
 					                        const std::vector<int>&      ClusterECALIndices,        // indices in the arrays above of ECAL clusters in the two photon pairs
 					                        const double&                Mass,                      // mass that each of the two photon pairs is constrained to
-					                        //TODO think about what to do with the two arguments below; they are needed for antok::NeutralFit::massIsInWindow(), but this function is never used
-					                        const double&                MassLowerLimit,
-					                        const double&                MassUpperLimit,
 					                        const double&                PrecisionGoal,             // defines convergence criterion for fit
 					                        const int&                   WhichEnergyVariance,       // defines how variance of ECAL energies is calculated; see src/neutral_fit.h
 					                        std::vector<TLorentzVector>& ResultLorentzVectors,      // Lorentz vectors of photon pairs after fit
@@ -852,8 +838,6 @@ namespace antok {
 						  _ClusterEnergyVariances  (ClusterEnergyVariances),
 						  _ClusterECALIndices      (ClusterECALIndices),
 						  _Mass                    (Mass),
-						  _MassLowerLimit          (MassLowerLimit),
-						  _MassUpperLimit          (MassUpperLimit),
 						  _PrecisionGoal           (PrecisionGoal),
 						  _WhichEnergyVariance     (WhichEnergyVariance),
 						  _ResultLorentzVectors    (ResultLorentzVectors),
@@ -939,8 +923,8 @@ namespace antok {
 								_ClusterEnergyVariances  [clusterIndexA],
 								_ClusterEnergyVariances  [clusterIndexB],
 								_Mass,
-								_MassLowerLimit,
-								_MassUpperLimit,
+								0, // MassLowerLimit for neutralFit::massIsInWindow(), which is not used
+								0, // MassUpperLimit for neutralFit::massIsInWindow(), which is not used
 								_PrecisionGoal,
 								_WhichEnergyVariance);
 							successes[i] = neutralFit.doFit();
@@ -972,8 +956,6 @@ namespace antok {
 					const std::vector<double>&   _ClusterEnergyVariances;
 					const std::vector<int>&      _ClusterECALIndices;
 					const double                 _Mass;                 // constant parameter, needs to be copied
-					const double                 _MassLowerLimit;       // constant parameter, needs to be copied
-					const double                 _MassUpperLimit;       // constant parameter, needs to be copied
 					const double                 _PrecisionGoal;        // constant parameter, needs to be copied
 					const int                    _WhichEnergyVariance;  // constant parameter, needs to be copied
 					std::vector<TLorentzVector>& _ResultLorentzVectors;
@@ -1112,8 +1094,6 @@ namespace antok {
 					                                  const std::vector<double>&   ClusterEnergyVariances,
 					                                  const std::vector<int>&      ClusterECALIndices,
 					                                  const double&                PiMass,
-					                                  const double&                PiMassLowerLimit,
-					                                  const double&                PiMassUpperLimit,
 					                                  const double&                precisionGoalLowerLimit,
 					                                  const double&                precisionGoalUpperLimit,
 					                                  const int&                   whichEnergyVariance,
@@ -1135,8 +1115,6 @@ namespace antok {
 						  _ClusterEnergyVariances  (ClusterEnergyVariances),
 						  _ClusterECALIndices      (ClusterECALIndices),
 						  _PiMass                  (PiMass),
-						  _PiMassLowerLimit        (PiMassLowerLimit),
-						  _PiMassUpperLimit        (PiMassUpperLimit),
 						  _precisionGoalLowerLimit (precisionGoalLowerLimit),
 						  _precisionGoalUpperLimit (precisionGoalUpperLimit),
 						  _whichEnergyVariance     (whichEnergyVariance),
@@ -1177,7 +1155,7 @@ namespace antok {
 						}
 						for (double PG = _precisionGoalLowerLimit; PG <= _precisionGoalUpperLimit; PG*= 10 ) {
 							GetKinematicFittingMass* PiPairFit = new GetKinematicFittingMass(_VertexPosition, _ClusterPositions, _ClusterPositionVariances, _ClusterEnergies, _ClusterEnergyVariances,
-							                                                                 _ClusterECALIndices, _PiMass, _PiMassLowerLimit, _PiMassUpperLimit, PG, _whichEnergyVariance, PiLorentzVectors,
+							                                                                 _ClusterECALIndices, _PiMass, PG, _whichEnergyVariance, PiLorentzVectors,
 						                                                                  PiChi2s, PiPValues, PiNmbIterations, PiSuccess, PiPullsX0, PiPullsY0, PiPullsE0, PiPullsX1, PiPullsY1, PiPullsE1);
 							(*PiPairFit)();
 							delete PiPairFit;
@@ -1211,8 +1189,6 @@ namespace antok {
 					const std::vector<double>&   _ClusterEnergyVariances;
 					const std::vector<int>&      _ClusterECALIndices;
 					const double                 _PiMass;                   // constant parameter, needs to be copied
-					const double                 _PiMassLowerLimit;         // constant parameter, needs to be copied
-					const double                 _PiMassUpperLimit;         // constant parameter, needs to be copied
 					const double                 _precisionGoalLowerLimit;  // constant parameter, needs to be copied
 					const double                 _precisionGoalUpperLimit;  // constant parameter, needs to be copied
 					const int                    _whichEnergyVariance;      // constant parameter, needs to be copied

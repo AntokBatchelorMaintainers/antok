@@ -597,7 +597,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
                                         const std::vector<std::string>& quantityNames,
                                         const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 5)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 3)) {
 		return nullptr;
 	}
 
@@ -625,8 +625,6 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes
 		= {"std::vector<TLorentzVector>",  // ResultPi0PairLVs
-		   "TLorentzVector",               // ResultPi0LV_0
-		   "TLorentzVector",               // ResultPi0LV_1
 		   "int",                          // ResultGoodPi0Pair
 		   "std::vector<int>"};            // ResultECALClusterIndices
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
@@ -641,10 +639,8 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 		constArgs["ECAL1MassWindow"],                                  // ECAL1MassWindow
 		constArgs["ECAL2MassWindow"],                                  // ECAL2MassWindow
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultPi0PairLVs
-		*data.getAddr<TLorentzVector>             (quantityNames[1]),  // ResultPi0LV_0
-		*data.getAddr<TLorentzVector>             (quantityNames[2]),  // ResultPi0LV_1
-		*data.getAddr<int>                        (quantityNames[3]),  // ResultGoodPi0Pair
-		*data.getAddr<std::vector<int>>           (quantityNames[4])   // ResultECALClusterIndices
+		*data.getAddr<int>                        (quantityNames[1]),  // ResultGoodPi0Pair
+		*data.getAddr<std::vector<int>>           (quantityNames[2])   // ResultECALClusterIndices
 	);
 }
 
@@ -679,8 +675,6 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 	}
 	std::map<std::string, double> constArgsDouble
 		= {{"Mass",           0},
-		   {"MassLowerLimit", 0},
-		   {"MassUpperLimit", 0},
 		   {"PrecisionGoal",  0}};
 	if (not functionArgumentHandlerConst<double>(constArgsDouble, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -714,8 +708,6 @@ antok::user::cdreis::generateGetKinematicFittingMass(const YAML::Node&          
 		*data.getAddr<std::vector<double>>  (args[4].first),           // ClusterEnergieVariances
 		*data.getAddr<std::vector<int>>     (args[5].first),           // ClusterIndices
 		constArgsDouble["Mass"],                                       // Mass
-		constArgsDouble["MassLowerLimit"],                             // MassLowerLimit,
-		constArgsDouble["MassUpperLimit"],                             // MassUpperLimit,
 		constArgsDouble["PrecisionGoal"],                              // PrecisionGoal
 		constArgsInt   ["WhichEnergyVariance"],                        // WhichEnergyVariance,
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultLorentzVectors
@@ -832,8 +824,6 @@ antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(const YAML::Node&
 	}
 	std::map<std::string, double> constArgs
 		= {{"PiMass",                  0},
-		   {"PiMassLowerLimit",        0},
-		   {"PiMassUpperLimit",        0},
 		   {"PrecisionGoalLowerLimit", 0},
 		   {"PrecisionGoalUpperLimit", 0},
 		   {"OmegaMass",               0},
@@ -868,8 +858,6 @@ antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(const YAML::Node&
 		*data.getAddr<std::vector<double>>  (args[10].first),  // ClusterEnergieVariances
 		*data.getAddr<std::vector<int>>     (args[11].first),  // ClusterIndices
 		constArgs["PiMass"],                                   // PiMass
-		constArgs["PiMassLowerLimit"],                         // PiMassLowerLimit
-		constArgs["PiMassUpperLimit"],                         // PiMassUpperLimit
 		constArgs["PrecisionGoalLowerLimit"],                  // PrecisionGoalLowerLimit
 		constArgs["PrecisionGoalUpperLimit"],                  // PrecisionGoalUpperLimit
 		constArgs["ErrorEstimateType"],                        // ErrorEstimateType
