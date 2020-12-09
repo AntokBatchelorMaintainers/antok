@@ -38,6 +38,7 @@ namespace antok {
 		    \param[in] mass                     mass the photon pair is constrained to
 		    \param[in] massLowerLimit           lower mass limit used in massIsInWindow()
 		    \param[in] massUpperLimit           upper mass limit used in massIsInWindow()
+		    \param[in] precisionGoal            defines convergence criterion for fit
 		    \param[in] whichEnergyVariance      defines how variance of cluster energy is calculated:
 		                                        0 = variance as returned by PHAST
 		                                        1 = square of cluster energy

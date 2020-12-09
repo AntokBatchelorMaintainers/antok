@@ -74,20 +74,14 @@ antok::NeutralFit::NeutralFit(const TVector3& vertexPosition,
 	TMatrixDSub(_covMat, 3, 5, 3, 5) = covForCluster(_cluster2Position, _cluster2PositionVariance, _cluster2Energy, _cluster2EnergyVariance);
 
 	// Initial measured values for the fit
-	const double X_1 = _cluster1Position.X() - _vertexPosition.X();
-	const double Y_1 = _cluster1Position.Y() - _vertexPosition.Y();
-	const double Z_1 = _cluster1Position.Z() - _vertexPosition.Z();
-	const double R_1 = sqrt(X_1 * X_1 + Y_1 * Y_1 + Z_1 * Z_1);
-	const double X_2 = _cluster2Position.X() - _vertexPosition.X();
-	const double Y_2 = _cluster2Position.Y() - _vertexPosition.Y();
-	const double Z_2 = _cluster2Position.Z() - _vertexPosition.Z();
-	const double R_2 = sqrt(X_2 * X_2 + Y_2 * Y_2 + Z_2 * Z_2);
+	const TVector3 photonDir_1 = (_cluster1Position - _vertexPosition).Unit();
+	const TVector3 photonDir_2 = (_cluster2Position - _vertexPosition).Unit();
 	_startValues.ResizeTo(_nmbFittedVars);
-	_startValues[0] = X_1 / R_1;
-	_startValues[1] = Y_1 / R_1;
+	_startValues[0] = photonDir_1.X();
+	_startValues[1] = photonDir_1.Y();
 	_startValues[2] = _cluster1Energy;
-	_startValues[3] = X_2 / R_2;
-	_startValues[4] = Y_2 / R_2;
+	_startValues[3] = photonDir_2.X();
+	_startValues[4] = photonDir_2.Y();
 	_startValues[5] = _cluster2Energy;
 
 	_kinFitter = new KinematicFit(_problem, _startValues, _covMat);
@@ -160,11 +154,11 @@ antok::NeutralFit::covForCluster(const TVector3& clusterPosition,
 	const double Y2 = Y * Y;
 	const double Z2 = Z * Z;
 	const double R = sqrt(X2 + Y2 + Z2);
-	const double R3 = 1 / (R * R * R);
+	const double invR3 = 1 / (R * R * R);
 	// Jacobian
-	const double j[12] = {(Y2 + Z2) * R3,  -X * Y * R3,     -X * Z * R3,  0,
-	                      -X * Y * R3,     (X2 + Z2) * R3,  -Y * Z * R3,  0,
-	                      0,               0,               0,            1};
+	const double j[12] = {(Y2 + Z2) * invR3,  -X * Y * invR3,     -X * Z * invR3,  0,
+	                      -X * Y * invR3,     (X2 + Z2) * invR3,  -Y * Z * invR3,  0,
+	                      0,                  0,                  0,               1};
 	const TMatrixD J(3, 4, j);
 	// Finally, calculate the covariance matrix for (x, y, E).
 	Cov.Similarity(J);

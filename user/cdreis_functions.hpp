@@ -383,6 +383,7 @@ namespace antok {
 						_ResultTimes.reserve             (nmbClusters);
 						_ResultECALClusterIndices.reserve(nmbClusters);
 						for (size_t i = 0; i < nmbClusters; ++i) {
+							//TODO add cut that excludes cells in HCAL1 shadow? (see Tobias' PhD thesis p. 62)
 							const double energy  = _Energies[i];
 							const double energy2 = energy * energy;
 							if (_ECALClusterIndices[i] == 1) {
