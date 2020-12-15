@@ -1083,7 +1083,6 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 	return nullptr;
 }
 
-
 antok::Function*
 antok::generators::generateMass(const YAML::Node&               function,
                                 const std::vector<std::string>& quantityNames,
@@ -1092,24 +1091,49 @@ antok::generators::generateMass(const YAML::Node&               function,
 	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
-
-	// Get input variables
-	vecPairString<std::string> args = {{"Vector", "TLorentzVector"}};
-	if (not antok::generators::functionArgumentHandler(args, function, index)) {
-		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
-		return nullptr;
-	}
-
-	// Register output variables
 	const std::string& quantityName = quantityNames[0];
+	const YAML::Node& functionName = function["Name"];
+	vecPairString<std::string> args;
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
-	if (not data.insert<double>(quantityName)) {
-		std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+
+	// Çheck if input is one LV or vector of LVs
+	if        (hasNodeKey(function, "Vector")) {
+		// Get input variables
+		args     = {{"Vector", "TLorentzVector"}};
+		if (not antok::generators::functionArgumentHandler(args, function, index)) {
+			std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+			return nullptr;
+		}
+
+		// Register output variables
+		if (not data.insert<double>(quantityName)) {
+			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+			return nullptr;
+		}
+		return new antok::functions::Mass(*data.getAddr<TLorentzVector>(args[0].first),
+										  *data.getAddr<double>(quantityName));
+	} else if (hasNodeKey(function, "Vectors")) {
+		// Get input variables
+		args     = {{"Vectors", "std::vector<TLorentzVector>"}};
+		if (not antok::generators::functionArgumentHandler(args, function, index)) {
+			std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+			return nullptr;
+		}
+
+		// Register output variables
+		if (not data.insert<std::vector<double>>(quantityName)) {
+			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+			return nullptr;
+		}
+		return new antok::functions::Masses(*data.getAddr<std::vector<TLorentzVector>>(args[0].first),
+										    *data.getAddr<std::vector<double>>(quantityName));
+	} else {
+		std::cerr << "Function '" << functionName << "' needs either input variables "
+		          << "'Vector' or 'Vectors' "
+		          << "to calculate variable '" << quantityNames[0] << "'." << std::endl;
 		return nullptr;
 	}
 
-	return new antok::functions::Mass(*data.getAddr<TLorentzVector>(args[0].first),
-	                                  *data.getAddr<double>(quantityName));
 }
 
 

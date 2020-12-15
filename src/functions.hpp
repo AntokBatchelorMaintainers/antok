@@ -104,6 +104,37 @@ namespace antok {
 		};
 
 
+		class Masses: public Function
+		{
+
+		public:
+
+			Masses(const std::vector<TLorentzVector>& inputLVs,
+			     std::vector<double>&               out)
+				: _inputLVs(inputLVs),
+				  _out     (out)
+			{ }
+
+			virtual ~Masses() { }
+
+			bool
+			operator() ()
+			{
+				_out.clear();
+				_out.reserve(_inputLVs.size());
+				for (auto& entry : _inputLVs) {
+					_out.push_back(entry.M());
+				}
+				return true;
+			}
+
+		private:
+
+			const std::vector<TLorentzVector>& _inputLVs;
+			std::vector<double>&               _out;
+
+		};
+
 		class Mass2: public Function
 		{
 
