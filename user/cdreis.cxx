@@ -466,10 +466,10 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 
 	// Get constant arguments
 	std::map<std::string, int> constArgsInt = {{"SelectedECALIndex", 0}};
-		if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
-			std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
-			return nullptr;
-		}
+	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
@@ -546,7 +546,10 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
                                                     const std::vector<std::string>& quantityNames,
                                                     const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 2)) {
+	// Get constant argument
+	std::map<std::string, int> constArgsInt = {{"SelectionMode",0}};
+	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
 
@@ -559,35 +562,44 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 		return nullptr;
 	}
 
-	// Get constant arguments
-	std::map<std::string, double> constArgs
-		= {{"NominalMass",         0},
-		   {"ECALMixedMassWindow", 0},
-		   {"ECAL1MassWindow",     0},
-		   {"ECAL2MassWindow",     0}};
-	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
-		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
-		return nullptr;
-	}
-
-	// Register output variables
+	std::vector<TLorentzVector>* ResultParticleLVs_0 = nullptr;
+	std::vector<TLorentzVector>* ResultParticleLVs_1 = nullptr;
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	const std::vector<std::string> outputVarTypes
-		= {"std::vector<TLorentzVector>",  // ResultParticleLVs
-		   "int"};                         // ResultHasParticles
-	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
-		return nullptr;
+
+	// Check selection mode to check if 1 or 2 output LV vectors are required
+	if (constArgsInt["SelectionMode"] == 0) {
+		if (not nmbArgsIsExactly(function, quantityNames.size(), 2)) {
+			return nullptr;
+		}
+		// Register output variables
+		const std::vector<std::string> outputVarTypes
+			= {"std::vector<TLorentzVector>",   // ResultParticleLVs_0
+			   "std::vector<TLorentzVector>"};  // ResultParticleLVs_1
+		if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
+			return nullptr;
+		}
+		ResultParticleLVs_0 = data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]);
+		ResultParticleLVs_1 = data.getAddr<std::vector<TLorentzVector>>(quantityNames[1]);
+	}
+	else {
+		if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+			return nullptr;
+		}
+		// Register output variables
+		const std::vector<std::string> outputVarTypes
+			= {"std::vector<TLorentzVector>"};  // ResultParticleLVs_0
+		if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
+			return nullptr;
+		}
+		ResultParticleLVs_0 = data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]);
 	}
 
 	return new antok::user::cdreis::functions::GetPhotonPairParticles(
-		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),     // PhotonLVs
-		*data.getAddr<std::vector<int>>           (args[1].first),     // ECALClusterIndices
-		constArgs["NominalMass"],                                      // NominalMass
-		constArgs["ECALMixedMassWindow"],                              // ECALMixedMassWindow
-		constArgs["ECAL1MassWindow"],                                  // ECAL1MassWindow
-		constArgs["ECAL2MassWindow"],                                  // ECAL2MassWindow
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultParticleLVs
-		*data.getAddr<int>                        (quantityNames[1])   // ResultHasParticles
+		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // PhotonLVs
+		*data.getAddr<std::vector<int>>           (args[1].first),  // ECALClusterIndices
+		constArgsInt["SelectionMode"],                              // SelectionMode
+		*ResultParticleLVs_0,                                       // ResultParticleLVs_0
+		*ResultParticleLVs_1                                        // ResultParticleLVs_1
 	);
 }
 

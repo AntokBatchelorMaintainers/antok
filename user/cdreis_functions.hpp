@@ -632,20 +632,14 @@ namespace antok {
 
 					GetPhotonPairParticles(const std::vector<TLorentzVector>& PhotonLVs,            // Lorentz vectors of photons
 					                       const std::vector<int>&            ECALClusterIndices,   // indices of the ECAL that measured the photons
-					                       const double&                      NominalMass,          // nominal mass of photon pair
-					                       const double&                      ECALMixedMassWindow,  // m(gamma gamma) cut applied around NominalMass when the photon pair is in ECAL1 and 2
-					                       const double&                      ECAL1MassWindow,      // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL1
-					                       const double&                      ECAL2MassWindow,      // m(gamma gamma) cut applied around NominalMass when both photons are in ECAL2
-					                       std::vector<TLorentzVector>&       ResultParticleLVs,    // Lorentz vectors of all particles reconstructed from photon pairs
-					                       int&                               ResultHasParticles)   // 1 if at least one photon pair was found; else 0
+					                       const int&                         SelectionMode,        // nominal mass of photon pair
+					                       std::vector<TLorentzVector>&       ResultParticleLVs_0,  // Lorentz vectors of all particles reconstructed from photon pairs
+					                       std::vector<TLorentzVector>&       ResultParticleLVs_1)  // Lorentz vectors of all particles reconstructed from photon pairs
 						: _PhotonLVs          (PhotonLVs),
 						  _ECALClusterIndices (ECALClusterIndices),
-						  _NominalMass        (NominalMass),
-						  _ECALMixedMassWindow(ECALMixedMassWindow),
-						  _ECAL1MassWindow    (ECAL1MassWindow),
-						  _ECAL2MassWindow    (ECAL2MassWindow),
-						  _ResultParticleLVs  (ResultParticleLVs),
-						  _ResultHasParticles (ResultHasParticles)
+						  _SelectionMode      (SelectionMode),
+						  _ResultParticleLVs_0(ResultParticleLVs_0),
+						  _ResultParticleLVs_1(ResultParticleLVs_1)
 					{ }
 
 					virtual ~GetPhotonPairParticles() { }
@@ -653,29 +647,53 @@ namespace antok {
 					bool
 					operator() ()
 					{
+						if (_SelectionMode < 0 or _SelectionMode > 4) {
+							std::cerr << " Selection mode " << _SelectionMode << " is not within [0,4] and therefore invalid." << std::endl;
+							return false;
+						}
 						const size_t nmbPhotons = _PhotonLVs.size();
 						if (_ECALClusterIndices.size() != nmbPhotons) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
 
-						_ResultParticleLVs.clear();
-						_ResultParticleLVs.reserve(nmbPhotons * nmbPhotons);
-						_ResultHasParticles = 0;
+						_ResultParticleLVs_0.clear();
+						if (_SelectionMode == 0) {
+							_ResultParticleLVs_1.clear();
+							if (nmbPhotons != 4) {
+								return true;
+							}
+						}
+
 						if (nmbPhotons < 2) {
 							return true;
 						}
-						for (size_t i = 0; i < nmbPhotons; ++i) {
+						for (size_t i = 0; i < nmbPhotons-1; ++i) {
 							for (size_t j = i + 1; j < nmbPhotons; ++j) {
-								const TLorentzVector candidate = _PhotonLVs[i] + _PhotonLVs[j];
-								if (std::fabs(candidate.M() - _NominalMass)
-								    < getECALMassWindow(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
-									_ResultParticleLVs.push_back(candidate);
+								// select only photon pairs with both photons in ECAL1
+								if      (_SelectionMode == 1 and (_ECALClusterIndices[0] != 1 or _ECALClusterIndices[1] != 1)) {
+									continue;
 								}
+								// select only photon pairs with both photons in ECAL2
+								else if (_SelectionMode == 2 and (_ECALClusterIndices[0] != 2 or _ECALClusterIndices[1] != 2)) {
+									continue;
+								}
+								// select only photon pairs with one photon in ECAL1 and one in ECAL2
+								else if (_SelectionMode == 3 and not((_ECALClusterIndices[0] == 1 and _ECALClusterIndices[1] == 2) or
+																     (_ECALClusterIndices[0] == 2 and _ECALClusterIndices[1] == 1))) {
+									continue;
+								}
+                                _ResultParticleLVs_0.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
 							}
 						}
-						if (_ResultParticleLVs.size() > 1) {
-							_ResultHasParticles = 1;
+						if (_SelectionMode == 0) {
+							// if there are exactly 4 photons the combinations in _ResultParticlesLVs_0 are {12, 13, 14, 23, 24, 34}
+							// therefore possible combinations for two pairs are element[0] and element[5], element[1] and element[4], element[2] and element[3]
+							_ResultParticleLVs_1.push_back(_ResultParticleLVs_0[5]);
+							_ResultParticleLVs_1.push_back(_ResultParticleLVs_0[4]);
+							_ResultParticleLVs_1.push_back(_ResultParticleLVs_0[3]);
+							_ResultParticleLVs_0.erase(_ResultParticleLVs_0.begin()+3,_ResultParticleLVs_0.begin()+6);
+							return true;
 						}
 						return true;
 					}
@@ -684,12 +702,9 @@ namespace antok {
 
 					const std::vector<TLorentzVector>& _PhotonLVs;
 					const std::vector<int>&            _ECALClusterIndices;
-					const double                       _NominalMass;          // constant parameter, needs to be copied
-					const double                       _ECALMixedMassWindow;  // constant parameter, needs to be copied
-					const double                       _ECAL1MassWindow;      // constant parameter, needs to be copied
-					const double                       _ECAL2MassWindow;      // constant parameter, needs to be copied
-					std::vector<TLorentzVector>&       _ResultParticleLVs;
-					int&                               _ResultHasParticles;
+					const int                          _SelectionMode;  // constant parameter, needs to be copied
+					std::vector<TLorentzVector>&       _ResultParticleLVs_0;
+					std::vector<TLorentzVector>&       _ResultParticleLVs_1;
 
 				};
 
