@@ -547,7 +547,7 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
                                                     const int                       index)
 {
 	// Get constant argument
-	std::map<std::string, int> constArgsInt = {{"SelectionMode",0}};
+	std::map<std::string, int> constArgsInt = {{"SelectionMode", 0}};
 	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
 		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -562,24 +562,24 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 		return nullptr;
 	}
 
-	std::vector<TLorentzVector>* ResultParticleLVs_0 = nullptr;
-	std::vector<TLorentzVector>* ResultParticleLVs_1 = nullptr;
+	std::vector<TLorentzVector>* ResultPhotonPairLVs_0 = nullptr;
+	std::vector<TLorentzVector>* ResultPhotonPairLVs_1 = nullptr;
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
-	// Check selection mode to check if 1 or 2 output LV vectors are required
+	// Check selection mode to check whether 1 or 2 output LV vectors are required
 	if (constArgsInt["SelectionMode"] == 0) {
 		if (not nmbArgsIsExactly(function, quantityNames.size(), 2)) {
 			return nullptr;
 		}
 		// Register output variables
 		const std::vector<std::string> outputVarTypes
-			= {"std::vector<TLorentzVector>",   // ResultParticleLVs_0
-			   "std::vector<TLorentzVector>"};  // ResultParticleLVs_1
+			= {"std::vector<TLorentzVector>",   // ResultPhotonPairLVs_0
+			   "std::vector<TLorentzVector>"};  // ResultPhotonPairLVs_1
 		if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 			return nullptr;
 		}
-		ResultParticleLVs_0 = data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]);
-		ResultParticleLVs_1 = data.getAddr<std::vector<TLorentzVector>>(quantityNames[1]);
+		ResultPhotonPairLVs_0 = data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]);
+		ResultPhotonPairLVs_1 = data.getAddr<std::vector<TLorentzVector>>(quantityNames[1]);
 	}
 	else {
 		if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
@@ -587,19 +587,19 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 		}
 		// Register output variables
 		const std::vector<std::string> outputVarTypes
-			= {"std::vector<TLorentzVector>"};  // ResultParticleLVs_0
+			= {"std::vector<TLorentzVector>"};  // ResultPhotonPairLVs_0
 		if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 			return nullptr;
 		}
-		ResultParticleLVs_0 = data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]);
+		ResultPhotonPairLVs_0 = data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]);
 	}
 
 	return new antok::user::cdreis::functions::GetPhotonPairParticles(
 		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // PhotonLVs
 		*data.getAddr<std::vector<int>>           (args[1].first),  // ECALClusterIndices
 		constArgsInt["SelectionMode"],                              // SelectionMode
-		*ResultParticleLVs_0,                                       // ResultParticleLVs_0
-		*ResultParticleLVs_1                                        // ResultParticleLVs_1
+		*ResultPhotonPairLVs_0,                                     // ResultPhotonPairLVs_0
+		*ResultPhotonPairLVs_1                                      // ResultPhotonPairLVs_1
 	);
 }
 
