@@ -1217,21 +1217,20 @@ namespace antok {
 				};
 
 
-				class GetThreePionCombinationMass : public Function
+				class GetThreePionCombinationLV : public Function
 				{
 
 				public:
 
-					GetThreePionCombinationMass(const TLorentzVector& Pi0LV_0,          // Lorentz vector of 1st pi^0
-					                            const TLorentzVector& Pi0LV_1,          // Lorentz vector of 2nd pi^0
-					                            const TLorentzVector& ChargedPartLV_0,  // Lorentz vector of 1st charged particle
-					                            const TLorentzVector& ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
-					                            const TLorentzVector& ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
-					                            const int&            Charge_0,         // charge of 1st charged particle
-					                            const int&            Charge_1,         // charge of 2nd charged particle
-					                            const int&            Charge_2,         // charge of 3rd charged particle
-					                            const int&            UseMassSquared,   // switch between mass squared (= 1) and mass (all other values)
-					                            std::vector<double>&  Result)           // mass or mass squared (see above)
+					GetThreePionCombinationLV(const TLorentzVector&        Pi0LV_0,          // Lorentz vector of 1st pi^0
+					                          const TLorentzVector&        Pi0LV_1,          // Lorentz vector of 2nd pi^0
+					                          const TLorentzVector&        ChargedPartLV_0,  // Lorentz vector of 1st charged particle
+					                          const TLorentzVector&        ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
+					                          const TLorentzVector&        ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
+					                          const int&                   Charge_0,         // charge of 1st charged particle
+					                          const int&                   Charge_1,         // charge of 2nd charged particle
+					                          const int&                   Charge_2,         // charge of 3rd charged particle
+					                          std::vector<TLorentzVector>& Result)           // mass or mass squared (see above)
 						: _Pi0LV_0        (Pi0LV_0),
 						  _Pi0LV_1        (Pi0LV_1),
 						  _ChargedPartLV_0(ChargedPartLV_0),
@@ -1240,11 +1239,10 @@ namespace antok {
 						  _Charge_0       (Charge_0),
 						  _Charge_1       (Charge_1),
 						  _Charge_2       (Charge_2),
-						  _UseMassSquared (UseMassSquared),
 						  _Result         (Result)
 					{ }
 
-					virtual ~GetThreePionCombinationMass() { }
+					virtual ~GetThreePionCombinationLV() { }
 
 					bool
 					operator() ()
@@ -1266,12 +1264,7 @@ namespace antok {
 									if (chargeFirst == chargeSecond) {
 										continue;
 									} else {
-										const TLorentzVector sum = *Pi0LV + *chargedFirst + *chargedSecond;
-										if (_UseMassSquared == 1) {
-											_Result.push_back(sum.M2());
-										} else {
-											_Result.push_back(sum.M());
-										}
+										_Result.push_back(*Pi0LV + *chargedFirst + *chargedSecond);
 									}
 								}
 							}
@@ -1290,8 +1283,7 @@ namespace antok {
 					const int&            _Charge_0;
 					const int&            _Charge_1;
 					const int&            _Charge_2;
-					const int             _UseMassSquared;  // constant parameter, needs to be copied
-					std::vector<double>&  _Result;
+					std::vector<TLorentzVector>&  _Result;
 
 				};
 

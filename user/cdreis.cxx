@@ -52,8 +52,8 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 		return antok::user::cdreis::generateGetOmega                         (function, quantityNames, index);
 	} else if (functionName == "getFittedOmegaMassVsPrecisionGoal") {
 		return antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(function, quantityNames, index);
-	} else if (functionName == "getThreePionCombinationMass") {
-		return antok::user::cdreis::generateGetThreePionCombinationMass      (function, quantityNames, index);
+	} else if (functionName == "getThreePionCombinationLV") {
+		return antok::user::cdreis::generateGetThreePionCombinationLV        (function, quantityNames, index);
 	}
 	return nullptr;
 }
@@ -883,9 +883,9 @@ antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(const YAML::Node&
 
 
 antok::Function*
-antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&               function,
-                                                         const std::vector<std::string>& quantityNames,
-                                                         const int                       index)
+antok::user::cdreis::generateGetThreePionCombinationLV(const YAML::Node&               function,
+                                                       const std::vector<std::string>& quantityNames,
+                                                       const int                       index)
 {
 	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
@@ -893,8 +893,8 @@ antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&      
 
 	// Get input variables
 	vecPairString<std::string> args
-		= {{"Pi0_0",           "TLorentzVector"},
-		   {"Pi0_1",           "TLorentzVector"},
+		= {{"Pi0LV_0",         "TLorentzVector"},
+		   {"Pi0LV_1",         "TLorentzVector"},
 		   {"ChargedPartLV_0", "TLorentzVector"},
 		   {"ChargedPartLV_1", "TLorentzVector"},
 		   {"ChargedPartLV_2", "TLorentzVector"},
@@ -906,31 +906,23 @@ antok::user::cdreis::generateGetThreePionCombinationMass(const YAML::Node&      
 		return nullptr;
 	}
 
-	// Get constant arguments
-	std::map<std::string, int> constArgs = {{"UseMassSquared", 0}};
-	if (not functionArgumentHandlerConst<int>(constArgs, function)) {
-		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
-		return nullptr;
-	}
-
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	const std::vector<std::string> outputVarTypes = {"std::vector<double>"};  // Result Masses or squared Masses
+	const std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"};  // Result Masses or squared Masses
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
 
-	return new antok::user::cdreis::functions::GetThreePionCombinationMass(
-		*data.getAddr<TLorentzVector>(args[0].first),         // Pi0LV_0
-		*data.getAddr<TLorentzVector>(args[1].first),         // Pi0LV_1
-		*data.getAddr<TLorentzVector>(args[2].first),         // ChargedPartLV_0
-		*data.getAddr<TLorentzVector>(args[3].first),         // ChargedPartLV_1
-		*data.getAddr<TLorentzVector>(args[4].first),         // ChargedPartLV_2
-		*data.getAddr<int>           (args[5].first),         // Charge_0
-		*data.getAddr<int>           (args[6].first),         // Charge_1
-		*data.getAddr<int>           (args[7].first),         // Charge_2
-		constArgs["UseMassSquared"],                          // UseMassSquared,
-		*data.getAddr<std::vector<double>>(quantityNames[0])  // Result
+	return new antok::user::cdreis::functions::GetThreePionCombinationLV(
+		*data.getAddr<TLorentzVector>(args[0].first),                 // Pi0LV_0
+		*data.getAddr<TLorentzVector>(args[1].first),                 // Pi0LV_1
+		*data.getAddr<TLorentzVector>(args[2].first),                 // ChargedPartLV_0
+		*data.getAddr<TLorentzVector>(args[3].first),                 // ChargedPartLV_1
+		*data.getAddr<TLorentzVector>(args[4].first),                 // ChargedPartLV_2
+		*data.getAddr<int>           (args[5].first),                 // Charge_0
+		*data.getAddr<int>           (args[6].first),                 // Charge_1
+		*data.getAddr<int>           (args[7].first),                 // Charge_2
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0])  // Result
 	);
 }
 
