@@ -630,16 +630,18 @@ namespace antok {
 
 				public:
 
-					GetPhotonPairParticles(const std::vector<TLorentzVector>& PhotonLVs,              // Lorentz vectors of photons
-					                       const std::vector<int>&            ECALClusterIndices,     // indices of the ECAL that measured the photons
-					                       const int&                         SelectionMode,          // nominal mass of photon pair
-					                       std::vector<TLorentzVector>&       ResultPhotonPairLVs_0,  // Lorentz vectors of all particles reconstructed from photon pairs
-					                       std::vector<TLorentzVector>&       ResultPhotonPairLVs_1)  // Lorentz vectors of all particles reconstructed from photon pairs
-						: _PhotonLVs            (PhotonLVs),
-						  _ECALClusterIndices   (ECALClusterIndices),
-						  _SelectionMode        (SelectionMode),
-						  _ResultPhotonPairLVs_0(ResultPhotonPairLVs_0),
-						  _ResultPhotonPairLVs_1(ResultPhotonPairLVs_1)
+					GetPhotonPairParticles(const std::vector<TLorentzVector>& PhotonLVs,               // Lorentz vectors of photons
+					                       const std::vector<int>&            ECALClusterIndices,      // indices of the ECAL that measured the photons
+					                       const int&                         SelectionMode,           // nominal mass of photon pair
+					                       std::vector<TLorentzVector>&       ResultPhotonPairLVs,     // Lorentz vectors of all particles reconstructed from photon pairs
+					                       std::vector<TLorentzVector>&       ResultPhotonPairsLVs_0,  // Lorentz vectors of first particle reconstructed from photon pair
+					                       std::vector<TLorentzVector>&       ResultPhotonPairsLVs_1)  // Lorentz vectors of second particle reconstructed from photon pair
+						: _PhotonLVs             (PhotonLVs),
+						  _ECALClusterIndices    (ECALClusterIndices),
+						  _SelectionMode         (SelectionMode),
+						  _ResultPhotonPairLVs   (ResultPhotonPairLVs),
+						  _ResultPhotonPairsLVs_0(ResultPhotonPairsLVs_0),
+						  _ResultPhotonPairsLVs_1(ResultPhotonPairsLVs_1)
 					{ }
 
 					virtual ~GetPhotonPairParticles() { }
@@ -647,54 +649,100 @@ namespace antok {
 					bool
 					operator() ()
 					{
-						//TODO is this strict test really needed? for other values the function just returns the values for both ECALs
-						if (_SelectionMode < 0 or _SelectionMode > 4) {
-							std::cerr << " Selection mode " << _SelectionMode << " is not within [0, 3] and therefore invalid." << std::endl;
-							return false;
-						}
+						enum selectionType {noSelection = -1, allSelection = 0, ECAL1Selection = 1, ECAL2Selection = 2, mixedSelection = 3};
+
 						const size_t nmbPhotons = _PhotonLVs.size();
+						if (nmbPhotons != 4) {
+							return true;
+						}
 						if (_ECALClusterIndices.size() != nmbPhotons) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
-
-						_ResultPhotonPairLVs_0.clear();
-						_ResultPhotonPairLVs_1.clear();
-						//TODO use enum for _SelectionMode values
-						if (_SelectionMode == 0 and nmbPhotons != 4) {
-							return true;
+						selectionType internSelectionMode = allSelection;
+						// set selection mode to 0 if its not in {1, 2, 3}
+						if (   _SelectionMode == 1
+							or _SelectionMode == 2
+							or _SelectionMode == 3) {
+							internSelectionMode = (selectionType)_SelectionMode;
 						}
 
-						if (nmbPhotons < 2) {
-							return true;
-						}
-						for (size_t i = 0; i < nmbPhotons - 1; ++i) {
+						_ResultPhotonPairLVs.clear();
+						_ResultPhotonPairsLVs_0.clear();
+						_ResultPhotonPairsLVs_1.clear();
+
+						selectionType PhotonPairMode_0;
+						selectionType PhotonPairMode_1;
+						for (size_t i = 0; i < nmbPhotons-3; ++i) {
 							for (size_t j = i + 1; j < nmbPhotons; ++j) {
 								// select only photon pairs with both photons in ECAL1
-								if      (_SelectionMode == 1 and (_ECALClusterIndices[0] != 1 or _ECALClusterIndices[1] != 1)) {
-									continue;
+								if      (internSelectionMode == ECAL1Selection and (_ECALClusterIndices[i] == 1 and _ECALClusterIndices[j] == 1)) {
+									PhotonPairMode_0 = ECAL1Selection;
+									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
 								}
 								// select only photon pairs with both photons in ECAL2
-								else if (_SelectionMode == 2 and (_ECALClusterIndices[0] != 2 or _ECALClusterIndices[1] != 2)) {
-									continue;
+								else if (internSelectionMode == ECAL2Selection and (_ECALClusterIndices[i] == 2 or _ECALClusterIndices[j] == 2)) {
+									PhotonPairMode_0 = ECAL2Selection;
+									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
 								}
 								// select only photon pairs with one photon in ECAL1 and one in ECAL2
-								else if (_SelectionMode == 3
-								         and not(   (_ECALClusterIndices[0] == 1 and _ECALClusterIndices[1] == 2)
-								                 or (_ECALClusterIndices[0] == 2 and _ECALClusterIndices[1] == 1))) {
-									continue;
+								else if (internSelectionMode == mixedSelection
+								         and (   (_ECALClusterIndices[i] == 1 and _ECALClusterIndices[j] == 2)
+								              or (_ECALClusterIndices[i] == 2 and _ECALClusterIndices[j] == 1))) {
+									PhotonPairMode_0 = mixedSelection;
+									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
 								}
-								_ResultPhotonPairLVs_0.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
+								// select all photon pairs
+								else if (internSelectionMode == allSelection) {
+									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
+									PhotonPairMode_0 = allSelection;
+							    }
+								else {
+									PhotonPairMode_0 = noSelection;
+								}
+								for (size_t k = i + 1; k < nmbPhotons-1; ++k) {
+									if (k == j) {
+										continue;
+									}
+									for (size_t l = k + 1; l < nmbPhotons; ++l) {
+										if (l == j) {
+											continue;
+										}
+										// select only photon pairs with both photons in ECAL1
+										if      (internSelectionMode == ECAL1Selection and (_ECALClusterIndices[k] == 1 and _ECALClusterIndices[l] == 1)) {
+											PhotonPairMode_1 = ECAL1Selection;
+											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
+										}
+										// select only photon pairs with both photons in ECAL2
+										else if (internSelectionMode == ECAL2Selection and (_ECALClusterIndices[k] == 2 or _ECALClusterIndices[l] == 2)) {
+											PhotonPairMode_1 = ECAL2Selection;
+											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
+										}
+										// select only photon pairs with one photon in ECAL1 and one in ECAL2
+										else if (internSelectionMode == mixedSelection
+												 and (   (_ECALClusterIndices[k] == 1 and _ECALClusterIndices[l] == 2)
+													  or (_ECALClusterIndices[k] == 2 and _ECALClusterIndices[l] == 1))) {
+											PhotonPairMode_1 = mixedSelection;
+											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
+										}
+										// select all photon pairs
+										else if (internSelectionMode == allSelection) {
+											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
+											PhotonPairMode_1 = allSelection;
+										}
+										else {
+											PhotonPairMode_1 = noSelection;
+										}
+										// push back LV for two pairs if selected mode is true for both pairs
+										if (     PhotonPairMode_0 == internSelectionMode
+											 and PhotonPairMode_1 == internSelectionMode) {
+											size_t vecSize = _ResultPhotonPairLVs.size();
+											_ResultPhotonPairsLVs_0.push_back(_ResultPhotonPairLVs[vecSize-1]);
+											_ResultPhotonPairsLVs_1.push_back(_ResultPhotonPairLVs[vecSize-2]);
+										}
+									}
+								}
 							}
-						}
-						if (_SelectionMode == 0) {
-							// if there are exactly 4 photons the combinations in _ResultParticlesLVs_0 are {12, 13, 14, 23, 24, 34}
-							// therefore possible combinations for two pairs are element[0] and element[5], element[1] and element[4], element[2] and element[3]
-							_ResultPhotonPairLVs_1.push_back(_ResultPhotonPairLVs_0[5]);
-							_ResultPhotonPairLVs_1.push_back(_ResultPhotonPairLVs_0[4]);
-							_ResultPhotonPairLVs_1.push_back(_ResultPhotonPairLVs_0[3]);
-							_ResultPhotonPairLVs_0.erase(_ResultPhotonPairLVs_0.begin() + 3, _ResultPhotonPairLVs_0.begin() + 6);
-							return true;  //TODO isn't this redundant with the return below?
 						}
 						return true;
 					}
@@ -704,8 +752,9 @@ namespace antok {
 					const std::vector<TLorentzVector>& _PhotonLVs;
 					const std::vector<int>&            _ECALClusterIndices;
 					const int                          _SelectionMode;  // constant parameter, needs to be copied
-					std::vector<TLorentzVector>&       _ResultPhotonPairLVs_0;
-					std::vector<TLorentzVector>&       _ResultPhotonPairLVs_1;
+					std::vector<TLorentzVector>&       _ResultPhotonPairLVs;
+					std::vector<TLorentzVector>&       _ResultPhotonPairsLVs_0;
+					std::vector<TLorentzVector>&       _ResultPhotonPairsLVs_1;
 
 				};
 
