@@ -630,16 +630,16 @@ namespace antok {
 
 				public:
 
-					GetPhotonPairParticles(const std::vector<TLorentzVector>& PhotonLVs,            // Lorentz vectors of photons
-					                       const std::vector<int>&            ECALClusterIndices,   // indices of the ECAL that measured the photons
-					                       const int&                         SelectionMode,        // nominal mass of photon pair
-					                       std::vector<TLorentzVector>&       ResultParticleLVs_0,  // Lorentz vectors of all particles reconstructed from photon pairs
-					                       std::vector<TLorentzVector>&       ResultParticleLVs_1)  // Lorentz vectors of all particles reconstructed from photon pairs
-						: _PhotonLVs          (PhotonLVs),
-						  _ECALClusterIndices (ECALClusterIndices),
-						  _SelectionMode      (SelectionMode),
-						  _ResultParticleLVs_0(ResultParticleLVs_0),
-						  _ResultParticleLVs_1(ResultParticleLVs_1)
+					GetPhotonPairParticles(const std::vector<TLorentzVector>& PhotonLVs,              // Lorentz vectors of photons
+					                       const std::vector<int>&            ECALClusterIndices,     // indices of the ECAL that measured the photons
+					                       const int&                         SelectionMode,          // nominal mass of photon pair
+					                       std::vector<TLorentzVector>&       ResultPhotonPairLVs_0,  // Lorentz vectors of all particles reconstructed from photon pairs
+					                       std::vector<TLorentzVector>&       ResultPhotonPairLVs_1)  // Lorentz vectors of all particles reconstructed from photon pairs
+						: _PhotonLVs            (PhotonLVs),
+						  _ECALClusterIndices   (ECALClusterIndices),
+						  _SelectionMode        (SelectionMode),
+						  _ResultPhotonPairLVs_0(ResultPhotonPairLVs_0),
+						  _ResultPhotonPairLVs_1(ResultPhotonPairLVs_1)
 					{ }
 
 					virtual ~GetPhotonPairParticles() { }
@@ -647,8 +647,9 @@ namespace antok {
 					bool
 					operator() ()
 					{
+						//TODO is this strict test really needed? for other values the function just returns the values for both ECALs
 						if (_SelectionMode < 0 or _SelectionMode > 4) {
-							std::cerr << " Selection mode " << _SelectionMode << " is not within [0,4] and therefore invalid." << std::endl;
+							std::cerr << " Selection mode " << _SelectionMode << " is not within [0, 3] and therefore invalid." << std::endl;
 							return false;
 						}
 						const size_t nmbPhotons = _PhotonLVs.size();
@@ -657,18 +658,17 @@ namespace antok {
 							return false;
 						}
 
-						_ResultParticleLVs_0.clear();
-						if (_SelectionMode == 0) {
-							_ResultParticleLVs_1.clear();
-							if (nmbPhotons != 4) {
-								return true;
-							}
+						_ResultPhotonPairLVs_0.clear();
+						_ResultPhotonPairLVs_1.clear();
+						//TODO use enum for _SelectionMode values
+						if (_SelectionMode == 0 and nmbPhotons != 4) {
+							return true;
 						}
 
 						if (nmbPhotons < 2) {
 							return true;
 						}
-						for (size_t i = 0; i < nmbPhotons-1; ++i) {
+						for (size_t i = 0; i < nmbPhotons - 1; ++i) {
 							for (size_t j = i + 1; j < nmbPhotons; ++j) {
 								// select only photon pairs with both photons in ECAL1
 								if      (_SelectionMode == 1 and (_ECALClusterIndices[0] != 1 or _ECALClusterIndices[1] != 1)) {
@@ -679,21 +679,22 @@ namespace antok {
 									continue;
 								}
 								// select only photon pairs with one photon in ECAL1 and one in ECAL2
-								else if (_SelectionMode == 3 and not((_ECALClusterIndices[0] == 1 and _ECALClusterIndices[1] == 2) or
-																     (_ECALClusterIndices[0] == 2 and _ECALClusterIndices[1] == 1))) {
+								else if (_SelectionMode == 3
+								         and not(   (_ECALClusterIndices[0] == 1 and _ECALClusterIndices[1] == 2)
+								                 or (_ECALClusterIndices[0] == 2 and _ECALClusterIndices[1] == 1))) {
 									continue;
 								}
-                                _ResultParticleLVs_0.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
+								_ResultPhotonPairLVs_0.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
 							}
 						}
 						if (_SelectionMode == 0) {
 							// if there are exactly 4 photons the combinations in _ResultParticlesLVs_0 are {12, 13, 14, 23, 24, 34}
 							// therefore possible combinations for two pairs are element[0] and element[5], element[1] and element[4], element[2] and element[3]
-							_ResultParticleLVs_1.push_back(_ResultParticleLVs_0[5]);
-							_ResultParticleLVs_1.push_back(_ResultParticleLVs_0[4]);
-							_ResultParticleLVs_1.push_back(_ResultParticleLVs_0[3]);
-							_ResultParticleLVs_0.erase(_ResultParticleLVs_0.begin()+3,_ResultParticleLVs_0.begin()+6);
-							return true;
+							_ResultPhotonPairLVs_1.push_back(_ResultPhotonPairLVs_0[5]);
+							_ResultPhotonPairLVs_1.push_back(_ResultPhotonPairLVs_0[4]);
+							_ResultPhotonPairLVs_1.push_back(_ResultPhotonPairLVs_0[3]);
+							_ResultPhotonPairLVs_0.erase(_ResultPhotonPairLVs_0.begin() + 3, _ResultPhotonPairLVs_0.begin() + 6);
+							return true;  //TODO isn't this redundant with the return below?
 						}
 						return true;
 					}
@@ -703,8 +704,8 @@ namespace antok {
 					const std::vector<TLorentzVector>& _PhotonLVs;
 					const std::vector<int>&            _ECALClusterIndices;
 					const int                          _SelectionMode;  // constant parameter, needs to be copied
-					std::vector<TLorentzVector>&       _ResultParticleLVs_0;
-					std::vector<TLorentzVector>&       _ResultParticleLVs_1;
+					std::vector<TLorentzVector>&       _ResultPhotonPairLVs_0;
+					std::vector<TLorentzVector>&       _ResultPhotonPairLVs_1;
 
 				};
 
@@ -757,7 +758,7 @@ namespace antok {
 						// search is aborted if more than one pair is found
 						// always the first found pair is returned
 						size_t nmbCandidatePairs = 0;
-						for (size_t i = 0; i < nmbPhotons; ++i) {
+						for (size_t i = 0; i < nmbPhotons - 1; ++i) {
 							if (nmbCandidatePairs > 1) {
 								break;
 							}
@@ -771,7 +772,7 @@ namespace antok {
 								    > getECALMassWindow(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
 									continue;
 								}
-								for (size_t m = i + 1; m < nmbPhotons; ++m) {
+								for (size_t m = i + 1; m < nmbPhotons - 1; ++m) {
 									if (nmbCandidatePairs > 1) {
 										break;
 									}
