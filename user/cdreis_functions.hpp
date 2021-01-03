@@ -8,6 +8,8 @@
 #include "TLorentzRotation.h"
 #include "TLorentzVector.h"
 #include "TRotation.h"
+#include<TRandom.h>
+
 
 #include "functions.hpp"
 #include "neutral_fit.h"
@@ -734,11 +736,16 @@ namespace antok {
 											PhotonPairMode_1 = noSelection;
 										}
 										// push back LV for two pairs if selected mode is true for both pairs
+										// randomise order of photon pairs to remove order
 										if (     PhotonPairMode_0 == internSelectionMode
 											 and PhotonPairMode_1 == internSelectionMode) {
 											size_t vecSize = _ResultPhotonPairLVs.size();
-											_ResultPhotonPairsLVs_0.push_back(_ResultPhotonPairLVs[vecSize-1]);
-											_ResultPhotonPairsLVs_1.push_back(_ResultPhotonPairLVs[vecSize-2]);
+											// generate random int in {0, 1} to decide if values get swapped
+											const int swapMode = gRandom->Integer(2);
+											// get next-to-last element if swapMode is non, else last element
+											_ResultPhotonPairsLVs_0.push_back(_ResultPhotonPairLVs[vecSize-(1+swapMode)]);
+											// get last element if swapMode is non, else next-to-last element using modulo
+											_ResultPhotonPairsLVs_1.push_back(_ResultPhotonPairLVs[vecSize-(1+(1+swapMode)%2)]);
 										}
 									}
 								}
