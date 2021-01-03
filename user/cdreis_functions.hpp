@@ -771,7 +771,7 @@ namespace antok {
 					           const double&                      ECAL1MassWindow,           // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
 					           const double&                      ECAL2MassWindow,           // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
 					           std::vector<TLorentzVector>&       ResultPi0PairLVs,          // Lorentz vectors of the two pi^0 in the first found pair
-					           int&                               ResultGoodPi0Pair,         // 1 if exactly one pi^0 pair was found; else 0
+					           int&                               ResultNmbGoodPi0Pairs,     // 1 if exactly one pi^0 pair was found; else 0
 					           std::vector<int>&                  ResultECALClusterIndices)  // indices of the ECAL that measured the selected photons
 						: _PhotonLVs                 (PhotonLVs),
 						  _ECALClusterIndices        (ECALClusterIndices),
@@ -780,7 +780,7 @@ namespace antok {
 						  _ECAL1MassWindow           (ECAL1MassWindow),
 						  _ECAL2MassWindow           (ECAL2MassWindow),
 						  _ResultPi0PairLVs          (ResultPi0PairLVs),
-						  _ResultGoodPi0Pair         (ResultGoodPi0Pair),
+						  _ResultNmbGoodPi0Pairs     (ResultNmbGoodPi0Pairs),
 						  _ResultECALClusterIndices  (ResultECALClusterIndices)
 					{ }
 
@@ -797,7 +797,7 @@ namespace antok {
 
 						_ResultPi0PairLVs.clear();
 						_ResultPi0PairLVs.reserve(2);
-						_ResultGoodPi0Pair = 0;
+						_ResultNmbGoodPi0Pairs = 0;
 						_ResultECALClusterIndices = {-1, -1, -1, -1};
 						if (nmbPhotons < 4) {
 							return true;
@@ -806,15 +806,8 @@ namespace antok {
 						// searches for pairs of pi^0 candidates
 						// search is aborted if more than one pair is found
 						// always the first found pair is returned
-						size_t nmbCandidatePairs = 0;
 						for (size_t i = 0; i < nmbPhotons - 1; ++i) {
-							if (nmbCandidatePairs > 1) {
-								break;
-							}
 							for (size_t j = i + 1; j < nmbPhotons; ++j) {
-								if (nmbCandidatePairs > 1) {
-									break;
-								}
 								// photon pair 0
 								const TLorentzVector pi0Candidate0 = _PhotonLVs[i] + _PhotonLVs[j];
 								if (std::fabs(pi0Candidate0.M() - _Pi0Mass)
@@ -822,13 +815,7 @@ namespace antok {
 									continue;
 								}
 								for (size_t m = i + 1; m < nmbPhotons - 1; ++m) {
-									if (nmbCandidatePairs > 1) {
-										break;
-									}
 									for (size_t n = m + 1; n < nmbPhotons; ++n) {
-										if (nmbCandidatePairs > 1) {
-											break;
-										}
 										// exclude photon pairs that share photon(s) with pair 0
 										if (m == j or n == j) {
 											continue;
@@ -839,18 +826,15 @@ namespace antok {
 										    > getECALMassWindow(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
 											continue;
 										}
-										if (nmbCandidatePairs == 0) {
+										if (_ResultNmbGoodPi0Pairs == 0) {
 											_ResultPi0PairLVs.push_back(pi0Candidate0);
 											_ResultPi0PairLVs.push_back(pi0Candidate1);
 											_ResultECALClusterIndices = {(int)i, (int)j, (int)m, (int)n};
 										}
-										nmbCandidatePairs++;
+										_ResultNmbGoodPi0Pairs++;
 									}
 								}
 							}
-						}
-						if (nmbCandidatePairs == 1) {
-							_ResultGoodPi0Pair = 1;
 						}
 
 						return true;
@@ -865,7 +849,7 @@ namespace antok {
 					const double                       _ECAL1MassWindow;      // constant parameter, needs to be copied
 					const double                       _ECAL2MassWindow;      // constant parameter, needs to be copied
 					std::vector<TLorentzVector>&       _ResultPi0PairLVs;
-					int&                               _ResultGoodPi0Pair;
+					int&                               _ResultNmbGoodPi0Pairs;
 					std::vector<int>&                  _ResultECALClusterIndices;
 
 				};
@@ -1055,7 +1039,7 @@ namespace antok {
 					         const double&         OmegaMass,               // nominal omega mass
 					         const double&         OmegaMassWindow,         // cut around OmegaMass applied on m(pi^- pi^0 pi^+)
 					         TLorentzVector&       ResultOmegaLV,           // Lorentz vector of last found omega candidate
-					         int&                  ResultAccepted,          // 1 if there is exactly one omega candidate, 0 otherwise
+					         int&                  ResultNmbOmegas,         // 1 if there is exactly one omega candidate, 0 otherwise
 					         TLorentzVector&       ResultNotUsedPi0LV,      // Lorentz vector of the pi^0 that is not part of the omega
 					         TLorentzVector&       ResultNotUsedPiMinusLV)  // Lorentz vector of the pi^- that is not part of the omega
 						: _Pi0LV_O               (Pi0LV_O),
@@ -1069,7 +1053,7 @@ namespace antok {
 						  _OmegaMass             (OmegaMass),
 						  _OmegaMassWindow       (OmegaMassWindow),
 						  _ResultOmegaLV         (ResultOmegaLV),
-						  _ResultAccepted        (ResultAccepted),
+						  _ResultNmbOmegas       (ResultNmbOmegas),
 						  _ResultNotUsedPi0LV    (ResultNotUsedPi0LV),
 						  _ResultNotUsedPiMinusLV(ResultNotUsedPiMinusLV)
 					{ }
@@ -1084,8 +1068,7 @@ namespace antok {
 						const std::vector<const TLorentzVector*> pi0s       = {&_Pi0LV_O, &_Pi0LV_1};
 						const std::vector<const TLorentzVector*> chargedLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
 						const std::vector<const int*>            charges    = {&_Charge_0,        &_Charge_1,        &_Charge_2};
-						size_t numberCandidates = 0;
-						_ResultAccepted = 0;
+						_ResultNmbOmegas = 0;
 						// Loop over available pi^0s
 						for (size_t i = 0; i < pi0s.size(); ++i) {
 							// Loop over charged particles
@@ -1097,7 +1080,7 @@ namespace antok {
 										const TLorentzVector candidate = *pi0s[i] + *chargedLVs[j] + *chargedLVs[k];
 										if (std::fabs(candidate.M() - _OmegaMass) < _OmegaMassWindow) {
 											_ResultOmegaLV = candidate;
-											numberCandidates++;  // Count omega candidates
+											_ResultNmbOmegas++;  // Count omega candidates
 											// find pi^0 that is not part of the omega candidate
 											for (size_t l = 0; l < pi0s.size(); l++) {
 												if (i != l) {
@@ -1114,9 +1097,6 @@ namespace antok {
 									}
 								}
 							}
-						}
-						if (numberCandidates ==  1) {
-							_ResultAccepted = 1;
 						}
 
 						return true;
@@ -1135,7 +1115,7 @@ namespace antok {
 					const double          _OmegaMass;        // constant parameter, needs to be copied
 					const double          _OmegaMassWindow;  // constant parameter, needs to be copied
 					TLorentzVector&       _ResultOmegaLV;
-					int&                  _ResultAccepted;
+					int&                  _ResultNmbOmegas;
 					TLorentzVector&       _ResultNotUsedPi0LV;
 					TLorentzVector&       _ResultNotUsedPiMinusLV;
 
@@ -1267,6 +1247,102 @@ namespace antok {
 				};
 
 
+				class GetTwoPionCombinationLV : public Function
+				{
+
+				public:
+
+					GetTwoPionCombinationLV(const TLorentzVector&        Pi0LV_0,          // Lorentz vector of 1st pi^0
+					                        const TLorentzVector&        Pi0LV_1,          // Lorentz vector of 2nd pi^0
+					                        const TLorentzVector&        ChargedPartLV_0,  // Lorentz vector of 1st charged particle
+					                        const TLorentzVector&        ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
+					                        const TLorentzVector&        ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
+					                        const int&                   Charge_0,         // charge of 1st charged particle
+					                        const int&                   Charge_1,         // charge of 2nd charged particle
+					                        const int&                   Charge_2,         // charge of 3rd charged particle
+					                        const int &                  CombinationMode,
+					                        std::vector<TLorentzVector>& Result)           // result LVs
+						: _Pi0LV_0        (Pi0LV_0),
+						  _Pi0LV_1        (Pi0LV_1),
+						  _ChargedPartLV_0(ChargedPartLV_0),
+						  _ChargedPartLV_1(ChargedPartLV_1),
+						  _ChargedPartLV_2(ChargedPartLV_2),
+						  _Charge_0       (Charge_0),
+						  _Charge_1       (Charge_1),
+						  _Charge_2       (Charge_2),
+						  _CombinationMode(CombinationMode),
+						  _Result         (Result)
+					{ }
+
+					virtual ~GetTwoPionCombinationLV() { }
+
+					bool
+					operator() ()
+					{
+						enum combMode {Pi0PiMinusCombinations = 0, Pi0PiPlusCombinations = 1, PiMinusPiPlusCombinations = 2};
+
+						_Result.clear();
+						_Result.reserve(4);
+						const std::vector<const TLorentzVector*> Pi0LVs         = {&_Pi0LV_0, &_Pi0LV_1};
+						const std::vector<const TLorentzVector*> ChargedPartLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
+						const std::vector<int>                   Charges        = { _Charge_0,         _Charge_1,         _Charge_2};
+
+						std::vector<const TLorentzVector*> PiMinusLVs;
+						std::vector<const TLorentzVector*> PiPlusLVs;
+						for (size_t i = 0; i < ChargedPartLVs.size(); ++i) {
+							if (Charges[i] == -1) {
+								PiMinusLVs.push_back(ChargedPartLVs[i]);
+							} else if (Charges[i] == 1) {
+								PiPlusLVs.push_back(ChargedPartLVs[i]);
+							}
+						}
+						std::vector<const TLorentzVector*> LVs_0, LVs_1;
+
+						//get requested Pi LVs
+						switch ((combMode)_CombinationMode) {
+							case Pi0PiMinusCombinations: {
+								LVs_0 = Pi0LVs;
+								LVs_1 = PiMinusLVs;
+								break;
+							}
+							case Pi0PiPlusCombinations: {
+								LVs_0 = Pi0LVs;
+								LVs_1 = PiPlusLVs;
+								break;
+							}
+							case PiMinusPiPlusCombinations: {
+								LVs_0 = PiMinusLVs;
+								LVs_1 = PiPlusLVs;
+								break;
+							}
+						}
+
+						// get all Pi combinations
+						for (const TLorentzVector* LV_0 : LVs_0) {
+							for (const TLorentzVector* LV_1 : LVs_1) {
+								_Result.push_back(*LV_0 + *LV_1);
+							}
+						}
+
+						return true;
+					}
+
+				private:
+
+					const TLorentzVector& _Pi0LV_0;
+					const TLorentzVector& _Pi0LV_1;
+					const TLorentzVector& _ChargedPartLV_0;
+					const TLorentzVector& _ChargedPartLV_1;
+					const TLorentzVector& _ChargedPartLV_2;
+					const int&            _Charge_0;
+					const int&            _Charge_1;
+					const int&            _Charge_2;
+					const int             _CombinationMode;
+					std::vector<TLorentzVector>&  _Result;
+
+				};
+
+
 				class GetThreePionCombinationLV : public Function
 				{
 
@@ -1280,7 +1356,7 @@ namespace antok {
 					                          const int&                   Charge_0,         // charge of 1st charged particle
 					                          const int&                   Charge_1,         // charge of 2nd charged particle
 					                          const int&                   Charge_2,         // charge of 3rd charged particle
-					                          std::vector<TLorentzVector>& Result)           // mass or mass squared (see above)
+					                          std::vector<TLorentzVector>& Result)           // result LVs
 						: _Pi0LV_0        (Pi0LV_0),
 						  _Pi0LV_1        (Pi0LV_1),
 						  _ChargedPartLV_0(ChargedPartLV_0),

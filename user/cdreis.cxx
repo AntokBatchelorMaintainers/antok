@@ -52,6 +52,8 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 		return antok::user::cdreis::generateGetOmega                         (function, quantityNames, index);
 	} else if (functionName == "getFittedOmegaMassVsPrecisionGoal") {
 		return antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(function, quantityNames, index);
+	} else if (functionName == "getTwoPionCombinationLV") {
+		return antok::user::cdreis::generateGetTwoPionCombinationLV          (function, quantityNames, index);
 	} else if (functionName == "getThreePionCombinationLV") {
 		return antok::user::cdreis::generateGetThreePionCombinationLV        (function, quantityNames, index);
 	}
@@ -619,7 +621,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes
 		= {"std::vector<TLorentzVector>",  // ResultPi0PairLVs
-		   "int",                          // ResultGoodPi0Pair
+		   "int",                          // ResultNmbGoodPi0Pairs
 		   "std::vector<int>"};            // ResultECALClusterIndices
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
@@ -633,7 +635,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 		constArgs["ECAL1MassWindow"],                                  // ECAL1MassWindow
 		constArgs["ECAL2MassWindow"],                                  // ECAL2MassWindow
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultPi0PairLVs
-		*data.getAddr<int>                        (quantityNames[1]),  // ResultGoodPi0Pair
+		*data.getAddr<int>                        (quantityNames[1]),  // ResultNmbGoodPi0Pairs
 		*data.getAddr<std::vector<int>>           (quantityNames[2])   // ResultECALClusterIndices
 	);
 }
@@ -756,7 +758,7 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes
 		= {"TLorentzVector",   // ResultOmegaLV
-		   "int",              // ResultAccepted
+		   "int",              // ResultNmbOmegas
 		   "TLorentzVector",   // ResultNotUsedPi0LV
 		   "TLorentzVector"};  // ResultNotUsedPiMinusLV
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
@@ -775,7 +777,7 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 		constArgs["OmegaMass"],                           // OmegaMass,
 		constArgs["OmegaMassWindow"],                     // MassWindowOmega,
 		*data.getAddr<TLorentzVector>(quantityNames[0]),  // ResultOmegaLV
-		*data.getAddr<int>           (quantityNames[1]),  // ResultAccepted
+		*data.getAddr<int>           (quantityNames[1]),  // ResultNmbOmegas
 		*data.getAddr<TLorentzVector>(quantityNames[2]),  // ResultNotUsedPi0LV
 		*data.getAddr<TLorentzVector>(quantityNames[3])   // ResultNotUsedPiMinusLV
 	);
@@ -865,6 +867,59 @@ antok::user::cdreis::generateGetFittedOmegaMassVsPrecisionGoal(const YAML::Node&
 
 
 antok::Function*
+antok::user::cdreis::generateGetTwoPionCombinationLV(const YAML::Node&               function,
+                                                     const std::vector<std::string>& quantityNames,
+                                                     const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	vecPairString<std::string> args
+		= {{"Pi0LV_0",         "TLorentzVector"},
+		   {"Pi0LV_1",         "TLorentzVector"},
+		   {"ChargedPartLV_0", "TLorentzVector"},
+		   {"ChargedPartLV_1", "TLorentzVector"},
+		   {"ChargedPartLV_2", "TLorentzVector"},
+		   {"Charge_0",        "int"},
+		   {"Charge_1",        "int"},
+		   {"Charge_2",        "int"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+	
+	// Get constant argument
+	std::map<std::string, int> constArgsInt = {{"CombinationMode", 0}}; // CombinationMode: 0 for Pi0PiMinus, 1 for Pi0PiPlus, 2 for PiMinusPiPlus
+	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Register output variables
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	const std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"};  // Result LVs
+	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
+		return nullptr;
+	}
+
+	return new antok::user::cdreis::functions::GetTwoPionCombinationLV(
+		*data.getAddr<TLorentzVector>(args[0].first),                 // Pi0LV_0
+		*data.getAddr<TLorentzVector>(args[1].first),                 // Pi0LV_1
+		*data.getAddr<TLorentzVector>(args[2].first),                 // ChargedPartLV_0
+		*data.getAddr<TLorentzVector>(args[3].first),                 // ChargedPartLV_1
+		*data.getAddr<TLorentzVector>(args[4].first),                 // ChargedPartLV_2
+		*data.getAddr<int>           (args[5].first),                 // Charge_0
+		*data.getAddr<int>           (args[6].first),                 // Charge_1
+		*data.getAddr<int>           (args[7].first),                 // Charge_2
+		constArgsInt["CombinationMode"],                              // CombinationMode
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0])  // Result
+	);
+  }
+
+
+antok::Function*
 antok::user::cdreis::generateGetThreePionCombinationLV(const YAML::Node&               function,
                                                        const std::vector<std::string>& quantityNames,
                                                        const int                       index)
@@ -890,7 +945,7 @@ antok::user::cdreis::generateGetThreePionCombinationLV(const YAML::Node&        
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	const std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"};  // Result Masses or squared Masses
+	const std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"};  // Result LVs
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
