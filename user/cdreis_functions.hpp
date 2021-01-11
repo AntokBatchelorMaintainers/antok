@@ -602,31 +602,6 @@ namespace antok {
 				};
 
 
-				namespace {
-
-					double
-					getECALMassWindow(const int    ECALIndex1,
-					                  const int    ECALIndex2,
-					                  const double ECAL1MassWindow,
-					                  const double ECAL2MassWindow,
-					                  const double ECALMixedMassWindow)
-					{
-						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
-							return ECAL1MassWindow;
-						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
-							return ECAL2MassWindow;
-						} else if (   ((ECALIndex1 == 1) and (ECALIndex2 == 2))
-						           or ((ECALIndex1 == 2) and (ECALIndex2 == 1))) {
-							return ECALMixedMassWindow;
-						}
-						std::stringstream errMsg;
-						errMsg << "At least one of the given ECAL indices (" << ECALIndex1 << ", " << ECALIndex2 << ") is unknown. Aborting...";
-						throw std::runtime_error(errMsg.str());
-					}
-
-				}
-
-
 				class GetPhotonPairParticles : public Function
 				{
 
@@ -766,6 +741,31 @@ namespace antok {
 				};
 
 
+				namespace {
+
+					double
+					getECALMassWindow(const int    ECALIndex1,
+					                  const int    ECALIndex2,
+					                  const double ECAL1MassWindow,
+					                  const double ECAL2MassWindow,
+					                  const double ECALMixedMassWindow)
+					{
+						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
+							return ECAL1MassWindow;
+						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
+							return ECAL2MassWindow;
+						} else if (   ((ECALIndex1 == 1) and (ECALIndex2 == 2))
+						           or ((ECALIndex1 == 2) and (ECALIndex2 == 1))) {
+							return ECALMixedMassWindow;
+						}
+						std::stringstream errMsg;
+						errMsg << "At least one of the given ECAL indices (" << ECALIndex1 << ", " << ECALIndex2 << ") is unknown. Aborting...";
+						throw std::runtime_error(errMsg.str());
+					}
+
+				}
+
+
 				class GetPi0Pair : public Function
 				{
 
@@ -817,8 +817,9 @@ namespace antok {
 							for (size_t j = i + 1; j < nmbPhotons; ++j) {
 								// photon pair 0
 								const TLorentzVector pi0Candidate0 = _PhotonLVs[i] + _PhotonLVs[j];
-								if (std::fabs(pi0Candidate0.M() - _Pi0Mass)
-								    > getECALMassWindow(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
+								const double massDiff0 = std::fabs(pi0Candidate0.M() - _Pi0Mass);
+								const double massWindow0 = getECALMassWindow(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow);
+								if (massDiff0 > massWindow0) {
 									continue;
 								}
 								for (size_t m = i + 1; m < nmbPhotons - 1; ++m) {
@@ -829,8 +830,10 @@ namespace antok {
 										}
 										// photon pair 1
 										const TLorentzVector pi0Candidate1 = _PhotonLVs[m] + _PhotonLVs[n];
-										if (std::fabs(pi0Candidate1.M() - _Pi0Mass)
-										    > getECALMassWindow(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow)) {
+										const double massDiff1 = std::fabs(pi0Candidate1.M() - _Pi0Mass);
+										const double massWindow1 = getECALMassWindow(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow);
+										// elliptic cut in mass vs mass plane
+										if ( massDiff0 * massDiff0 / ( massWindow0 * massWindow0 ) + massDiff1 * massDiff1 / ( massWindow1 * massWindow1 ) > 1) {
 											continue;
 										}
 										if (_ResultNmbGoodPi0Pairs == 0) {
@@ -1267,7 +1270,7 @@ namespace antok {
 					                        const int&                   Charge_0,         // charge of 1st charged particle
 					                        const int&                   Charge_1,         // charge of 2nd charged particle
 					                        const int&                   Charge_2,         // charge of 3rd charged particle
-					                        const int &                  CombinationMode,
+					                        const int&                   CombinationMode,
 					                        std::vector<TLorentzVector>& Result)           // result LVs
 						: _Pi0LV_0        (Pi0LV_0),
 						  _Pi0LV_1        (Pi0LV_1),
@@ -1416,6 +1419,95 @@ namespace antok {
 					const int&            _Charge_0;
 					const int&            _Charge_1;
 					const int&            _Charge_2;
+					std::vector<TLorentzVector>&  _Result;
+
+				};
+
+
+				class GetFourPionCombinationLV : public Function
+				{
+
+				public:
+
+					GetFourPionCombinationLV(const TLorentzVector&        Pi0LV_0,          // Lorentz vector of 1st pi^0
+					                         const TLorentzVector&        Pi0LV_1,          // Lorentz vector of 2nd pi^0
+					                         const TLorentzVector&        ChargedPartLV_0,  // Lorentz vector of 1st charged particle
+					                         const TLorentzVector&        ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
+					                         const TLorentzVector&        ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
+					                         const int&                   Charge_0,         // charge of 1st charged particle
+					                         const int&                   Charge_1,         // charge of 2nd charged particle
+					                         const int&                   Charge_2,         // charge of 3rd charged particle
+					                         const int&                   CombinationMode,
+					                         std::vector<TLorentzVector>& Result)           // result LVs
+						: _Pi0LV_0        (Pi0LV_0),
+						  _Pi0LV_1        (Pi0LV_1),
+						  _ChargedPartLV_0(ChargedPartLV_0),
+						  _ChargedPartLV_1(ChargedPartLV_1),
+						  _ChargedPartLV_2(ChargedPartLV_2),
+						  _Charge_0       (Charge_0),
+						  _Charge_1       (Charge_1),
+						  _Charge_2       (Charge_2),
+						  _CombinationMode(CombinationMode),
+						  _Result         (Result)
+					{ }
+
+					virtual ~GetFourPionCombinationLV() { }
+
+					bool
+					operator() ()
+					{
+						enum combMode {Pi00MinusPlusCombinations = -1, Pi0MinusMinusPlusCombinations = 0, Pi00MinusMinusCombinations = 1};
+
+						_Result.clear();
+						_Result.reserve(2);
+						const std::vector<const TLorentzVector*> Pi0LVs         = {&_Pi0LV_0, &_Pi0LV_1};
+						const std::vector<const TLorentzVector*> ChargedPartLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
+						const std::vector<int>                   Charges        = { _Charge_0,         _Charge_1,         _Charge_2};
+
+						std::vector<const TLorentzVector*> PiMinusLVs;
+						std::vector<const TLorentzVector*> PiPlusLVs;
+						for (size_t i = 0; i < ChargedPartLVs.size(); ++i) {
+							if (Charges[i] == -1) {
+								PiMinusLVs.push_back(ChargedPartLVs[i]);
+							} else if (Charges[i] == 1) {
+								PiPlusLVs.push_back(ChargedPartLVs[i]);
+							}
+						}
+
+						//get requested Pi LVs
+						switch ((combMode)_CombinationMode) {
+							case Pi00MinusPlusCombinations: {
+								for (auto& selectedLV: PiMinusLVs) {
+									_Result.push_back(*selectedLV + *(PiPlusLVs[0]) + _Pi0LV_0 + _Pi0LV_1);
+								}
+								break;
+							}
+							case Pi0MinusMinusPlusCombinations: {
+								for (auto& selectedLV: Pi0LVs) {
+									_Result.push_back(*selectedLV + *(PiPlusLVs[0]) + *(PiMinusLVs[0]) + *(PiMinusLVs[1]));
+								}
+								break;
+							}
+							case Pi00MinusMinusCombinations: {
+								_Result.push_back(*(PiMinusLVs[0]) + *(PiMinusLVs[1]) + _Pi0LV_0 + _Pi0LV_1);
+								break;
+							}
+						}
+
+						return true;
+					}
+
+				private:
+
+					const TLorentzVector& _Pi0LV_0;
+					const TLorentzVector& _Pi0LV_1;
+					const TLorentzVector& _ChargedPartLV_0;
+					const TLorentzVector& _ChargedPartLV_1;
+					const TLorentzVector& _ChargedPartLV_2;
+					const int&            _Charge_0;
+					const int&            _Charge_1;
+					const int&            _Charge_2;
+					const int             _CombinationMode;
 					std::vector<TLorentzVector>&  _Result;
 
 				};

@@ -56,6 +56,8 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 		return antok::user::cdreis::generateGetTwoPionCombinationLV          (function, quantityNames, index);
 	} else if (functionName == "getThreePionCombinationLV") {
 		return antok::user::cdreis::generateGetThreePionCombinationLV        (function, quantityNames, index);
+	} else if (functionName == "getFourPionCombinationLV") {
+		return antok::user::cdreis::generateGetFourPionCombinationLV        (function, quantityNames, index);
 	}
 	return nullptr;
 }
@@ -962,6 +964,59 @@ antok::user::cdreis::generateGetThreePionCombinationLV(const YAML::Node&        
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0])  // Result
 	);
 }
+
+
+antok::Function*
+antok::user::cdreis::generateGetFourPionCombinationLV(const YAML::Node&               function,
+                                                      const std::vector<std::string>& quantityNames,
+                                                      const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	vecPairString<std::string> args
+		= {{"Pi0LV_0",         "TLorentzVector"},
+		   {"Pi0LV_1",         "TLorentzVector"},
+		   {"ChargedPartLV_0", "TLorentzVector"},
+		   {"ChargedPartLV_1", "TLorentzVector"},
+		   {"ChargedPartLV_2", "TLorentzVector"},
+		   {"Charge_0",        "int"},
+		   {"Charge_1",        "int"},
+		   {"Charge_2",        "int"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+	
+	// Get constant argument
+	std::map<std::string, int> constArgsInt = {{"CombinationMode", 0}}; // CombinationMode: -1 for Pi00MinusPlus, 0 for Pi0MinusMinusPlus, 1 for Pi00MinusMinus
+	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Register output variables
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	const std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"};  // Result LVs
+	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
+		return nullptr;
+	}
+
+	return new antok::user::cdreis::functions::GetFourPionCombinationLV(
+		*data.getAddr<TLorentzVector>(args[0].first),                 // Pi0LV_0
+		*data.getAddr<TLorentzVector>(args[1].first),                 // Pi0LV_1
+		*data.getAddr<TLorentzVector>(args[2].first),                 // ChargedPartLV_0
+		*data.getAddr<TLorentzVector>(args[3].first),                 // ChargedPartLV_1
+		*data.getAddr<TLorentzVector>(args[4].first),                 // ChargedPartLV_2
+		*data.getAddr<int>           (args[5].first),                 // Charge_0
+		*data.getAddr<int>           (args[6].first),                 // Charge_1
+		*data.getAddr<int>           (args[7].first),                 // Charge_2
+		constArgsInt["CombinationMode"],                              // CombinationMode
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0])  // Result
+	);
+  }
 
 
 bool

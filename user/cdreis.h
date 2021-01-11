@@ -33,6 +33,7 @@ namespace antok {
 			FUNCTION_PROTOTYPE(generateGetFittedOmegaMassVsPrecisionGoal);
 			FUNCTION_PROTOTYPE(generateGetTwoPionCombinationLV);
 			FUNCTION_PROTOTYPE(generateGetThreePionCombinationLV);
+			FUNCTION_PROTOTYPE(generateGetFourPionCombinationLV);
 
 			bool registerOutputVarTypes(antok::Data& data, const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes);
 
