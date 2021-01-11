@@ -55,6 +55,7 @@ namespace antok {
 		FUNCTION_PROTOTYPE(generateGetTs);
 		FUNCTION_PROTOTYPE(generateGetVector3);
 		FUNCTION_PROTOTYPE(generateGetVectorEntry);
+		FUNCTION_PROTOTYPE(generateGetVectorSize);
 		FUNCTION_PROTOTYPE(generateMass);
 		FUNCTION_PROTOTYPE(generateMass2);
 		FUNCTION_PROTOTYPE(generateRadToDegree);

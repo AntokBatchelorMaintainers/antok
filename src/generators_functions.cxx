@@ -1083,6 +1083,84 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 	return nullptr;
 }
 
+
+namespace {
+
+	// registers output variables and creates functor
+	template <typename T>
+	antok::Function*
+	__getVectorSizeFunction(const vecPairString<std::string>& args,
+	                        const std::vector<std::string>&   quantityNames)
+	{
+		const std::string& quantityName = quantityNames[0];
+		antok::Data&       data         = antok::ObjectManager::instance()->getData();
+		if (not data.insert<int>(quantityName)) {
+			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+			return nullptr;
+		}
+
+		return new antok::functions::GetVectorSize<T>(*data.getAddr<std::vector<T>>(args[0].first),  // vector
+		                                              *data.getAddr<int>(quantityName));             // result
+	}
+
+}
+
+
+antok::Function*
+antok::generators::generateGetVectorSize(const YAML::Node&               function,
+                                         const std::vector<std::string>& quantityNames,
+                                         const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	const YAML::Node& functionName = function["Name"];
+	vecPairString<std::string> args;
+	enum vectorElementType {Int = 0, Double = 1, Vector3 = 2, LorentzVector = 3};
+	vectorElementType elemType;
+	if        (hasNodeKey(function, "VectorInt")) {
+		elemType = Int;
+		args     = {{"VectorInt", "std::vector<int>"}};
+	} else if (hasNodeKey(function, "VectorDouble")) {
+		elemType = Double;
+		args     = {{"VectorDouble", "std::vector<double>"}};
+	} else if (hasNodeKey(function, "VectorTVector3")) {
+		elemType = Vector3;
+		args     = {{"VectorTVector3", "std::vector<TVector3>"}};
+	} else if (hasNodeKey(function, "VectorTLorentzVector")) {
+		elemType = LorentzVector;
+		args     = {{"VectorTLorentzVector", "std::vector<TLorentzVector>"}};
+	} else {
+		std::cerr << "Function '" << functionName << "' needs either input variables "
+		          << "'VectorInt', 'VectorDouble', 'VectorTVector3', or 'VectorTLorentzVector' "
+		          << "to calculate variable '" << quantityNames[0] << "'." << std::endl;
+		return nullptr;
+	}
+	if (not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// return functor
+	switch (elemType) {
+		case Int:
+		  return __getVectorSizeFunction<int>           (args, quantityNames);
+		case Double:
+		  return __getVectorSizeFunction<double>        (args, quantityNames);
+		case Vector3:
+		  return __getVectorSizeFunction<TVector3>      (args, quantityNames);
+		case LorentzVector:
+		  return __getVectorSizeFunction<TLorentzVector>(args, quantityNames);
+		default: {
+			std::cerr << "Unclear what to do in function '" << functionName << "'." << std::endl;
+			return nullptr;
+		}
+	}
+	return nullptr;
+}
+
 antok::Function*
 antok::generators::generateMass(const YAML::Node&               function,
                                 const std::vector<std::string>& quantityNames,

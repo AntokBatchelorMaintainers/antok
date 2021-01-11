@@ -828,6 +828,8 @@ antok::Initializer::getFunction(const YAML::Node&               function,
 		return antok::generators::generateGetVector3                (function, quantityNames, index);
 	} else if (functionName == "getVectorEntry") {
 		return antok::generators::generateGetVectorEntry            (function, quantityNames, index);
+	} else if (functionName == "getVectorSize") {
+		return antok::generators::generateGetVectorSize             (function, quantityNames, index);
 	} else if (functionName == "mass") {
 		return antok::generators::generateMass                      (function, quantityNames, index);
 	} else if (functionName == "mass2") {

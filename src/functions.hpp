@@ -1077,6 +1077,35 @@ namespace antok {
 		};
 
 
+		template <typename T>
+		class GetVectorSize : public Function
+		{
+
+		public:
+
+			GetVectorSize(const std::vector<T>& vector,
+			              int&                  result)
+				: _vector(vector),
+				  _result(result)
+			{ };
+
+			virtual ~GetVectorSize() { }
+
+			bool
+			operator() ()
+			{
+				_result = _vector.size();
+				return true;
+			};
+
+		private:
+
+			const std::vector<T>& _vector;
+			int&                  _result;
+
+		};
+
+
 		class GetTVector3FromTLorenzVector : public Function
 		{
 
