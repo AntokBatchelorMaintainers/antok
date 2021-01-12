@@ -24,7 +24,9 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
                                      int                             index)
 {
 	const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
-	if        (functionName == "getVector3VectorAttributes") {
+	if        (functionName == "getSumOverVector") {
+		return antok::user::cdreis::generateGetSumOverVector                 (function, quantityNames, index);
+	} else if (functionName == "getVector3VectorAttributes") {
 		return antok::user::cdreis::generateGetVector3VectorAttributes       (function, quantityNames, index);
 	} else if (functionName == "getVectorLorentzVectorAttributes") {
 		return antok::user::cdreis::generateGetVectorLorentzVectorAttributes (function, quantityNames, index);
@@ -58,6 +60,57 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 		return antok::user::cdreis::generateGetThreePionCombinationLV        (function, quantityNames, index);
 	} else if (functionName == "getFourPionCombinationLV") {
 		return antok::user::cdreis::generateGetFourPionCombinationLV        (function, quantityNames, index);
+	}
+	return nullptr;
+}
+
+namespace {
+
+	// registers output variables and creates functor
+	template <typename T>
+	antok::Function*
+	__getSumOverVector(const vecPairString<std::string>& args,
+	                   const std::vector<std::string>&   quantityNames)
+	{
+		const std::string& quantityName = quantityNames[0];
+		antok::Data&       data         = antok::ObjectManager::instance()->getData();
+		if (not data.insert<T>(quantityName)) {
+			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
+			return nullptr;
+		}
+
+		return new antok::user::cdreis::functions::GetSumOverVector<T>(*data.getAddr<std::vector<T>>(args[0].first),  // vector
+		                                                               *data.getAddr<T>(quantityName));               // result
+	}
+
+}
+
+antok::Function*
+antok::user::cdreis::generateGetSumOverVector(const YAML::Node&               function,
+                                              const std::vector<std::string>& quantityNames,
+                                              const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	const std::string argName     = "Vector";
+	const std::string argTypeName = antok::generators::getTypeOfArg(function, index, argName);
+	vecPairString<std::string> args = {{argName, argTypeName}};
+	if (not antok::generators::functionArgumentHandler(args, function, index)) {
+		std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	if        (argTypeName == "std::vector<int>") {
+		return __getSumOverVector<int>           (args, quantityNames);
+	} else if (argTypeName == "std::vector<double>") {
+		return __getSumOverVector<double>        (args, quantityNames);
+	} else if (argTypeName == "std::vector<TVector3>") {
+		return __getSumOverVector<TVector3>      (args, quantityNames);
+	} else if (argTypeName == "std::vector<TLorentzVector>") {
+		return __getSumOverVector<TLorentzVector>(args, quantityNames);
 	}
 	return nullptr;
 }

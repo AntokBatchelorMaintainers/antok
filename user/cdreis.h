@@ -17,6 +17,7 @@ namespace antok {
 			// reuse macro from generators_functions.h
 			FUNCTION_PROTOTYPE(getUserFunction);
 
+			FUNCTION_PROTOTYPE(generateGetSumOverVector);
 			FUNCTION_PROTOTYPE(generateGetVector3VectorAttributes);
 			FUNCTION_PROTOTYPE(generateGetVectorLorentzVectorAttributes);
 			FUNCTION_PROTOTYPE(generateGetNominalMassDifferences);

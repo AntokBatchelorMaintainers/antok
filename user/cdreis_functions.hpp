@@ -23,6 +23,38 @@ namespace antok {
 
 			namespace functions {
 
+				template <typename T>
+				class GetSumOverVector : public Function
+				{
+
+				public:
+
+					GetSumOverVector(const std::vector<T>& Vector,     // input vector
+					                       T&              ResultSum)  // sum over all elements in vector
+						: _Vector         (Vector),
+						  _ResultSum(ResultSum)
+					{ }
+
+					virtual ~GetSumOverVector() { }
+
+					bool
+					operator() ()
+					{
+						_ResultSum = T();
+						for (auto& entry : _Vector) {
+							_ResultSum += entry;
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<T>& _Vector;
+					T&                    _ResultSum;
+
+				};
+
+
 				class GetVector3VectorAttributes : public Function
 				{
 
