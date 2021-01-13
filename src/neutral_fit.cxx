@@ -136,20 +136,20 @@ antok::NeutralFit::covForCluster(const TVector3& clusterPosition,
 			break;
 		}
 		case 3: {
-			// fit by David Spülbeck
+			// fit by David Spuelbeck
 			// TODO add source
 			double a, b, c;
 			if (clusterPosition.Z() < 2500) {
-				a = 6.63e-04;
-				b = 2.01e-04;
-				c = 0.01e-04;
+				a = 6.63e-02;
+				b = 2.01e-02;
+				c = 0.01e-02;
 				
 			} else {
-				a = 15.87e-04;
-				b = 11.84e-04;
-				c = 1.05e-04;
+				a = 15.87e-02;
+				b = 11.84e-02;
+				c = 1.05e-02;
 			}
-			varE = a + b / clusterEnergy + c * clusterEnergy;
+			varE = a*a + b*b / clusterEnergy + c*c * clusterEnergy;
 			break;
 		}
 		default:
