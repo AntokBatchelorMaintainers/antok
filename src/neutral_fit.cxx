@@ -140,16 +140,16 @@ antok::NeutralFit::covForCluster(const TVector3& clusterPosition,
 			// TODO add source
 			double a, b, c;
 			if (clusterPosition.Z() < 2500) {
-				a = 0.0663;
-				b = 0.0201;
-				c = 0.0001;
+				a = 6.63e-04;
+				b = 2.01e-04;
+				c = 0.01e-04;
 				
 			} else {
-				a = 0.1587;
-				b = 0.1184;
-				c = 0.0105;
+				a = 15.87e-04;
+				b = 11.84e-04;
+				c = 1.05e-04;
 			}
-			varE = a * a + b * b / clusterEnergy + c * c * clusterEnergy;
+			varE = a + b / clusterEnergy + c * clusterEnergy;
 			break;
 		}
 		default:
