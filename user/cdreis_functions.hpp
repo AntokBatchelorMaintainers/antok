@@ -365,6 +365,7 @@ namespace antok {
 					                       const std::vector<int>&                           ECALClusterIndices,        // ECAL indices of clusters
 					                       const double&                                     ECAL1ThresholdEnergy,      // energy threshold applied to ECAL1 clusters
 					                       const double&                                     ECAL2ThresholdEnergy,      // energy threshold applied to ECAL2 clusters
+										   const int&                                        TimeResolutionMode,        // selects parametrization for time resolution
 					                       const std::map<std::string, std::vector<double>>& ResolutionCoeffs,          // coefficients used to parametrize energy dependence of time resolution
 					                       std::vector<TVector3>&                            ResultPositions,           // positions of ECAL clusters
 					                       std::vector<TVector3>&                            ResultPositionVariances,   // position variances of ECAL clusters
@@ -380,6 +381,7 @@ namespace antok {
 						  _ECALClusterIndices      (ECALClusterIndices),
 						  _ECAL1ThresholdEnergy    (ECAL1ThresholdEnergy),
 						  _ECAL2ThresholdEnergy    (ECAL2ThresholdEnergy),
+						  _TimeResolutionMode      (TimeResolutionMode),
 						  _ResolutionCoeffs        (ResolutionCoeffs),
 						  _ResultPositions         (ResultPositions),
 						  _ResultPositionVariances (ResultPositionVariances),
@@ -430,8 +432,14 @@ namespace antok {
 								// http://wwwcompass.cern.ch/compass/publications/theses/2016_phd_uhl.pdf
 								// see lines 553ff in /nfs/freenas/tuph/e18/project/compass/analysis/suhl/scripts/FinalState_3pi.-00/KinematicPlots.C
 								const std::vector<double>& coefficients = _ResolutionCoeffs.at("ECAL1");
-								const double sigmaT = std::sqrt(coefficients[0] + coefficients[1] / energy
-								                                                + coefficients[2] / energy2);
+								double sigmaT;
+								if        (_TimeResolutionMode == 0) {
+									sigmaT = std::sqrt(coefficients[0] + coefficients[1] / energy
+								                                       + coefficients[2] / energy2);
+								} else if (_TimeResolutionMode == 1) {
+									sigmaT = coefficients[0] + coefficients[1] / energy
+								                             + coefficients[2] * energy;
+								}
 								if (fabs(_Times[i]) > 3 * sigmaT) {
 									continue;
 								}
@@ -443,8 +451,14 @@ namespace antok {
 								}
 								// apply energy-dependent cut on cluster time; see above
 								const std::vector<double>& coefficients = _ResolutionCoeffs.at("ECAL2");
-								const double sigmaT = std::sqrt(coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
-								                                                + coefficients[3] / energy2 + coefficients[4] * energy2);
+								double sigmaT;
+								if        (_TimeResolutionMode == 0) {
+									sigmaT= std::sqrt(coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
+								                                      + coefficients[3] / energy2 + coefficients[4] * energy2);
+								} else if (_TimeResolutionMode == 1) {
+									sigmaT = coefficients[0] + coefficients[1] / energy
+								                             + coefficients[2] * energy;
+								}
 								if (fabs(_Times[i]) > 3 * sigmaT) {
 									continue;
 								}
@@ -472,6 +486,7 @@ namespace antok {
 					const std::vector<int>&                          _ECALClusterIndices;
 					const double                                     _ECAL1ThresholdEnergy;  // constant parameter, needs to be copied
 					const double                                     _ECAL2ThresholdEnergy;  // constant parameter, needs to be copied
+					const int                                        _TimeResolutionMode;    // constant parameter, needs to be copied
 					const std::map<std::string, std::vector<double>> _ResolutionCoeffs;      // constant parameter, needs to be copied
 					std::vector<TVector3>&                           _ResultPositions;
 					std::vector<TVector3>&                           _ResultPositionVariances;

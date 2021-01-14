@@ -436,6 +436,12 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
+	std::map<std::string, int> constIntArgs
+		= {{"TimeResolutionMode", 0}};
+	if (not functionArgumentHandlerConst<int>(constIntArgs, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
 
 	std::map<std::string, std::string> constArgsString = {{"ResolutionCalibration", ""}};
 	if (not functionArgumentHandlerConst<std::string>(constArgsString, function)) {
@@ -455,8 +461,16 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		}
 		std::string ECALName;
 		double      a, b, c, d, e;
-		while (ResolutionFile >> ECALName >> a >> b >> c >> d >> e) {
-			ResolutionCoeffs[ECALName] = {a, b, c, d, e};
+		if        (constIntArgs["TimeResolutionMode"] == 0) {
+			std::cout << "TimeResolutionMode 0";
+			while (ResolutionFile >> ECALName >> a >> b >> c >> d >> e) {
+				ResolutionCoeffs[ECALName] = {a, b, c, d, e};
+			}
+		} else if (constIntArgs["TimeResolutionMode"] == 1) {
+			std::cout << "TimeResolutionMode 1";
+			while (ResolutionFile >> ECALName >> a >> b >> c) {
+				ResolutionCoeffs[ECALName] = {a, b, c};
+			}
 		}
 		if (not ResolutionFile.eof()) {
 			std::cerr << "ERROR: Invalid ECAL time-resolution entries at end of file '" << ResolutionFileName << "'; "
@@ -488,6 +502,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		*data.getAddr<std::vector<int>>     (args[5].first),     // ECAL Cluster Indices
 		constArgs["ECAL1ThresholdEnergy"],                       // ECAL1ThresholdEnergy
 		constArgs["ECAL2ThresholdEnergy"],                       // ECAL2ThresholdEnergy
+		constIntArgs["TimeResolutionMode"],                      // mode for time resolution parametrizazion
 		ResolutionCoeffs,
 		*data.getAddr<std::vector<TVector3>>(quantityNames[0]),  // ResultPositions
 		*data.getAddr<std::vector<TVector3>>(quantityNames[1]),  // ResultPositionVariances
