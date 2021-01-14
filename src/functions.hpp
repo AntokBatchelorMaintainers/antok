@@ -825,6 +825,38 @@ namespace antok {
 		};
 
 
+		class Energies : public Function
+		{
+
+		public:
+
+			Energies(const std::vector<TLorentzVector>& in,
+			         std::vector<double>&               out)
+				: _in (in),
+				  _out(out)
+			{ }
+
+			virtual ~Energies() { }
+
+			bool
+			operator() ()
+			{
+				_out.clear();
+				_out.reserve(_in.size());
+				for (auto& entry : _in) {
+					_out.push_back(entry.E());
+				}
+				return true;
+			}
+
+		private:
+
+			const std::vector<TLorentzVector>& _in;
+			std::vector<double>&               _out;
+
+		};
+
+
 		class RadToDegree : public Function
 		{
 

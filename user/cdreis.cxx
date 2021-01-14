@@ -462,12 +462,10 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		std::string ECALName;
 		double      a, b, c, d, e;
 		if        (constIntArgs["TimeResolutionMode"] == 0) {
-			std::cout << "TimeResolutionMode 0";
 			while (ResolutionFile >> ECALName >> a >> b >> c >> d >> e) {
 				ResolutionCoeffs[ECALName] = {a, b, c, d, e};
 			}
 		} else if (constIntArgs["TimeResolutionMode"] == 1) {
-			std::cout << "TimeResolutionMode 1";
 			while (ResolutionFile >> ECALName >> a >> b >> c) {
 				ResolutionCoeffs[ECALName] = {a, b, c};
 			}
