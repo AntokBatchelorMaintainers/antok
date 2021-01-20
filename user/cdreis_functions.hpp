@@ -1304,6 +1304,72 @@ namespace antok {
 				};
 
 
+				class GetPionLVs : public Function
+				{
+
+				public:
+
+					GetPionLVs(const TLorentzVector&        Pi0LV_0,          // Lorentz vector of 1st pi^0
+					           const TLorentzVector&        Pi0LV_1,          // Lorentz vector of 2nd pi^0
+					           const TLorentzVector&        ChargedPartLV_0,  // Lorentz vector of 1st charged particle
+					           const TLorentzVector&        ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
+					           const TLorentzVector&        ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
+					           const int&                   Charge_0,         // charge of 1st charged particle
+					           const int&                   Charge_1,         // charge of 2nd charged particle
+					           const int&                   Charge_2,         // charge of 3rd charged particle
+					           const int&                   SelectedCharge,
+					           std::vector<TLorentzVector>& Result)           // result LVs
+						: _Pi0LV_0        (Pi0LV_0),
+						  _Pi0LV_1        (Pi0LV_1),
+						  _ChargedPartLV_0(ChargedPartLV_0),
+						  _ChargedPartLV_1(ChargedPartLV_1),
+						  _ChargedPartLV_2(ChargedPartLV_2),
+						  _Charge_0       (Charge_0),
+						  _Charge_1       (Charge_1),
+						  _Charge_2       (Charge_2),
+						  _SelectedCharge (SelectedCharge),
+						  _Result         (Result)
+					{ }
+
+					virtual ~GetPionLVs() { }
+
+					bool
+					operator() ()
+					{
+						_Result.clear();
+						_Result.reserve(2);
+						const std::vector<const TLorentzVector*> ChargedPartLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
+						const std::vector<int>                   Charges        = { _Charge_0,         _Charge_1,         _Charge_2};
+
+						if (_SelectedCharge == 0) {
+							_Result = {_Pi0LV_0, _Pi0LV_1};
+						} else {
+							for (size_t i = 0; i < ChargedPartLVs.size(); ++i) {
+								if (Charges[i] == _SelectedCharge) {
+									_Result.push_back(*(ChargedPartLVs[i]));
+								}
+							}
+						}
+
+						return true;
+					}
+
+				private:
+
+					const TLorentzVector& _Pi0LV_0;
+					const TLorentzVector& _Pi0LV_1;
+					const TLorentzVector& _ChargedPartLV_0;
+					const TLorentzVector& _ChargedPartLV_1;
+					const TLorentzVector& _ChargedPartLV_2;
+					const int&            _Charge_0;
+					const int&            _Charge_1;
+					const int&            _Charge_2;
+					const int             _SelectedCharge;
+					std::vector<TLorentzVector>&  _Result;
+
+				};
+
+
 				class GetTwoPionCombinationLV : public Function
 				{
 

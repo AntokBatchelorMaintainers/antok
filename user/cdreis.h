@@ -32,6 +32,7 @@ namespace antok {
 			FUNCTION_PROTOTYPE(generateGetKinematicFittingMass);
 			FUNCTION_PROTOTYPE(generateGetOmega);
 			FUNCTION_PROTOTYPE(generateGetFittedOmegaMassVsPrecisionGoal);
+			FUNCTION_PROTOTYPE(generateGetPionLVs);
 			FUNCTION_PROTOTYPE(generateGetTwoPionCombinationLV);
 			FUNCTION_PROTOTYPE(generateGetThreePionCombinationLV);
 			FUNCTION_PROTOTYPE(generateGetFourPionCombinationLV);
