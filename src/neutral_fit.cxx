@@ -136,20 +136,21 @@ antok::NeutralFit::covForCluster(const TVector3& clusterPosition,
 			break;
 		}
 		case 3: {
-			// fit by David Spuelbeck
-			// TODO add source
+			// fit by David Spuelbeck to 2008 data
+			// see David's email from 14. Jan 2021
 			double a, b, c;
 			if (clusterPosition.Z() < 2500) {
+				// ECAL1
 				a = 6.61e-02;
 				b = 0.52e-02;
 				c = 2.09e-02;
-				
 			} else {
+				// ECAL2
 				a = 15.86e-02;
 				b = 11.84e-02;
 				c = 1.05e-02;
 			}
-			varE = a*a + b*b / clusterEnergy + c*c * clusterEnergy;
+			varE = a * a * clusterEnergy + b * b / clusterEnergy + c * c * clusterEnergy * clusterEnergy;
 			break;
 		}
 		default:

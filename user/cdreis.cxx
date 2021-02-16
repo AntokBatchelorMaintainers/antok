@@ -112,6 +112,7 @@ antok::user::cdreis::generateGetSumOverVector(const YAML::Node&               fu
 	} else if (argTypeName == "std::vector<TLorentzVector>") {
 		return __getSumOverVector<TLorentzVector>(args, quantityNames);
 	}
+	//!TODO print error message if none of the above
 	return nullptr;
 }
 
@@ -417,13 +418,13 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 
 	// Get input variables
 	vecPairString<std::string> args
-	 = {{"Positions",          "std::vector<TVector3>"},
-	    {"PositionVariances",  "std::vector<TVector3>"},
-		{"Energies",           "std::vector<double>"},
-		{"EnergyVariances",    "std::vector<double>"},
-		{"Times",              "std::vector<double>"},
-		{"DistancesToCharge",  "std::vector<double>"},
-		{"ECALClusterIndices", "std::vector<int>"}};	
+		= {{"Positions",          "std::vector<TVector3>"},
+		   {"PositionVariances",  "std::vector<TVector3>"},
+		   {"Energies",           "std::vector<double>"},
+		   {"EnergyVariances",    "std::vector<double>"},
+		   {"Times",              "std::vector<double>"},
+		   {"DistancesToCharge",  "std::vector<double>"},
+		   {"ECALClusterIndices", "std::vector<int>"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -893,7 +894,7 @@ antok::user::cdreis::generateGetPionLVs(const YAML::Node&               function
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
-	
+
 	// Get constant argument
 	std::map<std::string, int> constArgsInt = {{"SelectedCharge", 0}}; // SelectedCharge: -1 for PiMinus, 0 for Pi0, 1 for PiPlus
 	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
@@ -946,7 +947,7 @@ antok::user::cdreis::generateGetTwoPionCombinationLV(const YAML::Node&          
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
-	
+
 	// Get constant argument
 	std::map<std::string, int> constArgsInt = {{"CombinationMode", 0}}; // CombinationMode: 0 for Pi0PiMinus, 1 for Pi0PiPlus, 2 for PiMinusPiPlus
 	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {
@@ -1044,7 +1045,7 @@ antok::user::cdreis::generateGetFourPionCombinationLV(const YAML::Node&         
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
-	
+
 	// Get constant argument
 	std::map<std::string, int> constArgsInt = {{"CombinationMode", 0}}; // CombinationMode: -1 for Pi00MinusPlus, 0 for Pi0MinusMinusPlus, 1 for Pi00MinusMinus
 	if (not functionArgumentHandlerConst<int>(constArgsInt, function)) {

@@ -613,42 +613,42 @@ antok::generators::generateEnergy(const YAML::Node&               function,
 	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
 	}
-	const std::string& quantityName = quantityNames[0];
-	const YAML::Node& functionName = function["Name"];
-	vecPairString<std::string> args;
-	antok::Data&       data         = antok::ObjectManager::instance()->getData();
 
-	// Çheck if input is one LV or vector of LVs
-	if        (hasNodeKey(function, "Vector")) {
+	const std::string& quantityName = quantityNames[0];
+	const YAML::Node&  functionName = function["Name"];
+	antok::Data&       data         = antok::ObjectManager::instance()->getData();
+	vecPairString<std::string> args;
+	// Çheck whether input is one LV or std::vector of LVs
+	if (hasNodeKey(function, "Vector")) {
+		// input is one LV
 		// Get input variables
-		args     = {{"Vector", "TLorentzVector"}};
+		args = {{"Vector", "TLorentzVector"}};
 		if (not antok::generators::functionArgumentHandler(args, function, index)) {
 			std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 			return nullptr;
 		}
-
 		// Register output variables
 		if (not data.insert<double>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
 		}
 		return new antok::functions::Energy(*data.getAddr<TLorentzVector>(args[0].first),
-										    *data.getAddr<double>(quantityName));
+		                                    *data.getAddr<double>(quantityName));
 	} else if (hasNodeKey(function, "Vectors")) {
+		// input is std LV
 		// Get input variables
-		args     = {{"Vectors", "std::vector<TLorentzVector>"}};
+		args = {{"Vectors", "std::vector<TLorentzVector>"}};
 		if (not antok::generators::functionArgumentHandler(args, function, index)) {
 			std::cerr << antok::generators::getFunctionArgumentHandlerErrorMsg(quantityNames);
 			return nullptr;
 		}
-
 		// Register output variables
 		if (not data.insert<std::vector<double>>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
 		}
 		return new antok::functions::Energies(*data.getAddr<std::vector<TLorentzVector>>(args[0].first),
-										      *data.getAddr<std::vector<double>>(quantityName));
+		                                      *data.getAddr<std::vector<double>>(quantityName));
 	} else {
 		std::cerr << "Function '" << functionName << "' needs either input variables "
 		          << "'Vector' or 'Vectors' "
@@ -1179,12 +1179,12 @@ antok::generators::generateGetVectorSize(const YAML::Node&               functio
 		case LorentzVector:
 		  return __getVectorSizeFunction<TLorentzVector>(args, quantityNames);
 		default: {
-			std::cerr << "Unclear what to do in function '" << functionName << "'." << std::endl;
+			std::cerr << "Unknown element type in function '" << functionName << "'." << std::endl;
 			return nullptr;
 		}
 	}
-	return nullptr;
 }
+
 
 antok::Function*
 antok::generators::generateMass(const YAML::Node&               function,

@@ -7,9 +7,8 @@
 
 #include "TLorentzRotation.h"
 #include "TLorentzVector.h"
+#include "TRandom.h"
 #include "TRotation.h"
-#include<TRandom.h>
-
 
 #include "functions.hpp"
 #include "neutral_fit.h"
@@ -30,8 +29,8 @@ namespace antok {
 				public:
 
 					GetSumOverVector(const std::vector<T>& Vector,     // input vector
-					                       T&              ResultSum)  // sum over all elements in vector
-						: _Vector         (Vector),
+					                 T&                    ResultSum)  // sum over all elements in vector
+						: _Vector   (Vector),
 						  _ResultSum(ResultSum)
 					{ }
 
@@ -357,46 +356,46 @@ namespace antok {
 
 				public:
 
-					GetCleanedEcalClusters(const std::vector<TVector3>&                      Positions,                 // positions of ECAL clusters
-					                       const std::vector<TVector3>&                      PositionVariances,         // position variances of ECAL clusters
-					                       const std::vector<double>&                        Energies,                  // energies of ECAL clusters
-					                       const std::vector<double>&                        EnergyVariances,           // energy variances of ECAL clusters
-					                       const std::vector<double>&                        Times,                     // times of ECAL clusters
-					                       const std::vector<double>&                        DistancesToCharge,         // distances to the next charged track
-					                       const std::vector<int>&                           ECALClusterIndices,        // ECAL indices of clusters
-					                       const double&                                     ECAL1ThresholdEnergy,      // energy threshold applied to ECAL1 clusters
-					                       const double&                                     ECAL2ThresholdEnergy,      // energy threshold applied to ECAL2 clusters
-										   const double&                                     ECAL2YUpperLimit,          // upper limit for the Y position of ECAL2 clusters (HCAL shadow)
-										   const double&                                     ECAL2YLowerLimit,          // lower limit for the Y position of ECAL2 clusters (HCAL shadow)
-										   const double&                                     DistanceToChargeThreshold, // distance to the next charged track threshold at zPosition of the cluster
-										   const int&                                        TimeResolutionMode,        // selects parametrization for time resolution
-					                       const std::map<std::string, std::vector<double>>& ResolutionCoeffs,          // coefficients used to parametrize energy dependence of time resolution
-					                       std::vector<TVector3>&                            ResultPositions,           // positions of ECAL clusters
-					                       std::vector<TVector3>&                            ResultPositionVariances,   // position variances of ECAL clusters
-					                       std::vector<double>&                              ResultEnergies,            // energies of ECAL clusters
-					                       std::vector<double>&                              ResultEnergyVariances,     // energy variances of ECAL clusters
-					                       std::vector<double>&                              ResultTimes,               // times of ECAL clusters
-					                       std::vector<int>&                                 ResultECALClusterIndices)  // indices of the ECAL that measured the photons
-						: _Positions                (Positions),
-						  _PositionVariances        (PositionVariances),
-						  _Energies                 (Energies),
-						  _EnergyVariances          (EnergyVariances),
-						  _Times                    (Times),
-						  _DistancesToCharge        (DistancesToCharge),
-						  _ECALClusterIndices       (ECALClusterIndices),
-						  _ECAL1ThresholdEnergy     (ECAL1ThresholdEnergy),
-						  _ECAL2ThresholdEnergy     (ECAL2ThresholdEnergy),
-						  _ECAL2YUpperLimit         (ECAL2YUpperLimit),
-						  _ECAL2YLowerLimit         (ECAL2YLowerLimit),
-						  _DistanceToChargeThreshold(DistanceToChargeThreshold),
-						  _TimeResolutionMode       (TimeResolutionMode),
-						  _ResolutionCoeffs         (ResolutionCoeffs),
-						  _ResultPositions          (ResultPositions),
-						  _ResultPositionVariances  (ResultPositionVariances),
-						  _ResultEnergies           (ResultEnergies),
-						  _ResultEnergyVariances    (ResultEnergyVariances),
-						  _ResultTimes              (ResultTimes),
-						  _ResultECALClusterIndices (ResultECALClusterIndices)
+					GetCleanedEcalClusters(const std::vector<TVector3>&                      Positions,                   // positions of ECAL clusters
+					                       const std::vector<TVector3>&                      PositionVariances,           // position variances of ECAL clusters
+					                       const std::vector<double>&                        Energies,                    // energies of ECAL clusters
+					                       const std::vector<double>&                        EnergyVariances,             // energy variances of ECAL clusters
+					                       const std::vector<double>&                        Times,                       // times of ECAL clusters
+					                       const std::vector<double>&                        DistancesToCharged,          // distances to the next charged track at z Position of the cluster
+					                       const std::vector<int>&                           ECALClusterIndices,          // ECAL indices of clusters
+					                       const double&                                     ECAL1ThresholdEnergy,        // energy threshold applied to ECAL1 clusters
+					                       const double&                                     ECAL2ThresholdEnergy,        // energy threshold applied to ECAL2 clusters
+					                       const double&                                     ECAL2YUpperLimit,            // upper limit for the Y position of ECAL2 clusters (HCAL shadow)
+					                       const double&                                     ECAL2YLowerLimit,            // lower limit for the Y position of ECAL2 clusters (HCAL shadow)
+					                       const double&                                     DistanceToChargedThreshold,  // minimum distance to the next charged track at z Position of the cluster
+					                       const int&                                        TimeResolutionMode,          // selects parametrization for time resolution
+					                       const std::map<std::string, std::vector<double>>& ResolutionCoeffs,            // coefficients used to parametrize energy dependence of time resolution
+					                       std::vector<TVector3>&                            ResultPositions,             // positions of ECAL clusters
+					                       std::vector<TVector3>&                            ResultPositionVariances,     // position variances of ECAL clusters
+					                       std::vector<double>&                              ResultEnergies,              // energies of ECAL clusters
+					                       std::vector<double>&                              ResultEnergyVariances,       // energy variances of ECAL clusters
+					                       std::vector<double>&                              ResultTimes,                 // times of ECAL clusters
+					                       std::vector<int>&                                 ResultECALClusterIndices)    // indices of the ECAL that measured the photons
+						: _Positions                 (Positions),
+						  _PositionVariances         (PositionVariances),
+						  _Energies                  (Energies),
+						  _EnergyVariances           (EnergyVariances),
+						  _Times                     (Times),
+						  _DistancesToCharged        (DistancesToCharged),
+						  _ECALClusterIndices        (ECALClusterIndices),
+						  _ECAL1ThresholdEnergy      (ECAL1ThresholdEnergy),
+						  _ECAL2ThresholdEnergy      (ECAL2ThresholdEnergy),
+						  _ECAL2YUpperLimit          (ECAL2YUpperLimit),
+						  _ECAL2YLowerLimit          (ECAL2YLowerLimit),
+						  _DistanceToChargedThreshold(DistanceToChargedThreshold),
+						  _TimeResolutionMode        (TimeResolutionMode),
+						  _ResolutionCoeffs          (ResolutionCoeffs),
+						  _ResultPositions           (ResultPositions),
+						  _ResultPositionVariances   (ResultPositionVariances),
+						  _ResultEnergies            (ResultEnergies),
+						  _ResultEnergyVariances     (ResultEnergyVariances),
+						  _ResultTimes               (ResultTimes),
+						  _ResultECALClusterIndices  (ResultECALClusterIndices)
 					{ }
 
 					virtual ~GetCleanedEcalClusters() { }
@@ -409,7 +408,7 @@ namespace antok {
 						    or (_Energies.size()           != nmbClusters)
 						    or (_EnergyVariances.size()    != nmbClusters)
 						    or (_Times.size()              != nmbClusters)
-						    or (_DistancesToCharge.size()  != nmbClusters)
+						    or (_DistancesToCharged.size() != nmbClusters)
 						    or (_ECALClusterIndices.size() != nmbClusters)) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
@@ -428,7 +427,6 @@ namespace antok {
 						_ResultTimes.reserve             (nmbClusters);
 						_ResultECALClusterIndices.reserve(nmbClusters);
 						for (size_t i = 0; i < nmbClusters; ++i) {
-							//TODO add cut that excludes cells in HCAL1 shadow? (see Tobias' PhD thesis p. 62)
 							const double energy  = _Energies[i];
 							const double energy2 = energy * energy;
 							if (_ECALClusterIndices[i] == 1) {
@@ -453,7 +451,7 @@ namespace antok {
 									continue;
 								}
 								// apply distance to next charge threshold
-								if (_DistancesToCharge[i] < _DistanceToChargeThreshold) {
+								if (_DistancesToCharged[i] < _DistanceToChargedThreshold) {
 									continue;
 								}
 								_ResultECALClusterIndices.push_back(1);
@@ -475,13 +473,13 @@ namespace antok {
 								if (fabs(_Times[i]) > 3 * sigmaT) {
 									continue;
 								}
-								// apply HCAL shadow veto on Y position of cluster in ECAL2
-								if ( not(_ECAL2YUpperLimit == 0 and _ECAL2YLowerLimit == 0) // check if at least one limit is set
-									and (_Positions[i].Y() >= _ECAL2YUpperLimit or _Positions[i].Y() <= _ECAL2YLowerLimit)) {
+								// apply HCAL shadow veto on Y position of cluster in ECAL2 (see Tobias' PhD thesis p. 62)
+								if (not (_ECAL2YUpperLimit == 0 and _ECAL2YLowerLimit == 0)  // check if at least one limit is set
+								    and (_Positions[i].Y() >= _ECAL2YUpperLimit or _Positions[i].Y() <= _ECAL2YLowerLimit)) {
 									continue;
 								}
 								// apply distance to next charge threshold
-								if (_DistancesToCharge[i] < _DistanceToChargeThreshold) {
+								if (_DistancesToCharged[i] < _DistanceToChargedThreshold) {
 									continue;
 								}
 								_ResultECALClusterIndices.push_back(2);
@@ -505,15 +503,15 @@ namespace antok {
 					const std::vector<double>&                       _Energies;
 					const std::vector<double>&                       _EnergyVariances;
 					const std::vector<double>&                       _Times;
-					const std::vector<double>&                       _DistancesToCharge;
+					const std::vector<double>&                       _DistancesToCharged;
 					const std::vector<int>&                          _ECALClusterIndices;
-					const double                                     _ECAL1ThresholdEnergy;       // constant parameter, needs to be copied
-					const double                                     _ECAL2ThresholdEnergy;       // constant parameter, needs to be copied
-					const double                                     _ECAL2YUpperLimit;           // constant parameter, needs to be copied
-					const double                                     _ECAL2YLowerLimit;           // constant parameter, needs to be copied
-					const double                                     _DistanceToChargeThreshold;  // constant parameter, needs to be copied
-					const int                                        _TimeResolutionMode;         // constant parameter, needs to be copied
-					const std::map<std::string, std::vector<double>> _ResolutionCoeffs;           // constant parameter, needs to be copied
+					const double                                     _ECAL1ThresholdEnergy;        // constant parameter, needs to be copied
+					const double                                     _ECAL2ThresholdEnergy;        // constant parameter, needs to be copied
+					const double                                     _ECAL2YUpperLimit;            // constant parameter, needs to be copied
+					const double                                     _ECAL2YLowerLimit;            // constant parameter, needs to be copied
+					const double                                     _DistanceToChargedThreshold;  // constant parameter, needs to be copied
+					const int                                        _TimeResolutionMode;          // constant parameter, needs to be copied
+					const std::map<std::string, std::vector<double>> _ResolutionCoeffs;            // constant parameter, needs to be copied
 					std::vector<TVector3>&                           _ResultPositions;
 					std::vector<TVector3>&                           _ResultPositionVariances;
 					std::vector<double>&                             _ResultEnergies;
@@ -535,7 +533,7 @@ namespace antok {
 					                 const std::vector<double>&         Energies,                  // energies of ECAL clusters
 					                 const std::vector<double>&         EnergyVariances,           // variance in energy of ECAL clusters
 					                 const std::vector<double>&         Times,                     // times of ECAL clusters
-					                 const std::vector<double>&         DistancesToCharge,         // distances to the next charge track
+					                 const std::vector<double>&         DistancesToCharged,        // distances to the next charged track
 					                 const int&                         SelectedECALIndex,         // index of selected ECAL
 					                 std::vector<int>&                  ResultECALClusterIndices,  // ECAL indices of cluster
 					                 std::vector<TVector3>&             ResultPositions,           // positions of ECAL clusters
@@ -543,14 +541,14 @@ namespace antok {
 					                 std::vector<double>&               ResultEnergies,            // energies of ECAL clusters
 					                 std::vector<double>&               ResultEnergyVariances,     // variance in energy of ECAL clusters
 					                 std::vector<double>&               ResultTimes,               // times of ECAL clusters
-					                 std::vector<double>&               ResultDistancesToCharge)   // distances to the next charge track
+					                 std::vector<double>&               ResultDistancesToCharged)  // distances to the next charged track
 						: _ECALClusterIndices      (ECALClusterIndices),
 						  _Positions               (Positions),
 						  _PositionVariances       (PositionVariances),
 						  _Energies                (Energies),
 						  _EnergyVariances         (EnergyVariances),
 						  _Times                   (Times),
-						  _DistancesToCharge       (DistancesToCharge),
+						  _DistancesToCharged      (DistancesToCharged),
 						  _SelectedECALIndex       (SelectedECALIndex),
 						  _ResultECALClusterIndices(ResultECALClusterIndices),
 						  _ResultPositions         (ResultPositions),
@@ -558,7 +556,7 @@ namespace antok {
 						  _ResultEnergies          (ResultEnergies),
 						  _ResultEnergyVariances   (ResultEnergyVariances),
 						  _ResultTimes             (ResultTimes),
-						  _ResultDistancesToCharge (ResultDistancesToCharge)
+						  _ResultDistancesToCharged(ResultDistancesToCharged)
 					{ }
 
 					virtual ~getECALVariables() { }
@@ -568,12 +566,12 @@ namespace antok {
 					{
 						// check if all vectors have the same size
 						const size_t nmbClusters = _ECALClusterIndices.size();
-						if (   (_Positions.size()         != nmbClusters)
-						    or (_PositionVariances.size() != nmbClusters)
-						    or (_Energies.size()          != nmbClusters)
-						    or (_EnergyVariances.size()   != nmbClusters)
-						    or (_Times.size()             != nmbClusters)
-						    or (_DistancesToCharge.size() != nmbClusters)) {
+						if (   (_Positions.size()          != nmbClusters)
+						    or (_PositionVariances.size()  != nmbClusters)
+						    or (_Energies.size()           != nmbClusters)
+						    or (_EnergyVariances.size()    != nmbClusters)
+						    or (_Times.size()              != nmbClusters)
+						    or (_DistancesToCharged.size() != nmbClusters)) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
@@ -591,7 +589,7 @@ namespace antok {
 						_ResultEnergies.resize          (nmbClustersResult);
 						_ResultEnergyVariances.resize   (nmbClustersResult);
 						_ResultTimes.resize             (nmbClustersResult);
-						_ResultDistancesToCharge.resize (nmbClustersResult);
+						_ResultDistancesToCharged.resize(nmbClustersResult);
 
 						// loop over clusters and save information if cluster is in required ECAL
 						int nmbAccepted = 0;
@@ -603,7 +601,7 @@ namespace antok {
 								_ResultEnergies          [nmbAccepted] = _Energies          [i];
 								_ResultEnergyVariances   [nmbAccepted] = _EnergyVariances   [i];
 								_ResultTimes             [nmbAccepted] = _Times             [i];
-								_ResultDistancesToCharge [nmbAccepted] = _DistancesToCharge [i];
+								_ResultDistancesToCharged[nmbAccepted] = _DistancesToCharged[i];
 								++nmbAccepted;
 							}
 						}
@@ -618,7 +616,7 @@ namespace antok {
 					const std::vector<double>&   _Energies;
 					const std::vector<double>&   _EnergyVariances;
 					const std::vector<double>&   _Times;
-					const std::vector<double>&   _DistancesToCharge;
+					const std::vector<double>&   _DistancesToCharged;
 					const int                    _SelectedECALIndex;  // const paramerter, needs to be copied
 					std::vector<int>&            _ResultECALClusterIndices;
 					std::vector<TVector3>&       _ResultPositions;
@@ -626,7 +624,7 @@ namespace antok {
 					std::vector<double>&         _ResultEnergies;
 					std::vector<double>&         _ResultEnergyVariances;
 					std::vector<double>&         _ResultTimes;
-					std::vector<double>&         _ResultDistancesToCharge;
+					std::vector<double>&         _ResultDistancesToCharged;
 
 				};
 
@@ -638,6 +636,7 @@ namespace antok {
 
 					GetPhotonLorentzVecs(const std::vector<TVector3>& Positions,           // positions of ECAL clusters
 					                     const std::vector<double>&   Energies,            // energies of ECAL clusters
+					                     //!TODO Times and ECALClusterIndices are not used in function and can be removed
 					                     const std::vector<double>&   Times,               // times of ECAL clusters
 					                     const std::vector<int>&      ECALClusterIndices,  // ECAL indices of clusters
 					                     const TVector3&              VertexPosition,      // position of primary vertex
@@ -718,11 +717,11 @@ namespace antok {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
-						selectionType internSelectionMode = allSelection;
 						// set selection mode to 0 if its not in {1, 2, 3}
+						selectionType internSelectionMode = allSelection;
 						if (   _SelectionMode == 1
-							or _SelectionMode == 2
-							or _SelectionMode == 3) {
+							  or _SelectionMode == 2
+							  or _SelectionMode == 3) {
 							internSelectionMode = (selectionType)_SelectionMode;
 						}
 
@@ -732,7 +731,7 @@ namespace antok {
 
 						selectionType PhotonPairMode_0;
 						selectionType PhotonPairMode_1;
-						for (size_t i = 0; i < nmbPhotons-3; ++i) {
+						for (size_t i = 0; i < nmbPhotons - 3; ++i) {
 							for (size_t j = i + 1; j < nmbPhotons; ++j) {
 								// select only photon pairs with both photons in ECAL1
 								if      (internSelectionMode == ECAL1Selection and (_ECALClusterIndices[i] == 1 and _ECALClusterIndices[j] == 1)) {
@@ -753,9 +752,9 @@ namespace antok {
 								}
 								// select all photon pairs
 								else if (internSelectionMode == allSelection) {
-									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
 									PhotonPairMode_0 = allSelection;
-							    }
+									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
+								}
 								else {
 									PhotonPairMode_0 = noSelection;
 								}
@@ -779,30 +778,30 @@ namespace antok {
 										}
 										// select only photon pairs with one photon in ECAL1 and one in ECAL2
 										else if (internSelectionMode == mixedSelection
-												 and (   (_ECALClusterIndices[k] == 1 and _ECALClusterIndices[l] == 2)
-													  or (_ECALClusterIndices[k] == 2 and _ECALClusterIndices[l] == 1))) {
+										         and (   (_ECALClusterIndices[k] == 1 and _ECALClusterIndices[l] == 2)
+										              or (_ECALClusterIndices[k] == 2 and _ECALClusterIndices[l] == 1))) {
 											PhotonPairMode_1 = mixedSelection;
 											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
 										}
 										// select all photon pairs
 										else if (internSelectionMode == allSelection) {
-											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
 											PhotonPairMode_1 = allSelection;
+											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
 										}
 										else {
 											PhotonPairMode_1 = noSelection;
 										}
 										// push back LV for two pairs if selected mode is true for both pairs
-										// randomise order of photon pairs to remove order
-										if (     PhotonPairMode_0 == internSelectionMode
-											 and PhotonPairMode_1 == internSelectionMode) {
+										// randomise order of photon pairs to undo energy ordering by PHAST
+										if (    PhotonPairMode_0 == internSelectionMode
+										    and PhotonPairMode_1 == internSelectionMode) {
 											size_t vecSize = _ResultPhotonPairLVs.size();
 											// generate random int in {0, 1} to decide if values get swapped
 											const int swapMode = gRandom->Integer(2);
-											// get next-to-last element if swapMode is non, else last element
-											_ResultPhotonPairsLVs_0.push_back(_ResultPhotonPairLVs[vecSize-(1+swapMode)]);
-											// get last element if swapMode is non, else next-to-last element using modulo
-											_ResultPhotonPairsLVs_1.push_back(_ResultPhotonPairLVs[vecSize-(1+(1+swapMode)%2)]);
+											// get next-to-last element if swapMode is 1, else last element
+											_ResultPhotonPairsLVs_0.push_back(_ResultPhotonPairLVs[vecSize - (1 + swapMode)]);
+											// get last element if swapMode is 1, else next-to-last element using modulo
+											_ResultPhotonPairsLVs_1.push_back(_ResultPhotonPairLVs[vecSize - (1 + (1 + swapMode) % 2)]);
 										}
 									}
 								}
@@ -912,10 +911,10 @@ namespace antok {
 										}
 										// photon pair 1
 										const TLorentzVector pi0Candidate1 = _PhotonLVs[m] + _PhotonLVs[n];
-										const double massDiff1 = std::fabs(pi0Candidate1.M() - _Pi0Mass);
-										const double massWindow1 = getECALMassWindow(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow);
+										const double         massDiff1     = std::fabs(pi0Candidate1.M() - _Pi0Mass);
+										const double         massWindow1   = getECALMassWindow(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow);
 										// elliptic cut in mass vs mass plane
-										if ( massDiff0 * massDiff0 / ( massWindow0 * massWindow0 ) + massDiff1 * massDiff1 / ( massWindow1 * massWindow1 ) > 1) {
+										if (massDiff0 * massDiff0 / (massWindow0 * massWindow0) + massDiff1 * massDiff1 / (massWindow1 * massWindow1) > 1) {
 											continue;
 										}
 										if (_ResultNmbGoodPi0Pairs == 0) {
@@ -1283,16 +1282,16 @@ namespace antok {
 
 				private:
 
-					const TLorentzVector& _Pi0LV_0;
-					const TLorentzVector& _Pi0LV_1;
-					const TLorentzVector& _ChargedPartLV_0;
-					const TLorentzVector& _ChargedPartLV_1;
-					const TLorentzVector& _ChargedPartLV_2;
-					const int&            _Charge_0;
-					const int&            _Charge_1;
-					const int&            _Charge_2;
-					const int             _SelectedCharge;
-					std::vector<TLorentzVector>&  _Result;
+					const TLorentzVector&        _Pi0LV_0;
+					const TLorentzVector&        _Pi0LV_1;
+					const TLorentzVector&        _ChargedPartLV_0;
+					const TLorentzVector&        _ChargedPartLV_1;
+					const TLorentzVector&        _ChargedPartLV_2;
+					const int&                   _Charge_0;
+					const int&                   _Charge_1;
+					const int&                   _Charge_2;
+					const int                    _SelectedCharge;
+					std::vector<TLorentzVector>& _Result;
 
 				};
 
@@ -1346,9 +1345,9 @@ namespace antok {
 								PiPlusLVs.push_back(ChargedPartLVs[i]);
 							}
 						}
-						std::vector<const TLorentzVector*> LVs_0, LVs_1;
 
 						//get requested Pi LVs
+						std::vector<const TLorentzVector*> LVs_0, LVs_1;
 						switch ((combMode)_CombinationMode) {
 							case Pi0PiMinusCombinations: {
 								LVs_0 = Pi0LVs;
@@ -1365,6 +1364,7 @@ namespace antok {
 								LVs_1 = PiPlusLVs;
 								break;
 							}
+							//!TODO add default that throws error
 						}
 
 						// get all Pi combinations
@@ -1379,16 +1379,16 @@ namespace antok {
 
 				private:
 
-					const TLorentzVector& _Pi0LV_0;
-					const TLorentzVector& _Pi0LV_1;
-					const TLorentzVector& _ChargedPartLV_0;
-					const TLorentzVector& _ChargedPartLV_1;
-					const TLorentzVector& _ChargedPartLV_2;
-					const int&            _Charge_0;
-					const int&            _Charge_1;
-					const int&            _Charge_2;
-					const int             _CombinationMode;
-					std::vector<TLorentzVector>&  _Result;
+					const TLorentzVector&        _Pi0LV_0;
+					const TLorentzVector&        _Pi0LV_1;
+					const TLorentzVector&        _ChargedPartLV_0;
+					const TLorentzVector&        _ChargedPartLV_1;
+					const TLorentzVector&        _ChargedPartLV_2;
+					const int&                   _Charge_0;
+					const int&                   _Charge_1;
+					const int&                   _Charge_2;
+					const int                    _CombinationMode;
+					std::vector<TLorentzVector>& _Result;
 
 				};
 
@@ -1451,15 +1451,15 @@ namespace antok {
 
 				private:
 
-					const TLorentzVector& _Pi0LV_0;
-					const TLorentzVector& _Pi0LV_1;
-					const TLorentzVector& _ChargedPartLV_0;
-					const TLorentzVector& _ChargedPartLV_1;
-					const TLorentzVector& _ChargedPartLV_2;
-					const int&            _Charge_0;
-					const int&            _Charge_1;
-					const int&            _Charge_2;
-					std::vector<TLorentzVector>&  _Result;
+					const TLorentzVector&        _Pi0LV_0;
+					const TLorentzVector&        _Pi0LV_1;
+					const TLorentzVector&        _ChargedPartLV_0;
+					const TLorentzVector&        _ChargedPartLV_1;
+					const TLorentzVector&        _ChargedPartLV_2;
+					const int&                   _Charge_0;
+					const int&                   _Charge_1;
+					const int&                   _Charge_2;
+					std::vector<TLorentzVector>& _Result;
 
 				};
 
@@ -1532,6 +1532,7 @@ namespace antok {
 								_Result.push_back(*(PiMinusLVs[0]) + *(PiMinusLVs[1]) + _Pi0LV_0 + _Pi0LV_1);
 								break;
 							}
+							//!TODO add default that throws error
 						}
 
 						return true;
@@ -1539,16 +1540,16 @@ namespace antok {
 
 				private:
 
-					const TLorentzVector& _Pi0LV_0;
-					const TLorentzVector& _Pi0LV_1;
-					const TLorentzVector& _ChargedPartLV_0;
-					const TLorentzVector& _ChargedPartLV_1;
-					const TLorentzVector& _ChargedPartLV_2;
-					const int&            _Charge_0;
-					const int&            _Charge_1;
-					const int&            _Charge_2;
-					const int             _CombinationMode;
-					std::vector<TLorentzVector>&  _Result;
+					const TLorentzVector&        _Pi0LV_0;
+					const TLorentzVector&        _Pi0LV_1;
+					const TLorentzVector&        _ChargedPartLV_0;
+					const TLorentzVector&        _ChargedPartLV_1;
+					const TLorentzVector&        _ChargedPartLV_2;
+					const int&                   _Charge_0;
+					const int&                   _Charge_1;
+					const int&                   _Charge_2;
+					const int                    _CombinationMode;
+					std::vector<TLorentzVector>& _Result;
 
 				};
 
