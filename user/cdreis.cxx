@@ -111,9 +111,10 @@ antok::user::cdreis::generateGetSumOverVector(const YAML::Node&               fu
 		return __getSumOverVector<TVector3>      (args, quantityNames);
 	} else if (argTypeName == "std::vector<TLorentzVector>") {
 		return __getSumOverVector<TLorentzVector>(args, quantityNames);
+	} else {
+		std::cerr << "'" << function["Name"] << "' is not (yet) implemented for type '" << argTypeName << "'." << std::endl;
+		return nullptr;
 	}
-	//!TODO print error message if none of the above
-	return nullptr;
 }
 
 
@@ -598,8 +599,6 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
 	vecPairString<std::string> args
 		= {{"Positions",          "std::vector<TVector3>"},
 		   {"Energies",           "std::vector<double>"},
-		   {"Times",              "std::vector<double>"},
-		   {"ECALClusterIndices", "std::vector<int>"},
 		   {"PV",                 "TVector3"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -616,9 +615,7 @@ antok::user::cdreis::generateGetPhotonLorentzVecs(const YAML::Node&             
 	return new antok::user::cdreis::functions::GetPhotonLorentzVecs(
 		*data.getAddr<std::vector<TVector3>>(args[0].first),          // Positions
 		*data.getAddr<std::vector<double>>  (args[1].first),          // Energies
-		*data.getAddr<std::vector<double>>  (args[2].first),          // Times
-		*data.getAddr<std::vector<int>>     (args[3].first),          // ECALClusterIndices
-		*data.getAddr<TVector3>             (args[4].first),          // VertexPosition
+		*data.getAddr<TVector3>             (args[2].first),          // VertexPosition
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0])  // ResultPhotonLVs
 	);
 }

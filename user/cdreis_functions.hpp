@@ -636,15 +636,10 @@ namespace antok {
 
 					GetPhotonLorentzVecs(const std::vector<TVector3>& Positions,           // positions of ECAL clusters
 					                     const std::vector<double>&   Energies,            // energies of ECAL clusters
-					                     //!TODO Times and ECALClusterIndices are not used in function and can be removed
-					                     const std::vector<double>&   Times,               // times of ECAL clusters
-					                     const std::vector<int>&      ECALClusterIndices,  // ECAL indices of clusters
 					                     const TVector3&              VertexPosition,      // position of primary vertex
 					                     std::vector<TLorentzVector>& ResultPhotonLVs)     // photon Lorentz vectors
 						: _Positions         (Positions),
 						  _Energies          (Energies),
-						  _Times             (Times),
-						  _ECALClusterIndices(ECALClusterIndices),
 						  _VertexPosition    (VertexPosition),
 						  _ResultPhotonLVs   (ResultPhotonLVs)
 					{ }
@@ -655,9 +650,7 @@ namespace antok {
 					operator() ()
 					{
 						const size_t nmbPhotons = _Positions.size();
-						if (   (_Energies.size()           != nmbPhotons)
-						    or (_Times.size()              != nmbPhotons)
-						    or (_ECALClusterIndices.size() != nmbPhotons)) {
+						if (   (_Energies.size()           != nmbPhotons)) {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
@@ -675,8 +668,6 @@ namespace antok {
 
 					const std::vector<TVector3>& _Positions;
 					const std::vector<double>&   _Energies;
-					const std::vector<double>&   _Times;
-					const std::vector<int>&      _ECALClusterIndices;
 					const TVector3&              _VertexPosition;
 					std::vector<TLorentzVector>& _ResultPhotonLVs;
 
@@ -1364,7 +1355,8 @@ namespace antok {
 								LVs_1 = PiPlusLVs;
 								break;
 							}
-							//!TODO add default that throws error
+							default:
+								abort();
 						}
 
 						// get all Pi combinations
@@ -1532,7 +1524,8 @@ namespace antok {
 								_Result.push_back(*(PiMinusLVs[0]) + *(PiMinusLVs[1]) + _Pi0LV_0 + _Pi0LV_1);
 								break;
 							}
-							//!TODO add default that throws error
+							default:
+								abort();
 						}
 
 						return true;

@@ -150,7 +150,7 @@ antok::NeutralFit::covForCluster(const TVector3& clusterPosition,
 				b = 11.84e-02;
 				c = 1.05e-02;
 			}
-			varE = a * a * clusterEnergy + b * b / clusterEnergy + c * c * clusterEnergy * clusterEnergy;
+			varE = a * a * clusterEnergy + b * b + c * c * clusterEnergy * clusterEnergy;
 			break;
 		}
 		default:
