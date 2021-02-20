@@ -626,7 +626,7 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
                                                     const std::vector<std::string>& quantityNames,
                                                     const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 3)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 5)) {
 		return nullptr;
 	}
 	// Get input variables
@@ -649,6 +649,8 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes
 		= {"std::vector<TLorentzVector>",   // ResultPhotonLVs
+		   "std::vector<TLorentzVector>",   // ResultPhoton0inPairLVs
+		   "std::vector<TLorentzVector>",   // ResultPhoton1inPairLVs
 		   "std::vector<TLorentzVector>",   // ResultPhotonLVs_0
 		   "std::vector<TLorentzVector>"};  // ResultPhotonLVs_1
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
@@ -660,8 +662,10 @@ antok::user::cdreis::generateGetPhotonPairParticles(const YAML::Node&           
 		*data.getAddr<std::vector<int>>           (args[1].first),     // ECALClusterIndices
 		constArgsInt["SelectionMode"],                                 // SelectionMode
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultPhotonPairLVs
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[1]),  // ResultPhotonPairsLVs_0
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[2])   // ResultPhotonPairsLVs_1
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[1]),  // ResultPhoton0inPairLVs
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[2]),  // ResultPhoton1inPairLVs
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[3]),  // ResultPhotonPairsLVs_0
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[4])   // ResultPhotonPairsLVs_1
 	);
 }
 
@@ -671,7 +675,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
                                         const std::vector<std::string>& quantityNames,
                                         const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 3)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 5)) {
 		return nullptr;
 	}
 
@@ -700,7 +704,9 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 	const std::vector<std::string> outputVarTypes
 		= {"std::vector<TLorentzVector>",  // ResultPi0PairLVs
 		   "int",                          // ResultNmbGoodPi0Pairs
-		   "std::vector<int>"};            // ResultECALClusterIndices
+		   "std::vector<int>",             // ResultECALClusterIndices
+		   "std::vector<TLorentzVector>",  // ResultGammaLVsForPi0_0
+		   "std::vector<TLorentzVector>"}; // ResultGammaLVsForPi0_1
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
@@ -714,7 +720,9 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 		constArgs["ECAL2MassWindow"],                                  // ECAL2MassWindow
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultPi0PairLVs
 		*data.getAddr<int>                        (quantityNames[1]),  // ResultNmbGoodPi0Pairs
-		*data.getAddr<std::vector<int>>           (quantityNames[2])   // ResultECALClusterIndices
+		*data.getAddr<std::vector<int>>           (quantityNames[2]),  // ResultECALClusterIndices
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[3]),  // ResultGammaLVsForPi0_0
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[4])   // ResultGammaLVsForPi0_1
 	);
 }
 
@@ -979,7 +987,7 @@ antok::user::cdreis::generateGetThreePionCombinationLV(const YAML::Node&        
                                                        const std::vector<std::string>& quantityNames,
                                                        const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 2)) {
 		return nullptr;
 	}
 
@@ -1000,7 +1008,9 @@ antok::user::cdreis::generateGetThreePionCombinationLV(const YAML::Node&        
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	const std::vector<std::string> outputVarTypes = {"std::vector<TLorentzVector>"};  // Result LVs
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<TLorentzVector>",  // Result3PiLVs
+		   "std::vector<TLorentzVector>"}; // ResultPi0In3PiLVs
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
@@ -1014,7 +1024,8 @@ antok::user::cdreis::generateGetThreePionCombinationLV(const YAML::Node&        
 		*data.getAddr<int>           (args[5].first),                 // Charge_0
 		*data.getAddr<int>           (args[6].first),                 // Charge_1
 		*data.getAddr<int>           (args[7].first),                 // Charge_2
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0])  // Result
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]), // Result3PiLVs
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[1])  // ResultPi0In3PiLVs
 	);
 }
 

@@ -683,12 +683,16 @@ namespace antok {
 					                       const std::vector<int>&            ECALClusterIndices,      // indices of the ECAL that measured the photons
 					                       const int&                         SelectionMode,           // nominal mass of photon pair
 					                       std::vector<TLorentzVector>&       ResultPhotonPairLVs,     // Lorentz vectors of all particles reconstructed from photon pairs
+					                       std::vector<TLorentzVector>&       ResultPhoton0inPairLVs,  // Lorentz vectors of all first photons used in photon pairs above
+					                       std::vector<TLorentzVector>&       ResultPhoton1inPairLVs,  // Lorentz vectors of all second photons used in photon pairs above
 					                       std::vector<TLorentzVector>&       ResultPhotonPairsLVs_0,  // Lorentz vectors of first particle reconstructed from photon pair
 					                       std::vector<TLorentzVector>&       ResultPhotonPairsLVs_1)  // Lorentz vectors of second particle reconstructed from photon pair
 						: _PhotonLVs             (PhotonLVs),
 						  _ECALClusterIndices    (ECALClusterIndices),
 						  _SelectionMode         (SelectionMode),
 						  _ResultPhotonPairLVs   (ResultPhotonPairLVs),
+						  _ResultPhoton0inPairLVs(ResultPhoton0inPairLVs),
+						  _ResultPhoton1inPairLVs(ResultPhoton1inPairLVs),
 						  _ResultPhotonPairsLVs_0(ResultPhotonPairsLVs_0),
 						  _ResultPhotonPairsLVs_1(ResultPhotonPairsLVs_1)
 					{ }
@@ -717,6 +721,8 @@ namespace antok {
 						}
 
 						_ResultPhotonPairLVs.clear();
+						_ResultPhoton0inPairLVs.clear();
+						_ResultPhoton1inPairLVs.clear();
 						_ResultPhotonPairsLVs_0.clear();
 						_ResultPhotonPairsLVs_1.clear();
 
@@ -728,11 +734,15 @@ namespace antok {
 								if      (internSelectionMode == ECAL1Selection and (_ECALClusterIndices[i] == 1 and _ECALClusterIndices[j] == 1)) {
 									PhotonPairMode_0 = ECAL1Selection;
 									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
+									_ResultPhoton0inPairLVs.push_back(_PhotonLVs[i]);
+									_ResultPhoton1inPairLVs.push_back(_PhotonLVs[j]);
 								}
 								// select only photon pairs with both photons in ECAL2
 								else if (internSelectionMode == ECAL2Selection and (_ECALClusterIndices[i] == 2 or _ECALClusterIndices[j] == 2)) {
 									PhotonPairMode_0 = ECAL2Selection;
 									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
+									_ResultPhoton0inPairLVs.push_back(_PhotonLVs[i]);
+									_ResultPhoton1inPairLVs.push_back(_PhotonLVs[j]);
 								}
 								// select only photon pairs with one photon in ECAL1 and one in ECAL2
 								else if (internSelectionMode == mixedSelection
@@ -740,11 +750,15 @@ namespace antok {
 								              or (_ECALClusterIndices[i] == 2 and _ECALClusterIndices[j] == 1))) {
 									PhotonPairMode_0 = mixedSelection;
 									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
+									_ResultPhoton0inPairLVs.push_back(_PhotonLVs[i]);
+									_ResultPhoton1inPairLVs.push_back(_PhotonLVs[j]);
 								}
 								// select all photon pairs
 								else if (internSelectionMode == allSelection) {
 									PhotonPairMode_0 = allSelection;
 									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
+									_ResultPhoton0inPairLVs.push_back(_PhotonLVs[i]);
+									_ResultPhoton1inPairLVs.push_back(_PhotonLVs[j]);
 								}
 								else {
 									PhotonPairMode_0 = noSelection;
@@ -761,11 +775,15 @@ namespace antok {
 										if      (internSelectionMode == ECAL1Selection and (_ECALClusterIndices[k] == 1 and _ECALClusterIndices[l] == 1)) {
 											PhotonPairMode_1 = ECAL1Selection;
 											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
+											_ResultPhoton0inPairLVs.push_back(_PhotonLVs[k]);
+											_ResultPhoton1inPairLVs.push_back(_PhotonLVs[l]);
 										}
 										// select only photon pairs with both photons in ECAL2
 										else if (internSelectionMode == ECAL2Selection and (_ECALClusterIndices[k] == 2 or _ECALClusterIndices[l] == 2)) {
 											PhotonPairMode_1 = ECAL2Selection;
 											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
+											_ResultPhoton0inPairLVs.push_back(_PhotonLVs[k]);
+											_ResultPhoton1inPairLVs.push_back(_PhotonLVs[l]);
 										}
 										// select only photon pairs with one photon in ECAL1 and one in ECAL2
 										else if (internSelectionMode == mixedSelection
@@ -773,11 +791,15 @@ namespace antok {
 										              or (_ECALClusterIndices[k] == 2 and _ECALClusterIndices[l] == 1))) {
 											PhotonPairMode_1 = mixedSelection;
 											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
+											_ResultPhoton0inPairLVs.push_back(_PhotonLVs[k]);
+											_ResultPhoton1inPairLVs.push_back(_PhotonLVs[l]);
 										}
 										// select all photon pairs
 										else if (internSelectionMode == allSelection) {
 											PhotonPairMode_1 = allSelection;
 											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
+											_ResultPhoton0inPairLVs.push_back(_PhotonLVs[k]);
+											_ResultPhoton1inPairLVs.push_back(_PhotonLVs[l]);
 										}
 										else {
 											PhotonPairMode_1 = noSelection;
@@ -807,6 +829,8 @@ namespace antok {
 					const std::vector<int>&            _ECALClusterIndices;
 					const int                          _SelectionMode;  // constant parameter, needs to be copied
 					std::vector<TLorentzVector>&       _ResultPhotonPairLVs;
+					std::vector<TLorentzVector>&       _ResultPhoton0inPairLVs;
+					std::vector<TLorentzVector>&       _ResultPhoton1inPairLVs;
 					std::vector<TLorentzVector>&       _ResultPhotonPairsLVs_0;
 					std::vector<TLorentzVector>&       _ResultPhotonPairsLVs_1;
 
@@ -851,7 +875,9 @@ namespace antok {
 					           const double&                      ECAL2MassWindow,           // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
 					           std::vector<TLorentzVector>&       ResultPi0PairLVs,          // Lorentz vectors of the two pi^0 in the first found pair
 					           int&                               ResultNmbGoodPi0Pairs,     // 1 if exactly one pi^0 pair was found; else 0
-					           std::vector<int>&                  ResultECALClusterIndices)  // indices of the ECAL that measured the selected photons
+					           std::vector<int>&                  ResultECALClusterIndices,  // indices of the ECAL that measured the selected photons
+					           std::vector<TLorentzVector>&       ResultGammaLVsForPi0_0,    // Lorentz vectors of the two gammas in the first pi0_0
+					           std::vector<TLorentzVector>&       ResultGammaLVsForPi0_1)    // Lorentz vectors of the two gammas in the first pi0_1
 						: _PhotonLVs                 (PhotonLVs),
 						  _ECALClusterIndices        (ECALClusterIndices),
 						  _Pi0Mass                   (Pi0Mass),
@@ -860,7 +886,9 @@ namespace antok {
 						  _ECAL2MassWindow           (ECAL2MassWindow),
 						  _ResultPi0PairLVs          (ResultPi0PairLVs),
 						  _ResultNmbGoodPi0Pairs     (ResultNmbGoodPi0Pairs),
-						  _ResultECALClusterIndices  (ResultECALClusterIndices)
+						  _ResultECALClusterIndices  (ResultECALClusterIndices),
+						  _ResultGammaLVsForPi0_0    (ResultGammaLVsForPi0_0),
+						  _ResultGammaLVsForPi0_1    (ResultGammaLVsForPi0_1)
 					{ }
 
 					virtual ~GetPi0Pair() { }
@@ -889,6 +917,7 @@ namespace antok {
 							for (size_t j = i + 1; j < nmbPhotons; ++j) {
 								// photon pair 0
 								const TLorentzVector pi0Candidate0 = _PhotonLVs[i] + _PhotonLVs[j];
+								const std::vector<TLorentzVector> gammasForpi0Candidate0 = {_PhotonLVs[i], _PhotonLVs[j]};
 								const double massDiff0 = std::fabs(pi0Candidate0.M() - _Pi0Mass);
 								const double massWindow0 = getECALMassWindow(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow);
 								if (massDiff0 > massWindow0) {
@@ -902,6 +931,7 @@ namespace antok {
 										}
 										// photon pair 1
 										const TLorentzVector pi0Candidate1 = _PhotonLVs[m] + _PhotonLVs[n];
+										const std::vector<TLorentzVector> gammasForpi0Candidate1 = {_PhotonLVs[m], _PhotonLVs[n]};
 										const double         massDiff1     = std::fabs(pi0Candidate1.M() - _Pi0Mass);
 										const double         massWindow1   = getECALMassWindow(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow);
 										// elliptic cut in mass vs mass plane
@@ -910,7 +940,9 @@ namespace antok {
 										}
 										if (_ResultNmbGoodPi0Pairs == 0) {
 											_ResultPi0PairLVs.push_back(pi0Candidate0);
+											_ResultGammaLVsForPi0_0 = gammasForpi0Candidate0;
 											_ResultPi0PairLVs.push_back(pi0Candidate1);
+											_ResultGammaLVsForPi0_1 = gammasForpi0Candidate1;
 											_ResultECALClusterIndices = {(int)i, (int)j, (int)m, (int)n};
 										}
 										_ResultNmbGoodPi0Pairs++;
@@ -933,6 +965,8 @@ namespace antok {
 					std::vector<TLorentzVector>&       _ResultPi0PairLVs;
 					int&                               _ResultNmbGoodPi0Pairs;
 					std::vector<int>&                  _ResultECALClusterIndices;
+					std::vector<TLorentzVector>&       _ResultGammaLVsForPi0_0;
+					std::vector<TLorentzVector>&       _ResultGammaLVsForPi0_1;
 
 				};
 
@@ -1390,24 +1424,27 @@ namespace antok {
 
 				public:
 
-					GetThreePionCombinationLV(const TLorentzVector&        Pi0LV_0,          // Lorentz vector of 1st pi^0
-					                          const TLorentzVector&        Pi0LV_1,          // Lorentz vector of 2nd pi^0
-					                          const TLorentzVector&        ChargedPartLV_0,  // Lorentz vector of 1st charged particle
-					                          const TLorentzVector&        ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
-					                          const TLorentzVector&        ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
-					                          const int&                   Charge_0,         // charge of 1st charged particle
-					                          const int&                   Charge_1,         // charge of 2nd charged particle
-					                          const int&                   Charge_2,         // charge of 3rd charged particle
-					                          std::vector<TLorentzVector>& Result)           // result LVs
-						: _Pi0LV_0        (Pi0LV_0),
-						  _Pi0LV_1        (Pi0LV_1),
-						  _ChargedPartLV_0(ChargedPartLV_0),
-						  _ChargedPartLV_1(ChargedPartLV_1),
-						  _ChargedPartLV_2(ChargedPartLV_2),
-						  _Charge_0       (Charge_0),
-						  _Charge_1       (Charge_1),
-						  _Charge_2       (Charge_2),
-						  _Result         (Result)
+					GetThreePionCombinationLV(const TLorentzVector&        Pi0LV_0,           // Lorentz vector of 1st pi^0
+					                          const TLorentzVector&        Pi0LV_1,           // Lorentz vector of 2nd pi^0
+					                          const TLorentzVector&        ChargedPartLV_0,   // Lorentz vector of 1st charged particle
+					                          const TLorentzVector&        ChargedPartLV_1,   // Lorentz vector of 2nd charged particle
+					                          const TLorentzVector&        ChargedPartLV_2,   // Lorentz vector of 3rd charged particle
+					                          const int&                   Charge_0,          // charge of 1st charged particle
+					                          const int&                   Charge_1,          // charge of 2nd charged particle
+					                          const int&                   Charge_2,          // charge of 3rd charged particle
+					                          std::vector<TLorentzVector>& Result3PiLVs,      // result 3Pi LVs
+											  std::vector<TLorentzVector>& ResultPi0In3PiLVs) // result Pi0 in 3Pi comb LVs
+						: _Pi0LV_0          (Pi0LV_0),
+						  _Pi0LV_1          (Pi0LV_1),
+						  _ChargedPartLV_0  (ChargedPartLV_0),
+						  _ChargedPartLV_1  (ChargedPartLV_1),
+						  _ChargedPartLV_2  (ChargedPartLV_2),
+						  _Charge_0         (Charge_0),
+						  _Charge_1         (Charge_1),
+						  _Charge_2         (Charge_2),
+						  _Result3PiLVs     (Result3PiLVs),
+						  _ResultPi0In3PiLVs(ResultPi0In3PiLVs)
+
 					{ }
 
 					virtual ~GetThreePionCombinationLV() { }
@@ -1415,8 +1452,10 @@ namespace antok {
 					bool
 					operator() ()
 					{
-						_Result.clear();
-						_Result.reserve(4);
+						_Result3PiLVs.clear();
+						_Result3PiLVs.reserve(4);
+						_ResultPi0In3PiLVs.clear();
+						_ResultPi0In3PiLVs.reserve(4);
 						const std::vector<const TLorentzVector*> Pi0LVs         = {&_Pi0LV_0, &_Pi0LV_1};
 						const std::vector<const TLorentzVector*> ChargedPartLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
 						const std::vector<int>                   Charges        = { _Charge_0,         _Charge_1,         _Charge_2};
@@ -1432,7 +1471,8 @@ namespace antok {
 									if (chargeFirst == chargeSecond) {
 										continue;
 									} else {
-										_Result.push_back(*Pi0LV + *chargedFirst + *chargedSecond);
+										_Result3PiLVs.push_back(*Pi0LV + *chargedFirst + *chargedSecond);
+										_ResultPi0In3PiLVs.push_back(*Pi0LV);
 									}
 								}
 							}
@@ -1451,7 +1491,8 @@ namespace antok {
 					const int&                   _Charge_0;
 					const int&                   _Charge_1;
 					const int&                   _Charge_2;
-					std::vector<TLorentzVector>& _Result;
+					std::vector<TLorentzVector>& _Result3PiLVs;
+					std::vector<TLorentzVector>& _ResultPi0In3PiLVs;
 
 				};
 
