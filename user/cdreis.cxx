@@ -675,7 +675,7 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
                                         const std::vector<std::string>& quantityNames,
                                         const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 5)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 6)) {
 		return nullptr;
 	}
 
@@ -703,8 +703,9 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes
 		= {"std::vector<TLorentzVector>",  // ResultPi0PairLVs
+		   "std::vector<int>",             // ResultPi0CombTypes
 		   "int",                          // ResultNmbGoodPi0Pairs
-		   "std::vector<int>",             // ResultECALClusterIndices
+		   "std::vector<int>",             // ResultSelectedClusterIndices
 		   "std::vector<TLorentzVector>",  // ResultGammaLVsForPi0_0
 		   "std::vector<TLorentzVector>"}; // ResultGammaLVsForPi0_1
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
@@ -719,10 +720,11 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 		constArgs["ECAL1MassWindow"],                                  // ECAL1MassWindow
 		constArgs["ECAL2MassWindow"],                                  // ECAL2MassWindow
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultPi0PairLVs
-		*data.getAddr<int>                        (quantityNames[1]),  // ResultNmbGoodPi0Pairs
-		*data.getAddr<std::vector<int>>           (quantityNames[2]),  // ResultECALClusterIndices
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[3]),  // ResultGammaLVsForPi0_0
-		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[4])   // ResultGammaLVsForPi0_1
+		*data.getAddr<std::vector<int>>           (quantityNames[1]),  // ResultPi0CombTypes
+		*data.getAddr<int>                        (quantityNames[2]),  // ResultNmbGoodPi0Pairs
+		*data.getAddr<std::vector<int>>           (quantityNames[3]),  // ResultSelectedClusterIndices
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[4]),  // ResultGammaLVsForPi0_0
+		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[5])   // ResultGammaLVsForPi0_1
 	);
 }
 

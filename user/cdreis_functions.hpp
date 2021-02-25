@@ -867,28 +867,30 @@ namespace antok {
 
 				public:
 
-					GetPi0Pair(const std::vector<TLorentzVector>& PhotonLVs,                 // Lorentz vectors of photons
-					           const std::vector<int>&            ECALClusterIndices,        // indices of the ECAL that measured the photons
-					           const double&                      Pi0Mass,                   // nominal pi^0 mass
-					           const double&                      ECALMixedMassWindow,       // m(gamma gamma) cut applied around Pi0Mass when the photon pair is in ECAL1 and 2
-					           const double&                      ECAL1MassWindow,           // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
-					           const double&                      ECAL2MassWindow,           // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
-					           std::vector<TLorentzVector>&       ResultPi0PairLVs,          // Lorentz vectors of the two pi^0 in the first found pair
-					           int&                               ResultNmbGoodPi0Pairs,     // 1 if exactly one pi^0 pair was found; else 0
-					           std::vector<int>&                  ResultECALClusterIndices,  // indices of the ECAL that measured the selected photons
-					           std::vector<TLorentzVector>&       ResultGammaLVsForPi0_0,    // Lorentz vectors of the two gammas in the first pi0_0
-					           std::vector<TLorentzVector>&       ResultGammaLVsForPi0_1)    // Lorentz vectors of the two gammas in the first pi0_1
-						: _PhotonLVs                 (PhotonLVs),
-						  _ECALClusterIndices        (ECALClusterIndices),
-						  _Pi0Mass                   (Pi0Mass),
-						  _ECALMixedMassWindow       (ECALMixedMassWindow),
-						  _ECAL1MassWindow           (ECAL1MassWindow),
-						  _ECAL2MassWindow           (ECAL2MassWindow),
-						  _ResultPi0PairLVs          (ResultPi0PairLVs),
-						  _ResultNmbGoodPi0Pairs     (ResultNmbGoodPi0Pairs),
-						  _ResultECALClusterIndices  (ResultECALClusterIndices),
-						  _ResultGammaLVsForPi0_0    (ResultGammaLVsForPi0_0),
-						  _ResultGammaLVsForPi0_1    (ResultGammaLVsForPi0_1)
+					GetPi0Pair(const std::vector<TLorentzVector>& PhotonLVs,                    // Lorentz vectors of photons
+					           const std::vector<int>&            ECALClusterIndices,           // indices of the ECAL that measured the photons
+					           const double&                      Pi0Mass,                      // nominal pi^0 mass
+					           const double&                      ECALMixedMassWindow,          // m(gamma gamma) cut applied around Pi0Mass when the photon pair is in ECAL1 and 2
+					           const double&                      ECAL1MassWindow,              // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
+					           const double&                      ECAL2MassWindow,              // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
+					           std::vector<TLorentzVector>&       ResultPi0PairLVs,             // Lorentz vectors of the two pi^0 in the first found pair
+							   std::vector<int>&                  ResultPi0CombTypes,           // vector of combination types of first found pair: both photons ecal1 = 1, both photons ecal2 = 2, mixed photons = 3
+					           int&                               ResultNmbGoodPi0Pairs,        // 1 if exactly one pi^0 pair was found; else 0
+					           std::vector<int>&                  ResultSelectedClusterIndices, // indices of the selected clusters
+					           std::vector<TLorentzVector>&       ResultGammaLVsForPi0_0,       // Lorentz vectors of the two gammas in the first pi0_0
+					           std::vector<TLorentzVector>&       ResultGammaLVsForPi0_1)       // Lorentz vectors of the two gammas in the first pi0_1
+						: _PhotonLVs                    (PhotonLVs),
+						  _ECALClusterIndices           (ECALClusterIndices),
+						  _Pi0Mass                      (Pi0Mass),
+						  _ECALMixedMassWindow          (ECALMixedMassWindow),
+						  _ECAL1MassWindow              (ECAL1MassWindow),
+						  _ECAL2MassWindow              (ECAL2MassWindow),
+						  _ResultPi0PairLVs             (ResultPi0PairLVs),
+						  _ResultPi0CombTypes           (ResultPi0CombTypes),
+						  _ResultNmbGoodPi0Pairs        (ResultNmbGoodPi0Pairs),
+						  _ResultSelectedClusterIndices (ResultSelectedClusterIndices),
+						  _ResultGammaLVsForPi0_0       (ResultGammaLVsForPi0_0),
+						  _ResultGammaLVsForPi0_1       (ResultGammaLVsForPi0_1)
 					{ }
 
 					virtual ~GetPi0Pair() { }
@@ -903,9 +905,11 @@ namespace antok {
 						}
 
 						_ResultPi0PairLVs.clear();
+						_ResultPi0CombTypes.clear();
 						_ResultPi0PairLVs.reserve(2);
+						_ResultPi0CombTypes.reserve(2);
 						_ResultNmbGoodPi0Pairs = 0;
-						_ResultECALClusterIndices = {-1, -1, -1, -1};
+						_ResultSelectedClusterIndices = {-1, -1, -1, -1};
 						if (nmbPhotons < 4) {
 							return true;
 						}
@@ -943,7 +947,28 @@ namespace antok {
 											_ResultGammaLVsForPi0_0 = gammasForpi0Candidate0;
 											_ResultPi0PairLVs.push_back(pi0Candidate1);
 											_ResultGammaLVsForPi0_1 = gammasForpi0Candidate1;
-											_ResultECALClusterIndices = {(int)i, (int)j, (int)m, (int)n};
+											_ResultSelectedClusterIndices = {(int)i, (int)j, (int)m, (int)n};
+											// find combination type of both photon pairs: 1 if both photons in ECAL1, 2 if both photons in ECAL2, 3 if mixed case
+											for (size_t indexEntry = 0; indexEntry < 4; indexEntry = indexEntry + 2) {
+												int index0 = _ECALClusterIndices[_ResultSelectedClusterIndices[indexEntry]];
+												int index1 = _ECALClusterIndices[_ResultSelectedClusterIndices[indexEntry+1]];
+												switch (index0 + index1) {
+													case 2: { // both photons in ECAL1
+														_ResultPi0CombTypes.push_back(1);
+														break;
+													}
+													case 4: { // both photons in ECAL2
+														_ResultPi0CombTypes.push_back(2);
+														break;
+													}
+													case 3: { // one photon in ECAL1, one in ECAL2
+														_ResultPi0CombTypes.push_back(3);
+														break;
+													}
+													default:
+														abort();
+												}
+											}
 										}
 										_ResultNmbGoodPi0Pairs++;
 									}
@@ -963,8 +988,9 @@ namespace antok {
 					const double                       _ECAL1MassWindow;      // constant parameter, needs to be copied
 					const double                       _ECAL2MassWindow;      // constant parameter, needs to be copied
 					std::vector<TLorentzVector>&       _ResultPi0PairLVs;
+					std::vector<int>&                  _ResultPi0CombTypes;
 					int&                               _ResultNmbGoodPi0Pairs;
-					std::vector<int>&                  _ResultECALClusterIndices;
+					std::vector<int>&                  _ResultSelectedClusterIndices;
 					std::vector<TLorentzVector>&       _ResultGammaLVsForPi0_0;
 					std::vector<TLorentzVector>&       _ResultGammaLVsForPi0_1;
 
