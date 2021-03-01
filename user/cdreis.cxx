@@ -690,9 +690,11 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 
 	// Get constant arguments
 	std::map<std::string, double> constArgs
-		= {{"Pi0Mass",             0},
+		= {{"ECALMixedMass",       0},
 		   {"ECALMixedMassWindow", 0},
+		   {"ECAL1Mass",           0},
 		   {"ECAL1MassWindow",     0},
+		   {"ECAL2Mass",           0},
 		   {"ECAL2MassWindow",     0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
@@ -715,9 +717,11 @@ antok::user::cdreis::generateGetPi0Pair(const YAML::Node&               function
 	return new antok::user::cdreis::functions::GetPi0Pair(
 		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),     // PhotonLVs
 		*data.getAddr<std::vector<int>>           (args[1].first),     // ECALClusterIndices
-		constArgs["Pi0Mass"],                                          // Pi0Mass
+		constArgs["ECALMixedMass"],                                    // ECALMixedMass
 		constArgs["ECALMixedMassWindow"],                              // ECALMixedMassWindow
+		constArgs["ECAL1Mass"],                                        // ECAL1Mass
 		constArgs["ECAL1MassWindow"],                                  // ECAL1MassWindow
+		constArgs["ECAL2Mass"],                                        // ECAL2Mass
 		constArgs["ECAL2MassWindow"],                                  // ECAL2MassWindow
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0]),  // ResultPi0PairLVs
 		*data.getAddr<std::vector<int>>           (quantityNames[1]),  // ResultPi0CombTypes

@@ -839,20 +839,31 @@ namespace antok {
 
 				namespace {
 
-					double
-					getECALMassWindow(const int    ECALIndex1,
-					                  const int    ECALIndex2,
-					                  const double ECAL1MassWindow,
-					                  const double ECAL2MassWindow,
-					                  const double ECALMixedMassWindow)
+					void
+					getECALMassParamters(const int    ECALIndex1,
+					                     const int    ECALIndex2,
+										 const double ECAL1Mass,
+					                     const double ECAL1MassWindow,
+										 const double ECAL2Mass,
+					                     const double ECAL2MassWindow,
+										 const double ECALMixedMass,
+					                     const double ECALMixedMassWindow,
+									     double &outMass,
+									     double &outMassWindow)
 					{
 						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
-							return ECAL1MassWindow;
+							outMass = ECAL1Mass;
+							outMassWindow = ECAL1MassWindow;
+							return;
 						} else if ((ECALIndex1 == 2) and (ECALIndex2 == 2)) {
-							return ECAL2MassWindow;
+							outMass = ECAL2Mass;
+							outMassWindow = ECAL2MassWindow;
+							return;
 						} else if (   ((ECALIndex1 == 1) and (ECALIndex2 == 2))
 						           or ((ECALIndex1 == 2) and (ECALIndex2 == 1))) {
-							return ECALMixedMassWindow;
+							outMass = ECALMixedMass;
+							outMassWindow = ECALMixedMassWindow;
+							return;
 						}
 						std::stringstream errMsg;
 						errMsg << "At least one of the given ECAL indices (" << ECALIndex1 << ", " << ECALIndex2 << ") is unknown. Aborting...";
@@ -869,9 +880,11 @@ namespace antok {
 
 					GetPi0Pair(const std::vector<TLorentzVector>& PhotonLVs,                    // Lorentz vectors of photons
 					           const std::vector<int>&            ECALClusterIndices,           // indices of the ECAL that measured the photons
-					           const double&                      Pi0Mass,                      // nominal pi^0 mass
+					           const double&                      ECALMixedMass,                // pi^0 mass when the photon pair is in ECAL1 and 2
 					           const double&                      ECALMixedMassWindow,          // m(gamma gamma) cut applied around Pi0Mass when the photon pair is in ECAL1 and 2
+					           const double&                      ECAL1Mass,                    // pi^0 mass when both photons are in ECAL1
 					           const double&                      ECAL1MassWindow,              // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
+					           const double&                      ECAL2Mass,                    // pi^0 mass when both photons are in ECAL2
 					           const double&                      ECAL2MassWindow,              // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
 					           std::vector<TLorentzVector>&       ResultPi0PairLVs,             // Lorentz vectors of the two pi^0 in the first found pair
 							   std::vector<int>&                  ResultPi0CombTypes,           // vector of combination types of first found pair: both photons ecal1 = 1, both photons ecal2 = 2, mixed photons = 3
@@ -881,9 +894,11 @@ namespace antok {
 					           std::vector<TLorentzVector>&       ResultGammaLVsForPi0_1)       // Lorentz vectors of the two gammas in the first pi0_1
 						: _PhotonLVs                    (PhotonLVs),
 						  _ECALClusterIndices           (ECALClusterIndices),
-						  _Pi0Mass                      (Pi0Mass),
+						  _ECALMixedMass                (ECALMixedMass),
 						  _ECALMixedMassWindow          (ECALMixedMassWindow),
+						  _ECAL1Mass                    (ECAL1Mass),
 						  _ECAL1MassWindow              (ECAL1MassWindow),
+						  _ECAL2Mass                    (ECAL2Mass),
 						  _ECAL2MassWindow              (ECAL2MassWindow),
 						  _ResultPi0PairLVs             (ResultPi0PairLVs),
 						  _ResultPi0CombTypes           (ResultPi0CombTypes),
@@ -922,8 +937,10 @@ namespace antok {
 								// photon pair 0
 								const TLorentzVector pi0Candidate0 = _PhotonLVs[i] + _PhotonLVs[j];
 								const std::vector<TLorentzVector> gammasForpi0Candidate0 = {_PhotonLVs[i], _PhotonLVs[j]};
-								const double massDiff0 = std::fabs(pi0Candidate0.M() - _Pi0Mass);
-								const double massWindow0 = getECALMassWindow(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow);
+								double mass0 = 0.0;
+								double massWindow0 = 0.0;
+								getECALMassParamters(_ECALClusterIndices[i], _ECALClusterIndices[j], _ECAL1Mass, _ECAL1MassWindow, _ECAL2Mass, _ECAL2MassWindow, _ECALMixedMass, _ECALMixedMassWindow, mass0, massWindow0);
+								const double massDiff0 = std::fabs(pi0Candidate0.M() - mass0);
 								if (massDiff0 > massWindow0) {
 									continue;
 								}
@@ -936,8 +953,10 @@ namespace antok {
 										// photon pair 1
 										const TLorentzVector pi0Candidate1 = _PhotonLVs[m] + _PhotonLVs[n];
 										const std::vector<TLorentzVector> gammasForpi0Candidate1 = {_PhotonLVs[m], _PhotonLVs[n]};
-										const double         massDiff1     = std::fabs(pi0Candidate1.M() - _Pi0Mass);
-										const double         massWindow1   = getECALMassWindow(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1MassWindow, _ECAL2MassWindow, _ECALMixedMassWindow);
+										double mass1 = 0.0;
+										double massWindow1 = 0.0;
+										getECALMassParamters(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1Mass, _ECAL1MassWindow, _ECAL2Mass, _ECAL2MassWindow, _ECALMixedMass, _ECALMixedMassWindow, mass1, massWindow1);
+										const double massDiff1 = std::fabs(pi0Candidate0.M() - mass1);
 										// elliptic cut in mass vs mass plane
 										if (massDiff0 * massDiff0 / (massWindow0 * massWindow0) + massDiff1 * massDiff1 / (massWindow1 * massWindow1) > 1) {
 											continue;
@@ -983,9 +1002,11 @@ namespace antok {
 
 					const std::vector<TLorentzVector>& _PhotonLVs;
 					const std::vector<int>&            _ECALClusterIndices;
-					const double                       _Pi0Mass;              // constant parameter, needs to be copied
+					const double                       _ECALMixedMass;        // constant parameter, needs to be copied
 					const double                       _ECALMixedMassWindow;  // constant parameter, needs to be copied
+					const double                       _ECAL1Mass;            // constant parameter, needs to be copied
 					const double                       _ECAL1MassWindow;      // constant parameter, needs to be copied
+					const double                       _ECAL2Mass;            // constant parameter, needs to be copied
 					const double                       _ECAL2MassWindow;      // constant parameter, needs to be copied
 					std::vector<TLorentzVector>&       _ResultPi0PairLVs;
 					std::vector<int>&                  _ResultPi0CombTypes;
