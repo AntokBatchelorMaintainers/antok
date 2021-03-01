@@ -2,6 +2,7 @@
 
 #include<iostream>
 #include<sstream>
+#include<fstream>
 
 #include<TLorentzVector.h>
 
@@ -458,6 +459,69 @@ namespace {
 
 	};
 
+	antok::Cut* __generateListCut(const YAML::Node& cut,
+	                              const std::string& shortName,
+	                              const std::string& longName,
+	                              const std::string& abbreviation,
+	                              bool* const result)
+	{
+
+		using antok::YAMLUtils::hasNodeKey;
+		int mode = 0;
+
+		if(not (hasNodeKey(cut, "Type") and hasNodeKey(cut, "ListAddress") and hasNodeKey(cut, "Variable"))) {
+			std::cerr<<"A required entry is missing for \"ListCut\" cut \""<<shortName<<"\" (either \"Type\" or \"ListAddress\" or \"Variable\")"<<std::endl;
+			return 0;
+		}
+
+		std::string type = antok::YAMLUtils::getString(cut["Type"]);
+		if(type == "Inclusive") {
+			mode = 1;
+		} else if(type == "Exclusive") {
+			mode = 0;
+		} else if(type == "") {
+			std::cerr<<"Could not convert \"Type\" to std::string for \"ListCut\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		} else {
+			std::cerr<<"\"Type\" entry in \"ListCut\" cut \""<<shortName<<"\" has either to be \"Exclusive\" or \"Inclusive\""<<std::endl;
+			return 0;
+		}
+
+		std::string listAddress = antok::YAMLUtils::getString(cut["ListAddress"]);
+		std::vector<int> list;
+		{
+			std::ifstream listFile;
+			listFile.open(listAddress);
+			if (not listFile) {
+				std::cerr<<"Could not open file named \"" << listAddress << "\" for \"ListCut\" cut \""<<shortName<<"\"."<<std::endl;
+				return 0;
+			}
+			int    variable;
+			while (listFile >> variable) {
+				list.push_back(variable);
+			}
+			if (not listFile.eof()) {
+				std::cerr << "ERROR: Invalid run numbers at end of file '" << listAddress << "'; "
+						<< "last good entry for run " << variable << "." << std::endl;
+				return nullptr;
+			}
+			listFile.close();
+		}
+
+		std::string variableStr = antok::YAMLUtils::getString(cut["Variable"]);
+		
+		antok::Data& data = antok::ObjectManager::instance()->getData();
+		std::string variableType = data.getType(variableStr);
+
+		if(variableType != "int") {
+			std::cerr<<"Variable type \""<<variableType<<"\" of variable \"Variable\" not supported in \"ListCut\" cut \""<<shortName<<"\"."<<std::endl;
+			return 0;
+		}
+		int* variableAddr = data.getAddr<int>(variableStr);
+
+		return (new antok::cuts::ListCut(shortName, longName, abbreviation, result, list, variableAddr, mode));
+
+	};
 
 	antok::Cut* __generateIsNotNANCut(const YAML::Node& cut,
 	                                  const std::string& shortName,
@@ -523,6 +587,8 @@ namespace {
 			antokCut = __generateGroupCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "NoCut") {
 			antokCut = new antok::cuts::NoCut(shortName, longName, abbreviation, result);
+		} else if (cutName == "ListCut") {
+			antokCut = __generateListCut(cut, shortName, longName, abbreviation, result);
 		} else if (cutName == "IsNotNAN") {
 			antokCut = __generateIsNotNANCut(cut, shortName, longName, abbreviation, result);
 		} else {

@@ -4,6 +4,8 @@
 #include<string>
 #include<sstream>
 #include<iostream>
+#include<vector>
+#include<algorithm>
 
 #include<event.h>
 
@@ -376,6 +378,53 @@ namespace antok {
 			std::vector<antok::Cut*> _cuts;
 			std::vector<bool*> _results;
 			groupMethod _mode;
+
+		};
+
+		class ListCut: public Cut {
+
+		  public:
+
+			ListCut(const std::string& shortname,
+			        const std::string& longname,
+			        const std::string& abbreviation,
+			        bool* outAddr,
+			        std::vector<int> list,
+			        int* variableAddress,
+			        int mode)
+				: Cut(shortname, longname, abbreviation, outAddr),
+				  _list(list),
+				  _variableAddress(variableAddress),
+				  _mode(mode) { }
+
+			bool operator() () {
+				const bool inList = (std::find(_list.begin(), _list.end(), *_variableAddress) != _list.end());
+				switch(_mode) {
+					case 0: // exclude if in list
+						*_outAddr = !inList;
+						return true;
+					case 1: //include if in list
+						*_outAddr = inList;
+						return true;
+				}
+				return false;
+			}
+
+			bool operator==(const Cut& arhs) {
+				const ListCut* rhs = dynamic_cast<const ListCut*>(&arhs);
+				if(not rhs) {
+					return false;
+				}
+				return (*this->_variableAddress == *rhs->_variableAddress) and
+				       (this->_list == rhs->_list) and
+				       (this->_mode == rhs->_mode);
+			}
+
+		  private:
+
+			std::vector<int> _list;
+			int* _variableAddress;
+			int _mode;
 
 		};
 
