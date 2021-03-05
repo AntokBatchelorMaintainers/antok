@@ -106,7 +106,8 @@ antok::generators::functionArgumentHandler(vecPairString<std::string>& args,
 template <typename T>
 bool
 antok::generators::functionArgumentHandlerConst(mapStringTo<T>&   args,
-                                                const YAML::Node& function)
+                                                const YAML::Node& function,
+                                                const bool        required)
 {
 	const YAML::Node& functionName = function["Name"];
 	for (auto& arg : args) {
@@ -114,7 +115,9 @@ antok::generators::functionArgumentHandlerConst(mapStringTo<T>&   args,
 		T&                 argVal  = arg.second;
 		argVal = T();
 		if (not hasNodeKey(function, argName)) {
-			std::cerr << "Argument '" << argName << "' not found (required for function '" << functionName << "')." << std::endl;
+			if (required) {
+				std::cerr << "Argument '" << argName << "' not found (required for function '" << functionName << "')." << std::endl;
+			}
 			return false;
 		}
 		const YAML::Node& argNode = function[argName];
@@ -129,9 +132,9 @@ antok::generators::functionArgumentHandlerConst(mapStringTo<T>&   args,
 }
 
 // specializations for common data types, add more as needed
-template bool antok::generators::functionArgumentHandlerConst<double>     (mapStringTo<double>&      args, const YAML::Node& function);
-template bool antok::generators::functionArgumentHandlerConst<int>        (mapStringTo<int>&         args, const YAML::Node& function);
-template bool antok::generators::functionArgumentHandlerConst<std::string>(mapStringTo<std::string>& args, const YAML::Node& function);
+template bool antok::generators::functionArgumentHandlerConst<double>     (mapStringTo<double>&      args, const YAML::Node& function, const bool required);
+template bool antok::generators::functionArgumentHandlerConst<int>        (mapStringTo<int>&         args, const YAML::Node& function, const bool required);
+template bool antok::generators::functionArgumentHandlerConst<std::string>(mapStringTo<std::string>& args, const YAML::Node& function, const bool required);
 
 
 /**
@@ -286,7 +289,7 @@ antok::generators::generateLog(const YAML::Node&               function,
 
 	// Get optional constant argument
 	std::map<std::string, double> constArgs = {{"Base", 0}};
-	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
+	if (not functionArgumentHandlerConst<double>(constArgs, function, false)) {
 		// set default value
 		constArgs["Base"] = std::numeric_limits<double>::quiet_NaN();
 	}

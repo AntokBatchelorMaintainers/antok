@@ -20,11 +20,13 @@ namespace antok {
 		 * Sets values in given args vector to the constants found in YAML node
 		 * @param args Vector of pairs where first: node name, second: node value (will be copied in this function)
 		 * @param function: Node of the function
+		 * @param required: if set error message is printed if args do not exist
 		 * @return true if everything was ok
 		 */
 		template <typename T>
 		bool functionArgumentHandlerConst(std::map<std::string, T>& args,
-		                                  const YAML::Node&         function);
+		                                  const YAML::Node&         function,
+		                                  const bool                required = true);
 		/**
 		* Sets the data pointers in the args vector to the address of the variable or to a constant if no variable name, but a number is given
 		* @param args Vector of pairs where first: node/variable name, second: data pointer (will be set in this function)
