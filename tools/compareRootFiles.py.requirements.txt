@@ -1,0 +1,6 @@
+awkward1==0.4.3
+coloredlogs==14.0
+humanfriendly==8.2
+numpy==1.19.4
+uproot4==0.1.2
+verboselogs==1.7

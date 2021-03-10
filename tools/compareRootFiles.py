@@ -5,6 +5,7 @@ import argparse
 import coloredlogs
 import numpy as np
 import os
+import sys
 import uproot4 as uproot
 import verboselogs
 
@@ -16,7 +17,7 @@ Pair = namedtuple('Pair', 'orig new')
 
 def compareHists(TKey):
 	# get histograms
-	keyName = TKey.orig.name()
+	keyName = TKey.orig.object_path
 	className = TKey.orig.classname()
 	fileName = Pair(TKey.orig.file.file_path,
 	                TKey.new.file.file_path)
@@ -50,8 +51,6 @@ def compareHists(TKey):
 	                    hist.new.values_errors())
 	if not np.array_equal(histContents.orig, histContents.new):
 		logger.error(f"histograms for key '{keyName}' have different contents")
-		# logger.verbose(f"     '{histContents.orig!r}' in file '{fileName.orig}'")
-		# logger.verbose(f" vs. '{histContents.new!r}' in file '{fileName.new}'")
 		logger.verbose(f" orig - new values = '{histContents.orig[0] - histContents.new[0]!r}'")
 		logger.verbose(f" orig - new errors = '{histContents.orig[1] - histContents.new[1]!r}'")
 		return False
@@ -78,7 +77,7 @@ def compareLeafs(branch):
 def compareTrees(TKey):
 	result = True
 	# get trees
-	keyName = TKey.orig.name()
+	keyName = TKey.orig.object_path
 	fileName = Pair(TKey.orig.file.file_path,
 	                TKey.new.file.file_path)
 	tree = Pair(TKey.orig.get(),
@@ -95,24 +94,23 @@ def compareTrees(TKey):
 	                  sorted(tree.new.keys()))
 	branchKeysSet = Pair(set(branchKeys.orig),
 	                     set(branchKeys.new))
-	#TODO use zip to iterate over tuple entries
+	# check that branches in each tree are unique
 	if len(branchKeysSet.orig) == len(branchKeys.orig):
 		logger.success(f"branches in tree '{keyName}' in file '{fileName.orig}' are unique")
 	else:
-		result = False
-		logger.error(f"branches '{branchKeys.orig}' in tree '{keyName}' in file '{fileName.orig}' are not unique")
+		logger.warning(f"branches '{branchKeys.orig}' in tree '{keyName}' in file '{fileName.orig}' are not unique")
 	if len(branchKeysSet.new) == len(branchKeys.new):
 		logger.success(f"branches in tree '{keyName}' in file '{fileName.new}' are unique")
 	else:
-		result = False
-		logger.error(f"branches '{branchKeys.new}' in tree '{keyName}' in file '{fileName.new}' are not unique")
+		logger.warning(f"branches '{branchKeys.new}' in tree '{keyName}' in file '{fileName.new}' are not unique")
+	# check tast the two tress have the same branches
 	if branchKeysSet.orig == branchKeysSet.new:
 		logger.success(f"trees for key '{keyName}' have identical branches")
 	else:
 		result = False
 		logger.error(f"trees for key '{keyName}' have different branches:")
 		onlyIn = Pair(branchKeysSet.orig - branchKeysSet.new,
-		              branchKeysSet.new - branchKeysSet.orig)
+		              branchKeysSet.new  - branchKeysSet.orig)
 		if onlyIn.orig:
 			logger.error(f"    the following branches are found only in tree '{keyName}' in file '{fileName.orig}': {onlyIn.orig}")
 		if onlyIn.new:
@@ -136,6 +134,7 @@ def compareTrees(TKey):
 		else:
 			result = False
 
+	# print summary for tree
 	logger.info(f"Comparison summary after checking {len(branchKeys.orig)} branches in trees for key '{keyName}':")
 	if count['BranchesSuccess'] == count['BranchesBoth']:
 		logger.success(f"all of the {count['BranchesBoth']} branches that are found in both trees for key '{keyName}' are identical")
@@ -146,27 +145,18 @@ def compareTrees(TKey):
 
 
 def compareFiles(fileName=Pair('orig.root', 'new.root')):
+	result = True
 	logger.info(f"comparing files '{fileName.orig}' and '{fileName.new}'")
 	file = Pair(uproot.open(fileName.orig),
 	            uproot.open(fileName.new))
 	keys = Pair(sorted(file.orig.keys(recursive=True)),
 	            sorted(file.new.keys(recursive=True)))
+
+	# check that keys in each file are unique
 	keySet = Pair(set(keys.orig),
 	              set(keys.new))
 	assert len(keySet.orig) == len(keys.orig), f"keys in file '{fileName.orig}' are not unique"
 	assert len(keySet.new) == len(keys.new), f"keys in file '{fileName.new}' are not unique"
-
-	# check that both files have the same keys
-	if keySet.orig == keySet.new:
-		logger.success(f"files '{fileName.orig}' and '{fileName.new}' have identical keys")
-	else:
-		logger.error('files have different keys:')
-		onlyIn = Pair(keySet.orig - keySet.new,
-		              keySet.new - keySet.orig)
-		if onlyIn.orig:
-			logger.error(f"    the following keys are found only in file '{fileName.orig}': {onlyIn.orig}")
-		if onlyIn.new:
-			logger.error(f"    the following keys are found only in file '{fileName.new}': {onlyIn.new}")
 
 	# check each key
 	count = Counter()
@@ -202,18 +192,34 @@ def compareFiles(fileName=Pair('orig.root', 'new.root')):
 		else:
 			logger.notice(f"cannot compare object of class '{className.orig}'")
 
+	# print summary
 	logger.info(f"Comparison summary after checking {len(keys.orig)} keys:")
+	if keySet.orig == keySet.new:
+		logger.success(f"files '{fileName.orig}' and '{fileName.new}' have identical keys")
+	else:
+		result = False
+		logger.error('files have different keys:')
+		onlyIn = Pair(keySet.orig - keySet.new,
+		              keySet.new  - keySet.orig)
+		if onlyIn.orig:
+			logger.error(f"    the following keys are found only in file '{fileName.orig}': {onlyIn.orig}")
+		if onlyIn.new:
+			logger.error(f"    the following keys are found only in file '{fileName.new}': {onlyIn.new}")
+
 	if count['HistsSuccess'] == count['HistsTotal']:
-		logger.success(f"the {count['HistsTotal']} histograms that are found in both files are identical")
+		logger.success(f"all {count['HistsTotal']} histograms that are found in both files are identical")
 	else:
-		logger.warning(f"{count['HistsTotal'] - count['HistsSuccess']} histograms that are found in both files differ")
+		result = False
+		logger.error(f"{count['HistsTotal'] - count['HistsSuccess']} histograms that are found in both files differ")
 	if count['TreesSuccess'] == count['TreesTotal']:
-		logger.success(f"the {count['TreesTotal']} trees that are found in both files are identical")
+		logger.success(f"all {count['TreesTotal']} trees that are found in both files are identical")
 	else:
-		logger.warning(f"{count['TreesTotal'] - count['TreesSuccess']} trees that are found in both files differ")
+		result = False
+		logger.error(f"{count['TreesTotal'] - count['TreesSuccess']} trees that are found in both files differ")
 
 	file.orig.close()
 	file.new.close()
+	return result
 
 
 if __name__ == '__main__':
@@ -235,11 +241,16 @@ if __name__ == '__main__':
 
 	# parse command line arguments
 	parser = argparse.ArgumentParser(
-		description="Compares contents of histograms and trees of two ROOT files."
+		description="Compares the contents of histograms and trees of two ROOT files."
 	)
 	parser.add_argument("filePathA", type=str, help="first input file")
 	parser.add_argument("filePathB", type=str, help="second input file")
 	args = parser.parse_args()
 
-	compareFiles(Pair(os.path.abspath(args.filePathA),
-	                  os.path.abspath(args.filePathB)))
+	if compareFiles(Pair(os.path.abspath(args.filePathA),
+	                     os.path.abspath(args.filePathB))):
+		logger.success(f"files '{args.filePathA}' and '{args.filePathB}' are identical")
+		sys.exit(os.EX_OK)
+	else:
+		logger.error(f"files '{args.filePathA}' and '{args.filePathB}' differ")
+		sys.exit(os.EX_DATAERR)
