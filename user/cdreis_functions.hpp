@@ -1233,11 +1233,17 @@ namespace antok {
 					operator() ()
 					{
 						// searches for omega(782) -> pi^- pi^0 pi^+ candidates in pi^- pi^- pi^0 pi^0 pi^+ final state
-						// if several omega candidates are found, the last found one is returned
+						// if several omega candidates are found, a random omega is returned
 						const std::vector<const TLorentzVector*> pi0s       = {&_Pi0LV_O, &_Pi0LV_1};
 						const std::vector<const TLorentzVector*> chargedLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
 						const std::vector<const int*>            charges    = {&_Charge_0,        &_Charge_1,        &_Charge_2};
 						_ResultNmbOmegas = 0;
+						std::vector<TLorentzVector> _OmegaLVs = {};
+						std::vector<TLorentzVector> _Pi0InOmegaLVs = {};
+						std::vector<TLorentzVector> _NotUsedPi0LVs = {};
+						std::vector<TLorentzVector> _PiMinusInOmegaLVs = {};
+						std::vector<TLorentzVector> _NotUsedPiMinusLVs = {};
+						std::vector<TLorentzVector> _PiPlusInOmegaLVs = {};
 						// Loop over available pi^0s
 						for (size_t i = 0; i < pi0s.size(); ++i) {
 							// Loop over charged particles
@@ -1248,25 +1254,25 @@ namespace antok {
 										// Check if mass fits omega(782) nominal mass
 										const TLorentzVector candidate = *pi0s[i] + *chargedLVs[j] + *chargedLVs[k];
 										if (std::fabs(candidate.M() - _OmegaMass) < _OmegaMassWindow) {
-											_ResultOmegaLV = candidate;
+											_OmegaLVs.push_back(candidate);
 											_ResultNmbOmegas++;  // Count omega candidates
 											// find pi^0 that is not part of the omega candidate
 											for (size_t l = 0; l < pi0s.size(); l++) {
 												if (i != l) {
-													_ResultNotUsedPi0LV = *pi0s[l];
-													_ResultPi0InOmegaLV = *pi0s[i];
+													_NotUsedPi0LVs.push_back(*pi0s[l]);
+													_Pi0InOmegaLVs.push_back(*pi0s[i]);
 												}
 											}
 											// find pi^- that is not part of the omega candidate
 											for (size_t m = 0; m < chargedLVs.size(); ++m) {
 												if ((m != j) and (m != k)) {
-													_ResultNotUsedPiMinusLV = *chargedLVs[m];
+													_NotUsedPiMinusLVs.push_back(*chargedLVs[m]);
 													if (*charges[j] == +1) {
-														_ResultPiMinusInOmegaLV = *chargedLVs[k];
-														_ResultPiPlusInOmegaLV  = *chargedLVs[j];
+														_PiMinusInOmegaLVs.push_back(*chargedLVs[k]);
+														_PiPlusInOmegaLVs.push_back(*chargedLVs[j]);
 													} else {
-														_ResultPiMinusInOmegaLV = *chargedLVs[j];
-														_ResultPiPlusInOmegaLV  = *chargedLVs[k];
+														_PiMinusInOmegaLVs.push_back(*chargedLVs[j]);
+														_PiPlusInOmegaLVs.push_back(*chargedLVs[k]);
 													}
 												}
 											}
@@ -1275,7 +1281,26 @@ namespace antok {
 								}
 							}
 						}
-
+						if (_ResultNmbOmegas == 0) return true;
+						if (_ResultNmbOmegas == 1) {
+							_ResultOmegaLV          = _OmegaLVs[0];
+							_ResultNotUsedPi0LV     = _NotUsedPi0LVs[0];
+							_ResultNotUsedPiMinusLV = _NotUsedPiMinusLVs[0];
+							_ResultPiMinusInOmegaLV = _PiMinusInOmegaLVs[0];
+							_ResultPi0InOmegaLV     = _Pi0InOmegaLVs[0];
+							_ResultPiPlusInOmegaLV  = _PiPlusInOmegaLVs[0]; 
+						} else {
+							// randomly choose one of the events with a valid omega candidate
+							TRandom* randomSelector = new TRandom();
+							const size_t selectedEvent = randomSelector->Integer(_ResultNmbOmegas);
+							delete randomSelector;
+							_ResultOmegaLV          = _OmegaLVs[selectedEvent];
+							_ResultNotUsedPi0LV     = _NotUsedPi0LVs[selectedEvent];
+							_ResultNotUsedPiMinusLV = _NotUsedPiMinusLVs[selectedEvent];
+							_ResultPiMinusInOmegaLV = _PiMinusInOmegaLVs[selectedEvent];
+							_ResultPi0InOmegaLV     = _Pi0InOmegaLVs[selectedEvent];
+							_ResultPiPlusInOmegaLV  = _PiPlusInOmegaLVs[selectedEvent]; 
+						}
 						return true;
 					}
 
