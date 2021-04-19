@@ -4,6 +4,8 @@
 #include<string>
 #include<sstream>
 #include<iostream>
+#include<vector>
+#include<algorithm>
 
 #include<event.h>
 
@@ -40,6 +42,12 @@ namespace antok {
 
 	namespace cuts {
 
+		enum rangeMethod {rangeFail = -1,
+		                  rangeExcl = 0,         rangeIncl =         rangeExcl + 1,
+		                  rangeOpenLowExcl = 2,  rangeOpenLowIncl =  rangeOpenLowExcl + 1,
+		                  rangeOpenHighExcl = 4, rangeOpenHighIncl = rangeOpenHighExcl + 1,
+					      centralValExcl = 6,    centralValIncl =    centralValExcl + 1};
+
 		template< typename T>
 		class RangeCut : public Cut {
 
@@ -52,50 +60,45 @@ namespace antok {
 			         T* lowerBoundOrCentralValueAddr,
 			         T* upperBoundOrRangeAddr,
 			         T* valueAddr,
-			         int mode)
+			         rangeMethod mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
 				  _lowerBoundOrCentralValueAddr(lowerBoundOrCentralValueAddr),
 				  _upperBoundOrRangeAddr(upperBoundOrRangeAddr),
 				  _valueAddr(valueAddr),
 				  _mode(mode) { }
 
+
 			bool operator() () {
 				switch(_mode)
 				{
-					case 0:
-						// range exclusive
+					case rangeExcl:
 						(*_outAddr) = ((*_valueAddr) > (*_lowerBoundOrCentralValueAddr)) and ((*_valueAddr) < (*_upperBoundOrRangeAddr));
 						return true;
-					case 1:
-						// range inclusive
+					case rangeIncl:
 						(*_outAddr) = ((*_valueAddr) >= (*_lowerBoundOrCentralValueAddr)) and ((*_valueAddr) <= (*_upperBoundOrRangeAddr));
 						return true;
-					case 2:
-						// range open low exclusive
+					case rangeOpenLowExcl:
 						(*_outAddr) = (*_valueAddr) < (*_upperBoundOrRangeAddr);
 						return true;
-					case 3:
-						// range open low inclusive
+					case rangeOpenLowIncl:
 						(*_outAddr) = (*_valueAddr) <= (*_upperBoundOrRangeAddr);
 						return true;
-					case 4:
-						// range open high exclusive
+					case rangeOpenHighExcl:
 						(*_outAddr) = (*_valueAddr) > (*_lowerBoundOrCentralValueAddr);
 						return true;
-					case 5:
-						// range open high inclusive
+					case rangeOpenHighIncl:
 						(*_outAddr) = (*_valueAddr) >= (*_lowerBoundOrCentralValueAddr);
 						return true;
-					case 6:
-						// central value and range exclusive
+					case centralValExcl:
 						(*_outAddr) = ((*_valueAddr) > (*_lowerBoundOrCentralValueAddr - *_upperBoundOrRangeAddr)) and
 						              ((*_valueAddr) < (*_lowerBoundOrCentralValueAddr + *_upperBoundOrRangeAddr));
 						return true;
-					case 7:
-						// central value and range inclusive
+					case centralValIncl:
 						(*_outAddr) = ((*_valueAddr) >= (*_lowerBoundOrCentralValueAddr - *_upperBoundOrRangeAddr)) and
 						              ((*_valueAddr) <= (*_lowerBoundOrCentralValueAddr + *_upperBoundOrRangeAddr));
 						return true;
+					case rangeFail:
+						return false;
 				}
 				return false;
 			};
@@ -126,9 +129,11 @@ namespace antok {
 			T* _lowerBoundOrCentralValueAddr;
 			T* _upperBoundOrRangeAddr;
 			T* _valueAddr;
-			int _mode;
+			rangeMethod _mode;
 
 		};
+
+		enum equalityMethod {eqFail = -1, equality = 0, inequality = 1};
 
 		template<typename T>
 		class EqualityCut : public Cut {
@@ -141,7 +146,7 @@ namespace antok {
 			            bool* outAddr,
 			            T* leftAddr,
 			            T* rightAddr,
-			            int mode)
+			            antok::cuts::equalityMethod mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
 				  _leftAddr(leftAddr),
 				  _rightAddr(rightAddr),
@@ -149,14 +154,14 @@ namespace antok {
 
 			bool operator() () {
 				switch(_mode) {
-					case 0:
-						// ==
+					case equality:
 						(*_outAddr) = (*_leftAddr) == (*_rightAddr);
 						return true;
-					case 1:
-						// !=
+					case inequality:
 						(*_outAddr) = (*_leftAddr) != (*_rightAddr);
 						return true;
+					case eqFail:
+						return false;
 				}
 				return false;
 			}
@@ -175,9 +180,11 @@ namespace antok {
 
 			T* _leftAddr;
 			T* _rightAddr;
-			int _mode;
+			antok::cuts::equalityMethod _mode;
 
 		};
+
+		enum ellipticMethod {ellipticFail = -1, ellipticInclusive = 0, ellipticExclusive = 1};
 
 		class EllipticCut : public Cut {
 
@@ -193,7 +200,7 @@ namespace antok {
 			            double* cutY,
 			            double* X,
 			            double* Y,
-			            int mode)
+			            ellipticMethod mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
 				  _meanX(meanX),
 				  _meanY(meanY),
@@ -205,16 +212,16 @@ namespace antok {
 
 			bool operator() () {
 				switch(_mode) {
-					case 0:
-						// inclusive
+					case ellipticInclusive:
 						(*_outAddr) = (  ((*_X-*_meanX)*(*_X-*_meanX)/(*_cutX * *_cutX) +
 						                  (*_Y-*_meanY)*(*_Y-*_meanY)/(*_cutY * *_cutY))  <= 1.  );
 						return true;
-					case 1:
-						// exclusive
+					case ellipticExclusive:
 						(*_outAddr) = (  ((*_X-*_meanX)*(*_X-*_meanX)/(*_cutX * *_cutX) +
 						                  (*_Y-*_meanY)*(*_Y-*_meanY)/(*_cutY * *_cutY))  < 1.  );
 						return true;
+					case ellipticFail:
+						return false;
 				}
 				return false;
 			}
@@ -241,7 +248,7 @@ namespace antok {
 			double* _cutY;
 			double* _X;
 			double* _Y;
-			int _mode;
+			ellipticMethod _mode;
 
 		};
 
@@ -288,6 +295,8 @@ namespace antok {
 
 		};
 
+		enum groupMethod {groupFail = -1, groupAnd = 0, groupOr = 1, groupNand};
+
 		class CutGroup : public Cut {
 
 		  public:
@@ -298,7 +307,7 @@ namespace antok {
 			         bool* outAddr,
 			         std::vector<antok::Cut*> cuts,
 			         std::vector<bool*> results,
-			         int mode)
+			         groupMethod mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
 				  _cuts(cuts),
 				  _results(results),
@@ -315,7 +324,7 @@ namespace antok {
 			bool operator () () {
 				bool retval;
 				switch(_mode) {
-					case 0:
+					case groupAnd:
 						// and
 						retval = true;
 						for(unsigned int i = 0; i < _cuts.size(); ++i) {
@@ -324,7 +333,7 @@ namespace antok {
 						}
 						(*_outAddr) = retval;
 						return true;
-					case 1:
+					case groupOr:
 						// or
 						retval = false;
 						for(unsigned int i = 0; i < _cuts.size(); ++i) {
@@ -333,7 +342,7 @@ namespace antok {
 						}
 						(*_outAddr) = retval;
 						return true;
-					case 2:
+					case groupNand:
 						// nand
 						retval = true;
 						for(unsigned int i = 0; i < _cuts.size(); ++i) {
@@ -342,6 +351,8 @@ namespace antok {
 						}
 						(*_outAddr) = not retval;
 						return true;
+					case groupFail:
+						return false;
 				}
 				return false;
 			}
@@ -366,6 +377,53 @@ namespace antok {
 
 			std::vector<antok::Cut*> _cuts;
 			std::vector<bool*> _results;
+			groupMethod _mode;
+
+		};
+
+		class ListCut: public Cut {
+
+		  public:
+
+			ListCut(const std::string& shortname,
+			        const std::string& longname,
+			        const std::string& abbreviation,
+			        bool* outAddr,
+			        std::vector<int> list,
+			        int* variableAddress,
+			        int mode)
+				: Cut(shortname, longname, abbreviation, outAddr),
+				  _list(list),
+				  _variableAddress(variableAddress),
+				  _mode(mode) { }
+
+			bool operator() () {
+				const bool inList = (std::find(_list.begin(), _list.end(), *_variableAddress) != _list.end());
+				switch(_mode) {
+					case 0: // exclude if in list
+						*_outAddr = !inList;
+						return true;
+					case 1: //include if in list
+						*_outAddr = inList;
+						return true;
+				}
+				return false;
+			}
+
+			bool operator==(const Cut& arhs) {
+				const ListCut* rhs = dynamic_cast<const ListCut*>(&arhs);
+				if(not rhs) {
+					return false;
+				}
+				return (*this->_variableAddress == *rhs->_variableAddress) and
+				       (this->_list == rhs->_list) and
+				       (this->_mode == rhs->_mode);
+			}
+
+		  private:
+
+			std::vector<int> _list;
+			int* _variableAddress;
 			int _mode;
 
 		};

@@ -123,11 +123,11 @@ namespace {
 		if(antok::YAMLUtils::hasNodeKey(plot, "AxisLabels")) {
 			std::string xAxisLabel = "";
 			std::string yAxisLabel = "";
-			if(not antok::YAMLUtils::getValue<std::string>(plot["AxisLabels"][0], &xAxisLabel)) {
+			if(not antok::YAMLUtils::getValue<std::string>(plot["AxisLabels"][0], xAxisLabel)) {
 				std::cerr<<"Could not get first of the \"AxisLabels\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 				return "";
 			}
-			if(not antok::YAMLUtils::getValue<std::string>(plot["AxisLabels"][1], &yAxisLabel)) {
+			if(not antok::YAMLUtils::getValue<std::string>(plot["AxisLabels"][1], yAxisLabel)) {
 				std::cerr<<"Could not get second of the \"AxisLabels\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 				return "";
 			}
@@ -154,12 +154,12 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 	}
 
 	double lowerBound = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["LowerBound"], &lowerBound)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["LowerBound"], lowerBound)) {
 		std::cerr<<"Could not get \"LowerBound\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 	double upperBound = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["UpperBound"], &upperBound)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["UpperBound"], upperBound)) {
 		std::cerr<<"Could not get \"UpperBound\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
@@ -168,7 +168,7 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 		return 0;
 	}
 	int nBins = 0;
-	if(not antok::YAMLUtils::getValue<int>(plot["NBins"], &nBins)) {
+	if(not antok::YAMLUtils::getValue<int>(plot["NBins"], nBins)) {
 		std::cerr<<"Could not get \"NBins\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
@@ -306,18 +306,18 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 	}
 
 	double lowerBound1 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][0], &lowerBound1)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][0], lowerBound1)) {
 		std::cerr<<"Could not get first of the \"LowerBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 	double lowerBound2 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][1], &lowerBound2)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][1], lowerBound2)) {
 		std::cerr<<"Could not get second of the \"LowerBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 
 	double upperBound1 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][0], &upperBound1)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][0], upperBound1)) {
 		std::cerr<<"Could not get first of the \"UpperBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
@@ -326,7 +326,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 		return 0;
 	}
 	double upperBound2 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][1], &upperBound2)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][1], upperBound2)) {
 		std::cerr<<"Could not get second of the \"UpperBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
@@ -336,12 +336,12 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 	}
 
 	int nBins1 = 0;
-	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][0], &nBins1)) {
+	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][0], nBins1)) {
 		std::cerr<<"Could not get first of the \"NBins\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 	int nBins2 = 0;
-	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][1], &nBins2)) {
+	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][1], nBins2)) {
 		std::cerr<<"Could not get first of the \"NBins\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
@@ -698,23 +698,23 @@ antok::Plot* antok::generators::generate3DPlot(const YAML::Node& plot, const ant
 	}
 
 	double lowerBound1 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][0], &lowerBound1)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][0], lowerBound1)) {
 		std::cerr<<"Could not get first of the \"LowerBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 	double lowerBound2 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][1], &lowerBound2)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][1], lowerBound2)) {
 		std::cerr<<"Could not get second of the \"LowerBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 	double lowerBound3 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][2], &lowerBound3)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["LowerBounds"][2], lowerBound3)) {
 		std::cerr<<"Could not get third of the \"LowerBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 
 	double upperBound1 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][0], &upperBound1)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][0], upperBound1)) {
 		std::cerr<<"Could not get first of the \"UpperBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
@@ -723,12 +723,12 @@ antok::Plot* antok::generators::generate3DPlot(const YAML::Node& plot, const ant
 		return 0;
 	}
 	double upperBound2 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][1], &upperBound2)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][1], upperBound2)) {
 		std::cerr<<"Could not get second of the \"UpperBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 	double upperBound3 = 0.;
-	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][2], &upperBound3)) {
+	if(not antok::YAMLUtils::getValue<double>(plot["UpperBounds"][2], upperBound3)) {
 		std::cerr<<"Could not get third of the \"UpperBounds\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
@@ -742,17 +742,17 @@ antok::Plot* antok::generators::generate3DPlot(const YAML::Node& plot, const ant
 	}
 
 	int nBins1 = 0;
-	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][0], &nBins1)) {
+	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][0], nBins1)) {
 		std::cerr<<"Could not get first of the \"NBins\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 	int nBins2 = 0;
-	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][1], &nBins2)) {
+	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][1], nBins2)) {
 		std::cerr<<"Could not get second of the \"NBins\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}
 	int nBins3 = 0;
-	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][2], &nBins3)) {
+	if(not antok::YAMLUtils::getValue<int>(plot["NBins"][2], nBins3)) {
 		std::cerr<<"Could not get third of the \"NBins\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
 		return 0;
 	}

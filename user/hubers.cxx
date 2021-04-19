@@ -10,9 +10,9 @@
 #include<iostream>
 #include<fstream>
 
-antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function,
-                                                      std::vector<std::string>& quantityNames,
-                                                      int index)
+antok::Function* antok::user::hubers::getUserFunction(const YAML::Node&               function,
+                                                      const std::vector<std::string>& quantityNames,
+                                                      int                             index)
 {
 	std::string functionName = antok::YAMLUtils::getString(function["Name"]);
 	antok::Function* antokFunctionPtr = 0;
@@ -51,7 +51,7 @@ antok::Function* antok::user::hubers::getUserFunction(const YAML::Node& function
 	return antokFunctionPtr;
 }
 
-antok::Function* antok::user::hubers::generateSqrt(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateSqrt(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -80,7 +80,7 @@ antok::Function* antok::user::hubers::generateSqrt(const YAML::Node& function, s
 	return (new antok::user::hubers::functions::Sqrt(argAddr, data.getAddr<double>(quantityName)));
 };
 
-antok::Function* antok::user::hubers::generateFrac(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateFrac(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -111,7 +111,7 @@ antok::Function* antok::user::hubers::generateFrac(const YAML::Node& function, s
 	return (new antok::user::hubers::functions::Frac(arg1Addr, arg2Addr, data.getAddr<double>(quantityName)));
 };
 
-antok::Function* antok::user::hubers::generateGetPt(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetPt(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() != 1) {
@@ -146,7 +146,7 @@ antok::Function* antok::user::hubers::generateGetPt(const YAML::Node& function, 
 	return (new antok::user::hubers::functions::GetPt(xLVAddr, beamLVAddr, quantityAddrs[0]));
 };
 
-antok::Function* antok::user::hubers::generateEnforceEConservation(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateEnforceEConservation(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -187,7 +187,7 @@ antok::Function* antok::user::hubers::generateEnforceEConservation(const YAML::N
 	       );
 }
 
-antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() != 2) {
@@ -236,7 +236,7 @@ antok::Function* antok::user::hubers::generateGetNeuronalBeam(const YAML::Node& 
 //Calculates the angle theta between
 //two TLorentzVectors
 //***********************************
-antok::Function* antok::user::hubers::generateGetTheta(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetTheta(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -271,7 +271,7 @@ antok::Function* antok::user::hubers::generateGetTheta(const YAML::Node& functio
 //Calculates the condition for a
 //theta dependend Z cut
 //***********************************
-antok::Function* antok::user::hubers::generateGetThetaZCut(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetThetaZCut(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -318,7 +318,7 @@ antok::Function* antok::user::hubers::generateGetThetaZCut(const YAML::Node& fun
 //result is 1 if a run is in a bad
 //spill list
 //***********************************
-antok::Function* antok::user::hubers::generateGetBadSpill(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetBadSpill(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -371,7 +371,7 @@ antok::Function* antok::user::hubers::generateGetBadSpill(const YAML::Node& func
 //***********************************
 //Shifts std::vectors
 //***********************************
-antok::Function* antok::user::hubers::generateGetShifted(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetShifted(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() != 1) {
@@ -423,7 +423,7 @@ antok::Function* antok::user::hubers::generateGetShifted(const YAML::Node& funct
 // linear method in case of MC
 // posdep method in case of RD
 //***********************************
-antok::Function* antok::user::hubers::generateGetScaledCluster(const YAML::Node& function, std::vector<std::string>& quantityNames, int index){
+antok::Function* antok::user::hubers::generateGetScaledCluster(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index){
 
 	if(quantityNames.size() > 1) {
 		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
@@ -476,7 +476,7 @@ antok::Function* antok::user::hubers::generateGetScaledCluster(const YAML::Node&
 //cleans calorimeter clusters
 //and merges them dependend onn their distance
 //***********************************
-antok::Function* antok::user::hubers::generateGetCleanedClusters(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetCleanedClusters(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() != 5) {
@@ -550,7 +550,7 @@ antok::Function* antok::user::hubers::generateGetCleanedClusters(const YAML::Nod
 //***********************************
 //gets highest energetic calorimeter cluster
 //***********************************
-antok::Function* antok::user::hubers::generateGetMaximumCluster(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetMaximumCluster(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() != 6) {
@@ -620,7 +620,7 @@ antok::Function* antok::user::hubers::generateGetMaximumCluster(const YAML::Node
 //gets LorentzVector for cluster
 //produced in a  vertex with coordinates X/Y/Z
 //***********************************
-antok::Function* antok::user::hubers::generateGetNeutralLorentzVec(const YAML::Node& function, std::vector<std::string>& quantityNames, int index){
+antok::Function* antok::user::hubers::generateGetNeutralLorentzVec(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index){
 	if(quantityNames.size() > 1) {
 		std::cerr<<"Too many names for function \""<<function["Name"]<<"\"."<<std::endl;
 		return 0;
@@ -670,7 +670,7 @@ antok::Function* antok::user::hubers::generateGetNeutralLorentzVec(const YAML::N
 //returns true/false
 //a lot of things are hard coded for Nickel
 //***********************************
-antok::Function* antok::user::hubers::generateGetFormFactor(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetFormFactor(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -704,7 +704,7 @@ antok::Function* antok::user::hubers::generateGetFormFactor(const YAML::Node& fu
 //Calculates bgTrack Cut
 //returns true/false
 //***********************************
-antok::Function* antok::user::hubers::generateGetBgTrackCut(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetBgTrackCut(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() > 1) {
@@ -749,7 +749,7 @@ antok::Function* antok::user::hubers::generateGetBgTrackCut(const YAML::Node& fu
 //Gets best pi0 pair
 //gives an LV and the mass
 //***********************************
-antok::Function* antok::user::hubers::generateGetClosestPi0(const YAML::Node& function, std::vector<std::string>& quantityNames, int index)
+antok::Function* antok::user::hubers::generateGetClosestPi0(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index)
 {
 
 	if(quantityNames.size() != 2) {

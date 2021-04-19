@@ -1,51 +1,15 @@
-#///////////////////////////////////////////////////////////////////////////
-#//
-#//    Copyright 2010
-#//
-#//    This file is part of rootpwa
-#//
-#//    rootpwa is free software: you can redistribute it and/or modify
-#//    it under the terms of the GNU General Public License as published by
-#//    the Free Software Foundation, either version 3 of the License, or
-#//    (at your option) any later version.
-#//
-#//    rootpwa is distributed in the hope that it will be useful,
-#//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#//    GNU General Public License for more details.
-#//
-#//    You should have received a copy of the GNU General Public License
-#//    along with rootpwa.  If not, see <http://www.gnu.org/licenses/>.
-#//
-#///////////////////////////////////////////////////////////////////////////
-#//-------------------------------------------------------------------------
-#//
-#// Description:
-#//      build file for amplitude library
-#//
-#//
-#// Author List:
-#//      Boris Grube          TUM            (original author)
-#//
-#//
-#//-------------------------------------------------------------------------
-
-
 message(STATUS "")
 message(STATUS ">>> Setting up 'pyInterface' directory.")
 
-
-# set include directories
-set(INCLUDE_DIRECTORIES
-	${PYTHON_INCLUDE_DIRS}
-	SYSTEM ${Boost_INCLUDE_DIRS}
-	${ROOT_INCLUDE_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}
+include_directories(
 	${ANTOK_INCLUDE_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}
+	SYSTEM
+	${Boost_INCLUDE_DIRS}
+	${PYTHON_INCLUDE_DIRS}
+	${ROOT_INCLUDE_DIR}
 	${YamlCpp_INCLUDE_DIR}
 	)
-include_directories(${INCLUDE_DIRECTORIES})
-
 
 # source files that are compiled into library
 set(SOURCES
@@ -81,4 +45,4 @@ add_custom_target(
 	COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pytok/helperScripts/python_compiler.py ${CMAKE_SOURCE_DIR}/pytok/module ${PYTHON_LIBRARY_OUTPUT_PATH}/pytok
 )
 
-add_dependencies(libPytokLink pytok pytokModuleLinks )
+add_dependencies(libPytokLink pytok pytokModuleLinks)

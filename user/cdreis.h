@@ -1,7 +1,10 @@
 #ifndef ANTOK_USER_CDREIS_H
 #define ANTOK_USER_CDREIS_H
 
-#include<yaml-cpp/yaml.h>
+#include <yaml-cpp/yaml.h>
+
+#include "data.h"
+#include "generators_functions.h"
 
 namespace antok {
 
@@ -11,24 +14,52 @@ namespace antok {
 
 		namespace cdreis {
 
-			antok::Function* getUserFunction(const YAML::Node& function,
-			                                 std::vector<std::string>& quantityNames,
-			                                 int index);
+			// reuse macro from generators_functions.h
+			FUNCTION_PROTOTYPE(getUserFunction);
 
-			antok::Function* generateGetRecoilLorentzVec             (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetPhotonLorentzVecs            (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetVectorLorentzVectorAttributes(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetPi0Pair                      (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetCleanedEcalClusters          (const YAML::Node &function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetOmega                        (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetECALCorrectedTiming          (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetECALCorrectedEnergy          (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetPhotonPairParticles          (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetThreePionCombinationMass     (const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			FUNCTION_PROTOTYPE(generateGetSumOverVector);
+			FUNCTION_PROTOTYPE(generateGetVector3VectorAttributes);
+			FUNCTION_PROTOTYPE(generateGetVectorLorentzVectorAttributes);
+			FUNCTION_PROTOTYPE(generateGetNominalMassDifferences);
+			FUNCTION_PROTOTYPE(generateGetRecoilLorentzVec);
+			FUNCTION_PROTOTYPE(generateGetECALCorrectedEnergy);
+			FUNCTION_PROTOTYPE(generateGetECALCorrectedTiming);
+			FUNCTION_PROTOTYPE(generateGetCleanedEcalClusters);
+			FUNCTION_PROTOTYPE(generateGetECALVariables);
+			FUNCTION_PROTOTYPE(generateGetPhotonLorentzVecs);
+			FUNCTION_PROTOTYPE(generateGetPhotonPairParticles);
+			FUNCTION_PROTOTYPE(generateGetPi0Pair);
+			FUNCTION_PROTOTYPE(generateGetKinematicFittingMass);
+			FUNCTION_PROTOTYPE(generateGetOmega);
+			FUNCTION_PROTOTYPE(generateGetPionLVs);
+			FUNCTION_PROTOTYPE(generateGetTwoPionCombinationLV);
+			FUNCTION_PROTOTYPE(generateGetThreePionCombinationLV);
+			FUNCTION_PROTOTYPE(generateGetFourPionCombinationLV);
+
+			bool registerOutputVarTypes(antok::Data& data, const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes);
+
+		}
+
+
+		// stream operator for std::vector
+		template<typename T>
+		inline
+		std::ostream&
+		operator << (std::ostream&         out,
+		             const std::vector<T>& vec)
+		{
+			const size_t vecSize = vec.size();
+			if (vecSize == 0) {
+				return out << "[]";
+			}
+			out << "[";
+			for (unsigned int i = 0; i < (vecSize - 1); ++i)
+				out << vec[i] << ", ";
+			return out << vec[vecSize - 1] << "]";
 		}
 
 	}
 
 }
 
-#endif
+#endif  // ANTOK_USER_CDREIS_H

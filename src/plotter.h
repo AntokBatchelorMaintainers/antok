@@ -25,7 +25,7 @@ namespace antok {
 			bool plotsWithSingleCutsOff;
 			std::string statisticsHistInName;
 			std::string statisticsHistOutName;
-			std::map<std::string, std::vector<long> > cutMasks;
+			std::map<std::string, std::vector<long>> cutMasks;
 
 		  private:
 
@@ -33,29 +33,32 @@ namespace antok {
 
 		struct waterfallHistogramContainer {
 
-			waterfallHistogramContainer(TH1* hist,
-			                            std::vector<std::pair<const char*, const bool*> > cuts_)
-				: histogram(hist),
-				  cuts(cuts_) {
-						int startBin = 1;
-						for(int i = 1; i <= hist->GetNbinsX(); ++i) {
-							if(std::string(hist->GetXaxis()->GetBinLabel(i)) == "") {
-								startBin = i;
-								break;
-							}
-						}
-						const int nBinsNeeded = startBin + cuts.size()-1;
-						if(nBinsNeeded > hist->GetNbinsX()){
-							histogram->SetBins( nBinsNeeded, hist->GetXaxis()->GetBinLowEdge(1),
-							                    hist->GetXaxis()->GetBinUpEdge(startBin - 1) + hist->GetXaxis()->GetBinWidth(startBin - 1) * (nBinsNeeded-(startBin-1)));
-						}
-						for(unsigned int i = 0; i < cuts.size(); ++i) {
-							histogram->GetXaxis()->SetBinLabel(startBin + i, cuts[i].first);
-						}
-					};
+			waterfallHistogramContainer(TH1*                                                    histogram,
+			                            const std::vector<std::pair<std::string, const bool*>>& cuts)
+				: _histogram(histogram),
+				  _cuts(cuts)
+			{
+				TAxis* xAxis = _histogram->GetXaxis();
+				int startBin = 1;
+				for (int i = 1; i <= _histogram->GetNbinsX(); ++i) {
+					if (std::string(xAxis->GetBinLabel(i)) == "") {
+						startBin = i;
+						break;
+					}
+				}
+				const int nBinsNeeded = startBin + _cuts.size() - 1;
+				if (nBinsNeeded > _histogram->GetNbinsX()) {
+					_histogram->SetBins(nBinsNeeded,
+															xAxis->GetBinLowEdge(1),
+															xAxis->GetBinUpEdge(startBin - 1) + xAxis->GetBinWidth(startBin - 1) * (nBinsNeeded - (startBin - 1)));
+				}
+				for (size_t i = 0; i < _cuts.size(); ++i) {
+					xAxis->SetBinLabel(startBin + i, _cuts[i].first.c_str());
+				}
+			};
 
-			TH1* histogram;
-			std::vector<std::pair<const char*, const bool*> > cuts;
+			TH1*                                             _histogram;
+			std::vector<std::pair<std::string, const bool*>> _cuts;
 
 		};
 
@@ -72,7 +75,7 @@ namespace antok {
 		void fill(const long& cutPattern);
 		void addInputfileToWaterfallHistograms(const TH1D* waterfall);
 
-		static bool handleAdditionalCuts(const YAML::Node& cuts, std::map<std::string, std::vector<long> >& map);
+		static bool handleAdditionalCuts(const YAML::Node& cuts, std::map<std::string, std::vector<long>>& map);
 
 	  private:
 

@@ -15,12 +15,12 @@ namespace antok {
 		namespace kbicker {
 
 			antok::Function* getUserFunction(const YAML::Node& function,
-			                                 std::vector<std::string>& quantityNames,
+			                                 const std::vector<std::string>& quantityNames,
 			                                 int index);
 
-			antok::Function* generateGetRpdExpectedHitsParameters(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetRpdPhi(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
-			antok::Function* generateGetCutOnExtraTracks(const YAML::Node& function, std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetRpdExpectedHitsParameters(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetRpdPhi(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index);
+			antok::Function* generateGetCutOnExtraTracks(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index);
 
 
 			void getRPDDeltaPhiResProjection(const TLorentzVector& pBeam,

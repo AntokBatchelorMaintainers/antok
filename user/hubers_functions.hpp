@@ -407,7 +407,7 @@ namespace antok {
 							do {
 								closest = antok::sqr(*_mergeDist) + 0.1;
 								int m2 = -1;
-								for(unsigned int i = 0; i < nClusters; ++i){
+								for(int i = 0; i < nClusters; ++i){
 									if(i == imax)
 										continue;
 									double dist = ( antok::sqr((*_resultVecX)[i]-(*_resultVecX)[imax]) + antok::sqr((*_resultVecY)[i]-(*_resultVecY)[imax]) );
