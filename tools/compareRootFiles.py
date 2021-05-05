@@ -6,7 +6,7 @@ import coloredlogs
 import numpy as np
 import os
 import sys
-import uproot4 as uproot
+import uproot
 import verboselogs
 
 from collections import namedtuple, Counter
@@ -41,15 +41,15 @@ def compareHists(TKey):
 	elif className.startswith('TH3'):
 		axes = ['x', 'y', 'z']
 	for axis in axes:
-		edges = Pair(hist.orig.edges(axis),
-		             hist.new.edges(axis))
+		edges = Pair(hist.orig.axis(axis).edges(),
+		             hist.new.axis(axis).edges())
 		if not np.array_equal(edges.orig, edges.new):
 			logger.error(f"histograms for key '{keyName}' have different binning of {axis} axis")
 			logger.verbose(f"     '{edges.orig!r}' in file '{fileName.orig}'")
 			logger.verbose(f" vs. '{edges.new!r}' in file '{fileName.new}'")
 	# compare histogram contents
-	histContents = Pair(hist.orig.values_errors(),
-	                    hist.new.values_errors())
+	histContents = Pair([hist.orig.values(), hist.orig.errors()],
+	                    [hist.new.values(),  hist.new.errors()])
 	if not np.array_equal(histContents.orig, histContents.new):
 		logger.error(f"histograms for key '{keyName}' have different contents")
 		logger.verbose(f" orig - new values = '{histContents.orig[0] - histContents.new[0]!r}'")
