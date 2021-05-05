@@ -70,24 +70,13 @@ def compareLeafs(branch):
 	for itOrig, itNew in zip(branch.orig.iterate(), branch.new.iterate()):
 		assert len(itOrig) == len(itNew), (f"branches '{branchName}' in trees '{keyName}' have different number of entries: "
 		                                   f"'{len(itOrig)}' vs. '{len(itNew)}'")
-		success = True
-		for i, valOrig in enumerate(itOrig):
-			if isinstance(valOrig[branchName], Iterable):
-				# leafs are arrays or std::vectors (with variable length)
-				# all(valOrig[branchName] == itNew[i][branchName]) cannot deal with differently sized arrays
-				if (not len(valOrig[branchName]) == len(itNew[i][branchName])
-				    or not all(valOrig[branchName] == itNew[i][branchName])):
-					success = False
-					break
-			else:
-				# leafs are scalars
-				if not valOrig[branchName] == itNew[i][branchName]:
-					success = False
-					break
-		if not success:
-			logger.error(f"values in branches '{branchName}' of trees '{keyName}' differ: "
-			             f"{itOrig} vs. {itNew}")
-			return False
+		# np.array_equal(np.array(itOrig), np.array(itNew)) does not work for leafs with variable sized arrays
+		# hence we have to loop over the entries in Python making things unfortunately much slower
+		for entry, valOrig in enumerate(itOrig):
+			if not np.array_equal(np.array(valOrig[branchName]), np.array(itNew[entry][branchName]), equal_nan=True):
+				logger.error(f"values in branches '{branchName}' of trees '{keyName}' differ: "
+				             f"{itOrig} vs. {itNew}")
+				return False
 	return True
 
 
