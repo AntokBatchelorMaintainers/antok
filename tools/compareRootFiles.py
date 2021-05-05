@@ -10,6 +10,7 @@ import uproot4 as uproot
 import verboselogs
 
 from collections import namedtuple, Counter
+from collections.abc import Iterable
 
 
 Pair = namedtuple('Pair', 'orig new')
@@ -66,10 +67,26 @@ def compareLeafs(branch):
 		             f"'{branch.orig.typename}' vs. '{branch.new.typename}'")
 		return False
 	# compare leaf values
-	for valOrig, valNew in zip(branch.orig.iterate(), branch.new.iterate()):
-		if not all(valOrig == valNew):
+	for itOrig, itNew in zip(branch.orig.iterate(), branch.new.iterate()):
+		assert len(itOrig) == len(itNew), (f"branches '{branchName}' in trees '{keyName}' have different number of entries: "
+		                                   f"'{len(itOrig)}' vs. '{len(itNew)}'")
+		success = True
+		for i, valOrig in enumerate(itOrig):
+			if isinstance(valOrig[branchName], Iterable):
+				# leafs are arrays or std::vectors (with variable length)
+				# all(valOrig[branchName] == itNew[i][branchName]) cannot deal with differently sized arrays
+				if (not len(valOrig[branchName]) == len(itNew[i][branchName])
+				    or not all(valOrig[branchName] == itNew[i][branchName])):
+					success = False
+					break
+			else:
+				# leafs are scalars
+				if not valOrig[branchName] == itNew[i][branchName]:
+					success = False
+					break
+		if not success:
 			logger.error(f"values in branches '{branchName}' of trees '{keyName}' differ: "
-			             f"{valOrig} vs. {valNew}")
+			             f"{itOrig} vs. {itNew}")
 			return False
 	return True
 
@@ -133,6 +150,7 @@ def compareTrees(TKey):
 			logger.success(f"branch '{branchKey}' in trees for key '{keyName}' is identical in both files")
 		else:
 			result = False
+		# break
 
 	# print summary for tree
 	logger.info(f"Comparison summary after checking {len(branchKeys.orig)} branches in trees for key '{keyName}':")
