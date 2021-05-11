@@ -12,6 +12,7 @@
 #include "hubers.h"
 #include "cdreis.h"
 #include "swallner.h"
+#include "jbeckers.h"
 
 namespace {
 
@@ -27,6 +28,7 @@ namespace {
 		userFunctions.push_back(&antok::user::hubers::getUserFunction);
 		userFunctions.push_back(&antok::user::cdreis::getUserFunction);
 		userFunctions.push_back(&antok::user::stefan::getUserFunction);
+		userFunctions.push_back(&antok::user::jbeckers::getUserFunction);
 
 		// End of user defined functions
 		return userFunctions;
