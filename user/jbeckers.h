@@ -3,6 +3,8 @@
 
 #include<yaml-cpp/yaml.h>
 
+#include "generators_functions.h"
+
 namespace antok {
 
 	class Function;
@@ -11,9 +13,10 @@ namespace antok {
 
 		namespace jbeckers {
 
-			antok::Function* getUserFunction(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index);
+			// reuse macro from generators_functions.h
+			FUNCTION_PROTOTYPE(getUserFunction);
 
-		    antok::Function* generateScale(const YAML::Node& function, const std::vector<std::string>& quantityNames, int index);
+			FUNCTION_PROTOTYPE(generateScale);
 
 		}
 
@@ -21,4 +24,4 @@ namespace antok {
 
 }
 
-#endif
+#endif  // ANTOK_USER_jbeckers_H

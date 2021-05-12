@@ -16,12 +16,12 @@ namespace functions {
 
 	public:
 
-		Scale(const double& scale,
-		      const T&      scaleOn,
-		      T&            out)
-			  : _scale(scale),
-			    _scaleOn(scaleOn),
-			    _out(out)
+		Scale(const double& scaleFactor,
+		      const T&      value,
+		      T&            result)
+			: _scaleFactor(scaleFactor),
+			  _value      (value),
+			  _result     (result)
 		{ }
 
 		virtual ~Scale() { }
@@ -29,17 +29,18 @@ namespace functions {
 		bool
 		operator() ()
 		{
-			_out = _scale * _scaleOn;
+			_result = _scaleFactor * _value;
 			return true;
 		}
 
 	private:
 
-		const double _scale; // constant, needs to be copied (-> no & !)
-		const T&     _scaleOn;
-		T&           _out;
+		const double _scaleFactor;  // constant parameter, needs to be copied (-> no & !)
+		const T&     _value;
+		T&           _result;
 
 	};
+
 
 	template <>
 	class Scale<std::vector<double>>: public Function
@@ -47,12 +48,12 @@ namespace functions {
 
 	public:
 
-		Scale(const double&               scale,
-		      const std::vector<double>&  scaleOn,
-		      std::vector<double>&        out)
-			  : _scale(scale),
-			    _scaleOn(scaleOn),
-			    _out(out)
+		Scale(const double&               scaleFactor,
+		      const std::vector<double>&  values,
+		      std::vector<double>&        results)
+			: _scaleFactor(scaleFactor),
+			  _values     (values),
+			  _results    (results)
 		{ }
 
 		virtual ~Scale() { }
@@ -60,19 +61,19 @@ namespace functions {
 		bool
 		operator() ()
 		{
-			const size_t sizeVec = _scaleOn.size();
-			_out.resize(sizeVec);
+			const size_t sizeVec = _values.size();
+			_results.resize(sizeVec);
 			for (size_t i = 0; i < sizeVec; ++i) {
-				_out[i] = _scale * _scaleOn[i];
+				_results[i] = _scaleFactor * _values[i];
 			}
 			return true;
 		}
 
 	private:
 
-		const double                   _scale; // constant, needs to be copied (-> no & !)
-		const std::vector<double>&     _scaleOn;
-		std::vector<double>&           _out;
+		const double               _scaleFactor;  // constant parameter, needs to be copied (-> no & !)
+		const std::vector<double>& _values;
+		std::vector<double>&       _results;
 
 	};
 
@@ -81,4 +82,4 @@ namespace functions {
 }
 }
 
-#endif
+#endif  // ANTOK_USER_JBECKERS_FUNCTIONS_HPP
