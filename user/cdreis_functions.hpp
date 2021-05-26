@@ -956,7 +956,7 @@ namespace antok {
 										double mass1 = 0.0;
 										double massWindow1 = 0.0;
 										getECALMassParamters(_ECALClusterIndices[m], _ECALClusterIndices[n], _ECAL1Mass, _ECAL1MassWindow, _ECAL2Mass, _ECAL2MassWindow, _ECALMixedMass, _ECALMixedMassWindow, mass1, massWindow1);
-										const double massDiff1 = std::fabs(pi0Candidate0.M() - mass1);
+										const double massDiff1 = std::fabs(pi0Candidate1.M() - mass1);
 										// elliptic cut in mass vs mass plane
 										if (massDiff0 * massDiff0 / (massWindow0 * massWindow0) + massDiff1 * massDiff1 / (massWindow1 * massWindow1) > 1) {
 											continue;
@@ -1619,6 +1619,10 @@ namespace antok {
 							}
 						}
 
+						if ((PiMinusLVs.size() != 2) or (PiPlusLVs.size() != 1)) {
+							return true;
+						}
+
 						//get requested Pi LVs
 						switch ((combMode)_CombinationMode) {
 							case Pi00MinusPlusCombinations: {
@@ -1656,6 +1660,164 @@ namespace antok {
 					const int&                   _Charge_2;
 					const int                    _CombinationMode;
 					std::vector<TLorentzVector>& _Result;
+
+				};
+
+
+				std::vector<double> resolutionHelper(std::vector<double> measuredValues, std::vector<double> trueValues) {
+					if (measuredValues.size() != trueValues.size()) abort();
+
+					std::vector<double> resolutions = {};
+
+					switch (measuredValues.size()) {
+						case 0: {
+							break;
+						}
+						case 1: {
+							resolutions.push_back(measuredValues[0]-trueValues[0]);
+
+							break;
+						}
+						case 2: {
+							if (TMath::Abs(measuredValues[0]-trueValues[0]) + TMath::Abs(measuredValues[1]-trueValues[1]) < 
+							    TMath::Abs(measuredValues[0]-trueValues[1]) + TMath::Abs(measuredValues[1]-trueValues[0])) {
+								resolutions.push_back(measuredValues[0]-trueValues[0]);
+								resolutions.push_back(measuredValues[1]-trueValues[1]);
+							} else {
+								resolutions.push_back(measuredValues[0]-trueValues[1]);
+								resolutions.push_back(measuredValues[1]-trueValues[0]);
+							}
+
+							break;
+						}
+						default: {
+							std::pair<size_t, size_t> closestPair = std::make_pair(0, 0);
+							double smallestDistance = measuredValues[0] - trueValues[0];
+
+							// find the pair (i,j) that is closest
+							for (size_t i = 0; i < measuredValues.size(); ++i) {
+								for (size_t j = 0; j < measuredValues.size(); ++j) {
+									if ( measuredValues[i] - trueValues[j] < smallestDistance) {
+										closestPair = std::make_pair(i, j);
+										smallestDistance = measuredValues[i] - trueValues[j];
+									}
+								}
+							}
+
+							// remove the closest pair and iterate again
+							measuredValues.erase(measuredValues.begin() + closestPair.first);
+							trueValues.erase    (trueValues.begin()     + closestPair.second);
+							resolutions = antok::user::cdreis::functions::resolutionHelper(measuredValues, trueValues);
+							resolutions.push_back(smallestDistance);
+
+							break;
+						}
+					}
+
+					return resolutions;
+				}
+
+				class GetResolutions : public Function
+				{
+
+				public:
+
+					GetResolutions(const std::vector<double>& MeasuredValues,  // values that have been measured in the detector
+					               const std::vector<double>& TrueValues,      // values that were generated, MC truth
+					               std::vector<double>&       Resolutions)     // result resolutions
+						: _MeasuredValues (MeasuredValues),
+						  _TrueValues     (TrueValues),
+						  _Resolutions    (Resolutions)
+					{ }
+
+					virtual ~GetResolutions() { }
+
+					bool
+					operator() ()
+					{
+						// if vectors have different size, ignore the input, so that events where more/less inputs were measured are not used
+						if (_MeasuredValues.size()!=_TrueValues.size()) {
+							return true;
+						}
+
+						_Resolutions = antok::user::cdreis::functions::resolutionHelper(_MeasuredValues, _TrueValues);
+
+						return true;
+					}
+
+				private:
+
+					const std::vector<double>& _MeasuredValues;
+					const std::vector<double>& _TrueValues;
+					std::vector<double>&       _Resolutions;
+
+				};
+
+				class GetPi0Resolutions : public Function
+				{
+
+				public:
+
+					GetPi0Resolutions(const std::vector<double>& Pi0Masses,                         // Mass of pi0s
+					                  const std::vector<int>&    Pi0CombTypes,                      // ECAL combination types of pi0s
+									  const double&              NominalPi0Mass,
+					                  std::vector<double>&       ResultResolutionsAllCombinations,  // resolutions
+					                  std::vector<double>&       ResultResolutionsECAL1,            // resolutions for ECAL1 pi0s
+					                  std::vector<double>&       ResultResolutionsECAL2,            // resolutions for ECAL2 pi0s
+					                  std::vector<double>&       ResultResolutionsECALMixed)        // resolutions for mixed ECAL pi0s
+						: _Pi0Masses                        (Pi0Masses),
+						  _Pi0CombTypes                     (Pi0CombTypes),
+						  _NominalPi0Mass                   (NominalPi0Mass),
+						  _ResultResolutionsAllCombinations (ResultResolutionsAllCombinations),
+						  _ResultResolutionsECAL1           (ResultResolutionsECAL1),
+						  _ResultResolutionsECAL2           (ResultResolutionsECAL2),
+						  _ResultResolutionsECALMixed       (ResultResolutionsECALMixed)
+					{ }
+
+					virtual ~GetPi0Resolutions() { }
+
+					bool
+					operator() ()
+					{
+						if (_Pi0Masses.size()!=_Pi0CombTypes.size()) abort();
+
+						_ResultResolutionsAllCombinations.clear();
+						_ResultResolutionsECAL1.clear();
+						_ResultResolutionsECAL2.clear();
+						_ResultResolutionsECALMixed.clear();
+
+						for (size_t i = 0; i < _Pi0Masses.size(); ++i) {
+							const double res = _Pi0Masses[i] - _NominalPi0Mass;
+							_ResultResolutionsAllCombinations.push_back(res);
+
+							switch (_Pi0CombTypes[i]) {
+								case 1: {
+									_ResultResolutionsECAL1.push_back(res);
+									break;
+								}
+								case 2: {
+									_ResultResolutionsECAL2.push_back(res);
+									break;
+								}
+								case 3: {
+									_ResultResolutionsECALMixed.push_back(res);
+									break;
+								}
+							}
+						}
+
+						return true;
+					}
+
+				private:
+
+					const std::vector<double>& _Pi0Masses;
+					const std::vector<int>&    _Pi0CombTypes;
+					const double&              _NominalPi0Mass;
+					std::vector<double>&       _ResultResolutionsAllCombinations;
+					std::vector<double>&       _ResultResolutionsECAL1;
+					std::vector<double>&       _ResultResolutionsECAL2;
+					std::vector<double>&       _ResultResolutionsECALMixed;
 
 				};
 

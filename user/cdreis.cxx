@@ -60,6 +60,10 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 		return antok::user::cdreis::generateGetThreePionCombinationLV        (function, quantityNames, index);
 	} else if (functionName == "getFourPionCombinationLV") {
 		return antok::user::cdreis::generateGetFourPionCombinationLV         (function, quantityNames, index);
+	} else if (functionName == "getResolutions") {
+		return antok::user::cdreis::generateGetResolutions					 (function, quantityNames, index);
+	} else if (functionName == "getPi0Resolutions") {
+		return antok::user::cdreis::generateGetPi0Resolutions				 (function, quantityNames, index);
 	}
 	return nullptr;
 }
@@ -1086,7 +1090,88 @@ antok::user::cdreis::generateGetFourPionCombinationLV(const YAML::Node&         
 		constArgsInt["CombinationMode"],                              // CombinationMode
 		*data.getAddr<std::vector<TLorentzVector>>(quantityNames[0])  // Result
 	);
-  }
+}
+
+
+antok::Function*
+antok::user::cdreis::generateGetResolutions(const YAML::Node&               function,
+                                            const std::vector<std::string>& quantityNames,
+                                            const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	vecPairString<std::string> args
+		= {{"MeasuredValues", "std::vector<double>"},
+		   {"TrueValues",     "std::vector<double>"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Register output variables
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	const std::vector<std::string> outputVarTypes = {"std::vector<double>"};  // Result resolutions
+	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
+		return nullptr;
+	}
+
+	return new antok::user::cdreis::functions::GetResolutions(
+		*data.getAddr<std::vector<double>>(args[0].first),    // MeasuredValues
+		*data.getAddr<std::vector<double>>(args[1].first),    // TrueValues
+		*data.getAddr<std::vector<double>>(quantityNames[0])  // Resolutions
+	);
+}
+
+
+antok::Function*
+antok::user::cdreis::generateGetPi0Resolutions(const YAML::Node&               function,
+                                               const std::vector<std::string>& quantityNames,
+                                               const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 4)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	vecPairString<std::string> args
+		= {{"Pi0Masses",    "std::vector<double>"},
+		   {"Pi0CombTypes", "std::vector<int>"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Get constant arguments
+	std::map<std::string, double> constArgs	= {{"NominalPi0Mass", 0}};
+	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Register output variables
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<double>",   // ResultResolutionsAllCombinations
+		   "std::vector<double>",   // ResultResolutionsECAL1
+		   "std::vector<double>",   // ResultResolutionsECAL2
+		   "std::vector<double>"};  // ResultResolutionsECALMixed
+	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
+		return nullptr;
+	}
+
+	return new antok::user::cdreis::functions::GetPi0Resolutions(
+		*data.getAddr<std::vector<double>>(args[0].first),     // Pi0Masses
+		*data.getAddr<std::vector<int>>(args[1].first),        // Pi0CombTypes
+		constArgs["NominalPi0Mass"],                           // NominalPi0Mass
+		*data.getAddr<std::vector<double>>(quantityNames[0]),  // ResultResolutionsAllCombinations
+		*data.getAddr<std::vector<double>>(quantityNames[1]),  // ResultResolutionsECAL1
+		*data.getAddr<std::vector<double>>(quantityNames[2]),  // ResultResolutionsECAL2
+		*data.getAddr<std::vector<double>>(quantityNames[3])   // ResultResolutionsECALMixed
+	);
+}
 
 
 bool

@@ -35,6 +35,8 @@ namespace antok {
 			FUNCTION_PROTOTYPE(generateGetTwoPionCombinationLV);
 			FUNCTION_PROTOTYPE(generateGetThreePionCombinationLV);
 			FUNCTION_PROTOTYPE(generateGetFourPionCombinationLV);
+			FUNCTION_PROTOTYPE(generateGetResolutions);
+			FUNCTION_PROTOTYPE(generateGetPi0Resolutions);
 
 			bool registerOutputVarTypes(antok::Data& data, const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes);
 
