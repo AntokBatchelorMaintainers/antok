@@ -20,6 +20,7 @@ namespace antok {
 			FUNCTION_PROTOTYPE(generateGetSumOverVector);
 			FUNCTION_PROTOTYPE(generateGetVector3VectorAttributes);
 			FUNCTION_PROTOTYPE(generateGetVectorLorentzVectorAttributes);
+			FUNCTION_PROTOTYPE(generateGetSumLorentzVectors);
 			FUNCTION_PROTOTYPE(generateGetNominalMassDifferences);
 			FUNCTION_PROTOTYPE(generateGetRecoilLorentzVec);
 			FUNCTION_PROTOTYPE(generateGetECALCorrectedEnergy);
@@ -37,6 +38,10 @@ namespace antok {
 			FUNCTION_PROTOTYPE(generateGetFourPionCombinationLV);
 			FUNCTION_PROTOTYPE(generateGetResolutions);
 			FUNCTION_PROTOTYPE(generateGetPi0Resolutions);
+			FUNCTION_PROTOTYPE(generateGetSelectedPhotonLVs);
+			FUNCTION_PROTOTYPE(generateGetNeutralMeson);
+			FUNCTION_PROTOTYPE(generateGetPiPiNeutralSystem);
+			FUNCTION_PROTOTYPE(generateGetAngles3P);
 
 			bool registerOutputVarTypes(antok::Data& data, const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes);
 
