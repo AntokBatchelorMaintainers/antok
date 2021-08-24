@@ -54,6 +54,8 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 		return antok::user::cdreis::generateGetKinematicFittingMass          (function, quantityNames, index);
 	} else if (functionName == "getOmega") {
 		return antok::user::cdreis::generateGetOmega                         (function, quantityNames, index);
+	} else if (functionName == "getOmegaDalitzVariables") {
+		return antok::user::cdreis::generateGetOmegaDalitzVariables          (function, quantityNames, index);
 	} else if (functionName == "getPionLVs") {
 		return antok::user::cdreis::generateGetPionLVs                       (function, quantityNames, index);
 	} else if (functionName == "getTwoPionCombinationLV") {
@@ -929,6 +931,69 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 		*data.getAddr<TLorentzVector>(quantityNames[4]),  // ResultPiMinusInOmegaLV
 		*data.getAddr<TLorentzVector>(quantityNames[5]),  // ResultPi0InOmegaLV
 		*data.getAddr<TLorentzVector>(quantityNames[6])   // ResultPiPlusInOmegaLV
+	);
+}
+
+
+antok::Function*
+antok::user::cdreis::generateGetOmegaDalitzVariables(const YAML::Node&               function,
+                                					 const std::vector<std::string>& quantityNames,
+                                					 const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 2)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	vecPairString<std::string> args
+		= {{"Pi0LV_0",         "TLorentzVector"},
+		   {"Pi0LV_1",         "TLorentzVector"},
+		   {"ChargedPartLV_0", "TLorentzVector"},
+		   {"ChargedPartLV_1", "TLorentzVector"},
+		   {"ChargedPartLV_2", "TLorentzVector"},
+		   {"Charge_0",        "int"},
+		   {"Charge_1",        "int"},
+		   {"Charge_2",        "int"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Get constant arguments
+	std::map<std::string, double> constArgs
+		= {{"NeutralPionMass", 0},
+		   {"ChargedPionMass", 0},
+		   {"OmegaMass",       0},
+		   {"OmegaMassWindow", 0}};
+	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Register output variables
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	const std::vector<std::string> outputVarTypes
+		= {"std::vector<double>",   // ResultDalitzX
+		   "std::vector<double>"};  // ResultDalitzY
+	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
+		return nullptr;
+	}
+
+	return new antok::user::cdreis::functions::GetOmegaDalitzVariables(
+		*data.getAddr<TLorentzVector>(args[0].first),          // Pi0LV_0
+		*data.getAddr<TLorentzVector>(args[1].first),          // Pi0LV_1
+		*data.getAddr<TLorentzVector>(args[2].first),          // ChargedPartLV_0
+		*data.getAddr<TLorentzVector>(args[3].first),          // ChargedPartLV_1
+		*data.getAddr<TLorentzVector>(args[4].first),          // ChargedPartLV_2
+		*data.getAddr<int>           (args[5].first),          // Charge_0
+		*data.getAddr<int>           (args[6].first),          // Charge_1
+		*data.getAddr<int>           (args[7].first),          // Charge_2
+		constArgs["NeutralPionMass"],                          // NeutralPionMass
+		constArgs["ChargedPionMass"],                          // ChargedPionMass
+		constArgs["OmegaMass"],                                // OmegaMass,
+		constArgs["OmegaMassWindow"],                          // MassWindowOmega,
+		*data.getAddr<std::vector<double>>(quantityNames[0]),  // ResultDalitzX
+		*data.getAddr<std::vector<double>>(quantityNames[1])   // ResultDalitzY
 	);
 }
 

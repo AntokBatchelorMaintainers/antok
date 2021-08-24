@@ -1251,7 +1251,7 @@ namespace antok {
 
 				public:
 
-					GetOmega(const TLorentzVector& Pi0LV_O,                 // Lorentz vector of 1st pi^0
+					GetOmega(const TLorentzVector& Pi0LV_0,                 // Lorentz vector of 1st pi^0
 					         const TLorentzVector& Pi0LV_1,                 // Lorentz vector of 2nd pi^0
 					         const TLorentzVector& ChargedPartLV_0,         // Lorentz vector of 1st charged particle
 					         const TLorentzVector& ChargedPartLV_1,         // Lorentz vector of 2nd charged particle
@@ -1268,7 +1268,7 @@ namespace antok {
 					         TLorentzVector&       ResultPiMinusInOmegaLV,  // Lorentz vector of the pi^- that is part of the omega
 					         TLorentzVector&       ResultPi0InOmegaLV,      // Lorentz vector of the pi^0 that is part of the omega
 					         TLorentzVector&       ResultPiPlusInOmegaLV)   // Lorentz vector of the pi^+ that is part of the omega
-						: _Pi0LV_O               (Pi0LV_O),
+						: _Pi0LV_0               (Pi0LV_0),
 						  _Pi0LV_1               (Pi0LV_1),
 						  _ChargedPartLV_0       (ChargedPartLV_0),
 						  _ChargedPartLV_1       (ChargedPartLV_1),
@@ -1294,7 +1294,7 @@ namespace antok {
 					{
 						// searches for omega(782) -> pi^- pi^0 pi^+ candidates in pi^- pi^- pi^0 pi^0 pi^+ final state
 						// if several omega candidates are found, a random omega is returned
-						const std::vector<const TLorentzVector*> pi0s       = {&_Pi0LV_O, &_Pi0LV_1};
+						const std::vector<const TLorentzVector*> pi0s       = {&_Pi0LV_0, &_Pi0LV_1};
 						const std::vector<const TLorentzVector*> chargedLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
 						const std::vector<const int*>            charges    = {&_Charge_0,        &_Charge_1,        &_Charge_2};
 						_ResultNmbOmegas = 0;
@@ -1366,7 +1366,7 @@ namespace antok {
 
 				private:
 
-					const TLorentzVector& _Pi0LV_O;
+					const TLorentzVector& _Pi0LV_0;
 					const TLorentzVector& _Pi0LV_1;
 					const TLorentzVector& _ChargedPartLV_0;
 					const TLorentzVector& _ChargedPartLV_1;
@@ -1383,6 +1383,122 @@ namespace antok {
 					TLorentzVector&       _ResultPiMinusInOmegaLV;
 					TLorentzVector&       _ResultPi0InOmegaLV;
 					TLorentzVector&       _ResultPiPlusInOmegaLV;
+
+				};
+
+
+				class GetOmegaDalitzVariables : public Function
+				{
+
+				public:
+
+					GetOmegaDalitzVariables(const TLorentzVector& Pi0LV_0,          // Lorentz vector of 1st pi^0
+					        				const TLorentzVector& Pi0LV_1,          // Lorentz vector of 2nd pi^0
+					        				const TLorentzVector& ChargedPartLV_0,  // Lorentz vector of 1st charged particle
+					        				const TLorentzVector& ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
+					        				const TLorentzVector& ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
+					        				const int&            Charge_0,         // charge of 1st charged particle
+					        				const int&            Charge_1,         // charge of 2nd charged particle
+					        				const int&            Charge_2,         // charge of 3rd charged particle
+					        				const double&         NeutralPionMass,  // mass of neutral pion
+					        				const double&         ChargedPionMass,  // mass of charged pions
+					        				const double&         OmegaMass,        // nominal omega mass
+					        				const double&         OmegaMassWindow,  // cut around OmegaMass applied on m(pi^- pi^0 pi^+)
+					        				std::vector<double>&  ResultDalitzX,    // Lorentz vector of last found omega candidate
+					        				std::vector<double>&  ResultDalitzY)    // 1 if there is exactly one omega candidate, 0 otherwise
+						: _Pi0LV_0        (Pi0LV_0),
+						  _Pi0LV_1        (Pi0LV_1),
+						  _ChargedPartLV_0(ChargedPartLV_0),
+						  _ChargedPartLV_1(ChargedPartLV_1),
+						  _ChargedPartLV_2(ChargedPartLV_2),
+						  _Charge_0       (Charge_0),
+						  _Charge_1       (Charge_1),
+						  _Charge_2       (Charge_2),
+						  _NeutralPionMass(NeutralPionMass),
+						  _ChargedPionMass(ChargedPionMass),
+						  _OmegaMass      (OmegaMass),
+						  _OmegaMassWindow(OmegaMassWindow),
+						  _ResultDalitzX  (ResultDalitzX),
+						  _ResultDalitzY  (ResultDalitzY)
+					{ }
+
+					virtual ~GetOmegaDalitzVariables() { }
+
+					bool
+					operator() ()
+					{
+						// searches for omega(782) -> pi^- pi^0 pi^+ candidates in pi^- pi^- pi^0 pi^0 pi^+ final state
+						const std::vector<const TLorentzVector*> pi0s       = {&_Pi0LV_0,         &_Pi0LV_1};
+						const std::vector<const TLorentzVector*> chargedLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
+						const std::vector<const int*>            charges    = {&_Charge_0,        &_Charge_1,        &_Charge_2};
+
+						std::vector<const TLorentzVector*> _PiMinusLVs = {};
+						std::vector<const TLorentzVector*> _Pi0LVs     = {};
+						std::vector<const TLorentzVector*> _PiPlusLVs  = {};
+						std::vector<double> _mOmegas = {};
+						// Loop over available pi^0s
+						for (size_t i = 0; i < pi0s.size(); ++i) {
+							// Loop over charged particles
+							for (size_t j = 0; j < chargedLVs.size(); ++j) {
+								for (size_t k = j + 1; k < chargedLVs.size(); ++k) {
+									// Find pi+ pi- pair
+									if (*charges[j] + *charges[k] == 0) {
+										// Check if mass fits omega(782) nominal mass
+										const TLorentzVector candidate = *pi0s[i] + *chargedLVs[j] + *chargedLVs[k];
+										if (std::fabs(candidate.M() - _OmegaMass) < _OmegaMassWindow) {
+											_mOmegas.push_back(candidate.M());
+											_Pi0LVs.push_back(pi0s[i]);
+											if (*charges[j] == 1) {
+												_PiMinusLVs.push_back(chargedLVs[k]);
+												_PiPlusLVs.push_back (chargedLVs[j]);
+											} else {
+												_PiMinusLVs.push_back(chargedLVs[j]);
+												_PiPlusLVs.push_back (chargedLVs[k]);
+											}
+										}
+									}
+								}
+							}
+						}
+						
+						// calculate the two Dalitz variables x and y used in https://doi.org/10.1140/epjc/s10052-012-2014-1
+						// for all valid combinations
+						_ResultDalitzX.clear();
+						_ResultDalitzY.clear();
+						_ResultDalitzX.resize(_Pi0LVs.size());
+						_ResultDalitzY.resize(_Pi0LVs.size());
+						for (size_t i = 0; i < _Pi0LVs.size(); ++i) {
+							const double mOmega = _mOmegas[i];
+							const double s =      (*_PiMinusLVs[i] + *_PiPlusLVs[i]).M2();
+							const double t =      (*_PiMinusLVs[i] + *_Pi0LVs[i]   ).M2();
+							const double u =      (*_Pi0LVs[i]     + *_PiPlusLVs[i]).M2();
+							const double s0 = (s + t + u)/3.;
+							const double deltaM = (mOmega - 2.*_ChargedPionMass - _NeutralPionMass);
+							const double rOmega = 2./3.*mOmega*(deltaM);
+
+							_ResultDalitzX[i] = (t - u) / (std::sqrt(3.) * rOmega);
+							_ResultDalitzY[i] = (s0 - s) / rOmega + 2.*( _ChargedPionMass - _NeutralPionMass ) / deltaM;
+						}
+
+						return true;
+					}
+
+				private:
+
+					const TLorentzVector& _Pi0LV_0;
+					const TLorentzVector& _Pi0LV_1;
+					const TLorentzVector& _ChargedPartLV_0;
+					const TLorentzVector& _ChargedPartLV_1;
+					const TLorentzVector& _ChargedPartLV_2;
+					const int&            _Charge_0;
+					const int&            _Charge_1;
+					const int&            _Charge_2;
+					const double          _NeutralPionMass;  // constant parameter, needs to be copied
+					const double          _ChargedPionMass;  // constant parameter, needs to be copied
+					const double          _OmegaMass;        // constant parameter, needs to be copied
+					const double          _OmegaMassWindow;  // constant parameter, needs to be copied
+					std::vector<double>&  _ResultDalitzX;
+					std::vector<double>&  _ResultDalitzY;
 
 				};
 
