@@ -940,7 +940,7 @@ antok::user::cdreis::generateGetOmegaDalitzVariables(const YAML::Node&          
                                 					 const std::vector<std::string>& quantityNames,
                                 					 const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 2)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 5)) {
 		return nullptr;
 	}
 
@@ -974,7 +974,10 @@ antok::user::cdreis::generateGetOmegaDalitzVariables(const YAML::Node&          
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes
 		= {"std::vector<double>",   // ResultDalitzX
-		   "std::vector<double>"};  // ResultDalitzY
+		   "std::vector<double>",   // ResultDalitzY
+		   "std::vector<double>",   // ResultDalitzZ
+		   "std::vector<double>",   // ResultDalitzPhi
+		   "std::vector<double>"};  // ResultKinFactor
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
@@ -993,7 +996,10 @@ antok::user::cdreis::generateGetOmegaDalitzVariables(const YAML::Node&          
 		constArgs["OmegaMass"],                                // OmegaMass,
 		constArgs["OmegaMassWindow"],                          // MassWindowOmega,
 		*data.getAddr<std::vector<double>>(quantityNames[0]),  // ResultDalitzX
-		*data.getAddr<std::vector<double>>(quantityNames[1])   // ResultDalitzY
+		*data.getAddr<std::vector<double>>(quantityNames[1]),  // ResultDalitzY
+		*data.getAddr<std::vector<double>>(quantityNames[2]),  // ResultDalitzZ
+		*data.getAddr<std::vector<double>>(quantityNames[3]),  // ResultDalitzPhi
+		*data.getAddr<std::vector<double>>(quantityNames[4])   // ResultKinFactor
 	);
 }
 

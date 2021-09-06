@@ -4,6 +4,7 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <cmath>
 
 #include "TLorentzRotation.h"
 #include "TLorentzVector.h"
@@ -1404,8 +1405,11 @@ namespace antok {
 					        				const double&         ChargedPionMass,  // mass of charged pions
 					        				const double&         OmegaMass,        // nominal omega mass
 					        				const double&         OmegaMassWindow,  // cut around OmegaMass applied on m(pi^- pi^0 pi^+)
-					        				std::vector<double>&  ResultDalitzX,    // Lorentz vector of last found omega candidate
-					        				std::vector<double>&  ResultDalitzY)    // 1 if there is exactly one omega candidate, 0 otherwise
+					        				std::vector<double>&  ResultDalitzX,    // dalitz variable x
+					        				std::vector<double>&  ResultDalitzY,    // dalitz variable y
+					        				std::vector<double>&  ResultDalitzZ,    // dalitz variable z
+					        				std::vector<double>&  ResultDalitzPhi,  // dalitz variable phi
+											std::vector<double>&  ResultKinFactor)  // kinematic weight in decay amplitude
 						: _Pi0LV_0        (Pi0LV_0),
 						  _Pi0LV_1        (Pi0LV_1),
 						  _ChargedPartLV_0(ChargedPartLV_0),
@@ -1419,7 +1423,10 @@ namespace antok {
 						  _OmegaMass      (OmegaMass),
 						  _OmegaMassWindow(OmegaMassWindow),
 						  _ResultDalitzX  (ResultDalitzX),
-						  _ResultDalitzY  (ResultDalitzY)
+						  _ResultDalitzY  (ResultDalitzY),
+						  _ResultDalitzZ  (ResultDalitzZ),
+						  _ResultDalitzPhi(ResultDalitzPhi),
+						  _ResultKinFactor(ResultKinFactor)
 					{ }
 
 					virtual ~GetOmegaDalitzVariables() { }
@@ -1463,11 +1470,20 @@ namespace antok {
 						
 						// calculate the two Dalitz variables x and y used in https://doi.org/10.1140/epjc/s10052-012-2014-1
 						// for all valid combinations
-						_ResultDalitzX.clear();
-						_ResultDalitzY.clear();
-						_ResultDalitzX.resize(_Pi0LVs.size());
-						_ResultDalitzY.resize(_Pi0LVs.size());
+						_ResultDalitzX  .clear();
+						_ResultDalitzY  .clear();
+						_ResultDalitzZ  .clear();
+						_ResultDalitzPhi.clear();
+						_ResultKinFactor.clear();
+						const size_t vecSize = _Pi0LVs.size();
+						_ResultDalitzX  .resize(vecSize);
+						_ResultDalitzY  .resize(vecSize);
+						_ResultDalitzZ  .resize(vecSize);
+						_ResultDalitzPhi.resize(vecSize);
+						_ResultKinFactor.resize(vecSize);
+
 						for (size_t i = 0; i < _Pi0LVs.size(); ++i) {
+							// calculate the kinematic variables
 							const double mOmega = _mOmegas[i];
 							const double s =      (*_PiMinusLVs[i] + *_PiPlusLVs[i]).M2();
 							const double t =      (*_PiMinusLVs[i] + *_Pi0LVs[i]   ).M2();
@@ -1476,8 +1492,20 @@ namespace antok {
 							const double deltaM = (mOmega - 2.*_ChargedPionMass - _NeutralPionMass);
 							const double rOmega = 2./3.*mOmega*(deltaM);
 
-							_ResultDalitzX[i] = (t - u) / (std::sqrt(3.) * rOmega);
-							_ResultDalitzY[i] = (s0 - s) / rOmega + 2.*( _ChargedPionMass - _NeutralPionMass ) / deltaM;
+							const double x = (t - u) / (std::sqrt(3.) * rOmega);
+							const double y = (s0 - s) / rOmega + 2.*( _ChargedPionMass - _NeutralPionMass ) / deltaM;
+
+							const double z   = x*x + y*y;
+							const double phi = std::atan2(y,x) / 3.14159265358979323846 * 180 + 180; // in deg
+
+							const double kinFactor = (_PiPlusLVs[i]->Vect().Cross(_PiMinusLVs[i]->Vect())).Mag2() / mOmega;
+
+							// write variables to output
+							_ResultDalitzX  [i] = x;
+							_ResultDalitzY  [i] = y;
+							_ResultDalitzZ  [i] = z;
+							_ResultDalitzPhi[i] = phi;
+							_ResultKinFactor[i] = kinFactor;
 						}
 
 						return true;
@@ -1499,6 +1527,9 @@ namespace antok {
 					const double          _OmegaMassWindow;  // constant parameter, needs to be copied
 					std::vector<double>&  _ResultDalitzX;
 					std::vector<double>&  _ResultDalitzY;
+					std::vector<double>&  _ResultDalitzZ;
+					std::vector<double>&  _ResultDalitzPhi;
+					std::vector<double>&  _ResultKinFactor;
 
 				};
 
