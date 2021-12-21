@@ -10,3 +10,5 @@
 .cproject
 .pydevproject
 .settings
+test*/
+cmakeLog.txt
