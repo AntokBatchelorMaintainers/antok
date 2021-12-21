@@ -17,12 +17,16 @@ namespace antok {
 			// reuse macro from generators_functions.h
 			FUNCTION_PROTOTYPE(getUserFunction);
 
+			FUNCTION_PROTOTYPE(generateGetDebugPrints);
 			FUNCTION_PROTOTYPE(generateGetSumOverVector);
 			FUNCTION_PROTOTYPE(generateGetVector3VectorAttributes);
 			FUNCTION_PROTOTYPE(generateGetVectorLorentzVectorAttributes);
 			FUNCTION_PROTOTYPE(generateGetSumLorentzVectors);
 			FUNCTION_PROTOTYPE(generateGetNominalMassDifferences);
+			FUNCTION_PROTOTYPE(generateGetCorrectedBeamTime);
 			FUNCTION_PROTOTYPE(generateGetRecoilLorentzVec);
+			FUNCTION_PROTOTYPE(generateGetRPDDeltaPhiResProjectionBonn);
+			FUNCTION_PROTOTYPE(generateGetCalcRICHPIDAlternative);
 			FUNCTION_PROTOTYPE(generateGetECALCorrectedEnergy);
 			FUNCTION_PROTOTYPE(generateGetECALCorrectedTiming);
 			FUNCTION_PROTOTYPE(generateGetCleanedEcalClusters);

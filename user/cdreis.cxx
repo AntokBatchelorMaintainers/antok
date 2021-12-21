@@ -24,7 +24,9 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
                                      int                             index)
 {
 	const std::string& functionName = antok::YAMLUtils::getString(function["Name"]);
-	if        (functionName == "getSumOverVector") {
+	if        (functionName == "getDebugPrints") {
+		return antok::user::cdreis::generateGetDebugPrints                   (function, quantityNames, index);
+	} else if (functionName == "getSumOverVector") {
 		return antok::user::cdreis::generateGetSumOverVector                 (function, quantityNames, index);
 	} else if (functionName == "getVector3VectorAttributes") {
 		return antok::user::cdreis::generateGetVector3VectorAttributes       (function, quantityNames, index);
@@ -34,6 +36,8 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 		return antok::user::cdreis::generateGetSumLorentzVectors             (function, quantityNames, index);
 	} else if (functionName == "getNominalMassDifferences") {
 		return antok::user::cdreis::generateGetNominalMassDifferences        (function, quantityNames, index);
+	} else if (functionName == "getCorrectedBeamTime") {
+		return antok::user::cdreis::generateGetCorrectedBeamTime             (function, quantityNames, index);
 	} else if (functionName == "getRecoilLorentzVec") {
 		return antok::user::cdreis::generateGetRecoilLorentzVec              (function, quantityNames, index);
 	} else if (functionName == "getECALCorrectedEnergy") {
@@ -78,6 +82,29 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 		return antok::user::cdreis::generateGetPiPiNeutralSystem 			 (function, quantityNames, index);
 	}
 	return nullptr;
+}
+
+
+antok::Function*
+antok::user::cdreis::generateGetDebugPrints(const YAML::Node&               function,
+                                            const std::vector<std::string>& quantityNames,
+                                            const int                       index)
+{
+	// Get input variables
+	vecPairString<std::string> args = {{"RunNumber",    "int"},
+									   {"SpillNumber",  "int"},
+									   {"EventInSpill", "int"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+
+	return new antok::user::cdreis::functions::GetDebugPrints(
+			*data.getAddr<int>(args[0].first),  // RunNumber
+			*data.getAddr<int>(args[1].first),  // SpillNumber
+			*data.getAddr<int>(args[2].first)   // EventInSpill
+	);
 }
 
 namespace {
@@ -283,6 +310,71 @@ antok::user::cdreis::generateGetNominalMassDifferences(const YAML::Node&        
 
 
 antok::Function*
+antok::user::cdreis::generateGetCorrectedBeamTime(const YAML::Node&               function,
+                                                  const std::vector<std::string>& quantityNames,
+                                                  const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	vecPairString<std::string> args
+		= {{"BeamTime",  "double"},
+		   {"RunNumber", "int"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Get constant arguments
+	std::map<std::string, std::string> constArgsString = {{"Shifts", ""}};
+	if (not functionArgumentHandlerConst<std::string>(constArgsString, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+	// Read time shifts from file
+	const std::string& quantityName   = quantityNames[0];
+	const std::string& ShiftsFileName = constArgsString["Shifts"];
+	std::map<int, double> Shifts;
+	{
+		std::ifstream ShiftsFile;
+		ShiftsFile.open(ShiftsFileName);
+		if (not ShiftsFile) {
+			std::cerr << "Could not open file at '" << ShiftsFileName << "' for 'Calibration' in function '" << function["Name"] << "' "
+			          << "which is required for calculation of variable '" << quantityName << "'" << std::endl;
+			return nullptr;
+		}
+		int    runNumber;
+		double a;
+		while (ShiftsFile >> runNumber >> a) {
+			Shifts[runNumber] = a;
+		}
+		if (not ShiftsFile.eof()) {
+			std::cerr << "ERROR: Invalid ECAL energy-correction entries at end of file '" << ShiftsFileName << "'; "
+			          << "last good entry for run " << runNumber << "." << std::endl;
+			return nullptr;
+		}
+		ShiftsFile.close();
+	}
+
+	// Register output variables
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	const std::vector<std::string> outputVarTypes = {"double"};  // ResultCorrectedTime
+	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
+		return nullptr;
+	}
+
+	return new antok::user::cdreis::functions::GetCorrectedBeamTime(
+		*data.getAddr<double>(args[0].first),    // Energies
+		*data.getAddr<int>   (args[1].first),    // RunNumber
+		Shifts,
+		*data.getAddr<double>(quantityNames[0])  // ResultCorrectedTime
+	);
+}
+
+
+antok::Function*
 antok::user::cdreis::generateGetRecoilLorentzVec(const YAML::Node&               function,
                                                  const std::vector<std::string>& quantityNames,
                                                  const int                       index)
@@ -389,7 +481,6 @@ antok::user::cdreis::generateGetECALCorrectedEnergy(const YAML::Node&           
 	);
 }
 
-
 antok::Function*
 antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&               function,
                                                     const std::vector<std::string>& quantityNames,
@@ -399,11 +490,15 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 		return nullptr;
 	}
 
+	// see if there is a time shift list given
+	bool doTimeShift = hasNodeKey(function, "Shifts");
+
 	// Get input variables
 	vecPairString<std::string> args
 		= {{"Times",              "std::vector<double>"},
 		   {"Energies",           "std::vector<double>"},
 		   {"ECALClusterIndices", "std::vector<int>"}};
+	if (doTimeShift) args.push_back(std::pair<std::string, std::string>("RunNumber", "int"));
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -411,12 +506,25 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 
 	// Get constant arguments
 	std::map<std::string, std::string> constArgsString = {{"Calibration", ""}};
+	if (doTimeShift) constArgsString.insert({"Shifts", ""});
 	if (not functionArgumentHandlerConst<std::string>(constArgsString, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
+
 	// Read time-correction coefficients from file
-	const std::string& quantityName        = quantityNames[0];
+	antok::user::cdreis::functions::timeParam timeParametrization = antok::user::cdreis::functions::uhl;
+	if (hasNodeKey(function, "TimeParametrization")) {
+		std::map<std::string, int> constIntArgs
+			= {{"TimeParametrization", 0}};
+		if (not functionArgumentHandlerConst<int>(constIntArgs, function)) {
+			std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+			return nullptr;
+		}
+		timeParametrization = antok::user::cdreis::functions::timeParam(constIntArgs["TimeParametrization"]);
+	}
+
+	const std::string& quantityName   = quantityNames[0];
 	const std::string& CalibrationFileName = constArgsString["Calibration"];
 	std::map<std::string, std::vector<double>> CalibrationCoeffs;
 	{
@@ -427,19 +535,36 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 			          << "which is required for calculation of variable '" << quantityName << "'" << std::endl;
 			return nullptr;
 		}
+
 		std::string ECALName;
-		double      a, b, c, d, e, f, g;
-		while (CalibrationFile >> ECALName >> a >> b >> c >> d >> e >> f >> g) {
-			CalibrationCoeffs[ECALName] = {a, b, c, d, e, f, g};
+		switch (timeParametrization) {
+			case antok::user::cdreis::functions::uhl: {
+				double      a, b, c, d, e, f, g;
+				while (CalibrationFile >> ECALName >> a >> b >> c >> d >> e >> f >> g) {
+					CalibrationCoeffs[ECALName] = {a, b, c, d, e, f, g};}
+				break;
+			}
+			case antok::user::cdreis::functions::spuhlbeck: {
+				double      a, b, c, d, e, f;
+				while (CalibrationFile >> ECALName >> a >> b >> c >> d >> e >> f) {
+					CalibrationCoeffs[ECALName] = {a, b, c, d, e, f};}
+				break;
+			}
+			default: {
+				std::cerr << timeParametrization << " is no viable TimeParametrization.";
+				return nullptr;
+			}
 		}
+
 		if (not CalibrationFile.eof()) {
 			std::cerr << "ERROR: Invalid ECAL time-calibration entries at end of file '" << CalibrationFileName << "'; "
-			          << "last good entry for ECAL '" << ECALName << "'." << std::endl;
+			          << "last good entry for ECAL '" << ECALName << timeParametrization << "'." << std::endl;
 			return nullptr;
 		}
 		CalibrationFile.close();
 	}
 
+	
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes = {"std::vector<double>"};  // ResultCorrectedTimes
@@ -447,13 +572,51 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 		return nullptr;
 	}
 
-	return new antok::user::cdreis::functions::GetECALCorrectedTiming(
-		*data.getAddr<std::vector<double>>(args[0].first),    // Times
-		*data.getAddr<std::vector<double>>(args[1].first),    // Energies
-		*data.getAddr<std::vector<int>>   (args[2].first),    // ClusterIndices
-		CalibrationCoeffs,
-		*data.getAddr<std::vector<double>>(quantityNames[0])  // ResultCorrectedTimes
-	);
+	if (!doTimeShift) {
+		return new antok::user::cdreis::functions::GetECALCorrectedTiming(
+			*data.getAddr<std::vector<double>>(args[0].first),    // Times
+			*data.getAddr<std::vector<double>>(args[1].first),    // Energies
+			*data.getAddr<std::vector<int>>   (args[2].first),    // ClusterIndices
+			timeParametrization,
+			CalibrationCoeffs,
+			*data.getAddr<std::vector<double>>(quantityNames[0])  // ResultCorrectedTimes
+		);
+	} else {
+		// Read time shifts from file
+		const std::string& ShiftsFileName = constArgsString["Shifts"];
+		std::map<int, std::pair<double, double>> Shifts;
+		{
+			std::ifstream ShiftsFile;
+			ShiftsFile.open(ShiftsFileName);
+			if (not ShiftsFile) {
+				std::cerr << "Could not open file at '" << ShiftsFileName << "' for 'Calibration' in function '" << function["Name"] << "' "
+						<< "which is required for calculation of variable '" << quantityName << "'" << std::endl;
+				return nullptr;
+			}
+			int    runNumber;
+			double a, b;
+			while (ShiftsFile >> runNumber >> a >> b) {
+				Shifts[runNumber] = std::pair<double, double>(a, b);
+			}
+			if (not ShiftsFile.eof()) {
+				std::cerr << "ERROR: Invalid ECAL energy-correction entries at end of file '" << ShiftsFileName << "'; "
+						<< "last good entry for run " << runNumber << "." << std::endl;
+				return nullptr;
+			}
+			ShiftsFile.close();
+		}
+
+		return new antok::user::cdreis::functions::GetECALCorrectedTiming(
+			*data.getAddr<std::vector<double>>(args[0].first),     // Times
+			*data.getAddr<std::vector<double>>(args[1].first),     // Energies
+			*data.getAddr<std::vector<int>>   (args[2].first),     // ClusterIndices
+			timeParametrization,
+			CalibrationCoeffs,
+			*data.getAddr<std::vector<double>>(quantityNames[0]),  // ResultCorrectedTimes
+			*data.getAddr<int>                (args[3].first),     // RunNumber
+			Shifts
+		);
+	}
 }
 
 

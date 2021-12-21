@@ -24,6 +24,36 @@ namespace antok {
 
 			namespace functions {
 
+				class GetDebugPrints : public Function
+				{
+
+				public:
+
+					GetDebugPrints(const int& RunNumber,
+								   const int& SpillNumber,
+								   const int& EventInSpill)
+						: _RunNumber   (RunNumber),
+						  _SpillNumber (SpillNumber),
+						  _EventInSpill(EventInSpill)
+					{ }
+
+					virtual ~GetDebugPrints() { }
+
+					bool
+					operator() ()
+					{
+						std::cout << "\nRun # " << _RunNumber << "\tSpill # " << _SpillNumber << "\tEvent-In-Spill # " << _EventInSpill << "\n";
+						return true;
+					}
+
+				private:
+
+					const int& _RunNumber;
+					const int& _SpillNumber;
+					const int& _EventInSpill;
+
+				};
+
 				template <typename T>
 				class GetSumOverVector : public Function
 				{
@@ -236,6 +266,45 @@ namespace antok {
 				};
 
 
+				class GetCorrectedBeamTime : public Function
+				{
+
+				public:
+
+					GetCorrectedBeamTime(const double&                Time,                 // beam time
+					                     const int&                   RunNumber,            // run number of the event
+					                     const std::map<int, double>& Shifts,               // beam time shifts per run
+					                     double&                      ResultCorrectedTime)  // corrected beam times
+						: _Time               (Time),
+						  _RunNumber          (RunNumber),
+						  _Shifts             (Shifts),
+						  _ResultCorrectedTime(ResultCorrectedTime)
+					{ }
+
+					virtual ~GetCorrectedBeamTime() { }
+
+					bool operator() ()
+					{
+
+						double shift = 0;  // default: no shift
+						const auto& it = _Shifts.find(_RunNumber);
+						if (it != _Shifts.end()) {
+							shift = it->second;
+						}
+						_ResultCorrectedTime = _Time - shift;
+						return true;
+					}
+
+				private:
+
+					const double&               _Time;
+					const int&                  _RunNumber;
+					const std::map<int, double> _Shifts;  // constant parameter, needs to be copied
+					double&                     _ResultCorrectedTime;
+
+				};
+
+
 				class GetRecoilLorentzVec : public Function
 				{
 
@@ -268,6 +337,7 @@ namespace antok {
 					TLorentzVector&       _ResultRecoilLV;
 
 				};
+				
 
 
 				class GetECALCorrectedEnergy : public Function
@@ -327,6 +397,7 @@ namespace antok {
 				};
 
 
+				enum timeParam { uhl = 0, spuhlbeck = 1};
 				// taken from Sebastian Uhl's analysis of pi-pi0pi0
 				// http://wwwcompass.cern.ch/compass/publications/theses/2016_phd_uhl.pdf
 				// see line 505ff in /nfs/freenas/tuph/e18/project/compass/analysis/suhl/scripts/FinalState_3pi.-00/KinematicPlots.C
@@ -338,12 +409,18 @@ namespace antok {
 					GetECALCorrectedTiming(const std::vector<double>&                        Times,                 // times of ECAL clusters to be corrected
 					                       const std::vector<double>&                        Energies,              // energies of ECAL clusters
 					                       const std::vector<int>&                           ECALClusterIndices,    // ECAL indices of clusters
+										   timeParam                                         TimeParametrization,   // select which parametrization to use
 					                       const std::map<std::string, std::vector<double>>& Calibration,           // calibration coefficients used to correct times
-					                       std::vector<double>&                              ResultCorrectedTimes)  // corrected times of ECAL clusters
+					                       std::vector<double>&                              ResultCorrectedTimes,  // corrected times of ECAL clusters
+										   const int&                                        RunNumber = 0,         // RunNumber
+										   const std::map<int, std::pair<double, double>>&   Shifts = {})           // shifts per run to correct times
 						: _Times               (Times),
 						  _Energies            (Energies),
 						  _ECALClusterIndices  (ECALClusterIndices),
+						  _RunNumber           (RunNumber),
+						  _TimeParametrization (TimeParametrization),
 						  _Calibration         (Calibration),
+						  _Shifts              (Shifts),
 						  _ResultCorrectedTimes(ResultCorrectedTimes)
 					{ }
 
@@ -357,27 +434,77 @@ namespace antok {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
-
+						
 						_ResultCorrectedTimes.resize(nmbClusters);
 						for (size_t i = 0; i < nmbClusters; ++i) {
+							_ResultCorrectedTimes[i] = _Times[i];
+							// first apply time shifts per run if available
+							if (_RunNumber != 0) {
+								double shift = 0;  // default: no shift
+								const auto& it = _Shifts.find(_RunNumber);
+								if (it != _Shifts.end()) {
+									if        (_ECALClusterIndices[i] == 1) {
+										shift = it->second.first;
+									} else if (_ECALClusterIndices[i] == 2) {
+										shift = it->second.second;
+									} else {
+										return false;
+									}
+								}
+								_ResultCorrectedTimes[i] = _ResultCorrectedTimes[i] - shift;								
+							}
+
+							// apply energy-dependent correction factors
 							const double energy  = _Energies[i];
 							const double energy2 = energy * energy;
 							double correction = 0;
-							if        (_ECALClusterIndices[i] == 1) {
-								const std::vector<double>& coefficients = _Calibration.at("ECAL1");
-								correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
-								                             + coefficients[3] / energy2 + coefficients[4] * energy2;
-							} else if (_ECALClusterIndices[i] == 2) {
-							  const double energy3 = energy * energy2;
-								const std::vector<double>& coefficients = _Calibration.at("ECAL2");
-								correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
-								                             + coefficients[3] / energy2 + coefficients[4] * energy2
-								                             + coefficients[5] / energy3 + coefficients[6] * energy3;
-							} else {
-								std::cerr << "ECAL index " << _ECALClusterIndices[i] << " is neither 1 nor 2." ;
-								return false;
+							switch (_TimeParametrization) {
+								case uhl: {
+									if        (_ECALClusterIndices[i] == 1) {
+										const std::vector<double>& coefficients = _Calibration.at("ECAL1");
+										correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
+																	+ coefficients[3] / energy2 + coefficients[4] * energy2;
+									} else if (_ECALClusterIndices[i] == 2) {
+									const double energy3 = energy * energy2;
+										const std::vector<double>& coefficients = _Calibration.at("ECAL2");
+										correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
+																	+ coefficients[3] / energy2 + coefficients[4] * energy2
+																	+ coefficients[5] / energy3 + coefficients[6] * energy3;
+									} else {
+										std::cerr << "ECAL index " << _ECALClusterIndices[i] << " is neither 1 nor 2." ;
+										return false;
+									}
+									break;
+								}
+								case spuhlbeck: {
+									std::string ECALString;
+									switch (_ECALClusterIndices[i]) {
+										case 1: {
+											ECALString = "ECAL1";
+											break;
+										}
+										case 2: {
+											ECALString = "ECAL2";
+											break;
+										}
+										default: {
+											std::cerr << "ECAL index " << _ECALClusterIndices[i] << " is neither 1 nor 2." ;
+											return false;
+										}
+									}
+									const std::vector<double>& coefficients = _Calibration.at(ECALString);
+									const double shiftedE  = energy - coefficients[5];
+									const double shiftedE2 = shiftedE*shiftedE;
+									correction = coefficients[0] + coefficients[1] / shiftedE  + coefficients[2] * shiftedE
+																	+ coefficients[3] / shiftedE2 + coefficients[4] * shiftedE2;
+									break;
+								}
+								default: {
+									std::cerr << _TimeParametrization << " is no viable TimeParametrization.";
+									return false;
+								}
 							}
-							_ResultCorrectedTimes[i] = _Times[i] - correction;
+							_ResultCorrectedTimes[i] = _ResultCorrectedTimes[i] - correction;
 						}
 						return true;
 					}
@@ -387,7 +514,10 @@ namespace antok {
 					const std::vector<double>&                       _Times;
 					const std::vector<double>&                       _Energies;
 					const std::vector<int>&                          _ECALClusterIndices;
+					const int&                                       _RunNumber;
+					timeParam                                        _TimeParametrization;
 					const std::map<std::string, std::vector<double>> _Calibration;  // constant parameter, needs to be copied
+					const std::map<int, std::pair<double, double>>   _Shifts;       // constant parameter, needs to be copied
 					std::vector<double>&                             _ResultCorrectedTimes;
 
 				};
@@ -1213,6 +1343,8 @@ namespace antok {
 								_ResultChi2s         [i] = neutralFit.chi2Value();
 								_ResultPValues       [i] = neutralFit.pValue();
 								_ResultNmbIterations [i] = neutralFit.nmbIterations();
+							} else {
+								
 							}
 						}
 						if (successes[0] and successes[1]) {
