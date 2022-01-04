@@ -8,7 +8,7 @@ namespace antok {
 	  public:
 
 		virtual ~Plot() { };
-		virtual void fill(long cutmask) = 0;
+		virtual void fill(antok::bitmask cutmask) = 0;
 
 	};
 

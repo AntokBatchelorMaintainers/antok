@@ -7,6 +7,8 @@
 
 #include<TH1.h>
 
+#include<cutter.h>
+
 namespace YAML {
 	class Node;
 }
@@ -25,7 +27,7 @@ namespace antok {
 			bool plotsWithSingleCutsOff;
 			std::string statisticsHistInName;
 			std::string statisticsHistOutName;
-			std::map<std::string, std::vector<long>> cutMasks;
+			std::map<std::string, std::vector<antok::bitmask>> cutMasks;
 
 		  private:
 
@@ -72,10 +74,10 @@ namespace antok {
 
 		static Plotter* instance();
 
-		void fill(const long& cutPattern);
+		void fill(const antok::bitmask& cutPattern);
 		void addInputfileToWaterfallHistograms(const TH1D* waterfall);
 
-		static bool handleAdditionalCuts(const YAML::Node& cuts, std::map<std::string, std::vector<long>>& map);
+		static bool handleAdditionalCuts(const YAML::Node& cuts, std::map<std::string, std::vector<antok::bitmask>>& map);
 
 	  private:
 

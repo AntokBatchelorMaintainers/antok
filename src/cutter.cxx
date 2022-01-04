@@ -7,10 +7,10 @@
 
 #include<cut.hpp>
 
-antok::Cutter* antok::Cutter::_cutter = 0;
+antok::Cutter* antok::Cutter::_cutter = nullptr;
 
 antok::Cutter* antok::Cutter::instance() {
-	if(_cutter == 0) {
+	if(_cutter == nullptr) {
 		_cutter = new antok::Cutter();
 	}
 	return _cutter;
@@ -24,14 +24,14 @@ bool antok::Cutter::cut() {
 		success = success and (*(_cuts[i].first))();
 		bool result = (*(_cuts[i].second));
 		if(result) {
-			_cutPattern += (1<<i);
+			_cutPattern[i] = 1;
 		}
 	}
 	return success;
 
 };
 
-long antok::Cutter::getAllCutsCutmaskForCutTrain(std::string cutTrainName) const {
+antok::bitmask antok::Cutter::getAllCutsCutmaskForCutTrain(std::string cutTrainName) const {
 
 	std::map<std::string, std::map<std::string, antok::Cut*> >::const_iterator cutTrainsMap_it = _cutTrainsMap.find(cutTrainName);
 	assert(cutTrainsMap_it != _cutTrainsMap.end());
@@ -52,21 +52,21 @@ const std::vector<antok::Cut*>& antok::Cutter::getCutsForCutTrain(std::string cu
 
 };
 
-bool antok::Cutter::cutOnInCutmask(long mask, const antok::Cut* cut) const {
+bool antok::Cutter::cutOnInCutmask(antok::bitmask mask, const antok::Cut* cut) const {
 
 	for(unsigned int i = 0; i < _cuts.size(); ++i) {
 		const antok::Cut* innerCut = _cuts[i].first;
 		if(cut == innerCut) {
-			return ((mask>>i)&1);
+			return (mask[i] == 1);
 		}
 	}
 	assert(false);
 
 }
 
-long antok::Cutter::getCutmaskForNames(std::vector<std::string> names) const {
+antok::bitmask antok::Cutter::getCutmaskForNames(std::vector<std::string> names) const {
 
-	long cutmask = 0;
+	antok::bitmask cutmask = 0;
 	for(unsigned int i = 0; i < names.size(); ++i) {
 		std::map<std::string, antok::Cut*>::const_iterator cutsMap_it = _cutsMap.find(names[i]);
 		assert(cutsMap_it != _cutsMap.end());
@@ -74,13 +74,13 @@ long antok::Cutter::getCutmaskForNames(std::vector<std::string> names) const {
 		unsigned int index = 0;
 		for( ; _cuts[index].first != cut && index < _cuts.size(); ++index);
 		assert(index < _cuts.size());
-		cutmask += 1<<index;
+		cutmask[index] = 1;
 	}
 	return cutmask;
 
 };
 
-std::string antok::Cutter::getAbbreviations(long cutPattern, std::string cutTrainName) const {
+std::string antok::Cutter::getAbbreviations(antok::bitmask cutPattern, std::string cutTrainName) const {
 
 	const std::vector<antok::Cut*>& cuts = getCutsForCutTrain(cutTrainName);
 
@@ -108,7 +108,7 @@ std::string antok::Cutter::getAbbreviations(long cutPattern, std::string cutTrai
 
 };
 
-const std::map<std::string, std::vector<long> >& antok::Cutter::getWaterfallCutmasks() {
+const std::map<std::string, std::vector<antok::bitmask> >& antok::Cutter::getWaterfallCutmasks() {
 
 	if(_waterfallCutmasksCache.empty()) {
 
@@ -136,7 +136,7 @@ const std::map<std::string, std::vector<long> >& antok::Cutter::getWaterfallCutm
 
 }
 
-const std::map<std::string, std::vector<long> >& antok::Cutter::getCutmasksAllCutsOffSeparately() {
+const std::map<std::string, std::vector<antok::bitmask> >& antok::Cutter::getCutmasksAllCutsOffSeparately() {
 
 	if(_singleOffCutmasksCache.empty()) {
 
@@ -145,12 +145,13 @@ const std::map<std::string, std::vector<long> >& antok::Cutter::getCutmasksAllCu
 		    ++cutTrainsCutOrder_it)
 		{
 			const std::string& cutTrainName = cutTrainsCutOrder_it->first;
-			long cutmaskTemplate = getAllCutsCutmaskForCutTrain(cutTrainName);
+			antok::bitmask cutmaskTemplate = getAllCutsCutmaskForCutTrain(cutTrainName);
 			const std::vector<antok::Cut*>& cuts = cutTrainsCutOrder_it->second;
 			for(unsigned int i = 0; i < cuts.size(); ++i) {
 				for(unsigned int j = 0; j < _cuts.size(); ++j) {
 					if(cuts[i] == _cuts[j].first) {
-						long cutmask = cutmaskTemplate - (1<<j);
+						antok::bitmask cutmask = cutmaskTemplate;
+						cutmask[j] = 0;
 						_singleOffCutmasksCache[cutTrainName].push_back(cutmask);
 						break;
 					}
@@ -164,7 +165,7 @@ const std::map<std::string, std::vector<long> >& antok::Cutter::getCutmasksAllCu
 
 }
 
-const std::map<std::string, std::vector<long> >& antok::Cutter::getCutmasksAllCutsOnSeparately() {
+const std::map<std::string, std::vector<antok::bitmask> >& antok::Cutter::getCutmasksAllCutsOnSeparately() {
 
 	if(_singleOnCutmasksCache.empty()) {
 
@@ -177,7 +178,8 @@ const std::map<std::string, std::vector<long> >& antok::Cutter::getCutmasksAllCu
 			for(unsigned int i = 0; i < cuts.size(); ++i) {
 				for(unsigned int j = 0; j < _cuts.size(); ++j) {
 					if(cuts[i] == _cuts[j].first) {
-						long cutmask = 1<<j;
+						antok::bitmask cutmask;
+						cutmask[j] = 1;
 						_singleOnCutmasksCache[cutTrainName].push_back(cutmask);
 						break;
 					}
@@ -205,7 +207,7 @@ bool antok::Cutter::fillOutTrees() const {
 	bool success = true;
 	for(unsigned int i = 0; i < _treesToFill.size(); ++i) {
 		TTree* tree = _treesToFill[i].first;
-		long mask = _treesToFill[i].second;
+		antok::bitmask mask = _treesToFill[i].second;
 		if((mask&_cutPattern) == mask) {
 			success = success and (tree->Fill() > 0);
 		}

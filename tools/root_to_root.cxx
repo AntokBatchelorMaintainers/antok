@@ -69,7 +69,7 @@ void convert_root_to_txt(char* infile_name,
 		}
 		strs<<".root";
 		tfiles.at(i) = TFile::Open(strs.str().c_str(), "NEW");
-		if(tfiles.at(i) == 0) {
+		if(tfiles.at(i) == nullptr) {
 			std::cout<<"Error opening file for writing."<<std::endl;
 			return;
 		}
@@ -77,7 +77,7 @@ void convert_root_to_txt(char* infile_name,
 
 	// Open input file and do all the tree stuff
 	TFile* infile = TFile::Open(infile_name, "READ");
-	if(infile == 0) {
+	if(infile == nullptr) {
 		return;
 	}
 	std::string inFileName = "Standard Event Selection/USR55";
@@ -85,7 +85,7 @@ void convert_root_to_txt(char* infile_name,
 		inFileName = "kbicker_5pic/USR55";
 	}
 	TTree* tree = (TTree*)infile->Get(inFileName.c_str());
-	if(tree == 0) {
+	if(tree == nullptr) {
 		std::cout<<"Error opening in-TTree."<<std::endl;
 		return;
 	}

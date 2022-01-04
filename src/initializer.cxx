@@ -27,7 +27,7 @@ TTree* createOutTree(TTree* const      inTree,
                      const YAML::Node& config);
 
 
-antok::Initializer* antok::Initializer::_initializer = 0;
+antok::Initializer* antok::Initializer::_initializer = nullptr;
 
 
 antok::Initializer*
@@ -218,7 +218,7 @@ antok::Initializer::initializeCutter()
 	}  // End loop over CutTrains
 
 	for (const std::pair<std::string, TTree*>& outTree : cutter._outTreeMap) {
-		cutter._treesToFill.push_back(std::pair<TTree*, long>(outTree.second, cutter.getAllCutsCutmaskForCutTrain(outTree.first)));
+		cutter._treesToFill.push_back(std::pair<TTree*, antok::bitmask>(outTree.second, cutter.getAllCutsCutmaskForCutTrain(outTree.first)));
 	}
 
 	return true;
