@@ -43,6 +43,7 @@ namespace antok {
 					operator() ()
 					{
 						std::cout << "\nRun # " << _RunNumber << "\tSpill # " << _SpillNumber << "\tEvent-In-Spill # " << _EventInSpill << "\n";
+						if (_EventInSpill > 3000) abort();
 						return true;
 					}
 
@@ -544,6 +545,7 @@ namespace antok {
 					                       const std::map<std::string, std::vector<double>>& ResolutionCoeffs,            // coefficients used to parametrize energy dependence of time resolution
 					                       std::vector<TVector3>&                            ResultPositions,             // positions of ECAL clusters
 					                       std::vector<TVector3>&                            ResultPositionVariances,     // position variances of ECAL clusters
+										   double&                                           ResultMaxPositionVariance,   // largest position variance of any ECAL cluster
 					                       std::vector<double>&                              ResultEnergies,              // energies of ECAL clusters
 					                       std::vector<double>&                              ResultEnergyVariances,       // energy variances of ECAL clusters
 					                       std::vector<double>&                              ResultTimes,                 // times of ECAL clusters
@@ -564,6 +566,7 @@ namespace antok {
 						  _ResolutionCoeffs          (ResolutionCoeffs),
 						  _ResultPositions           (ResultPositions),
 						  _ResultPositionVariances   (ResultPositionVariances),
+						  _ResultMaxPositionVariance (ResultMaxPositionVariance),
 						  _ResultEnergies            (ResultEnergies),
 						  _ResultEnergyVariances     (ResultEnergyVariances),
 						  _ResultTimes               (ResultTimes),
@@ -684,6 +687,18 @@ namespace antok {
 							_ResultEnergyVariances.push_back  (_EnergyVariances[i]);
 							_ResultTimes.push_back            (_Times[i]);
 						}
+
+						double maxPosVar = 0;
+						for (size_t i = 0; i < _ResultPositions.size(); ++i) {
+							// const double xVar = _ResultPositionVariances[i].X();
+							// const double yVar = _ResultPositionVariances[i].Y();
+							// const double zVar = _ResultPositionVariances[i].Z();
+							// const double posVar = std::sqrt(xVar*xVar + yVar*yVar + zVar*zVar);
+							const double posVar = _ResultPositionVariances[i].X() + _ResultPositionVariances[i].Y() + _ResultPositionVariances[i].Z();
+							if (posVar > maxPosVar) maxPosVar = posVar;
+						}
+						_ResultMaxPositionVariance = maxPosVar;
+
 						return true;
 					}
 
@@ -705,6 +720,7 @@ namespace antok {
 					const std::map<std::string, std::vector<double>> _ResolutionCoeffs;            // constant parameter, needs to be copied
 					std::vector<TVector3>&                           _ResultPositions;
 					std::vector<TVector3>&                           _ResultPositionVariances;
+					double&                                          _ResultMaxPositionVariance;
 					std::vector<double>&                             _ResultEnergies;
 					std::vector<double>&                             _ResultEnergyVariances;
 					std::vector<double>&                             _ResultTimes;
@@ -1302,14 +1318,14 @@ namespace antok {
 						    or (_ClusterECALIndices[3] == -1)) {
 							return true;
 						}
-						const double maxPosError = 1e3;
+						/*const double maxPosError = 1e3;
 						for (size_t i = 0; i < 4; ++i) {
 							if (   (_ClusterPositionVariances[_ClusterECALIndices[i]].X() > maxPosError)
 							    or (_ClusterPositionVariances[_ClusterECALIndices[i]].Y() > maxPosError)
 							    or (_ClusterPositionVariances[_ClusterECALIndices[i]].Z() > maxPosError)) {
 								return true;
 							}
-						}
+						}*/
 
 						// Fit clusters corresponding to first and second pair of indices in _ClusterECALIndices to given _Mass
 						std::vector<bool> successes = {false, false};

@@ -137,7 +137,7 @@ antok::NeutralFit::covForCluster(const TVector3& clusterPosition,
 		}
 		case 3: {
 			// fit by David Spuelbeck to 2008 data for ECAL2
-			// see David's email from 14. Jan 2021
+			// see https://indico.cern.ch/event/968722/contributions/4083945/attachments/2133122/3592426/spuelbeck_291020_KinFit_3Pi2G_final_state.pdf
 			double a, b, c;
 			if (clusterPosition.Z() < 2500) {
 				// ECAL1

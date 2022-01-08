@@ -625,7 +625,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
                                                     const std::vector<std::string>& quantityNames,
                                                     const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 6)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 7)) {
 		return nullptr;
 	}
 
@@ -705,6 +705,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 	const std::vector<std::string> outputVarTypes
 		 = {"std::vector<TVector3>",  // ResultPositions
 		    "std::vector<TVector3>",  // ResultPositionVariances
+			"double",                 // ResultMaxPositionVariance
 		    "std::vector<double>",    // ResultEnergies
 		    "std::vector<double>",    // ResultEnergyVariances
 		    "std::vector<double>",    // ResultTimes
@@ -730,10 +731,11 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		ResolutionCoeffs,
 		*data.getAddr<std::vector<TVector3>>(quantityNames[0]),  // ResultPositions
 		*data.getAddr<std::vector<TVector3>>(quantityNames[1]),  // ResultPositionVariances
-		*data.getAddr<std::vector<double>>  (quantityNames[2]),  // ResultEnergies
-		*data.getAddr<std::vector<double>>  (quantityNames[3]),  // ResultEnergyVariances
-		*data.getAddr<std::vector<double>>  (quantityNames[4]),  // ResultTimes
-		*data.getAddr<std::vector<int>>     (quantityNames[5])   // ResultECALClusterIndices
+		*data.getAddr<double>               (quantityNames[2]),  // ResultMaxPositionVariance
+		*data.getAddr<std::vector<double>>  (quantityNames[3]),  // ResultEnergies
+		*data.getAddr<std::vector<double>>  (quantityNames[4]),  // ResultEnergyVariances
+		*data.getAddr<std::vector<double>>  (quantityNames[5]),  // ResultTimes
+		*data.getAddr<std::vector<int>>     (quantityNames[6])   // ResultECALClusterIndices
 	);
 }
 
