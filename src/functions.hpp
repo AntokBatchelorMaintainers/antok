@@ -623,14 +623,14 @@ namespace antok {
 		};
 
 
-		template <>
-		class Abs<std::vector<double>>: public Function
+		template <typename T>
+		class Abs<std::vector<T>>: public Function
 		{
 
 		public:
 
-			Abs(const std::vector<double>& in,
-			    std::vector<double>&       out)
+			Abs(const std::vector<T>& in,
+			    std::vector<double>&  out)
 				: _in(in),
 				  _out(out)
 			{ }
@@ -643,15 +643,19 @@ namespace antok {
 				const size_t sizeVec = _in.size();
 				_out.resize(sizeVec);
 				for (size_t i = 0; i < sizeVec; ++i) {
-				    _out[i] = std::fabs(_in[i]);
+				    _out[i] = __abs(_in[i]);
 				}
 				return true;
 			}
 
 		private:
 
-			const std::vector<double>& _in;
-			std::vector<double>&       _out;
+			const std::vector<T>& _in;
+			std::vector<double>&  _out;
+
+			double __abs (const TVector3& x) { return x.Mag(); }
+			template <typename Q, class Dummy = int>
+			double __abs(const Q& x) { return std::fabs(x); }
 
 		};
 

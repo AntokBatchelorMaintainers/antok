@@ -236,7 +236,7 @@ antok::generators::generateAbs(const YAML::Node&               function,
 	//TODO reduce boiler-plate code using helper function similar to __generateDiffHelper()
 	const std::string& quantityName = quantityNames[0];
 	antok::Data&       data         = antok::ObjectManager::instance()->getData();
-	if (argTypeName == "std::vector<double>") {
+	if (argTypeName == "std::vector<double>" or argTypeName == "std::vector<TVector3>") {
 		if (not data.insert<std::vector<double>>(quantityName)) {
 			std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityNames);
 			return nullptr;
@@ -250,17 +250,20 @@ antok::generators::generateAbs(const YAML::Node&               function,
 
 	using antok::functions::Abs;
 	if        (argTypeName == "double") {
-		return new Abs<double>             (*data.getAddr<double>(args[0].first),
-		                                    *data.getAddr<double>(quantityName));
+		return new Abs<double>               (*data.getAddr<double>(args[0].first),
+		                                      *data.getAddr<double>(quantityName));
 	} else if (argTypeName == "int") {
-		return new Abs<int>                (*data.getAddr<int>(args[0].first),
-		                                    *data.getAddr<double>(quantityName));
+		return new Abs<int>                  (*data.getAddr<int>(args[0].first),
+		                                      *data.getAddr<double>(quantityName));
 	} else if (argTypeName == "TVector3") {
-		return new Abs<TVector3>           (*data.getAddr<TVector3>(args[0].first),
-		                                    *data.getAddr<double>(quantityName));
+		return new Abs<TVector3>             (*data.getAddr<TVector3>(args[0].first),
+		                                      *data.getAddr<double>(quantityName));
 	} else if (argTypeName == "std::vector<double>") {
-		return new Abs<std::vector<double>>(*data.getAddr<std::vector<double>>(args[0].first),
-		                                    *data.getAddr<std::vector<double>>(quantityName));
+		return new Abs<std::vector<double>>  (*data.getAddr<std::vector<double>>(args[0].first),
+		                                      *data.getAddr<std::vector<double>>(quantityName));
+	} else if (argTypeName == "std::vector<TVector3>") {
+		return new Abs<std::vector<TVector3>>(*data.getAddr<std::vector<TVector3>>(args[0].first),
+		                                      *data.getAddr<std::vector<double>>(quantityName));
 	} else {
 		std::cerr << "'" << function["Name"] << "' is not (yet) implemented for input type '" << argTypeName << "'." << std::endl;
 	}

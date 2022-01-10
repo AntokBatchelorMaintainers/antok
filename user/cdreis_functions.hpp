@@ -604,6 +604,14 @@ namespace antok {
 						for (size_t i = 0; i < nmbClusters; ++i) {
 							const double energy  = _Energies[i];
 							const double energy2 = energy * energy;
+							// apply position variance threshold
+							if ((_PositionVariances[i].X() + _PositionVariances[i].Y() + _PositionVariances[i].Z()) > 10000.0) {
+								continue;
+							}
+							// apply distance to next charge threshold
+							if (_DistancesToCharged[i] < _DistanceToChargedThreshold) {
+								continue;
+							}
 							if (_ECALClusterIndices[i] == 1) {
 								// apply energy threshold
 								if (energy < _ECAL1ThresholdEnergy) {
@@ -634,10 +642,6 @@ namespace antok {
 									if (_Times[i] < lowerLimitT or upperLimitT < _Times[i]) {
 										continue;
 									}
-								}
-								// apply distance to next charge threshold
-								if (_DistancesToCharged[i] < _DistanceToChargedThreshold) {
-									continue;
 								}
 								_ResultECALClusterIndices.push_back(1);
 							} else if (_ECALClusterIndices[i] == 2) {
@@ -670,10 +674,6 @@ namespace antok {
 								// apply HCAL shadow veto on Y position of cluster in ECAL2 (see Tobias' PhD thesis p. 62)
 								if (not (_ECAL2YUpperLimit == 0 and _ECAL2YLowerLimit == 0)  // check if at least one limit is set
 								    and (_Positions[i].Y() >= _ECAL2YUpperLimit or _Positions[i].Y() <= _ECAL2YLowerLimit)) {
-									continue;
-								}
-								// apply distance to next charge threshold
-								if (_DistancesToCharged[i] < _DistanceToChargedThreshold) {
 									continue;
 								}
 								_ResultECALClusterIndices.push_back(2);
