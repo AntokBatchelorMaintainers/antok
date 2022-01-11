@@ -36,6 +36,8 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 		return antok::user::cdreis::generateGetSumLorentzVectors             (function, quantityNames, index);
 	} else if (functionName == "getNominalMassDifferences") {
 		return antok::user::cdreis::generateGetNominalMassDifferences        (function, quantityNames, index);
+	} else if (functionName == "getVector2sfromVector3s") {
+		return antok::user::cdreis::generateGetVector2sfromVector3s          (function, quantityNames, index);
 	} else if (functionName == "getCorrectedBeamTime") {
 		return antok::user::cdreis::generateGetCorrectedBeamTime             (function, quantityNames, index);
 	} else if (functionName == "getRecoilLorentzVec") {
@@ -305,6 +307,45 @@ antok::user::cdreis::generateGetNominalMassDifferences(const YAML::Node&        
 		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // VectorLV
 		constArgs["NominalMass"],                                   // NominalMass
 		*data.getAddr<std::vector<double>>(quantityNames[0])        // ResultMassDifferences
+	);
+}
+
+antok::Function*
+antok::user::cdreis::generateGetVector2sfromVector3s(const YAML::Node&               function,
+                                                     const std::vector<std::string>& quantityNames,
+                                                     const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	vecPairString<std::string> args = {{"Vector3s", "std::vector<TVector3>"}};
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Get constant arguments
+	std::map<std::string, double> constArgs = {{"SelectedCoordinates", 0}};
+	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	const antok::user::cdreis::functions::selectedCoordinates SelectedCoordinates = antok::user::cdreis::functions::selectedCoordinates(constArgs["SelectedCoordinates"]);
+
+    // Register output variables
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	const std::vector<std::string> outputVarTypes = {"std::vector<TVector2>"};  // ResultVector2s
+	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
+		return nullptr;
+	}
+
+	return new antok::user::cdreis::functions::getVector2sfromVector3s(
+		*data.getAddr<std::vector<TVector3>>(args[0].first),    // Vector3s
+		SelectedCoordinates,                                    // SelectedCoordinates
+		*data.getAddr<std::vector<TVector2>>(quantityNames[0])  // ResultVector2s
 	);
 }
 
@@ -649,7 +690,8 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		   {"ECAL2ThresholdEnergy",      0},
 		   {"ECAL2YUpperLimit",          0},
 		   {"ECAL2YLowerLimit",          0},
-		   {"DistanceToChargeThreshold", 0}};
+		   {"DistanceToChargeThreshold", 0},
+		   {"XYVarianceThreshold",       0}};
 	if (not functionArgumentHandlerConst<double>(constArgs, function)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -705,7 +747,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 	const std::vector<std::string> outputVarTypes
 		 = {"std::vector<TVector3>",  // ResultPositions
 		    "std::vector<TVector3>",  // ResultPositionVariances
-			"double",                 // ResultMaxPositionVariance
+			"std::vector<double>",    // ResultXYVariances
 		    "std::vector<double>",    // ResultEnergies
 		    "std::vector<double>",    // ResultEnergyVariances
 		    "std::vector<double>",    // ResultTimes
@@ -727,11 +769,12 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 		constArgs["ECAL2YUpperLimit"],                           // upper limit on y position in ECAL2
 		constArgs["ECAL2YLowerLimit"],                           // lower limit on y position in ECAL2
 		constArgs["DistanceToChargeThreshold"],                  // lower limit for the distance to next charge
+		constArgs["XYVarianceThreshold"],                        // upper limit for the variance in XY plane
 		constIntArgs["TimeResolutionMode"],                      // mode for time resolution parametrizazion
 		ResolutionCoeffs,
 		*data.getAddr<std::vector<TVector3>>(quantityNames[0]),  // ResultPositions
 		*data.getAddr<std::vector<TVector3>>(quantityNames[1]),  // ResultPositionVariances
-		*data.getAddr<double>               (quantityNames[2]),  // ResultMaxPositionVariance
+		*data.getAddr<std::vector<double>>  (quantityNames[2]),  // ResultXYVariances
 		*data.getAddr<std::vector<double>>  (quantityNames[3]),  // ResultEnergies
 		*data.getAddr<std::vector<double>>  (quantityNames[4]),  // ResultEnergyVariances
 		*data.getAddr<std::vector<double>>  (quantityNames[5]),  // ResultTimes
@@ -745,7 +788,7 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
                                               const std::vector<std::string>& quantityNames,
                                               const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 7)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 8)) {
 		return nullptr;
 	}
 
@@ -776,6 +819,7 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 		= {"std::vector<int>",       // ResultECALClusterIndex
 		   "std::vector<TVector3>",  // ResultClusterPosition
 		   "std::vector<TVector3>",  // ResultClusterPositionVariance
+		   "std::vector<double>",    // ResultXYVariances
 		   "std::vector<double>",    // ResultClusterEnergy
 		   "std::vector<double>",    // ResultClusterEnergyVariances
 		   "std::vector<double>",    // ResultClusterTime
@@ -796,10 +840,11 @@ antok::user::cdreis::generateGetECALVariables(const YAML::Node&               fu
 		*data.getAddr<std::vector<int>>     (quantityNames[0]),  // ResultECALClusterIndices
 		*data.getAddr<std::vector<TVector3>>(quantityNames[1]),  // ResultPositions
 		*data.getAddr<std::vector<TVector3>>(quantityNames[2]),  // ResultPositionVariances
-		*data.getAddr<std::vector<double>>  (quantityNames[3]),  // ResultEnergies
-		*data.getAddr<std::vector<double>>  (quantityNames[4]),  // ResultEnergyVariances
-		*data.getAddr<std::vector<double>>  (quantityNames[5]),  // ResultTimes
-		*data.getAddr<std::vector<double>>  (quantityNames[6])   // ResultDistancesToCharge
+		*data.getAddr<std::vector<double>>  (quantityNames[3]),  // ResultXYVariances
+		*data.getAddr<std::vector<double>>  (quantityNames[4]),  // ResultEnergies
+		*data.getAddr<std::vector<double>>  (quantityNames[5]),  // ResultEnergyVariances
+		*data.getAddr<std::vector<double>>  (quantityNames[6]),  // ResultTimes
+		*data.getAddr<std::vector<double>>  (quantityNames[7])   // ResultDistancesToCharge
 	);
 }
 

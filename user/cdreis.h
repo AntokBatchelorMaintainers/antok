@@ -23,6 +23,7 @@ namespace antok {
 			FUNCTION_PROTOTYPE(generateGetVectorLorentzVectorAttributes);
 			FUNCTION_PROTOTYPE(generateGetSumLorentzVectors);
 			FUNCTION_PROTOTYPE(generateGetNominalMassDifferences);
+			FUNCTION_PROTOTYPE(generateGetVector2sfromVector3s);
 			FUNCTION_PROTOTYPE(generateGetCorrectedBeamTime);
 			FUNCTION_PROTOTYPE(generateGetRecoilLorentzVec);
 			FUNCTION_PROTOTYPE(generateGetRPDDeltaPhiResProjectionBonn);

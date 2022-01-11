@@ -266,6 +266,47 @@ namespace antok {
 
 				};
 
+				enum selectedCoordinates { XY = 0, XZ = 1, YZ = 2};
+
+				class getVector2sfromVector3s : public Function
+				{
+
+				public:
+
+					getVector2sfromVector3s(const std::vector<TVector3>& Vector3s,
+					                        const selectedCoordinates    SelectedCoordinates,
+					                        std::vector<TVector2>&       ResultVector2s)
+						: _Vector3s           (Vector3s),
+						  _SelectedCoordinates(SelectedCoordinates),
+						  _ResultVector2s     (ResultVector2s)
+					{ }
+
+					virtual ~getVector2sfromVector3s() { }
+
+					bool
+					operator() ()
+					{
+						_ResultVector2s.clear();
+						_ResultVector2s.resize(_Vector3s.size());
+						for (size_t i = 0; i < _Vector3s.size(); ++i) {
+							switch (_SelectedCoordinates) {
+								case XY: _ResultVector2s[i] = TVector2(_Vector3s[i].X(), _Vector3s[i].Y()); break;
+								case XZ: _ResultVector2s[i] = TVector2(_Vector3s[i].X(), _Vector3s[i].Z()); break;
+								case YZ: _ResultVector2s[i] = TVector2(_Vector3s[i].Y(), _Vector3s[i].Z()); break;
+								default: return false;
+							}
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<TVector3>& _Vector3s;
+					const selectedCoordinates    _SelectedCoordinates;  // constant parameter, needs to be copied
+					std::vector<TVector2>&       _ResultVector2s;
+
+				};
+
 
 				class GetCorrectedBeamTime : public Function
 				{
@@ -541,11 +582,12 @@ namespace antok {
 					                       const double&                                     ECAL2YUpperLimit,            // upper limit for the Y position of ECAL2 clusters (HCAL shadow)
 					                       const double&                                     ECAL2YLowerLimit,            // lower limit for the Y position of ECAL2 clusters (HCAL shadow)
 					                       const double&                                     DistanceToChargedThreshold,  // minimum distance to the next charged track at z Position of the cluster
+										   const double&                                     XYVarianceThreshold,         // upper limit for the variance in XY plane
 					                       const int&                                        TimeResolutionMode,          // selects parametrization for time resolution
 					                       const std::map<std::string, std::vector<double>>& ResolutionCoeffs,            // coefficients used to parametrize energy dependence of time resolution
 					                       std::vector<TVector3>&                            ResultPositions,             // positions of ECAL clusters
 					                       std::vector<TVector3>&                            ResultPositionVariances,     // position variances of ECAL clusters
-										   double&                                           ResultMaxPositionVariance,   // largest position variance of any ECAL cluster
+										   std::vector<double>&                              ResultXYVariances,           // variance of ECAL clusters in the XY plane
 					                       std::vector<double>&                              ResultEnergies,              // energies of ECAL clusters
 					                       std::vector<double>&                              ResultEnergyVariances,       // energy variances of ECAL clusters
 					                       std::vector<double>&                              ResultTimes,                 // times of ECAL clusters
@@ -562,11 +604,12 @@ namespace antok {
 						  _ECAL2YUpperLimit          (ECAL2YUpperLimit),
 						  _ECAL2YLowerLimit          (ECAL2YLowerLimit),
 						  _DistanceToChargedThreshold(DistanceToChargedThreshold),
+						  _XYVarianceThreshold       (XYVarianceThreshold),
 						  _TimeResolutionMode        (TimeResolutionMode),
 						  _ResolutionCoeffs          (ResolutionCoeffs),
 						  _ResultPositions           (ResultPositions),
 						  _ResultPositionVariances   (ResultPositionVariances),
-						  _ResultMaxPositionVariance (ResultMaxPositionVariance),
+						  _ResultXYVariances         (ResultXYVariances),
 						  _ResultEnergies            (ResultEnergies),
 						  _ResultEnergyVariances     (ResultEnergyVariances),
 						  _ResultTimes               (ResultTimes),
@@ -591,12 +634,14 @@ namespace antok {
 
 						_ResultPositions.clear();
 						_ResultPositionVariances.clear();
+						_ResultXYVariances.clear();
 						_ResultEnergies.clear();
 						_ResultEnergyVariances.clear();
 						_ResultTimes.clear();
 						_ResultECALClusterIndices.clear();
 						_ResultPositions.reserve         (nmbClusters);
 						_ResultPositionVariances.reserve (nmbClusters);
+						_ResultXYVariances.reserve       (nmbClusters);
 						_ResultEnergies.reserve          (nmbClusters);
 						_ResultEnergyVariances.reserve   (nmbClusters);
 						_ResultTimes.reserve             (nmbClusters);
@@ -604,8 +649,8 @@ namespace antok {
 						for (size_t i = 0; i < nmbClusters; ++i) {
 							const double energy  = _Energies[i];
 							const double energy2 = energy * energy;
-							// apply position variance threshold
-							if ((_PositionVariances[i].X() + _PositionVariances[i].Y() + _PositionVariances[i].Z()) > 10000.0) {
+							// apply XY variance threshold if threshold is greater than 0
+							if (_XYVarianceThreshold > 0 && (_PositionVariances[i].X() + _PositionVariances[i].Y()) > _XYVarianceThreshold) {
 								continue;
 							}
 							// apply distance to next charge threshold
@@ -683,21 +728,11 @@ namespace antok {
 							}
 							_ResultPositions.push_back        (_Positions[i]);
 							_ResultPositionVariances.push_back(_PositionVariances[i]);
+							_ResultXYVariances.push_back      (_PositionVariances[i].X() + _PositionVariances[i].Y());
 							_ResultEnergies.push_back         (energy);
 							_ResultEnergyVariances.push_back  (_EnergyVariances[i]);
 							_ResultTimes.push_back            (_Times[i]);
 						}
-
-						double maxPosVar = 0;
-						for (size_t i = 0; i < _ResultPositions.size(); ++i) {
-							// const double xVar = _ResultPositionVariances[i].X();
-							// const double yVar = _ResultPositionVariances[i].Y();
-							// const double zVar = _ResultPositionVariances[i].Z();
-							// const double posVar = std::sqrt(xVar*xVar + yVar*yVar + zVar*zVar);
-							const double posVar = _ResultPositionVariances[i].X() + _ResultPositionVariances[i].Y() + _ResultPositionVariances[i].Z();
-							if (posVar > maxPosVar) maxPosVar = posVar;
-						}
-						_ResultMaxPositionVariance = maxPosVar;
 
 						return true;
 					}
@@ -716,11 +751,12 @@ namespace antok {
 					const double                                     _ECAL2YUpperLimit;            // constant parameter, needs to be copied
 					const double                                     _ECAL2YLowerLimit;            // constant parameter, needs to be copied
 					const double                                     _DistanceToChargedThreshold;  // constant parameter, needs to be copied
+					const double                                     _XYVarianceThreshold;         // constant parameter, needs to be copied
 					const int                                        _TimeResolutionMode;          // constant parameter, needs to be copied
 					const std::map<std::string, std::vector<double>> _ResolutionCoeffs;            // constant parameter, needs to be copied
 					std::vector<TVector3>&                           _ResultPositions;
 					std::vector<TVector3>&                           _ResultPositionVariances;
-					double&                                          _ResultMaxPositionVariance;
+					std::vector<double>&                             _ResultXYVariances;
 					std::vector<double>&                             _ResultEnergies;
 					std::vector<double>&                             _ResultEnergyVariances;
 					std::vector<double>&                             _ResultTimes;
@@ -745,6 +781,7 @@ namespace antok {
 					                 std::vector<int>&                  ResultECALClusterIndices,  // ECAL indices of cluster
 					                 std::vector<TVector3>&             ResultPositions,           // positions of ECAL clusters
 					                 std::vector<TVector3>&             ResultPositionVariances,   // variances in position of ECAL clusters
+									 std::vector<double>&               ResultXYVariances,         // variance in XY plane of ECAL clusters
 					                 std::vector<double>&               ResultEnergies,            // energies of ECAL clusters
 					                 std::vector<double>&               ResultEnergyVariances,     // variance in energy of ECAL clusters
 					                 std::vector<double>&               ResultTimes,               // times of ECAL clusters
@@ -760,6 +797,7 @@ namespace antok {
 						  _ResultECALClusterIndices(ResultECALClusterIndices),
 						  _ResultPositions         (ResultPositions),
 						  _ResultPositionVariances (ResultPositionVariances),
+						  _ResultXYVariances       (ResultXYVariances),
 						  _ResultEnergies          (ResultEnergies),
 						  _ResultEnergyVariances   (ResultEnergyVariances),
 						  _ResultTimes             (ResultTimes),
@@ -793,6 +831,7 @@ namespace antok {
 						_ResultECALClusterIndices.resize(nmbClustersResult);
 						_ResultPositions.resize         (nmbClustersResult);
 						_ResultPositionVariances.resize (nmbClustersResult);
+						_ResultXYVariances.resize       (nmbClustersResult);
 						_ResultEnergies.resize          (nmbClustersResult);
 						_ResultEnergyVariances.resize   (nmbClustersResult);
 						_ResultTimes.resize             (nmbClustersResult);
@@ -809,6 +848,8 @@ namespace antok {
 								_ResultEnergyVariances   [nmbAccepted] = _EnergyVariances   [i];
 								_ResultTimes             [nmbAccepted] = _Times             [i];
 								_ResultDistancesToCharged[nmbAccepted] = _DistancesToCharged[i];
+
+								_ResultXYVariances[nmbAccepted] = _PositionVariances[i].X() + _PositionVariances[i].Y();
 								++nmbAccepted;
 							}
 						}
@@ -828,6 +869,7 @@ namespace antok {
 					std::vector<int>&            _ResultECALClusterIndices;
 					std::vector<TVector3>&       _ResultPositions;
 					std::vector<TVector3>&       _ResultPositionVariances;
+					std::vector<double>&         _ResultXYVariances;
 					std::vector<double>&         _ResultEnergies;
 					std::vector<double>&         _ResultEnergyVariances;
 					std::vector<double>&         _ResultTimes;
