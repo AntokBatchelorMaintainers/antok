@@ -55,6 +55,7 @@ namespace antok {
 		FUNCTION_PROTOTYPE(generateGetLorentzVectorAttributes);
 		FUNCTION_PROTOTYPE(generateGetLorentzVec);
 		FUNCTION_PROTOTYPE(generateGetTs);
+		FUNCTION_PROTOTYPE(generateGetVector2);
 		FUNCTION_PROTOTYPE(generateGetVector3);
 		FUNCTION_PROTOTYPE(generateGetVectorEntry);
 		FUNCTION_PROTOTYPE(generateGetVectorSize);
