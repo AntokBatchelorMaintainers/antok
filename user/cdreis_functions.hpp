@@ -308,6 +308,90 @@ namespace antok {
 				};
 
 
+				class CalcAngles2P: public Function {
+				public:
+
+					/**
+					* Calculates the Gottfried-Jackson frame angles from the four-momenta.
+					* Does only work for 2-particle final states
+					* Modified version of S. Wallners CalcAngles3P
+					*
+					* @param lv1Addr Four momentum of the batchelor
+					* @param lv2Addr Four momentum of the analyser
+					* @param lvBeam Four momentum of the beam particle
+					* @param targetMassAddr Target mass
+					* @param GJ_costhetaAddr Gottfried-Jackson frame costheta angle
+					* @param GJ_phiAddr Gottfried-Jackson frame phi angle
+					*/
+					CalcAngles2P(const TLorentzVector* lv1Addr, const TLorentzVector* lv2Addr,
+								const TLorentzVector* lvBeamAddr, const double* targetMassAddr,
+								double* GJ_costhetaAddr, double* GJ_phiAddr):
+						_lv1(*lv1Addr),
+						_lv2(*lv2Addr),
+						_lvBeam(*lvBeamAddr),
+						_targetMass(*targetMassAddr),
+						_GJ_costheta(*GJ_costhetaAddr),
+						_GJ_phi(*GJ_phiAddr)
+						{}
+
+
+
+					bool operator()() {
+
+						const TLorentzVector lvX = _lv1 + _lv2; // LV of X
+						const TLorentzVector lvTarget(0,0,0,_targetMass);
+
+						const TVector3 boostLab2X(-lvX.BoostVector());
+
+						// boost in X rest frame
+						TLorentzVector lvX_X(lvX);                          lvX_X.Boost(boostLab2X);
+						TLorentzVector lvBeam_X(_lvBeam);                   lvBeam_X.Boost(boostLab2X);
+						TLorentzVector lvTarget_X(lvTarget);                lvTarget_X.Boost(boostLab2X);
+						TLorentzVector lvRecoil_X(_lvBeam - lvX+ lvTarget);	lvRecoil_X.Boost(boostLab2X);
+						TLorentzVector lv1_X(_lv1);                         lv1_X.Boost(boostLab2X);
+						TLorentzVector lv2_X(_lv2);                         lv2_X.Boost(boostLab2X);
+
+
+
+						// get z-, y-,x- axis of GJ frame in X rest frame
+						const TVector3 gjAxisZ(lvBeam_X.Vect().Unit());
+						const TVector3 gjAxisY(lvTarget_X.Vect().Cross(lvRecoil_X.Vect()).Unit());
+						const TVector3 gjAxisX(gjAxisY.Cross(gjAxisZ).Unit());
+
+						// get rotation from GJ to lab frame and vice versa
+						TRotation GJ2X;
+						GJ2X = GJ2X.RotateAxes(gjAxisX, gjAxisY, gjAxisZ);
+						TRotation X2GJ(GJ2X);
+						X2GJ.Invert();
+						assert(!X2GJ.IsIdentity());
+
+						// rotate in GJ frame
+						TLorentzVector lvX_GJ(lvX_X);            lvX_GJ *= X2GJ;
+						TLorentzVector lvBeam_GJ(lvBeam_X);      lvBeam_GJ *= X2GJ;
+						TLorentzVector lvTarget_GJ(lvTarget_X);  lvTarget_GJ *= X2GJ;
+						TLorentzVector lvRecoil_GJ(lvRecoil_X);  lvRecoil_GJ *= X2GJ;
+						TLorentzVector lv1_GJ(lv1_X);            lv1_GJ *= X2GJ;
+						TLorentzVector lv2_GJ(lv2_X);            lv1_GJ *= X2GJ;
+
+						// calculate theta, phi in GJ frame
+						_GJ_costheta = lv2_GJ.CosTheta();
+						_GJ_phi = lv2_GJ.Phi();
+
+						return true;
+					}
+
+				private:
+
+					const TLorentzVector& _lv1;
+					const TLorentzVector& _lv2;
+					const TLorentzVector& _lvBeam;
+					const double&         _targetMass;
+					double&               _GJ_costheta;
+					double&               _GJ_phi;
+
+				};
+
+
 				class GetCorrectedBeamTime : public Function
 				{
 
@@ -334,6 +418,7 @@ namespace antok {
 							shift = it->second;
 						}
 						_ResultCorrectedTime = _Time - shift;
+						//std::cout << "BeamTime: " << _ResultCorrectedTime << "\n";
 						return true;
 					}
 
@@ -479,7 +564,6 @@ namespace antok {
 						
 						_ResultCorrectedTimes.resize(nmbClusters);
 						for (size_t i = 0; i < nmbClusters; ++i) {
-							_ResultCorrectedTimes[i] = _Times[i];
 							// first apply time shifts per run if available
 							if (_RunNumber != 0) {
 								double shift = 0;  // default: no shift
@@ -493,8 +577,11 @@ namespace antok {
 										return false;
 									}
 								}
-								_ResultCorrectedTimes[i] = _ResultCorrectedTimes[i] - shift;								
+								_ResultCorrectedTimes[i] = _Times[i] - shift;
+							} else {
+								_ResultCorrectedTimes[i] = _Times[i];
 							}
+							//std::cout << "ClusterTime (after run number shift): " << _ResultCorrectedTimes[i] << " [" << i << "]cluster\n";
 
 							// apply energy-dependent correction factors
 							const double energy  = _Energies[i];
@@ -535,7 +622,7 @@ namespace antok {
 										}
 									}
 									const std::vector<double>& coefficients = _Calibration.at(ECALString);
-									const double shiftedE  = energy - coefficients[5];
+									const double shiftedE  = energy + coefficients[5];
 									const double shiftedE2 = shiftedE*shiftedE;
 									correction = coefficients[0] + coefficients[1] / shiftedE  + coefficients[2] * shiftedE
 																	+ coefficients[3] / shiftedE2 + coefficients[4] * shiftedE2;
@@ -547,6 +634,7 @@ namespace antok {
 								}
 							}
 							_ResultCorrectedTimes[i] = _ResultCorrectedTimes[i] - correction;
+							//std::cout << "ClusterTime (after all corrections): " << _ResultCorrectedTimes[i] << " [" << i << "]cluster\n";
 						}
 						return true;
 					}
@@ -561,6 +649,42 @@ namespace antok {
 					const std::map<std::string, std::vector<double>> _Calibration;  // constant parameter, needs to be copied
 					const std::map<int, std::pair<double, double>>   _Shifts;       // constant parameter, needs to be copied
 					std::vector<double>&                             _ResultCorrectedTimes;
+
+				};
+
+
+				class GetECALTimeDiffToBeamTime : public Function
+				{
+
+				public:
+
+					GetECALTimeDiffToBeamTime(const std::vector<double>& ClusterTimes,          // times of ECAL clusters to be corrected
+					                    	  const double&              BeamTime,              // beam time
+					                    	  std::vector<double>&       ResultCorrectedTimes)  // corrected times of ECAL clusters
+						: _ClusterTimes        (ClusterTimes),
+						  _BeamTime            (BeamTime),
+						  _ResultCorrectedTimes(ResultCorrectedTimes)
+					{ }
+
+					virtual ~GetECALTimeDiffToBeamTime() { }
+
+					bool
+					operator() ()
+					{
+						_ResultCorrectedTimes.clear();
+						for (size_t i = 0; i < _ClusterTimes.size(); ++i) {
+							//std::cout << "ClusterTime (raw): " << _ClusterTimes[i] << " [" << i << "]cluster\n";
+							_ResultCorrectedTimes.push_back(_ClusterTimes[i] - _BeamTime);
+							//std::cout << "ClusterTime (after beamTime shift): " << _ResultCorrectedTimes[i] << " [" << i << "]cluster\n";
+						}
+						return true;
+					}
+
+				private:
+
+					const std::vector<double>& _ClusterTimes;
+					const double&              _BeamTime;
+					std::vector<double>&       _ResultCorrectedTimes;
 
 				};
 
@@ -649,6 +773,9 @@ namespace antok {
 						for (size_t i = 0; i < nmbClusters; ++i) {
 							const double energy  = _Energies[i];
 							const double energy2 = energy * energy;
+							//if (_PositionVariances[i].X() + _PositionVariances[i].Y() + _PositionVariances[i].Z() > 10000.) {
+							//	continue;
+							//}
 							// apply XY variance threshold if threshold is greater than 0
 							if (_XYVarianceThreshold > 0 && (_PositionVariances[i].X() + _PositionVariances[i].Y()) > _XYVarianceThreshold) {
 								continue;
@@ -2600,6 +2727,26 @@ namespace antok {
 
 				};
 
+
+				namespace {
+
+					bool
+					checkMassWindow(const double Mass,
+					                const double MassWindow,
+									const int    SelectedChannel,
+									const double SubsystemMass)
+					{
+						const bool inWindow = (SubsystemMass > Mass-MassWindow && SubsystemMass < Mass+MassWindow);
+						if (SelectedChannel == 3) { //if F1Pi return if outside window
+							return !inWindow;
+						} else                      //if EtaPi or EtaPrimePi return if in window
+						{
+							return inWindow;
+						}
+					}
+
+				}
+
 				class GetPiPiNeutralSystem : public Function
 				{
 
@@ -2615,24 +2762,28 @@ namespace antok {
 					                     const int&            Charge_2,         // charge of 3rd charged particle
 										 const double&         Mass,
 										 const double&         MassWindow,
-										 const int&            SelectedNeutralType,
-					                     TLorentzVector&       ResultPiPiNeutralLV,   // lorentz vector of the PiPiNeutral system
-					                     TLorentzVector&       ResultBachelorLV,      // lorentz vector of the bachelor piMinus
-										 int&                  ResultValidCandidate)  // success of subsystem selection
-						: _NeutralLV           (NeutralLV),
-						  _NeutralType         (NeutralType),
-						  _ChargedPartLV_0     (ChargedPartLV_0),
-						  _ChargedPartLV_1     (ChargedPartLV_1),
-						  _ChargedPartLV_2     (ChargedPartLV_2),
-						  _Charge_0            (Charge_0),
-						  _Charge_1            (Charge_1),
-						  _Charge_2            (Charge_2),
-						  _Mass                (Mass),
-						  _MassWindow          (MassWindow),
-						  _SelectedNeutralType (SelectedNeutralType),
-						  _ResultPiPiNeutralLV (ResultPiPiNeutralLV),
-						  _ResultBachelorLV    (ResultBachelorLV),
-						  _ResultValidCandidate(ResultValidCandidate)
+										 const int&            SelectedChannel,
+					                     TLorentzVector&       ResultPiPiNeutralLV,      // lorentz vector of the PiPiNeutral system
+					                     TLorentzVector&       ResultBachelorLV,         // lorentz vector of the bachelor piMinus
+					                     TLorentzVector&       ResultPiPlusInPiPiGGLV,   // lorentz vector of the piPlus within the PiPiNeutral system
+					                     TLorentzVector&       ResultPiMinusInPiPiGGLV,  // lorentz vector of the piMinus within the PiPiNeutral system
+										 int&                  ResultValidCandidates)    // number of valid of subsystem selection
+						: _NeutralLV              (NeutralLV),
+						  _NeutralType            (NeutralType),
+						  _ChargedPartLV_0        (ChargedPartLV_0),
+						  _ChargedPartLV_1        (ChargedPartLV_1),
+						  _ChargedPartLV_2        (ChargedPartLV_2),
+						  _Charge_0               (Charge_0),
+						  _Charge_1               (Charge_1),
+						  _Charge_2               (Charge_2),
+						  _Mass                   (Mass),
+						  _MassWindow             (MassWindow),
+						  _SelectedChannel        (SelectedChannel),
+						  _ResultPiPiNeutralLV    (ResultPiPiNeutralLV),
+						  _ResultBachelorLV       (ResultBachelorLV),
+						  _ResultPiPlusInPiPiGGLV (ResultPiPlusInPiPiGGLV),
+						  _ResultPiMinusInPiPiGGLV(ResultPiMinusInPiPiGGLV),
+						  _ResultValidCandidates  (ResultValidCandidates)
 					{ }
 
 					virtual ~GetPiPiNeutralSystem() { }
@@ -2640,47 +2791,78 @@ namespace antok {
 					bool
 					operator() ()
 					{
-						_ResultValidCandidate = 0;
+						_ResultValidCandidates = 0;
 						
-						const std::vector<const TLorentzVector*> ChargedPartLVs = {&_ChargedPartLV_0, &_ChargedPartLV_1, &_ChargedPartLV_2};
-						const std::vector<int>                   Charges        = { _Charge_0,         _Charge_1,         _Charge_2};
+						const TLorentzVector* PiPlusLV;
+						const TLorentzVector* PiMinus1LV;
+						const TLorentzVector* PiMinus2LV;
 
-						if (_SelectedNeutralType != _NeutralType) return true;
-
-						std::vector<TLorentzVector> selectedSubsystemLVs = {};
-						std::vector<TLorentzVector> selectedBachelorLVs = {};
-
-						for (size_t j = 0; j < ChargedPartLVs.size(); ++j) {
-							const int             chargeFirst  = Charges[j];
-							const TLorentzVector* chargedFirst = ChargedPartLVs[j];
-							for (size_t k = j+1; k < ChargedPartLVs.size(); ++k) {
-								const int             chargeSecond  = Charges[k];
-								const TLorentzVector* chargedSecond = ChargedPartLVs[k];
-								if (chargeFirst == chargeSecond) {
-									continue;
-								} else {
-									const double subsystemMass = (_NeutralLV + *chargedFirst + *chargedSecond).M();
-									if ( _Mass - _MassWindow < subsystemMass && subsystemMass < _Mass + _MassWindow) {
-										selectedSubsystemLVs.push_back(_NeutralLV + *chargedFirst + *chargedSecond);
-										// get remaining index of pion, sum of all indices needs to be 0 + 1 + 2 = 3;
-										int bachelorIndex = 3 - (k + j);
-										selectedBachelorLVs.push_back(*ChargedPartLVs[bachelorIndex]);
-									}
-								}
-							}
-						}
-						if        (selectedSubsystemLVs.size() == 0) {
-							return true;
-						} else if (selectedSubsystemLVs.size() == 1) {
-							_ResultValidCandidate = 1;
-							_ResultPiPiNeutralLV  = selectedSubsystemLVs[0];
-							_ResultBachelorLV     = selectedBachelorLVs[0];
+						if (_Charge_0 == +1) {
+							PiPlusLV   = &_ChargedPartLV_0;
+							PiMinus1LV = &_ChargedPartLV_1;
+							PiMinus2LV = &_ChargedPartLV_2;
+						} else if (_Charge_1 == +1) {
+							PiPlusLV   = &_ChargedPartLV_1;
+							PiMinus1LV = &_ChargedPartLV_2;
+							PiMinus2LV = &_ChargedPartLV_0;
 						} else {
-							TRandom* randomSelector = new TRandom();
-							const int selectedCandidate = randomSelector->Integer(selectedSubsystemLVs.size());
-							_ResultValidCandidate = 1;
-							_ResultPiPiNeutralLV  = selectedSubsystemLVs[selectedCandidate];
-							_ResultBachelorLV     = selectedBachelorLVs[selectedCandidate];
+							PiPlusLV   = &_ChargedPartLV_2;
+							PiMinus1LV = &_ChargedPartLV_0;
+							PiMinus2LV = &_ChargedPartLV_1;
+						}
+
+						switch (_SelectedChannel) {
+							case 1: {// EtaPi channel
+								if (_NeutralType != 1) return true; // check if neutral is pi0
+								break;
+							}
+							case 2:
+							case 3: {// EtaPrimePi and F1Pi channels
+								if (_NeutralType != 2) return true; // check if neutral is eta
+								break;
+							}
+							default: break;
+						}
+
+						int selectedPiMinus = 0;
+
+						if (checkMassWindow(_Mass, _MassWindow, _SelectedChannel, (_NeutralLV + *PiPlusLV + *PiMinus1LV).M())) selectedPiMinus = 1;
+						if (checkMassWindow(_Mass, _MassWindow, _SelectedChannel, (_NeutralLV + *PiPlusLV + *PiMinus2LV).M())) selectedPiMinus += 2;
+
+						switch (selectedPiMinus) {
+							case 1: {
+								_ResultBachelorLV        = *PiMinus2LV;
+								_ResultPiPlusInPiPiGGLV  = *PiPlusLV;
+								_ResultPiMinusInPiPiGGLV = *PiMinus1LV;
+								_ResultPiPiNeutralLV     = _NeutralLV + _ResultPiPlusInPiPiGGLV + _ResultPiMinusInPiPiGGLV;
+								_ResultValidCandidates = 1;
+								break;
+							}
+							case 2: {
+								_ResultBachelorLV        = *PiMinus1LV;
+								_ResultPiPlusInPiPiGGLV  = *PiPlusLV;
+								_ResultPiMinusInPiPiGGLV = *PiMinus2LV;
+								_ResultPiPiNeutralLV     = _NeutralLV + _ResultPiPlusInPiPiGGLV + _ResultPiMinusInPiPiGGLV;
+								_ResultValidCandidates = 1;
+								break;
+							}
+							case 3: {
+								_ResultValidCandidates = 2;
+							}
+							default: {
+								TRandom* randomSelector = new TRandom();
+								const int selectedCandidate = randomSelector->Integer(2);
+								delete randomSelector;
+								if (selectedCandidate) {
+									_ResultBachelorLV        = *PiMinus1LV;
+									_ResultPiMinusInPiPiGGLV = *PiMinus2LV;
+								} else {
+									_ResultBachelorLV        = *PiMinus2LV;
+									_ResultPiMinusInPiPiGGLV = *PiMinus1LV;
+								}
+								_ResultPiPlusInPiPiGGLV  = *PiPlusLV;
+								_ResultPiPiNeutralLV     = _NeutralLV + _ResultPiPlusInPiPiGGLV + _ResultPiMinusInPiPiGGLV;
+							}
 						}
 
 						return true;
@@ -2698,10 +2880,12 @@ namespace antok {
 					const int&            _Charge_2;
 					const double          _Mass;
 					const double          _MassWindow;
-					const int             _SelectedNeutralType;
+					const int             _SelectedChannel;
 					TLorentzVector&       _ResultPiPiNeutralLV;
 					TLorentzVector&       _ResultBachelorLV;
-					int&                  _ResultValidCandidate;
+					TLorentzVector&       _ResultPiPlusInPiPiGGLV;
+					TLorentzVector&       _ResultPiMinusInPiPiGGLV;
+					int&                  _ResultValidCandidates;
 
 				};
 

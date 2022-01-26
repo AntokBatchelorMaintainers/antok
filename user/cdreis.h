@@ -24,12 +24,14 @@ namespace antok {
 			FUNCTION_PROTOTYPE(generateGetSumLorentzVectors);
 			FUNCTION_PROTOTYPE(generateGetNominalMassDifferences);
 			FUNCTION_PROTOTYPE(generateGetVector2sfromVector3s);
+			FUNCTION_PROTOTYPE(generateGetCalcAngles2P);
 			FUNCTION_PROTOTYPE(generateGetCorrectedBeamTime);
 			FUNCTION_PROTOTYPE(generateGetRecoilLorentzVec);
 			FUNCTION_PROTOTYPE(generateGetRPDDeltaPhiResProjectionBonn);
 			FUNCTION_PROTOTYPE(generateGetCalcRICHPIDAlternative);
 			FUNCTION_PROTOTYPE(generateGetECALCorrectedEnergy);
 			FUNCTION_PROTOTYPE(generateGetECALCorrectedTiming);
+			FUNCTION_PROTOTYPE(generateGetECALTimeDiffToBeamTime);
 			FUNCTION_PROTOTYPE(generateGetCleanedEcalClusters);
 			FUNCTION_PROTOTYPE(generateGetECALVariables);
 			FUNCTION_PROTOTYPE(generateGetPhotonLorentzVecs);
