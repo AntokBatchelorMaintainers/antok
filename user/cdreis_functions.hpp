@@ -42,8 +42,8 @@ namespace antok {
 					bool
 					operator() ()
 					{
+						if (_EventInSpill > 32924) abort();
 						std::cout << "\nRun # " << _RunNumber << "\tSpill # " << _SpillNumber << "\tEvent-In-Spill # " << _EventInSpill << "\n";
-						if (_EventInSpill > 3000) abort();
 						return true;
 					}
 
@@ -1114,7 +1114,7 @@ namespace antok {
 									_ResultPhoton1inPairLVs.push_back(_PhotonLVs[j]);
 								}
 								// select only photon pairs with both photons in ECAL2
-								else if (internSelectionMode == ECAL2Selection and (_ECALClusterIndices[i] == 2 or _ECALClusterIndices[j] == 2)) {
+								else if (internSelectionMode == ECAL2Selection and (_ECALClusterIndices[i] == 2 and _ECALClusterIndices[j] == 2)) {
 									PhotonPairMode_0 = ECAL2Selection;
 									_ResultPhotonPairLVs.push_back(_PhotonLVs[i] + _PhotonLVs[j]);
 									_ResultPhoton0inPairLVs.push_back(_PhotonLVs[i]);
@@ -1155,7 +1155,7 @@ namespace antok {
 											_ResultPhoton1inPairLVs.push_back(_PhotonLVs[l]);
 										}
 										// select only photon pairs with both photons in ECAL2
-										else if (internSelectionMode == ECAL2Selection and (_ECALClusterIndices[k] == 2 or _ECALClusterIndices[l] == 2)) {
+										else if (internSelectionMode == ECAL2Selection and (_ECALClusterIndices[k] == 2 and _ECALClusterIndices[l] == 2)) {
 											PhotonPairMode_1 = ECAL2Selection;
 											_ResultPhotonPairLVs.push_back(_PhotonLVs[k] + _PhotonLVs[l]);
 											_ResultPhoton0inPairLVs.push_back(_PhotonLVs[k]);
@@ -1516,6 +1516,19 @@ namespace antok {
 								0, // MassUpperLimit for neutralFit::massIsInWindow(), which is not used
 								_PrecisionGoal,
 								_WhichEnergyVariance);
+							//std::cout << "Clusters: " << clusterIndexA << ", " << clusterIndexB << std::endl;
+							//std::cout << "NominalMass: " << _Mass << std::endl;
+							//std::cout << "x1,y1: " << _ClusterPositions[clusterIndexA].X() << _ClusterPositions[clusterIndexA].Y() << "+-" << std::sqrt(_ClusterPositionVariances[clusterIndexA].X()) << std::sqrt(_ClusterPositionVariances[clusterIndexA].Y()) << std::endl;
+							//std::cout << "x2,y2: " << _ClusterPositions[clusterIndexB].X() << _ClusterPositions[clusterIndexB].Y() << "+-" << std::sqrt(_ClusterPositionVariances[clusterIndexB].X()) << std::sqrt(_ClusterPositionVariances[clusterIndexB].Y()) << std::endl;
+							//std::cout << "E1: " << _ClusterEnergies[clusterIndexA] << "+-" << std::sqrt(_ClusterEnergyVariances[clusterIndexA]) << std::endl;
+							//std::cout << "E2: " << _ClusterEnergies[clusterIndexB] << "+-" << std::sqrt(_ClusterEnergyVariances[clusterIndexB]) << std::endl;
+
+							TVector3 photonMom1 = _ClusterPositions[clusterIndexA] - _VertexPosition;
+							photonMom1.SetMag(_ClusterEnergies[clusterIndexA]);
+							TVector3 photonMom2 = _ClusterPositions[clusterIndexB] - _VertexPosition;
+							photonMom2.SetMag(_ClusterEnergies[clusterIndexB]);
+
+							//std::cout << "Mass before Fit:" << (TLorentzVector(photonMom1, _ClusterEnergies[clusterIndexA]) + TLorentzVector(photonMom2, _ClusterEnergies[clusterIndexB]) ).M() << std::endl;
 							successes[i] = neutralFit.doFit();
 							if (successes[i]) {
 								_ResultLorentzVectors[i] = neutralFit.getImprovedLVSum();
@@ -1531,6 +1544,11 @@ namespace antok {
 							} else {
 								
 							}
+							//std::cout << "Mass after Fit:" << (_ResultLorentzVectors[i]).M() << std::endl;
+							//std::cout << "Mass difference:" << (_ResultLorentzVectors[i]).M()-_Mass << std::endl;
+
+							//std::cout << "LV[" << i << "] = (" << _ResultLorentzVectors[i].X() << "," << _ResultLorentzVectors[i].Y() << "," << _ResultLorentzVectors[i].Z() << "," << _ResultLorentzVectors[i].E() << std::endl;
+
 						}
 						if (successes[0] and successes[1]) {
 							_ResultSuccess = 1;
@@ -2511,76 +2529,80 @@ namespace antok {
 
 				public:
 
-					GetNeutralMeson(const TVector3&              VertexPosition,            // position of primary vertex
-					                const std::vector<TVector3>& ClusterPositions,          // positions of ECAL clusters
-					                const std::vector<TVector3>& ClusterPositionVariances,  // variances in position of ECAL clusters
-					                const std::vector<double>&   ClusterEnergies,           // energies of ECAL clusters
-					                const std::vector<double>&   ClusterEnergyVariances,    // variance in energy of ECAL clusters
-					                const std::vector<int>&      ClusterECALIndices,        // indices in the arrays above of ECAL clusters in the two photon pairs
-					                const double&                ECALMixedPiMass,           // pi^0 mass when the photon pair is in ECAL1 and 2
-					                const double&                ECALMixedPiMassWindow,     // m(gamma gamma) cut applied around Pi0Mass when the photon pair is in ECAL
-					                const double&                ECAL1PiMass,               // pi^0 mass when both photons are in ECAL1
-					                const double&                ECAL1PiMassWindow,         // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
-					                const double&                ECAL2PiMass,               // pi^0 mass when both photons are in ECAL2
-					                const double&                ECAL2PiMassWindow,         // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
-					                const double&                PiMass,                    // pi mass that each of the two photon pairs is constrained to
-					                const double&                PiPrecisionGoal,           // defines convergence criterion for pi fit
-					                const double&                ECALMixedEtaMass,          // eta mass when the photon pair is in ECAL1 and 2
-					                const double&                ECALMixedEtaMassWindow,    // m(gamma gamma) cut applied around EtaMass when the photon pair is in ECAL
-					                const double&                ECAL1EtaMass,              // eta mass when both photons are in ECAL1
-					                const double&                ECAL1EtaMassWindow,        // m(gamma gamma) cut applied around Eta0Mass when both photons are in ECAL1
-					                const double&                ECAL2EtaMass,              // eta mass when both photons are in ECAL2
-					                const double&                ECAL2EtaMassWindow,        // m(gamma gamma) cut applied around Eta0Mass when both photons are in ECAL2
-					                const double&                EtaMass,                   // eta mass that each of the two photon pairs is constrained to
-					                const double&                EtaPrecisionGoal,          // defines convergence criterion for eta fit
-					                const int&                   WhichEnergyVariance,       // defines how variance of ECAL energies is calculated; see src/neutral_fit.h
-					                TLorentzVector&              ResultLorentzVector,       // Lorentz vectors of photon pairs after fit
-									int&                         ResultMesonType,           // type of meson, 1 for pi0, 2 for eta
-					                double&                      ResultChi2,                // chi^2 values of fits
-					                double&                      ResultPValue,              // P-values of fits
-									double&                      ResultMassDifference,      // mass difference between nominal mass and mass after kinFit
-					                int&                         ResultSuccess,             // indicates whether fit was successful
-					                double&                      ResultPullX0,              // pulls for x direction of first photon in pairs
-					                double&                      ResultPullY0,              // pulls for y direction of first photon in pairs
-					                double&                      ResultPullE0,              // pulls for energie of first photon in pairs
-					                double&                      ResultPullX1,              // pulls for x direction of second photon in pairs
-					                double&                      ResultPullY1,              // pulls for y direction of second photon in pairs
-					                double&                      ResultPullE1)              // pulls for energy of second photon in pairs
-						: _VertexPosition          (VertexPosition),
-                          _ClusterPositions        (ClusterPositions),
-                          _ClusterPositionVariances(ClusterPositionVariances),
-                          _ClusterEnergies         (ClusterEnergies),
-                          _ClusterEnergyVariances  (ClusterEnergyVariances),
-                          _ClusterECALIndices      (ClusterECALIndices),
-                          _ECALMixedPiMass         (ECALMixedPiMass),
-                          _ECALMixedPiMassWindow   (ECALMixedPiMassWindow),
-                          _ECAL1PiMass             (ECAL1PiMass),
-                          _ECAL1PiMassWindow       (ECAL1PiMassWindow),
-                          _ECAL2PiMass             (ECAL2PiMass),
-                          _ECAL2PiMassWindow       (ECAL2PiMassWindow),
-                          _PiMass                  (PiMass),
-                          _PiPrecisionGoal         (PiPrecisionGoal),
-                          _ECALMixedEtaMass        (ECALMixedEtaMass),
-                          _ECALMixedEtaMassWindow  (ECALMixedEtaMassWindow),
-                          _ECAL1EtaMass            (ECAL1EtaMass),
-                          _ECAL1EtaMassWindow      (ECAL1EtaMassWindow),
-                          _ECAL2EtaMass            (ECAL2EtaMass),
-                          _ECAL2EtaMassWindow      (ECAL2EtaMassWindow),
-                          _EtaMass                 (EtaMass),
-                          _EtaPrecisionGoal        (EtaPrecisionGoal),
-                          _WhichEnergyVariance     (WhichEnergyVariance),
-                          _ResultLorentzVector     (ResultLorentzVector),
-                          _ResultMesonType         (ResultMesonType),
-                          _ResultChi2              (ResultChi2),
-                          _ResultPValue            (ResultPValue),
-                          _ResultMassDifference    (ResultMassDifference),
-                          _ResultSuccess           (ResultSuccess),
-                          _ResultPullX0            (ResultPullX0),
-                          _ResultPullY0            (ResultPullY0),
-                          _ResultPullE0            (ResultPullE0),
-                          _ResultPullX1            (ResultPullX1),
-                          _ResultPullY1            (ResultPullY1),
-                          _ResultPullE1            (ResultPullE1)
+					GetNeutralMeson(const TVector3&              VertexPosition,                 // position of primary vertex
+					                const std::vector<TVector3>& ClusterPositions,               // positions of ECAL clusters
+					                const std::vector<TVector3>& ClusterPositionVariances,       // variances in position of ECAL clusters
+					                const std::vector<double>&   ClusterEnergies,                // energies of ECAL clusters
+					                const std::vector<double>&   ClusterEnergyVariances,         // variance in energy of ECAL clusters
+					                const std::vector<int>&      ClusterECALIndices,             // indices in the arrays above of ECAL clusters in the two photon pairs
+					                const double&                ECALMixedPiMass,                // pi^0 mass when the photon pair is in ECAL1 and 2
+					                const double&                ECALMixedPiMassWindow,          // m(gamma gamma) cut applied around Pi0Mass when the photon pair is in ECAL
+					                const double&                ECAL1PiMass,                    // pi^0 mass when both photons are in ECAL1
+					                const double&                ECAL1PiMassWindow,              // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL1
+					                const double&                ECAL2PiMass,                    // pi^0 mass when both photons are in ECAL2
+					                const double&                ECAL2PiMassWindow,              // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
+					                const double&                PiMass,                         // pi mass that each of the two photon pairs is constrained to
+					                const double&                PiPrecisionGoal,                // defines convergence criterion for pi fit
+					                const double&                ECALMixedEtaMass,               // eta mass when the photon pair is in ECAL1 and 2
+					                const double&                ECALMixedEtaMassWindow,         // m(gamma gamma) cut applied around EtaMass when the photon pair is in ECAL
+					                const double&                ECAL1EtaMass,                   // eta mass when both photons are in ECAL1
+					                const double&                ECAL1EtaMassWindow,             // m(gamma gamma) cut applied around Eta0Mass when both photons are in ECAL1
+					                const double&                ECAL2EtaMass,                   // eta mass when both photons are in ECAL2
+					                const double&                ECAL2EtaMassWindow,             // m(gamma gamma) cut applied around Eta0Mass when both photons are in ECAL2
+					                const double&                EtaMass,                        // eta mass that each of the two photon pairs is constrained to
+					                const double&                EtaPrecisionGoal,               // defines convergence criterion for eta fit
+					                const int&                   WhichEnergyVariance,            // defines how variance of ECAL energies is calculated; see src/neutral_fit.h
+					                TLorentzVector&              ResultLorentzVector,            // Lorentz vectors of photon pairs after fit
+									TLorentzVector&              ResultLorentzVectorWithoutFit,  // Lorentz vectors of photon pairs before fit
+									int&                         ResultPhotonPairType,           // photon pair type, 1 for both photons in ECAL1, 2 for both in ECAL2 and 3 for one in ECAL1 and other in ECAL2
+									int&                         ResultMesonType,                // type of meson, 1 for pi0, 2 for eta
+					                double&                      ResultChi2,                     // chi^2 values of fits
+					                double&                      ResultPValue,                   // P-values of fits
+									double&                      ResultMassDifference,           // mass difference between nominal mass and mass after kinFit
+					                int&                         ResultSuccess,                  // indicates whether fit was successful
+					                double&                      ResultPullX0,                   // pulls for x direction of first photon in pairs
+					                double&                      ResultPullY0,                   // pulls for y direction of first photon in pairs
+					                double&                      ResultPullE0,                   // pulls for energie of first photon in pairs
+					                double&                      ResultPullX1,                   // pulls for x direction of second photon in pairs
+					                double&                      ResultPullY1,                   // pulls for y direction of second photon in pairs
+					                double&                      ResultPullE1)                   // pulls for energy of second photon in pairs
+						: _VertexPosition               (VertexPosition),
+                          _ClusterPositions             (ClusterPositions),
+                          _ClusterPositionVariances     (ClusterPositionVariances),
+                          _ClusterEnergies              (ClusterEnergies),
+                          _ClusterEnergyVariances       (ClusterEnergyVariances),
+                          _ClusterECALIndices           (ClusterECALIndices),
+                          _ECALMixedPiMass              (ECALMixedPiMass),
+                          _ECALMixedPiMassWindow        (ECALMixedPiMassWindow),
+                          _ECAL1PiMass                  (ECAL1PiMass),
+                          _ECAL1PiMassWindow            (ECAL1PiMassWindow),
+                          _ECAL2PiMass                  (ECAL2PiMass),
+                          _ECAL2PiMassWindow            (ECAL2PiMassWindow),
+                          _PiMass                       (PiMass),
+                          _PiPrecisionGoal              (PiPrecisionGoal),
+                          _ECALMixedEtaMass             (ECALMixedEtaMass),
+                          _ECALMixedEtaMassWindow       (ECALMixedEtaMassWindow),
+                          _ECAL1EtaMass                 (ECAL1EtaMass),
+                          _ECAL1EtaMassWindow           (ECAL1EtaMassWindow),
+                          _ECAL2EtaMass                 (ECAL2EtaMass),
+                          _ECAL2EtaMassWindow           (ECAL2EtaMassWindow),
+                          _EtaMass                      (EtaMass),
+                          _EtaPrecisionGoal             (EtaPrecisionGoal),
+                          _WhichEnergyVariance          (WhichEnergyVariance),
+                          _ResultLorentzVector          (ResultLorentzVector),
+                          _ResultLorentzVectorWithoutFit(ResultLorentzVectorWithoutFit),
+						  _ResultPhotonPairType         (ResultPhotonPairType),
+                          _ResultMesonType              (ResultMesonType),
+                          _ResultChi2                   (ResultChi2),
+                          _ResultPValue                 (ResultPValue),
+                          _ResultMassDifference         (ResultMassDifference),
+                          _ResultSuccess                (ResultSuccess),
+                          _ResultPullX0                 (ResultPullX0),
+                          _ResultPullY0                 (ResultPullY0),
+                          _ResultPullE0                 (ResultPullE0),
+                          _ResultPullX1                 (ResultPullX1),
+                          _ResultPullY1                 (ResultPullY1),
+                          _ResultPullE1                 (ResultPullE1)
 					{ }
 
 					virtual ~GetNeutralMeson() { }
@@ -2597,6 +2619,7 @@ namespace antok {
 						}
 
 						_ResultSuccess = 0;
+						_ResultPhotonPairType = 0;
 						_ResultMesonType = 0;
 						_ResultChi2 = 0;
 						_ResultPValue = 0;
@@ -2617,7 +2640,26 @@ namespace antok {
 							return true;
 						}
 
-						const TLorentzVector neutralMesonLV = photonLVs[0] + photonLVs[1];
+						_ResultLorentzVectorWithoutFit = photonLVs[0] + photonLVs[1];
+						// get
+						switch (_ClusterECALIndices[0] + _ClusterECALIndices[1]) {
+							case 2: {
+								_ResultPhotonPairType = 1;
+								break;
+							}
+							case 3: {
+								_ResultPhotonPairType = 3;
+								break;
+							}
+							case 4: {
+								_ResultPhotonPairType = 2;
+								break;
+							}
+							default: {
+								std::cerr << "ECAL index of both ECAL clusters must either be 1 or 2." << std::endl;
+								return false;
+							}
+						}
 
 						double piMass, piMassWindow;
 						getECALMassParameters(_ClusterECALIndices[0],
@@ -2643,7 +2685,7 @@ namespace antok {
 											  etaMass,
 											  etaMassWindow);
 
-						if (piMass - piMassWindow < neutralMesonLV.M() and neutralMesonLV.M() < piMass + piMassWindow) {
+						if (piMass - piMassWindow < _ResultLorentzVectorWithoutFit.M() and _ResultLorentzVectorWithoutFit.M() < piMass + piMassWindow) {
 							antok::NeutralFit neutralFit(
 								_VertexPosition,
 								_ClusterPositions        [0],
@@ -2663,7 +2705,8 @@ namespace antok {
 							_ResultMesonType = 1;
 							_ResultLorentzVector = neutralFit.getImprovedLVSum();
 							_ResultMassDifference = _ResultLorentzVector.M() - _PiMass;
-						} else if (etaMass - etaMassWindow < neutralMesonLV.M() and neutralMesonLV.M() < etaMass + etaMassWindow) {
+							if (std::isnan(_ResultLorentzVector.M())) std::cerr << "no Mass!";
+						} else if (etaMass - etaMassWindow < _ResultLorentzVectorWithoutFit.M() and _ResultLorentzVectorWithoutFit.M() < etaMass + etaMassWindow) {
 							antok::NeutralFit neutralFit(
 								_VertexPosition,
 								_ClusterPositions        [0],
@@ -2683,6 +2726,7 @@ namespace antok {
 							_ResultMesonType = 2;
 							_ResultLorentzVector = neutralFit.getImprovedLVSum();
 							_ResultMassDifference = _ResultLorentzVector.M() - _EtaMass;
+							if (std::isnan(_ResultLorentzVector.M())) std::cerr << "no Mass!";
 						}
 						return true;
 					}
@@ -2713,6 +2757,8 @@ namespace antok {
 					double                       _EtaPrecisionGoal;         // constant parameter, needs to be copied
 					int                          _WhichEnergyVariance;      // constant parameter, needs to be copied
 					TLorentzVector&              _ResultLorentzVector;
+					TLorentzVector&              _ResultLorentzVectorWithoutFit;
+					int&                         _ResultPhotonPairType;
 					int&                         _ResultMesonType;
 					double&                      _ResultChi2;
 					double&                      _ResultPValue;
@@ -2727,25 +2773,6 @@ namespace antok {
 
 				};
 
-
-				namespace {
-
-					bool
-					checkMassWindow(const double Mass,
-					                const double MassWindow,
-									const int    SelectedChannel,
-									const double SubsystemMass)
-					{
-						const bool inWindow = (SubsystemMass > Mass-MassWindow && SubsystemMass < Mass+MassWindow);
-						if (SelectedChannel == 3) { //if F1Pi return if outside window
-							return !inWindow;
-						} else                      //if EtaPi or EtaPrimePi return if in window
-						{
-							return inWindow;
-						}
-					}
-
-				}
 
 				class GetPiPiNeutralSystem : public Function
 				{
@@ -2762,6 +2789,8 @@ namespace antok {
 					                     const int&            Charge_2,         // charge of 3rd charged particle
 										 const double&         Mass,
 										 const double&         MassWindow,
+										 const double&         ExcludeMass,
+										 const double&         ExcludeMassWindow,
 										 const int&            SelectedChannel,
 					                     TLorentzVector&       ResultPiPiNeutralLV,      // lorentz vector of the PiPiNeutral system
 					                     TLorentzVector&       ResultBachelorLV,         // lorentz vector of the bachelor piMinus
@@ -2778,6 +2807,8 @@ namespace antok {
 						  _Charge_2               (Charge_2),
 						  _Mass                   (Mass),
 						  _MassWindow             (MassWindow),
+						  _ExcludeMass            (ExcludeMass),
+						  _ExcludeMassWindow      (ExcludeMassWindow),
 						  _SelectedChannel        (SelectedChannel),
 						  _ResultPiPiNeutralLV    (ResultPiPiNeutralLV),
 						  _ResultBachelorLV       (ResultBachelorLV),
@@ -2824,45 +2855,53 @@ namespace antok {
 							default: break;
 						}
 
-						int selectedPiMinus = 0;
+						const double Comb1Mass = (_NeutralLV + *PiPlusLV + *PiMinus1LV).M();
+						const double Comb2Mass = (_NeutralLV + *PiPlusLV + *PiMinus2LV).M();
 
-						if (checkMassWindow(_Mass, _MassWindow, _SelectedChannel, (_NeutralLV + *PiPlusLV + *PiMinus1LV).M())) selectedPiMinus = 1;
-						if (checkMassWindow(_Mass, _MassWindow, _SelectedChannel, (_NeutralLV + *PiPlusLV + *PiMinus2LV).M())) selectedPiMinus += 2;
+						// select comb that has mass within the selected range; if both combs are within range set selected comb to 3
+						const bool validSub1 = (Comb1Mass > _Mass - _MassWindow && Comb1Mass < _Mass + _MassWindow);
+						const bool validSub2 = (Comb2Mass > _Mass - _MassWindow && Comb2Mass < _Mass + _MassWindow);
 
-						switch (selectedPiMinus) {
-							case 1: {
-								_ResultBachelorLV        = *PiMinus2LV;
-								_ResultPiPlusInPiPiGGLV  = *PiPlusLV;
-								_ResultPiMinusInPiPiGGLV = *PiMinus1LV;
-								_ResultPiPiNeutralLV     = _NeutralLV + _ResultPiPlusInPiPiGGLV + _ResultPiMinusInPiPiGGLV;
-								_ResultValidCandidates = 1;
-								break;
-							}
-							case 2: {
+						bool excludeEvent = false;
+						if (_ExcludeMass != -1) {
+							if ((Comb1Mass > _ExcludeMass - _ExcludeMassWindow && Comb1Mass < _ExcludeMass + _ExcludeMassWindow)
+							 or (Comb2Mass > _ExcludeMass - _ExcludeMassWindow && Comb2Mass < _ExcludeMass + _ExcludeMassWindow)) excludeEvent = true;
+						}
+
+						// if at least one comb is within exclude range no comb is selected
+						if (excludeEvent) {
+							_ResultValidCandidates = -1;
+						} else if (validSub1 && validSub2) {
+							_ResultValidCandidates = 2;
+						} else if (validSub1) {
+							_ResultBachelorLV        = *PiMinus2LV;
+							_ResultPiPlusInPiPiGGLV  = *PiPlusLV;
+							_ResultPiMinusInPiPiGGLV = *PiMinus1LV;
+							_ResultPiPiNeutralLV     = _NeutralLV + _ResultPiPlusInPiPiGGLV + _ResultPiMinusInPiPiGGLV;
+							_ResultValidCandidates = 1;
+						} else if (validSub2) {
+							_ResultBachelorLV        = *PiMinus1LV;
+							_ResultPiPlusInPiPiGGLV  = *PiPlusLV;
+							_ResultPiMinusInPiPiGGLV = *PiMinus2LV;
+							_ResultPiPiNeutralLV     = _NeutralLV + _ResultPiPlusInPiPiGGLV + _ResultPiMinusInPiPiGGLV;
+							_ResultValidCandidates = 1;
+						} else {
+								_ResultValidCandidates = 0;
+						}
+
+						if (_ResultValidCandidates != 1) {
+							TRandom* randomSelector = new TRandom();
+							const int selectedCandidate = randomSelector->Integer(2);
+							delete randomSelector;
+							if (selectedCandidate) {
 								_ResultBachelorLV        = *PiMinus1LV;
-								_ResultPiPlusInPiPiGGLV  = *PiPlusLV;
 								_ResultPiMinusInPiPiGGLV = *PiMinus2LV;
-								_ResultPiPiNeutralLV     = _NeutralLV + _ResultPiPlusInPiPiGGLV + _ResultPiMinusInPiPiGGLV;
-								_ResultValidCandidates = 1;
-								break;
+							} else {
+								_ResultBachelorLV        = *PiMinus2LV;
+								_ResultPiMinusInPiPiGGLV = *PiMinus1LV;
 							}
-							case 3: {
-								_ResultValidCandidates = 2;
-							}
-							default: {
-								TRandom* randomSelector = new TRandom();
-								const int selectedCandidate = randomSelector->Integer(2);
-								delete randomSelector;
-								if (selectedCandidate) {
-									_ResultBachelorLV        = *PiMinus1LV;
-									_ResultPiMinusInPiPiGGLV = *PiMinus2LV;
-								} else {
-									_ResultBachelorLV        = *PiMinus2LV;
-									_ResultPiMinusInPiPiGGLV = *PiMinus1LV;
-								}
-								_ResultPiPlusInPiPiGGLV  = *PiPlusLV;
-								_ResultPiPiNeutralLV     = _NeutralLV + _ResultPiPlusInPiPiGGLV + _ResultPiMinusInPiPiGGLV;
-							}
+							_ResultPiPlusInPiPiGGLV  = *PiPlusLV;
+							_ResultPiPiNeutralLV     = _NeutralLV + _ResultPiPlusInPiPiGGLV + _ResultPiMinusInPiPiGGLV;
 						}
 
 						return true;
@@ -2880,6 +2919,8 @@ namespace antok {
 					const int&            _Charge_2;
 					const double          _Mass;
 					const double          _MassWindow;
+					const double          _ExcludeMass;
+					const double          _ExcludeMassWindow;
 					const int             _SelectedChannel;
 					TLorentzVector&       _ResultPiPiNeutralLV;
 					TLorentzVector&       _ResultBachelorLV;

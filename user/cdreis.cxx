@@ -1682,7 +1682,7 @@ antok::user::cdreis::generateGetNeutralMeson(const YAML::Node&               fun
                                              const std::vector<std::string>& quantityNames,
                                              const int                       index)
 {
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 12)) {
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 14)) {
 		return nullptr;
 	}
 
@@ -1731,6 +1731,8 @@ antok::user::cdreis::generateGetNeutralMeson(const YAML::Node&               fun
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes
 		= {"TLorentzVector",  // ResultLorentzVector
+		   "TLorentzVector",  // ResultLorentzVectorWithoutFit
+		   "int",             // ResultPhotonPairType
 		   "int",             // ResultMesonType
 		   "double",          // ResultChi2
 		   "double",          // ResultPValue
@@ -1772,17 +1774,19 @@ antok::user::cdreis::generateGetNeutralMeson(const YAML::Node&               fun
 		constArgsDouble["EtaPrecisionGoal"],                  // EtaPrecisionGoal
 		constArgsInt   ["WhichEnergyVariance"],               // WhichEnergyVariance,
 		*data.getAddr<TLorentzVector>(quantityNames[0]),      // ResultLorentzVector
-		*data.getAddr<int>           (quantityNames[1]),      // ResultMesonType
-		*data.getAddr<double>        (quantityNames[2]),      // ResultChi2
-		*data.getAddr<double>        (quantityNames[3]),      // ResultPValue
-		*data.getAddr<double>        (quantityNames[4]),      // ResultMassDifference
-		*data.getAddr<int>           (quantityNames[5]),      // ResultSuccess
-		*data.getAddr<double>        (quantityNames[6]),      // ResultPullX0
-		*data.getAddr<double>        (quantityNames[7]),      // ResultPullY0
-		*data.getAddr<double>        (quantityNames[8]),      // ResultPullE0
-		*data.getAddr<double>        (quantityNames[9]),      // ResultPullX1
-		*data.getAddr<double>        (quantityNames[10]),     // ResultPullY1
-		*data.getAddr<double>        (quantityNames[11])      // ResultPullE1
+		*data.getAddr<TLorentzVector>(quantityNames[1]),      // ResultLorentzVectorWithoutFit
+		*data.getAddr<int>           (quantityNames[2]),      // ResultPhotonPairType
+		*data.getAddr<int>           (quantityNames[3]),      // ResultMesonType
+		*data.getAddr<double>        (quantityNames[4]),      // ResultChi2
+		*data.getAddr<double>        (quantityNames[5]),      // ResultPValue
+		*data.getAddr<double>        (quantityNames[6]),      // ResultMassDifference
+		*data.getAddr<int>           (quantityNames[7]),      // ResultSuccess
+		*data.getAddr<double>        (quantityNames[8]),      // ResultPullX0
+		*data.getAddr<double>        (quantityNames[9]),      // ResultPullY0
+		*data.getAddr<double>        (quantityNames[10]),     // ResultPullE0
+		*data.getAddr<double>        (quantityNames[11]),     // ResultPullX1
+		*data.getAddr<double>        (quantityNames[12]),     // ResultPullY1
+		*data.getAddr<double>        (quantityNames[13])      // ResultPullE1
 	);
 }
 
@@ -1824,6 +1828,15 @@ antok::user::cdreis::generateGetPiPiNeutralSystem(const YAML::Node&             
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
 	}
+	std::map<std::string, double> constPossibleArgsDouble
+		= {{"ExcludeMass",       -1},
+		   {"ExcludeMassWindow", -1}};
+	if (antok::YAMLUtils::hasNodeKey(function, "ExcludeMass")) {
+		if (not functionArgumentHandlerConst<double>(constPossibleArgsDouble, function)) {
+			std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+			return nullptr;
+		}
+	}
 
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
@@ -1848,6 +1861,8 @@ antok::user::cdreis::generateGetPiPiNeutralSystem(const YAML::Node&             
 		*data.getAddr<int>(args[7].first),               // Charge_2
 		constArgsDouble["Mass"],                         // Mass
 		constArgsDouble["MassWindow"],                   // MassWindow
+		constPossibleArgsDouble["ExcludeMass"],          // ExcludeMass
+		constPossibleArgsDouble["ExcludeMassWindow"],    // ExcludeMassWindow
 		constArgsInt["SelectedChannel"],                 // SelectedChannel
 		*data.getAddr<TLorentzVector>(quantityNames[0]), // ResultPiPiNeutralLV
 		*data.getAddr<TLorentzVector>(quantityNames[1]), // ResultBachelorLV
