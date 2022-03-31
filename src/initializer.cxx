@@ -503,6 +503,7 @@ antok::Initializer::updateInput()
 	ok &= initializeInput();  // again set all input branches
 
 	// include waterfall plot of the new input file to the existing waterfall plot
+	// TODO Consider case where waterfall plot is enabled but no inputName is given in YAML config
 	const YAML::Node&     config        = *_config;
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 	antok::Cutter&        cutter        = objectManager->getCutter();

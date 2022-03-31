@@ -378,8 +378,8 @@ antok::user::cdreis::generateGetCalcAngles2P(const YAML::Node& function, const s
 
     // Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
-	const std::vector<std::string> outputVarTypes = {"double",   // CosPhiGJ
-													 "double"};  // ThetaGJ
+	const std::vector<std::string> outputVarTypes = {"double",   // CosThetaGJ
+													 "double"};  // PhiGJ
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}

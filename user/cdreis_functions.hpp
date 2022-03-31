@@ -371,7 +371,7 @@ namespace antok {
 						TLorentzVector lvTarget_GJ(lvTarget_X);  lvTarget_GJ *= X2GJ;
 						TLorentzVector lvRecoil_GJ(lvRecoil_X);  lvRecoil_GJ *= X2GJ;
 						TLorentzVector lv1_GJ(lv1_X);            lv1_GJ *= X2GJ;
-						TLorentzVector lv2_GJ(lv2_X);            lv1_GJ *= X2GJ;
+						TLorentzVector lv2_GJ(lv2_X);            lv2_GJ *= X2GJ;
 
 						// calculate theta, phi in GJ frame
 						_GJ_costheta = lv2_GJ.CosTheta();
