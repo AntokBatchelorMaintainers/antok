@@ -98,8 +98,8 @@ antok::user::cdreis::generateGetDebugPrints(const YAML::Node&               func
 {
 	// Get input variables
 	vecPairString<std::string> args = {{"RunNumber",    "int"},
-									   {"SpillNumber",  "int"},
-									   {"EventInSpill", "int"}};
+	                                   {"SpillNumber",  "int"},
+	                                   {"EventInSpill", "int"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -107,9 +107,9 @@ antok::user::cdreis::generateGetDebugPrints(const YAML::Node&               func
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 
 	return new antok::user::cdreis::functions::GetDebugPrints(
-			*data.getAddr<int>(args[0].first),  // RunNumber
-			*data.getAddr<int>(args[1].first),  // SpillNumber
-			*data.getAddr<int>(args[2].first)   // EventInSpill
+		*data.getAddr<int>(args[0].first),  // RunNumber
+		*data.getAddr<int>(args[1].first),  // SpillNumber
+		*data.getAddr<int>(args[2].first)   // EventInSpill
 	);
 }
 
@@ -233,14 +233,14 @@ antok::user::cdreis::generateGetVectorLorentzVectorAttributes(const YAML::Node& 
 	}
 
 	return new antok::user::cdreis::functions::GetVectorLorentzVectorAttributes(
-			*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // LVs
-			*data.getAddr<std::vector<double>>(quantityNames[0]),       // ResultXComponents
-			*data.getAddr<std::vector<double>>(quantityNames[1]),       // ResultYComponents
-			*data.getAddr<std::vector<double>>(quantityNames[2]),       // ResultZComponents
-			*data.getAddr<std::vector<double>>(quantityNames[3]),       // ResultEnergies
-			*data.getAddr<std::vector<double>>(quantityNames[4]),       // ResultThetas
-			*data.getAddr<std::vector<double>>(quantityNames[5]),       // ResultPhis
-			*data.getAddr<std::vector<double>>(quantityNames[6])        // ResultMags
+		*data.getAddr<std::vector<TLorentzVector>>(args[0].first),  // LVs
+		*data.getAddr<std::vector<double>>(quantityNames[0]),       // ResultXComponents
+		*data.getAddr<std::vector<double>>(quantityNames[1]),       // ResultYComponents
+		*data.getAddr<std::vector<double>>(quantityNames[2]),       // ResultZComponents
+		*data.getAddr<std::vector<double>>(quantityNames[3]),       // ResultEnergies
+		*data.getAddr<std::vector<double>>(quantityNames[4]),       // ResultThetas
+		*data.getAddr<std::vector<double>>(quantityNames[5]),       // ResultPhis
+		*data.getAddr<std::vector<double>>(quantityNames[6])        // ResultMags
 	);
 }
 
@@ -271,9 +271,9 @@ antok::user::cdreis::generateGetSumLorentzVectors(const YAML::Node&             
 	}
 
 	return new antok::user::cdreis::functions::GetSumLorentzVectors(
-			*data.getAddr<TLorentzVector>(args[0].first),  // LV 1
-			*data.getAddr<TLorentzVector>(args[1].first),  // LV 2
-			*data.getAddr<TLorentzVector>(quantityNames[0])  // ResultLorentzVector
+		*data.getAddr<TLorentzVector>(args[0].first),  // LV 1
+		*data.getAddr<TLorentzVector>(args[1].first),  // LV 2
+		*data.getAddr<TLorentzVector>(quantityNames[0])  // ResultLorentzVector
 	);
 }
 
@@ -362,8 +362,8 @@ antok::user::cdreis::generateGetCalcAngles2P(const YAML::Node& function, const s
 
 	// Get input variables
 	vecPairString<std::string> args = {{"LVBachelor", "TLorentzVector"},
-									   {"LVAnalyser", "TLorentzVector"},
-									   {"LVBeam", "TLorentzVector"}};
+	                                   {"LVAnalyser", "TLorentzVector"},
+	                                   {"LVBeam", "TLorentzVector"}};
 	if (not functionArgumentHandler(args, function, index)) {
 		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
 		return nullptr;
@@ -379,7 +379,7 @@ antok::user::cdreis::generateGetCalcAngles2P(const YAML::Node& function, const s
     // Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes = {"double",   // CosThetaGJ
-													 "double"};  // PhiGJ
+	                                                 "double"};  // PhiGJ
 	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
 		return nullptr;
 	}
@@ -649,7 +649,7 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 		CalibrationFile.close();
 	}
 
-	
+
 	// Register output variables
 	antok::Data& data = antok::ObjectManager::instance()->getData();
 	const std::vector<std::string> outputVarTypes = {"std::vector<double>"};  // ResultCorrectedTimes
@@ -707,8 +707,8 @@ antok::user::cdreis::generateGetECALCorrectedTiming(const YAML::Node&           
 
 antok::Function*
 antok::user::cdreis::generateGetECALTimeDiffToBeamTime(const YAML::Node&               function,
-                                                	   const std::vector<std::string>& quantityNames,
-                                                	   const int                       index)
+                                                       const std::vector<std::string>& quantityNames,
+                                                       const int                       index)
 {
 	if (not nmbArgsIsExactly(function, quantityNames.size(), 1)) {
 		return nullptr;
@@ -1224,8 +1224,8 @@ antok::user::cdreis::generateGetOmega(const YAML::Node&               function,
 
 antok::Function*
 antok::user::cdreis::generateGetOmegaDalitzVariables(const YAML::Node&               function,
-                                					 const std::vector<std::string>& quantityNames,
-                                					 const int                       index)
+                                                     const std::vector<std::string>& quantityNames,
+                                                     const int                       index)
 {
 	if (not nmbArgsIsExactly(function, quantityNames.size(), 5)) {
 		return nullptr;

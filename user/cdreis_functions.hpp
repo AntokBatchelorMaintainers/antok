@@ -219,7 +219,7 @@ namespace antok {
 						} else {
 							_ResultLorentzVector = _Summand1 + _Summand2;
 						}
-						
+
 						return true;
 					}
 
@@ -464,7 +464,7 @@ namespace antok {
 					TLorentzVector&       _ResultRecoilLV;
 
 				};
-				
+
 
 
 				class GetECALCorrectedEnergy : public Function
@@ -561,7 +561,7 @@ namespace antok {
 							std::cerr << "Input vectors do not have the same size." << std::endl;
 							return false;
 						}
-						
+
 						_ResultCorrectedTimes.resize(nmbClusters);
 						for (size_t i = 0; i < nmbClusters; ++i) {
 							// first apply time shifts per run if available
@@ -659,8 +659,8 @@ namespace antok {
 				public:
 
 					GetECALTimeDiffToBeamTime(const std::vector<double>& ClusterTimes,          // times of ECAL clusters to be corrected
-					                    	  const double&              BeamTime,              // beam time
-					                    	  std::vector<double>&       ResultCorrectedTimes)  // corrected times of ECAL clusters
+					                          const double&              BeamTime,              // beam time
+					                          std::vector<double>&       ResultCorrectedTimes)  // corrected times of ECAL clusters
 						: _ClusterTimes        (ClusterTimes),
 						  _BeamTime            (BeamTime),
 						  _ResultCorrectedTimes(ResultCorrectedTimes)
@@ -908,7 +908,7 @@ namespace antok {
 					                 std::vector<int>&                  ResultECALClusterIndices,  // ECAL indices of cluster
 					                 std::vector<TVector3>&             ResultPositions,           // positions of ECAL clusters
 					                 std::vector<TVector3>&             ResultPositionVariances,   // variances in position of ECAL clusters
-									 std::vector<double>&               ResultXYVariances,         // variance in XY plane of ECAL clusters
+					                 std::vector<double>&               ResultXYVariances,         // variance in XY plane of ECAL clusters
 					                 std::vector<double>&               ResultEnergies,            // energies of ECAL clusters
 					                 std::vector<double>&               ResultEnergyVariances,     // variance in energy of ECAL clusters
 					                 std::vector<double>&               ResultTimes,               // times of ECAL clusters
@@ -1218,14 +1218,14 @@ namespace antok {
 					void
 					getECALMassParameters(const int    ECALIndex1,
 					                      const int    ECALIndex2,
-										  const double ECAL1Mass,
+					                      const double ECAL1Mass,
 					                      const double ECAL1MassWindow,
-										  const double ECAL2Mass,
+					                      const double ECAL2Mass,
 					                      const double ECAL2MassWindow,
-										  const double ECALMixedMass,
+					                      const double ECALMixedMass,
 					                      const double ECALMixedMassWindow,
-									      double &outMass,
-									      double &outMassWindow)
+					                      double &outMass,
+					                      double &outMassWindow)
 					{
 						if        ((ECALIndex1 == 1) and (ECALIndex2 == 1)) {
 							outMass = ECAL1Mass;
@@ -1263,7 +1263,7 @@ namespace antok {
 					           const double&                      ECAL2Mass,                    // pi^0 mass when both photons are in ECAL2
 					           const double&                      ECAL2MassWindow,              // m(gamma gamma) cut applied around Pi0Mass when both photons are in ECAL2
 					           std::vector<TLorentzVector>&       ResultPi0PairLVs,             // Lorentz vectors of the two pi^0 in the first found pair
-							   std::vector<int>&                  ResultPi0CombTypes,           // vector of combination types of first found pair: both photons ecal1 = 1, both photons ecal2 = 2, mixed photons = 3
+					           std::vector<int>&                  ResultPi0CombTypes,           // vector of combination types of first found pair: both photons ecal1 = 1, both photons ecal2 = 2, mixed photons = 3
 					           int&                               ResultNmbGoodPi0Pairs,        // 1 if exactly one pi^0 pair was found; else 0
 					           std::vector<int>&                  ResultSelectedClusterIndices, // indices of the selected clusters
 					           std::vector<TLorentzVector>&       ResultGammaLVsForPi0_0,       // Lorentz vectors of the two gammas in the first pi0_0
@@ -1541,8 +1541,6 @@ namespace antok {
 								_ResultChi2s         [i] = neutralFit.chi2Value();
 								_ResultPValues       [i] = neutralFit.pValue();
 								_ResultNmbIterations [i] = neutralFit.nmbIterations();
-							} else {
-								
 							}
 							//std::cout << "Mass after Fit:" << (_ResultLorentzVectors[i]).M() << std::endl;
 							//std::cout << "Mass difference:" << (_ResultLorentzVectors[i]).M()-_Mass << std::endl;
@@ -1729,22 +1727,22 @@ namespace antok {
 				public:
 
 					GetOmegaDalitzVariables(const TLorentzVector& Pi0LV_0,          // Lorentz vector of 1st pi^0
-					        				const TLorentzVector& Pi0LV_1,          // Lorentz vector of 2nd pi^0
-					        				const TLorentzVector& ChargedPartLV_0,  // Lorentz vector of 1st charged particle
-					        				const TLorentzVector& ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
-					        				const TLorentzVector& ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
-					        				const int&            Charge_0,         // charge of 1st charged particle
-					        				const int&            Charge_1,         // charge of 2nd charged particle
-					        				const int&            Charge_2,         // charge of 3rd charged particle
-					        				const double&         NeutralPionMass,  // mass of neutral pion
-					        				const double&         ChargedPionMass,  // mass of charged pions
-					        				const double&         OmegaMass,        // nominal omega mass
-					        				const double&         OmegaMassWindow,  // cut around OmegaMass applied on m(pi^- pi^0 pi^+)
-					        				std::vector<double>&  ResultDalitzX,    // dalitz variable x
-					        				std::vector<double>&  ResultDalitzY,    // dalitz variable y
-					        				std::vector<double>&  ResultDalitzZ,    // dalitz variable z
-					        				std::vector<double>&  ResultDalitzPhi,  // dalitz variable phi
-											std::vector<double>&  ResultKinFactor)  // kinematic weight in decay amplitude
+					                        const TLorentzVector& Pi0LV_1,          // Lorentz vector of 2nd pi^0
+					                        const TLorentzVector& ChargedPartLV_0,  // Lorentz vector of 1st charged particle
+					                        const TLorentzVector& ChargedPartLV_1,  // Lorentz vector of 2nd charged particle
+					                        const TLorentzVector& ChargedPartLV_2,  // Lorentz vector of 3rd charged particle
+					                        const int&            Charge_0,         // charge of 1st charged particle
+					                        const int&            Charge_1,         // charge of 2nd charged particle
+					                        const int&            Charge_2,         // charge of 3rd charged particle
+					                        const double&         NeutralPionMass,  // mass of neutral pion
+					                        const double&         ChargedPionMass,  // mass of charged pions
+					                        const double&         OmegaMass,        // nominal omega mass
+					                        const double&         OmegaMassWindow,  // cut around OmegaMass applied on m(pi^- pi^0 pi^+)
+					                        std::vector<double>&  ResultDalitzX,    // dalitz variable x
+					                        std::vector<double>&  ResultDalitzY,    // dalitz variable y
+					                        std::vector<double>&  ResultDalitzZ,    // dalitz variable z
+					                        std::vector<double>&  ResultDalitzPhi,  // dalitz variable phi
+					                        std::vector<double>&  ResultKinFactor)  // kinematic weight in decay amplitude
 						: _Pi0LV_0        (Pi0LV_0),
 						  _Pi0LV_1        (Pi0LV_1),
 						  _ChargedPartLV_0(ChargedPartLV_0),
@@ -1802,7 +1800,7 @@ namespace antok {
 								}
 							}
 						}
-						
+
 						// calculate the two Dalitz variables x and y used in https://doi.org/10.1140/epjc/s10052-012-2014-1
 						// for all valid combinations
 						_ResultDalitzX  .clear();
@@ -2047,7 +2045,7 @@ namespace antok {
 					                          const int&                   Charge_1,          // charge of 2nd charged particle
 					                          const int&                   Charge_2,          // charge of 3rd charged particle
 					                          std::vector<TLorentzVector>& Result3PiLVs,      // result 3Pi LVs
-											  std::vector<TLorentzVector>& ResultPi0In3PiLVs) // result Pi0 in 3Pi comb LVs
+					                          std::vector<TLorentzVector>& ResultPi0In3PiLVs) // result Pi0 in 3Pi comb LVs
 						: _Pi0LV_0          (Pi0LV_0),
 						  _Pi0LV_1          (Pi0LV_1),
 						  _ChargedPartLV_0  (ChargedPartLV_0),
@@ -2302,7 +2300,7 @@ namespace antok {
 
 					GetPi0Resolutions(const std::vector<double>& Pi0Masses,                         // Mass of pi0s
 					                  const std::vector<int>&    Pi0CombTypes,                      // ECAL combination types of pi0s
-									  const double&              NominalPi0Mass,
+					                  const double&              NominalPi0Mass,
 					                  std::vector<double>&       ResultResolutionsAllCombinations,  // resolutions
 					                  std::vector<double>&       ResultResolutionsECAL1,            // resolutions for ECAL1 pi0s
 					                  std::vector<double>&       ResultResolutionsECAL2,            // resolutions for ECAL2 pi0s
@@ -2383,8 +2381,8 @@ namespace antok {
 					 * @param HF_phiAddr Helicity frame  phi angle of the isobar decay
 					 */
 					GetAngles3P(const TLorentzVector* lv11Addr, const TLorentzVector* lv21Addr, const TLorentzVector* lv22Addr,
-								const TLorentzVector* lvBeamAddr, const double* targetMassAddr,
-								double* GJ_costhetaAddr, double* GJ_phiAddr, double* HF_costhetaAddr, double* HF_phiAddr):
+					            const TLorentzVector* lvBeamAddr, const double* targetMassAddr,
+					            double* GJ_costhetaAddr, double* GJ_phiAddr, double* HF_costhetaAddr, double* HF_phiAddr):
 						lv11_(*lv11Addr),
 						lv21_(*lv21Addr),
 						lv22_(*lv22Addr),
@@ -2435,11 +2433,11 @@ namespace antok {
 				public:
 
 					GetSelectedPhotonLVs(const std::vector<TLorentzVector>& PhotonLVs,                   // lorentz vector of all photons
-										 const std::vector<int>&            ECALClusterInidices,         // ECAL indices of all ECAL clusters
-									     const int&                         NumberOfSelectedPhotons,     // number of selected photons
+					                     const std::vector<int>&            ECALClusterInidices,         // ECAL indices of all ECAL clusters
+					                     const int&                         NumberOfSelectedPhotons,     // number of selected photons
 					                     std::vector<TLorentzVector>&       ResultSelectedPhotonLVs,     // lorentz vectors of selected photons
-										 std::vector<int>&                  ResultSelectedPhotonIndices, // index of selected ECAL clusters
-									     TLorentzVector&                    ResultSelectedSumLV)         // lorentz vector of the sum of selected photons
+					                     std::vector<int>&                  ResultSelectedPhotonIndices, // index of selected ECAL clusters
+					                     TLorentzVector&                    ResultSelectedSumLV)         // lorentz vector of the sum of selected photons
 						: _PhotonLVs                  (PhotonLVs),
 						  _ECALClusterInidices        (ECALClusterInidices),
 						  _NumberOfSelectedPhotons    (NumberOfSelectedPhotons),
@@ -2465,7 +2463,7 @@ namespace antok {
 
 						if (_NumberOfSelectedPhotons > (int)_PhotonLVs.size()) return true;
 						std::vector<int> selectedPhotonIndices;
-						
+
 						for (int i = 0; i < _NumberOfSelectedPhotons; ++i) {
 							/*// select photon with the highest energy which is not selected yet
 							int selectedIndex;
@@ -2567,42 +2565,42 @@ namespace antok {
 					                double&                      ResultPullY1,                   // pulls for y direction of second photon in pairs
 					                double&                      ResultPullE1)                   // pulls for energy of second photon in pairs
 						: _VertexPosition               (VertexPosition),
-                          _ClusterPositions             (ClusterPositions),
-                          _ClusterPositionVariances     (ClusterPositionVariances),
-                          _ClusterEnergies              (ClusterEnergies),
-                          _ClusterEnergyVariances       (ClusterEnergyVariances),
-                          _ClusterECALIndices           (ClusterECALIndices),
-                          _ECALMixedPiMass              (ECALMixedPiMass),
-                          _ECALMixedPiMassWindow        (ECALMixedPiMassWindow),
-                          _ECAL1PiMass                  (ECAL1PiMass),
-                          _ECAL1PiMassWindow            (ECAL1PiMassWindow),
-                          _ECAL2PiMass                  (ECAL2PiMass),
-                          _ECAL2PiMassWindow            (ECAL2PiMassWindow),
-                          _PiMass                       (PiMass),
-                          _PiPrecisionGoal              (PiPrecisionGoal),
-                          _ECALMixedEtaMass             (ECALMixedEtaMass),
-                          _ECALMixedEtaMassWindow       (ECALMixedEtaMassWindow),
-                          _ECAL1EtaMass                 (ECAL1EtaMass),
-                          _ECAL1EtaMassWindow           (ECAL1EtaMassWindow),
-                          _ECAL2EtaMass                 (ECAL2EtaMass),
-                          _ECAL2EtaMassWindow           (ECAL2EtaMassWindow),
-                          _EtaMass                      (EtaMass),
-                          _EtaPrecisionGoal             (EtaPrecisionGoal),
-                          _WhichEnergyVariance          (WhichEnergyVariance),
-                          _ResultLorentzVector          (ResultLorentzVector),
-                          _ResultLorentzVectorWithoutFit(ResultLorentzVectorWithoutFit),
+						  _ClusterPositions             (ClusterPositions),
+						  _ClusterPositionVariances     (ClusterPositionVariances),
+						  _ClusterEnergies              (ClusterEnergies),
+						  _ClusterEnergyVariances       (ClusterEnergyVariances),
+						  _ClusterECALIndices           (ClusterECALIndices),
+						  _ECALMixedPiMass              (ECALMixedPiMass),
+						  _ECALMixedPiMassWindow        (ECALMixedPiMassWindow),
+						  _ECAL1PiMass                  (ECAL1PiMass),
+						  _ECAL1PiMassWindow            (ECAL1PiMassWindow),
+						  _ECAL2PiMass                  (ECAL2PiMass),
+						  _ECAL2PiMassWindow            (ECAL2PiMassWindow),
+						  _PiMass                       (PiMass),
+						  _PiPrecisionGoal              (PiPrecisionGoal),
+						  _ECALMixedEtaMass             (ECALMixedEtaMass),
+						  _ECALMixedEtaMassWindow       (ECALMixedEtaMassWindow),
+						  _ECAL1EtaMass                 (ECAL1EtaMass),
+						  _ECAL1EtaMassWindow           (ECAL1EtaMassWindow),
+						  _ECAL2EtaMass                 (ECAL2EtaMass),
+						  _ECAL2EtaMassWindow           (ECAL2EtaMassWindow),
+						  _EtaMass                      (EtaMass),
+						  _EtaPrecisionGoal             (EtaPrecisionGoal),
+						  _WhichEnergyVariance          (WhichEnergyVariance),
+						  _ResultLorentzVector          (ResultLorentzVector),
+						  _ResultLorentzVectorWithoutFit(ResultLorentzVectorWithoutFit),
 						  _ResultPhotonPairType         (ResultPhotonPairType),
-                          _ResultMesonType              (ResultMesonType),
-                          _ResultChi2                   (ResultChi2),
-                          _ResultPValue                 (ResultPValue),
-                          _ResultMassDifference         (ResultMassDifference),
-                          _ResultSuccess                (ResultSuccess),
-                          _ResultPullX0                 (ResultPullX0),
-                          _ResultPullY0                 (ResultPullY0),
-                          _ResultPullE0                 (ResultPullE0),
-                          _ResultPullX1                 (ResultPullX1),
-                          _ResultPullY1                 (ResultPullY1),
-                          _ResultPullE1                 (ResultPullE1)
+						  _ResultMesonType              (ResultMesonType),
+						  _ResultChi2                   (ResultChi2),
+						  _ResultPValue                 (ResultPValue),
+						  _ResultMassDifference         (ResultMassDifference),
+						  _ResultSuccess                (ResultSuccess),
+						  _ResultPullX0                 (ResultPullX0),
+						  _ResultPullY0                 (ResultPullY0),
+						  _ResultPullE0                 (ResultPullE0),
+						  _ResultPullX1                 (ResultPullX1),
+						  _ResultPullY1                 (ResultPullY1),
+						  _ResultPullE1                 (ResultPullE1)
 					{ }
 
 					virtual ~GetNeutralMeson() { }
@@ -2663,27 +2661,27 @@ namespace antok {
 
 						double piMass, piMassWindow;
 						getECALMassParameters(_ClusterECALIndices[0],
-											  _ClusterECALIndices[1],
-											  _ECAL1PiMass,
-											  _ECAL1PiMassWindow,
-											  _ECAL2PiMass,
-											  _ECAL2PiMassWindow,
-											  _ECALMixedPiMass,
-											  _ECALMixedPiMassWindow,
-											  piMass,
-											  piMassWindow);
+						                      _ClusterECALIndices[1],
+						                      _ECAL1PiMass,
+						                      _ECAL1PiMassWindow,
+						                      _ECAL2PiMass,
+						                      _ECAL2PiMassWindow,
+						                      _ECALMixedPiMass,
+						                      _ECALMixedPiMassWindow,
+						                      piMass,
+						                      piMassWindow);
 
 						double etaMass, etaMassWindow;
 						getECALMassParameters(_ClusterECALIndices[0],
-											  _ClusterECALIndices[1],
-											  _ECAL1EtaMass,
-											  _ECAL1EtaMassWindow,
-											  _ECAL2EtaMass,
-											  _ECAL2EtaMassWindow,
-											  _ECALMixedEtaMass,
-											  _ECALMixedEtaMassWindow,
-											  etaMass,
-											  etaMassWindow);
+						                      _ClusterECALIndices[1],
+						                      _ECAL1EtaMass,
+						                      _ECAL1EtaMassWindow,
+						                      _ECAL2EtaMass,
+						                      _ECAL2EtaMassWindow,
+						                      _ECALMixedEtaMass,
+						                      _ECALMixedEtaMassWindow,
+						                      etaMass,
+						                      etaMassWindow);
 
 						if (piMass - piMassWindow < _ResultLorentzVectorWithoutFit.M() and _ResultLorentzVectorWithoutFit.M() < piMass + piMassWindow) {
 							antok::NeutralFit neutralFit(
@@ -2787,16 +2785,16 @@ namespace antok {
 					                     const int&            Charge_0,         // charge of 1st charged particle
 					                     const int&            Charge_1,         // charge of 2nd charged particle
 					                     const int&            Charge_2,         // charge of 3rd charged particle
-										 const double&         Mass,
-										 const double&         MassWindow,
-										 const double&         ExcludeMass,
-										 const double&         ExcludeMassWindow,
-										 const int&            SelectedChannel,
+					                     const double&         Mass,
+					                     const double&         MassWindow,
+					                     const double&         ExcludeMass,
+					                     const double&         ExcludeMassWindow,
+					                     const int&            SelectedChannel,
 					                     TLorentzVector&       ResultPiPiNeutralLV,      // lorentz vector of the PiPiNeutral system
 					                     TLorentzVector&       ResultBachelorLV,         // lorentz vector of the bachelor piMinus
 					                     TLorentzVector&       ResultPiPlusInPiPiGGLV,   // lorentz vector of the piPlus within the PiPiNeutral system
 					                     TLorentzVector&       ResultPiMinusInPiPiGGLV,  // lorentz vector of the piMinus within the PiPiNeutral system
-										 int&                  ResultValidCandidates)    // number of valid of subsystem selection
+					                     int&                  ResultValidCandidates)    // number of valid of subsystem selection
 						: _NeutralLV              (NeutralLV),
 						  _NeutralType            (NeutralType),
 						  _ChargedPartLV_0        (ChargedPartLV_0),
@@ -2823,7 +2821,7 @@ namespace antok {
 					operator() ()
 					{
 						_ResultValidCandidates = 0;
-						
+
 						const TLorentzVector* PiPlusLV;
 						const TLorentzVector* PiMinus1LV;
 						const TLorentzVector* PiMinus2LV;
