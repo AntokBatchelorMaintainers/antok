@@ -171,7 +171,7 @@ antok::Initializer::initializeCutter()
 		outFile->cd();
 		outFile->mkdir(cutTrainName.c_str());
 		outFile->cd("tmptmptmp");
-		TDirectory::CurrentDirectory()->mkdir(cutTrainName.c_str());
+		((TDirectory*)TDirectory::CurrentDirectory())->mkdir(cutTrainName.c_str());
 		if (pertinent) {
 			outFile->cd(cutTrainName.c_str());
 			TTree* outTree = createOutTree(inTree, config);
