@@ -6,15 +6,20 @@
 
 namespace bp = boost::python;
 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+        #define ObjectProxy_FromVoidPtr CPPInstance_FromVoidPtr
+        #define ObjectProxy_AsVoidPtr CPPInstance_AsVoidPtr
+#endif
+
 template<typename T>
 PyObject* antok::py::convertToPy(const T& cxxObj) {
 	T* newCxxObj = new T(cxxObj);
-	return TPython::CPPInstance_FromVoidPtr(newCxxObj, newCxxObj->ClassName(), true);
+	return TPython::ObjectProxy_FromVoidPtr(newCxxObj, newCxxObj->ClassName(), true);
 };
 
 template<typename T>
 T antok::py::convertFromPy(PyObject* pyObj) {
-	TObject* TObj = (TObject*)(TPython::CPPInstance_AsVoidPtr(pyObj));
+	TObject* TObj = (TObject*)(TPython::ObjectProxy_AsVoidPtr(pyObj));
 	T cxxObj = dynamic_cast<T>(TObj);
 	return cxxObj;
 };

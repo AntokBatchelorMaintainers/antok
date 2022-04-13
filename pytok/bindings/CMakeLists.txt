@@ -34,7 +34,7 @@ make_shared_library(
 	"${THIS_LIB}"
 	"${SOURCES}"
 	"${PYTHON_LIBRARIES}"
-	"${Boost_PYTHON${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}_LIBRARY}"
+	"${Boost_PYTHON${Python_VERSION_MAJOR}${Python_VERSION_MINOR}_LIBRARY}"
 	"${ROOT_LIBS}"
 	"${ANTOK_LIB}"
 	# no idea why this is needed explicitly here and not in rootpwa
@@ -44,13 +44,13 @@ make_shared_library(
 # link the shared library with the python bindings
 add_custom_target(
 	libPytokLink ALL
-	COMMAND ${CMAKE_COMMAND} -E create_symlink ${LIBRARY_OUTPUT_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}pytok${CMAKE_SHARED_LIBRARY_SUFFIX} ${PYTHON_LIBRARY_OUTPUT_PATH}/pytok/libPytok.so
+	COMMAND ${CMAKE_COMMAND} -E create_symlink ${LIBRARY_OUTPUT_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}pytok${CMAKE_SHARED_LIBRARY_SUFFIX} ${Python_LIBRARY_OUTPUT_PATH}/pytok/libPytok.so
 )
 
 # produce python byte-code and move it to the build directory
 add_custom_target(
 	pytokModuleLinks ALL
-	COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pytok/helperScripts/python_compiler.py ${CMAKE_SOURCE_DIR}/pytok/module ${PYTHON_LIBRARY_OUTPUT_PATH}/pytok
+	COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pytok/helperScripts/python_compiler.py ${CMAKE_SOURCE_DIR}/pytok/module ${Python_LIBRARY_OUTPUT_PATH}/pytok
 )
 
 add_dependencies(libPytokLink pytok pytokModuleLinks)

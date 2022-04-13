@@ -35,18 +35,18 @@ def main():
 	( options, args ) = optparser.parse_args();
 
 	if not options.configfile:
-		print "No configfile given"
-		print optparser.usage
+		print("No configfile given")
+		print(optparser.usage)
 		exit( 100 );
 
 	if not os.path.isfile( options.configfile ):
-		print "Config file '{0}' not found!".format(options.configfile)
-		print optparser.usage
+		print("Config file '{0}' not found!".format(options.configfile))
+		print(optparser.usage)
 		exit( 100 );
 
 	if options.outfile and os.path.isfile( options.outfile ):
-		print "Output file '{0}' exists found!".format(options.outfile)
-		print optparser.usage
+		print("Output file '{0}' exists found!".format(options.outfile))
+		print(optparser.usage)
 		exit( 100 );
 
 	options.outfile = os.path.realpath(options.outfile)
@@ -62,16 +62,16 @@ def main():
 				yaml.merge_lists(config)
 				yaml.dump(config, fout)
 	except Exception as e:
-		print e
-		print "Cannot read config"
+		print(e)
+		print("Cannot read config")
 		sys.exit(1)
 
 	options.configfile = local_configfile
 	atexit.register(lambda: os.remove(options.configfile))
 
-	print "==========================================================================="
-	print "========================  START  =========================================="
-	print "==========================================================================="
+	print("===========================================================================")
+	print("========================  START  ==========================================")
+	print("===========================================================================")
 
 	bin = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'treereader')
 	infiles = "' '".join(args)
@@ -93,13 +93,13 @@ def main():
 	proc.communicate()
 
 	if proc.poll() > 0:
-		print "==========================================================================="
-		print "treereader stopped with exit status: ", proc.poll()
+		print("===========================================================================")
+		print("treereader stopped with exit status: ", proc.poll())
 		sys.exit(proc.poll())
 
-	print "==========================================================================="
-	print "========================  FINISHED  ======================================="
-	print "==========================================================================="
+	print("===========================================================================")
+	print("========================  FINISHED  =======================================")
+	print("===========================================================================")
 
 	sys.exit(0)
 

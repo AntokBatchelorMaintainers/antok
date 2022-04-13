@@ -91,6 +91,7 @@ function(make_executable EXE_NAME SOURCES)
 endfunction(make_executable)
 
 
+# protects against building project in source directory
 macro(enforce_out_of_source_build)
   if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "Building this project in the source directory is not allowed. "
@@ -100,3 +101,72 @@ mkdir build && cd build
 cmake ..")
   endif()
 endmacro(enforce_out_of_source_build)
+
+
+# helper function that parses version numbers of the form 1.2.3 from string
+# assumes that all digits in the string belong to the version info
+function(parse_version_from_string IN_STRING VERSION)
+	set(${VERSION} NOTFOUND PARENT_SCOPE)
+	if(IN_STRING)
+		string(REGEX MATCHALL "[0-9]+" _VERSION_COMPONENTS ${IN_STRING})
+		foreach(_VERSION_COMPONENT IN LISTS _VERSION_COMPONENTS)
+			if(DEFINED _VERSION)
+				set(_VERSION "${_VERSION}.")
+			endif()
+			set(_VERSION "${_VERSION}${_VERSION_COMPONENT}")
+		endforeach()
+		set(${VERSION} "${_VERSION}" PARENT_SCOPE)
+		unset(_VERSION)
+		unset(_VERSION_COMPONENT)
+		unset(_VERSION_COMPONENTS)
+	else()
+		message(WARNING "Cannot parse version from empty string.")
+	endif()
+endfunction(parse_version_from_string)
+
+
+# helper function which checks that list of matching version lines has
+# exactly one entry and parses version string from matching line
+function(parse_version_from_single_line VERSION_LINES VERSION)
+	set(${VERSION} NOTFOUND PARENT_SCOPE)
+	list(LENGTH VERSION_LINES _NMB_VERSION_LINES)
+	if(_NMB_VERSION_LINES EQUAL 1)
+		parse_version_from_string("${VERSION_LINES}" _VERSION)
+		set(${VERSION} "${_VERSION}" PARENT_SCOPE)
+		unset(_VERSION)
+	elseif(_NMB_VERSION_LINES EQUAL 0)
+		message(WARNING "Error while parsing version string from file '${IN_FILE}': "
+		  "cannot find pattern '${VERSION_SEARCH_PATTERN}'.")
+	else()
+		message(WARNING "Error while parsing version string from file '${IN_FILE}': "
+		  "got ${_NMB_VERSION_LINES} '${VERSION_SEARCH_PATTERN}' lines instead of 1.")
+	endif()
+	unset(_NMB_VERSION_LINES)
+endfunction(parse_version_from_single_line)
+
+
+# helper function that searches for VERSION_SEARCH_PATTERN in given file
+# and parses version string from matching line
+function(parse_version_from_file IN_FILE VERSION_SEARCH_PATTERN VERSION)
+	set(${VERSION} NOTFOUND PARENT_SCOPE)
+	if(NOT EXISTS "${IN_FILE}")
+		message(WARNING "File '${IN_FILE}' does not exist. Cannot parse version.")
+	else()
+		file(STRINGS ${IN_FILE} _VERSION_LINES REGEX ${VERSION_SEARCH_PATTERN})
+		parse_version_from_single_line("${_VERSION_LINES}" _VERSION)
+		set(${VERSION} "${_VERSION}" PARENT_SCOPE)
+		unset(_VERSION_LINES)
+		unset(_VERSION)
+	endif()
+endfunction(parse_version_from_file)
+
+
+# helper function that parses version string from given pkg-config's .pc file
+# this done using the CMake facilities
+# an alternative approach would be to use the output of the pkg-config executable
+function(parse_version_from_pkg_config_file PC_FILE VERSION)
+	set(${VERSION} NOTFOUND PARENT_SCOPE)
+	parse_version_from_file("${PC_FILE}" "Version:[ \t]+" _VERSION)
+	set(${VERSION} "${_VERSION}" PARENT_SCOPE)
+	unset(_VERSION)
+endfunction(parse_version_from_pkg_config_file)

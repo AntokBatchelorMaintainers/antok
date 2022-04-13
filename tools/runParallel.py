@@ -12,6 +12,7 @@ program_description = '''
 '''
 
 # std includes
+from builtins import range
 import sys
 from optparse import OptionParser
 from collections import defaultdict
@@ -41,7 +42,7 @@ def getRunNumber(filename):
 		runnbr = int( parsed[0])
 	else:
 		msg = "Can not get run number from file name '{0}'. Using run number 0.".format( filename )
-		print msg
+		print(msg)
 		runnbr = 0
 	return runnbr
 
@@ -55,7 +56,7 @@ def getSlot(filename):
 		slot = parsed[0]
 	else:
 		msg = "Can not get slot from file name '{0}'. Using slot '0-0'".format( filename )
-		print msg
+		print(msg)
 		slot='0-0'
 	return slot
 
@@ -65,17 +66,17 @@ def mergeRootFiles(output_file, input_files, merge_trees, parallel = True, n_job
 
 	n_files = len( input_files )
 
-	n_jobs = max( 1, min( n_files/2, int(math.sqrt(n_files)), multiprocessing.cpu_count() ) ) if parallel else 1
+	n_jobs = max( 1, min( n_files//2, int(math.sqrt(n_files)), multiprocessing.cpu_count() ) ) if parallel else 1
 	if n_jobs_max:
 		n_jobs = min(n_jobs, n_jobs_max)
 
-	q = n_files / n_jobs;
+	q = n_files // n_jobs;
 	r = n_files % n_jobs;
 
 	output_files = []
 	input_subfiles_list = []
 	processes = []
-	for i in xrange(n_jobs):
+	for i in range(n_jobs):
 		input_subfiles = input_files[i*q + min(r,i): (i+1)*q + min(r,i+1) ]
 		output_subfile = tempfile.mktemp() if n_jobs > 1 else output_file;
 		output_files.append( output_subfile );
@@ -91,11 +92,11 @@ def mergeRootFiles(output_file, input_files, merge_trees, parallel = True, n_job
 		pout, _ = p.communicate()
 		status = p.returncode
 		if status != 0:
-			print "Process exited with exit status", status, "when merging files"
+			print("Process exited with exit status", status, "when merging files")
 			for f in input_subfiles_list[i]:
-				print '\t', f
+				print('\t', f)
 			for l in pout.split('\n'):
-				print '\t', l
+				print('\t', l)
 			ok = False;
 
 	if ok and n_jobs > 1:
@@ -122,15 +123,15 @@ def mergeSubfolders(output_files, merge_trees):
 
 	n_cores = multiprocessing.cpu_count()
 	n_subfolders = len( subfolders.keys() )
-	n_parallel_subfolders = max(1, n_cores/6)
+	n_parallel_subfolders = max(1, n_cores//6)
 	pool = multiprocessing.Pool( n_parallel_subfolders )
 
 	args = []
-	for subname, subfiles in subfolders.iteritems():
+	for subname, subfiles in subfolders.items():
 		outfile = os.path.join( os.path.dirname( subfiles[0] ), "{0}.root".format(subname) )
 		output_files.append( outfile )
 		args.append( {'output_file': outfile, "input_files": subfiles, "merge_trees": merge_trees,
-		              "n_jobs_max": max( 1, multiprocessing.cpu_count() / n_parallel_subfolders  )} )
+		              "n_jobs_max": max( 1, multiprocessing.cpu_count() // n_parallel_subfolders  )} )
 
 	oks = pool.map(pfunc, iterable = args)
 	ok = not (False in oks );
@@ -154,16 +155,16 @@ def filterExcludes( fileslist, excludes_file):
 					if line:
 						exclude_filelist.append( line );
 
-			print exclude_filelist
+			print(exclude_filelist)
 
 			for filename in fileslist:
 				filename_real = os.path.realpath( os.path.abspath(filename) )
-				print filename_real
-				print [ exclude in filename_real for exclude in exclude_filelist ]
+				print(filename_real)
+				print([ exclude in filename_real for exclude in exclude_filelist ])
 				if not True in [ exclude in filename_real for exclude in exclude_filelist ]:
 					out_fileslist.append( filename )
 		else:
-			print "Can not open excludes file '{0}'.".fromat(excludes_file)
+			print("Can not open excludes file '{0}'.".fromat(excludes_file))
 			exit(1)
 	else:
 		out_fileslist = copy.copy( fileslist )
@@ -180,7 +181,7 @@ def splitFilesToJobs(all_files, n_files_per_job, doNotMixRuns):
 
 	if doNotMixRuns:
 		grouped_inputfiles_byrun = defaultdict(list)
-		for g, files in grouped_inputfiles.iteritems():
+		for g, files in grouped_inputfiles.items():
 			for f in files:
 				run = getRunNumber(f)
 				grouped_inputfiles_byrun[(g,run)].append(f)
@@ -191,10 +192,10 @@ def splitFilesToJobs(all_files, n_files_per_job, doNotMixRuns):
 		group_files = grouped_inputfiles[group]
 		n_files = len(group_files);
 		n_files_job = min(n_files_per_job, n_files);
-		n_jobs = n_files / n_files_job;
-		q = n_files / n_jobs
+		n_jobs = n_files // n_files_job;
+		q = n_files // n_jobs
 		m = n_files % n_jobs
-		files += [ group_files[i*q + min(m,i): (i+1)*q + min(m, i+1)] for i in xrange(n_jobs)]
+		files += [ group_files[i*q + min(m,i): (i+1)*q + min(m, i+1)] for i in range(n_jobs)]
 	return files
 
 def main():
@@ -215,18 +216,18 @@ def main():
 	( options, args ) = optparser.parse_args();
 
 	if not options.configfile:
-		print "No configfile given"
-		print optparser.usage
+		print("No configfile given")
+		print(optparser.usage)
 		exit( 100 );
 
 	if not os.path.isfile( options.configfile ):
-		print "Config file '{0}' not found!".format(options.configfile)
-		print optparser.usage
+		print("Config file '{0}' not found!".format(options.configfile))
+		print(optparser.usage)
 		exit( 100 );
 
 	if options.outfile and os.path.isfile( options.outfile ):
-		print "Output file '{0}' exists found!".format(options.outfile)
-		print optparser.usage
+		print("Output file '{0}' exists found!".format(options.outfile))
+		print(optparser.usage)
 		exit( 100 );
 
 	outfilePath = os.path.realpath(options.outfile)
@@ -237,26 +238,26 @@ def main():
 	options.outfile = outfilePath
 
 	if options.batchelorconfigfile and not os.path.isfile( options.batchelorconfigfile ):
-		print "Batchelor configfile '{0}' not found!".format(options.batchelorconfigfile)
-		print optparser.usage
+		print("Batchelor configfile '{0}' not found!".format(options.batchelorconfigfile))
+		print(optparser.usage)
 		exit( 100 );
 
 	if options.n_jobs != 0 and options.n_files_job != 1:
-		print "Cannot set number of files per job and number of jobs at the same time"
+		print("Cannot set number of files per job and number of jobs at the same time")
 		exit( 100 )
 
 	args = filterExcludes( args, options.excludes_file)
 
 	options.n_files_job = min( int(options.n_files_job), len(args))
 	if options.n_jobs != 0:
-		options.n_files_job = max( int( float(len(args)) / options.n_jobs ), 1)
+		options.n_files_job = max( int( float(len(args)) // options.n_jobs ), 1)
 
 	files = splitFilesToJobs(args, options.n_files_job, doNotMixRuns = options.not_mix_runs)
 
 	defaultBatchelorConfig = os.path.expanduser( "~/.batchelorrc");
 	if not os.path.isfile( defaultBatchelorConfig ):
-		print "Could not find default config file '{0}' for batchelor!".format(defaultBatchelorConfig)
-		print optparser.usage
+		print("Could not find default config file '{0}' for batchelor!".format(defaultBatchelorConfig))
+		print(optparser.usage)
 		exit( 100 );
 
 	antok = os.path.join(os.path.dirname(os.path.realpath(__file__)), "treereader" )
@@ -287,8 +288,8 @@ def main():
 				yaml.merge_lists(config)
 				yaml.dump(config, fout)
 	except Exception as e:
-		print e
-		print "Cannot read config"
+		print(e)
+		print("Cannot read config")
 		sys.exit(1)
 
 		
@@ -317,7 +318,7 @@ def main():
 		for i_infile, in_file in enumerate(in_files):
 			in_file = os.path.realpath(in_file)
 			if not os.path.isfile( in_file ):
-				print "File '{0}' not found!".format(in_file);
+				print("File '{0}' not found!".format(in_file));
 				handler.shutdown();
 				exit(1)
 			in_filenames += " '{0}'".format( in_file );
@@ -339,17 +340,17 @@ def main():
 			os.remove(log_file)
 
 		if os.path.isfile( out_file ) :
-			print "File '{0}' already exists!".format(out_file);
+			print("File '{0}' already exists!".format(out_file));
 			handler.shutdown();
 			exit(1)
 
 
-		print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-		print "Process files: "
+		print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+		print("Process files: ")
 		for f in in_files:
-			print "\t'{0}'".format(f)
-		print cmd
-		print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+			print("\t'{0}'".format(f))
+		print(cmd)
+		print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 		handler.submitJob( cmd, log_file, wd = os.getcwd(), jobName='Antok' );
 
 
@@ -362,13 +363,13 @@ def main():
 		exit(1)
 	handler.shutdown();
 
-	print "==========================================================================="
-	print "========================  FINISHED  ======================================="
-	print "==========================================================================="
+	print("===========================================================================")
+	print("========================  FINISHED  =======================================")
+	print("===========================================================================")
 
 	errors = [];
 	for l in log_files:
-		for i in xrange(10):
+		for i in range(10):
 			if os.path.exists(l):
 				break
 			time.sleep(1)
@@ -377,26 +378,26 @@ def main():
 				log_content = fin.read()
 				if not "STATUS: OK\n" in log_content:
 					errors.append(l)
-					print "***************************************************************************"
-					print "ERROR in this process: "
-					print "***************************************************************************"
-					print log_content
-					print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+					print("***************************************************************************")
+					print("ERROR in this process: ")
+					print("***************************************************************************")
+					print(log_content)
+					print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 		else:
 			errors.append(l)
-			print "***************************************************************************"
-			print "ERROR in this process: "
-			print "***************************************************************************"
-			print "Can not open logfile"
-			print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+			print("***************************************************************************")
+			print("ERROR in this process: ")
+			print("***************************************************************************")
+			print("Can not open logfile")
+			print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
 
 	if options.outfile:
 		if errors:
 			options.outfile = os.path.join(os.path.dirname(options.outfile), 'error_{0}'.format(os.path.basename(options.outfile)))
-		print "==========================================================================="
-		print "========================  MERGING  ========================================"
-		print "==========================================================================="
+		print("===========================================================================")
+		print("========================  MERGING  ========================================")
+		print("===========================================================================")
 
 		if options.subfolders:
 			files_to_merge = mergeSubfolders(out_files, merge_trees = options.merge_trees)
@@ -411,9 +412,9 @@ def main():
 #		 sp.check_call( "rm -f {0}".format(" ".join(out_files)), shell=True )
 
 	for error in errors:
-		print "***************************************************************************"
-		print "ERROR in logfile '{0}' ".format(error)
-		print "***************************************************************************"
+		print("***************************************************************************")
+		print("ERROR in logfile '{0}' ".format(error))
+		print("***************************************************************************")
 
 
 
