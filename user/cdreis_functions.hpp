@@ -706,12 +706,12 @@ namespace antok {
 					                       const double&                                     ECAL2YUpperLimit,            // upper limit for the Y position of ECAL2 clusters (HCAL shadow)
 					                       const double&                                     ECAL2YLowerLimit,            // lower limit for the Y position of ECAL2 clusters (HCAL shadow)
 					                       const double&                                     DistanceToChargedThreshold,  // minimum distance to the next charged track at z Position of the cluster
-										   const double&                                     XYVarianceThreshold,         // upper limit for the variance in XY plane
+					                       const double&                                     XYVarianceThreshold,         // upper limit for the variance in XY plane
 					                       const int&                                        TimeResolutionMode,          // selects parametrization for time resolution
 					                       const std::map<std::string, std::vector<double>>& ResolutionCoeffs,            // coefficients used to parametrize energy dependence of time resolution
 					                       std::vector<TVector3>&                            ResultPositions,             // positions of ECAL clusters
 					                       std::vector<TVector3>&                            ResultPositionVariances,     // position variances of ECAL clusters
-										   std::vector<double>&                              ResultXYVariances,           // variance of ECAL clusters in the XY plane
+					                       std::vector<double>&                              ResultXYVariances,           // variance of ECAL clusters in the XY plane
 					                       std::vector<double>&                              ResultEnergies,              // energies of ECAL clusters
 					                       std::vector<double>&                              ResultEnergyVariances,       // energy variances of ECAL clusters
 					                       std::vector<double>&                              ResultTimes,                 // times of ECAL clusters

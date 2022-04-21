@@ -87,19 +87,6 @@ endforeach()
 unset(_LANG)
 
 
-# # require C++11 compatible compiler and set compiler flags
-# include(CheckCXXCompilerFlag)
-# CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-# CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-# if(COMPILER_SUPPORTS_CXX11)
-# 	set(CMAKE_CXX_FLAGS "-g -Wall -Werror -std=c++11")
-# elseif(COMPILER_SUPPORTS_CXX0X)
-# 	set(CMAKE_CXX_FLAGS "-g -Wall -Werror")
-# else()
-# 	message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-# endif()
-
-
 # define buid type 'ASAN' that enables compilation with AddressSanitizer
 # to enable, add -DCMAKE_BUILD_TYPE=ASAN to cmake call
 # see https://github.com/google/sanitizers/wiki/AddressSanitizer
@@ -126,9 +113,16 @@ message(STATUS "Using executable output path '${EXECUTABLE_OUTPUT_PATH}'.")
 # setup Python
 message(STATUS "")
 message(STATUS ">>> Setting up Python.")
-find_package(Python "${ROOT_PYTHON_MAJOR_VERSION}.${ROOT_PYTHON_MINOR_VERSION}")
-set(Python_LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/pyLib")
-message(STATUS "Using python bindings output path '${Python_LIBRARY_OUTPUT_PATH}'.")
+option(USE_PYTHON "En/Disables Python bindings" ON)
+if(USE_PYTHON)
+	find_package(PYTHON "${ROOT_PYTHON_MAJOR_VERSION}.${ROOT_PYTHON_MINOR_VERSION}")
+	if(NOT PYTHONLIBS_FOUND)
+		set(USE_PYTHON OFF)
+		message(STATUS "Cannot find Python libraries. No Python bindings will be generated.")
+	endif()
+else()
+	message(STATUS "'USE_PYTHON' is set to false.")
+endif()
 
 
 # setup Boost
@@ -150,7 +144,7 @@ else()
 	set(Boost_NO_BOOST_CMAKE  ON)  # required starting from Boost 1.70.0 on
 endif()
 find_package(Boost 1.67.0 REQUIRED OPTIONAL_COMPONENTS "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
-if(Boost_FOUND)
+if(Boost_FOUND AND USE_PYTHON)
 	message(STATUS "Using Boost include directory '${Boost_INCLUDE_DIRS}'.")
 	message(STATUS "Using Boost library directory '${Boost_LIBRARY_DIRS}'.")
 	message(STATUS "Using Boost libraries '${Boost_LIBRARIES}'.")

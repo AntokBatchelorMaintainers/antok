@@ -101,9 +101,9 @@ if(PYTHONINTERP_FOUND)
 	endif()
 endif()
 
-
 # find the library
 if(PYTHONINTERP_FOUND)
+	set(_PYTHON_LIBRARY_DIRS)
 	if(PYTHON_VERSION VERSION_LESS 3.2)
 		# get name of shared library
 		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print('python' + sysconfig.get_config_var('VERSION'))"
@@ -113,37 +113,41 @@ if(PYTHONINTERP_FOUND)
 		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print(sysconfig.get_config_var('LIBPL'))"
 			OUTPUT_VARIABLE _PYTHON_LIBRARY_DIR
 			OUTPUT_STRIP_TRAILING_WHITESPACE)
+		list(APPEND _PYTHON_LIBRARY_DIRS ${_PYTHON_LIBRARY_DIR})
+		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
+			OUTPUT_VARIABLE _PYTHON_LIBRARY_DIR
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+		list(APPEND _PYTHON_LIBRARY_DIRS ${_PYTHON_LIBRARY_DIR})
 	else()
 		# get name of shared library
 		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; import sysconfig; print('python' + sysconfig.get_config_var('VERSION') + sys.abiflags)"
 			OUTPUT_VARIABLE _PYTHON_LIBRARY_NAME
 			OUTPUT_STRIP_TRAILING_WHITESPACE)
 		# get path of shared library
+		set(_PYTHON_LIBRARY_DIRS)
 		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LIBPL'))"
 			OUTPUT_VARIABLE _PYTHON_LIBRARY_DIR
 			OUTPUT_STRIP_TRAILING_WHITESPACE)
+		list(APPEND _PYTHON_LIBRARY_DIRS ${_PYTHON_LIBRARY_DIR})
+		execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
+			OUTPUT_VARIABLE _PYTHON_LIBRARY_DIR
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+		list(APPEND _PYTHON_LIBRARY_DIRS ${_PYTHON_LIBRARY_DIR})
 	endif()
 	find_library(PYTHON_LIBRARIES
 		NAMES ${_PYTHON_LIBRARY_NAME}
-		PATHS "${_PYTHON_LIBRARY_DIR}"
+		PATHS ${_PYTHON_LIBRARY_DIRS}
 		NO_DEFAULT_PATH)
-	# if(NOT PYTHON_LIBRARIES)
-	# 	execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
-	# 		OUTPUT_VARIABLE _PYTHON_LIBRARY_DIR
-	# 		OUTPUT_STRIP_TRAILING_WHITESPACE)
-	# 	find_library(PYTHON_LIBRARIES
-	# 		NAMES ${_PYTHON_LIBRARY_NAME}
-	# 		PATHS "${_PYTHON_LIBRARY_DIR}"
-	# 		NO_DEFAULT_PATH)
-	# endif()
 	if(NOT PYTHON_LIBRARIES)
 		set(PYTHONLIBS_FOUND FALSE)
-		set(PYTHON_ERROR_REASON "${PYTHON_ERROR_REASON} Cannot find Python shared library '${_PYTHON_LIBRARY_NAME}' in '${_PYTHON_LIBRARY_DIR}'. Make sure Python is setup correctly.")
+		set(PYTHONINTERP_FOUND FALSE)
+		set(PYTHON_ERROR_REASON "${PYTHON_ERROR_REASON} Cannot find Python shared library '${_PYTHON_LIBRARY_NAME}' in '${_PYTHON_LIBRARY_DIRS}'. Make sure Python is setup correctly.")
 	else()
 		set(PYTHONLIBS_FOUND TRUE)
 	endif()
 	unset(_PYTHON_LIBRARY_NAME)
 	unset(_PYTHON_LIBRARY_DIR)
+	unset(_PYTHON_LIBRARY_DIRS)
 endif()
 
 
@@ -200,18 +204,6 @@ if(PYTHONINTERP_FOUND)
 		set(PYTHONLIBS_FOUND TRUE)
 	endif()
 endif()
-
-
-# # protect against Python 3
-# if(NOT PYTHON_VERSION_MAJOR EQUAL "2")
-# 	set(PYTHON_FOUND       FALSE)
-# 	set(PYTHONINTERP_FOUND FALSE)
-# 	set(PYTHONLIBS_FOUND   FALSE)
-# 	set(PYTHON_ERROR_REASON "${PYTHON_ERROR_REASON} Python 2 interpreter required. Found only version ${PYTHON_VERSION}.")
-# endif()
-# if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
-# 	set(PYTHON_FOUND TRUE)
-# endif()
 
 
 if(PYTHON_ERROR_REASON AND NOT PYTHON_FIND_QUIETLY)

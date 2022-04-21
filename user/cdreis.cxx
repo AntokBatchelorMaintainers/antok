@@ -75,17 +75,17 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 	} else if (functionName == "getFourPionCombinationLV") {
 		return antok::user::cdreis::generateGetFourPionCombinationLV         (function, quantityNames, index);
 	} else if (functionName == "getResolutions") {
-		return antok::user::cdreis::generateGetResolutions					 (function, quantityNames, index);
+		return antok::user::cdreis::generateGetResolutions                   (function, quantityNames, index);
 	} else if (functionName == "getPi0Resolutions") {
-		return antok::user::cdreis::generateGetPi0Resolutions				 (function, quantityNames, index);
+		return antok::user::cdreis::generateGetPi0Resolutions                (function, quantityNames, index);
 	} else if (functionName == "getAngles3P") {
-		return antok::user::cdreis::generateGetAngles3P						 (function, quantityNames, index);
+		return antok::user::cdreis::generateGetAngles3P                      (function, quantityNames, index);
 	} else if (functionName == "getSelectedPhotonLVs") {
-		return antok::user::cdreis::generateGetSelectedPhotonLVs			 (function, quantityNames, index);
+		return antok::user::cdreis::generateGetSelectedPhotonLVs             (function, quantityNames, index);
 	} else if (functionName == "getNeutralMeson") {
-		return antok::user::cdreis::generateGetNeutralMeson 				 (function, quantityNames, index);
+		return antok::user::cdreis::generateGetNeutralMeson                  (function, quantityNames, index);
 	} else if (functionName == "getPiPiNeutralSystem") {
-		return antok::user::cdreis::generateGetPiPiNeutralSystem 			 (function, quantityNames, index);
+		return antok::user::cdreis::generateGetPiPiNeutralSystem             (function, quantityNames, index);
 	}
 	return nullptr;
 }
