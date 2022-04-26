@@ -217,7 +217,7 @@ antok::Initializer::initializeCutter()
 
 	}  // End loop over CutTrains
 
-	for (const std::pair<std::string, TTree*>& outTree : cutter._outTreeMap) {
+	for (const std::pair<const std::string, TTree*>& outTree : cutter._outTreeMap) {
 		cutter._treesToFill.push_back(std::pair<TTree*, antok::bitmask>(outTree.second, cutter.getAllCutsCutmaskForCutTrain(outTree.first)));
 	}
 
@@ -668,7 +668,7 @@ antok::Initializer::initializePlotter()
 		const antok::Cutter& cutter = objectManager->getCutter();
 		TFile* outFile = objectManager->getOutFile();
 		std::vector<antok::plotUtils::waterfallHistogramContainer> waterfallHists;
-		for (const std::pair<std::string, std::vector<antok::Cut*>>& cutTrain : cutter._cutTrainsCutOrderMap) {
+		for (const std::pair<const std::string, std::vector<antok::Cut*>>& cutTrain : cutter._cutTrainsCutOrderMap) {
 			const std::string& cutTrainName = cutTrain.first;
 			outFile->cd(cutTrainName.c_str());
 			TH1D* statsHist = (TH1D*)statsHistTemplate->Clone(plotOptions.statisticsHistOutName.c_str());
