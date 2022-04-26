@@ -40,7 +40,7 @@ if(ROOT_MAJOR_VERSION EQUAL 6)
 endif()
 
 
-# the c++ standard is given by the C++ sttandard with which ROOT was compiled
+# the C++ standard is given by the C++ standard with which ROOT was compiled
 set(SUPPORTED_CXX_STANDARDS 11 14 17)
 if(NOT ROOT_CPP_STD IN_LIST SUPPORTED_CXX_STANDARDS)
   message(FATAL_ERROR "The C++ standard '${ROOT_CPP_STD}' with which ROOT was compiled must be one of '${SUPPORTED_CXX_STANDARDS}'.")
@@ -51,7 +51,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # set common compiler flags
 # consider flags -pedantic -Wsuggest-attribute=pure -Wsuggest-attribute=noreturn -Wsuggest-attribute=const
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 # options switchable via command line
 # enable option by running cmake .. -D <VAR>=<any value>
 if(ARCH_NATIVE)

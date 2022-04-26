@@ -30,8 +30,8 @@ namespace antok {
 				public:
 
 					GetDebugPrints(const int& RunNumber,
-								   const int& SpillNumber,
-								   const int& EventInSpill)
+					               const int& SpillNumber,
+					               const int& EventInSpill)
 						: _RunNumber   (RunNumber),
 						  _SpillNumber (SpillNumber),
 						  _EventInSpill(EventInSpill)
@@ -198,7 +198,7 @@ namespace antok {
 				public:
 
 					GetSumLorentzVectors(const TLorentzVector& Summand1,             // Lorentz vector 1
-										 const TLorentzVector& Summand2,             // Lorentz vector 2
+					                     const TLorentzVector& Summand2,             // Lorentz vector 2
 					                     TLorentzVector&       ResultLorentzVector)  // result lorentz vector
 						: _Summand1(Summand1),
 						  _Summand2(Summand2),
@@ -308,7 +308,9 @@ namespace antok {
 				};
 
 
-				class CalcAngles2P: public Function {
+				class CalcAngles2P : public Function
+				{
+
 				public:
 
 					/**
@@ -316,27 +318,31 @@ namespace antok {
 					* Does only work for 2-particle final states
 					* Modified version of S. Wallners CalcAngles3P
 					*
-					* @param lv1Addr Four momentum of the batchelor
-					* @param lv2Addr Four momentum of the analyser
+					* @param lv1Addr Four momentum of the bachelor
+					* @param lv2Addr Four momentum of the analyzer
 					* @param lvBeam Four momentum of the beam particle
 					* @param targetMassAddr Target mass
 					* @param GJ_costhetaAddr Gottfried-Jackson frame costheta angle
 					* @param GJ_phiAddr Gottfried-Jackson frame phi angle
 					*/
-					CalcAngles2P(const TLorentzVector* lv1Addr, const TLorentzVector* lv2Addr,
-								const TLorentzVector* lvBeamAddr, const double* targetMassAddr,
-								double* GJ_costhetaAddr, double* GJ_phiAddr):
-						_lv1(*lv1Addr),
-						_lv2(*lv2Addr),
-						_lvBeam(*lvBeamAddr),
-						_targetMass(*targetMassAddr),
-						_GJ_costheta(*GJ_costhetaAddr),
-						_GJ_phi(*GJ_phiAddr)
-						{}
+					CalcAngles2P(const TLorentzVector* lv1Addr,
+					             const TLorentzVector* lv2Addr,
+					             const TLorentzVector* lvBeamAddr,
+					             const double*         targetMassAddr,
+					             double*               GJ_costhetaAddr,
+					             double*               GJ_phiAddr)
+						: _lv1        (*lv1Addr),
+						  _lv2        (*lv2Addr),
+						  _lvBeam     (*lvBeamAddr),
+						  _targetMass (*targetMassAddr),
+						  _GJ_costheta(*GJ_costhetaAddr),
+						  _GJ_phi     (*GJ_phiAddr)
+					{ }
 
 
-
-					bool operator()() {
+					bool
+					operator() ()
+					{
 
 						const TLorentzVector lvX = _lv1 + _lv2; // LV of X
 						const TLorentzVector lvTarget(0,0,0,_targetMass);
@@ -344,14 +350,12 @@ namespace antok {
 						const TVector3 boostLab2X(-lvX.BoostVector());
 
 						// boost in X rest frame
-						TLorentzVector lvX_X(lvX);                          lvX_X.Boost(boostLab2X);
-						TLorentzVector lvBeam_X(_lvBeam);                   lvBeam_X.Boost(boostLab2X);
-						TLorentzVector lvTarget_X(lvTarget);                lvTarget_X.Boost(boostLab2X);
-						TLorentzVector lvRecoil_X(_lvBeam - lvX+ lvTarget);	lvRecoil_X.Boost(boostLab2X);
-						TLorentzVector lv1_X(_lv1);                         lv1_X.Boost(boostLab2X);
-						TLorentzVector lv2_X(_lv2);                         lv2_X.Boost(boostLab2X);
-
-
+						TLorentzVector lvX_X     (lvX);                      lvX_X.Boost     (boostLab2X);
+						TLorentzVector lvBeam_X  (_lvBeam);                  lvBeam_X.Boost  (boostLab2X);
+						TLorentzVector lvTarget_X(lvTarget);                 lvTarget_X.Boost(boostLab2X);
+						TLorentzVector lvRecoil_X(_lvBeam - lvX + lvTarget); lvRecoil_X.Boost(boostLab2X);
+						TLorentzVector lv1_X     (_lv1);                     lv1_X.Boost     (boostLab2X);
+						TLorentzVector lv2_X     (_lv2);                     lv2_X.Boost     (boostLab2X);
 
 						// get z-, y-,x- axis of GJ frame in X rest frame
 						const TVector3 gjAxisZ(lvBeam_X.Vect().Unit());
@@ -366,16 +370,16 @@ namespace antok {
 						assert(!X2GJ.IsIdentity());
 
 						// rotate in GJ frame
-						TLorentzVector lvX_GJ(lvX_X);            lvX_GJ *= X2GJ;
-						TLorentzVector lvBeam_GJ(lvBeam_X);      lvBeam_GJ *= X2GJ;
+						TLorentzVector lvX_GJ     (lvX_X);       lvX_GJ      *= X2GJ;
+						TLorentzVector lvBeam_GJ  (lvBeam_X);    lvBeam_GJ   *= X2GJ;
 						TLorentzVector lvTarget_GJ(lvTarget_X);  lvTarget_GJ *= X2GJ;
 						TLorentzVector lvRecoil_GJ(lvRecoil_X);  lvRecoil_GJ *= X2GJ;
-						TLorentzVector lv1_GJ(lv1_X);            lv1_GJ *= X2GJ;
-						TLorentzVector lv2_GJ(lv2_X);            lv2_GJ *= X2GJ;
+						TLorentzVector lv1_GJ     (lv1_X);       lv1_GJ      *= X2GJ;
+						TLorentzVector lv2_GJ     (lv2_X);       lv2_GJ      *= X2GJ;
 
 						// calculate theta, phi in GJ frame
 						_GJ_costheta = lv2_GJ.CosTheta();
-						_GJ_phi = lv2_GJ.Phi();
+						_GJ_phi      = lv2_GJ.Phi();
 
 						return true;
 					}
@@ -524,7 +528,7 @@ namespace antok {
 				};
 
 
-				enum timeParam { uhl = 0, spuhlbeck = 1};
+				enum timeParam { uhl = 0, spuhlbeck = 1 };
 				// taken from Sebastian Uhl's analysis of pi-pi0pi0
 				// http://wwwcompass.cern.ch/compass/publications/theses/2016_phd_uhl.pdf
 				// see line 505ff in /nfs/freenas/tuph/e18/project/compass/analysis/suhl/scripts/FinalState_3pi.-00/KinematicPlots.C
@@ -536,11 +540,11 @@ namespace antok {
 					GetECALCorrectedTiming(const std::vector<double>&                        Times,                 // times of ECAL clusters to be corrected
 					                       const std::vector<double>&                        Energies,              // energies of ECAL clusters
 					                       const std::vector<int>&                           ECALClusterIndices,    // ECAL indices of clusters
-										   timeParam                                         TimeParametrization,   // select which parametrization to use
+					                       timeParam                                         TimeParametrization,   // select which parametrization to use
 					                       const std::map<std::string, std::vector<double>>& Calibration,           // calibration coefficients used to correct times
 					                       std::vector<double>&                              ResultCorrectedTimes,  // corrected times of ECAL clusters
-										   const int&                                        RunNumber = 0,         // RunNumber
-										   const std::map<int, std::pair<double, double>>&   Shifts = {})           // shifts per run to correct times
+					                       const int&                                        RunNumber = 0,         // RunNumber
+					                       const std::map<int, std::pair<double, double>>&   Shifts = {})           // shifts per run to correct times
 						: _Times               (Times),
 						  _Energies            (Energies),
 						  _ECALClusterIndices  (ECALClusterIndices),
@@ -592,13 +596,13 @@ namespace antok {
 									if        (_ECALClusterIndices[i] == 1) {
 										const std::vector<double>& coefficients = _Calibration.at("ECAL1");
 										correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
-																	+ coefficients[3] / energy2 + coefficients[4] * energy2;
+										             + coefficients[3] / energy2 + coefficients[4] * energy2;
 									} else if (_ECALClusterIndices[i] == 2) {
 									const double energy3 = energy * energy2;
 										const std::vector<double>& coefficients = _Calibration.at("ECAL2");
 										correction = coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
-																	+ coefficients[3] / energy2 + coefficients[4] * energy2
-																	+ coefficients[5] / energy3 + coefficients[6] * energy3;
+										             + coefficients[3] / energy2 + coefficients[4] * energy2
+										             + coefficients[5] / energy3 + coefficients[6] * energy3;
 									} else {
 										std::cerr << "ECAL index " << _ECALClusterIndices[i] << " is neither 1 nor 2." ;
 										return false;
@@ -625,7 +629,7 @@ namespace antok {
 									const double shiftedE  = energy + coefficients[5];
 									const double shiftedE2 = shiftedE*shiftedE;
 									correction = coefficients[0] + coefficients[1] / shiftedE  + coefficients[2] * shiftedE
-																	+ coefficients[3] / shiftedE2 + coefficients[4] * shiftedE2;
+									             + coefficients[3] / shiftedE2 + coefficients[4] * shiftedE2;
 									break;
 								}
 								default: {
@@ -777,7 +781,7 @@ namespace antok {
 							//	continue;
 							//}
 							// apply XY variance threshold if threshold is greater than 0
-							if (_XYVarianceThreshold > 0 && (_PositionVariances[i].X() + _PositionVariances[i].Y()) > _XYVarianceThreshold) {
+							if (_XYVarianceThreshold > 0 and (_PositionVariances[i].X() + _PositionVariances[i].Y()) > _XYVarianceThreshold) {
 								continue;
 							}
 							// apply distance to next charge threshold
@@ -797,14 +801,14 @@ namespace antok {
 								if        (_TimeResolutionMode == 0) {
 									double sigmaT;
 									sigmaT = std::sqrt(coefficients[0] + coefficients[1] / energy
-								                                       + coefficients[2] / energy2);
+									                                   + coefficients[2] / energy2);
 									if (fabs(_Times[i]) > 3 * sigmaT) {
 										continue;
 									}
 								} else if (_TimeResolutionMode == 1) {
 									double sigmaT;
 									sigmaT = coefficients[0] + coefficients[1] / energy
-								                             + coefficients[2] * energy;
+									                         + coefficients[2] * energy;
 									if (fabs(_Times[i]) > 3 * sigmaT) {
 										continue;
 									}
@@ -826,13 +830,13 @@ namespace antok {
 								double sigmaT;
 								if        (_TimeResolutionMode == 0) {
 									sigmaT= std::sqrt(coefficients[0] + coefficients[1] / energy  + coefficients[2] * energy
-								                                      + coefficients[3] / energy2 + coefficients[4] * energy2);
+									                                  + coefficients[3] / energy2 + coefficients[4] * energy2);
 									if (fabs(_Times[i]) > 3 * sigmaT) {
 										continue;
 									}
 								} else if (_TimeResolutionMode == 1) {
 									sigmaT = coefficients[0] + coefficients[1] / energy
-								                             + coefficients[2] * energy;
+									                         + coefficients[2] * energy;
 									if (fabs(_Times[i]) > 3 * sigmaT) {
 										continue;
 									}
@@ -2362,7 +2366,8 @@ namespace antok {
 				};
 
 
-				class GetAngles3P: public Function {
+				class GetAngles3P : public Function
+				{
 				public:
 
 					/**
@@ -2380,50 +2385,57 @@ namespace antok {
 					 * @param HF_costhetaAddr Helicity frame costheta angle of the isobar decay
 					 * @param HF_phiAddr Helicity frame  phi angle of the isobar decay
 					 */
-					GetAngles3P(const TLorentzVector* lv11Addr, const TLorentzVector* lv21Addr, const TLorentzVector* lv22Addr,
-					            const TLorentzVector* lvBeamAddr, const double* targetMassAddr,
-					            double* GJ_costhetaAddr, double* GJ_phiAddr, double* HF_costhetaAddr, double* HF_phiAddr):
-						lv11_(*lv11Addr),
-						lv21_(*lv21Addr),
-						lv22_(*lv22Addr),
-						lvBeam_(*lvBeamAddr),
-						targetMass_(*targetMassAddr),
-						GJ_costheta_(*GJ_costhetaAddr),
-						GJ_phi_(*GJ_phiAddr),
-						HF_costheta_(*HF_costhetaAddr),
-						HF_phi_(*HF_phiAddr)
-						{}
+					GetAngles3P(const TLorentzVector* lv11Addr,
+					            const TLorentzVector* lv21Addr,
+					            const TLorentzVector* lv22Addr,
+					            const TLorentzVector* lvBeamAddr,
+					            const double*         targetMassAddr,
+					            double*               GJ_costhetaAddr,
+					            double*               GJ_phiAddr,
+					            double*               HF_costhetaAddr,
+					            double*               HF_phiAddr)
+						: lv11_       (*lv11Addr),
+						  lv21_       (*lv21Addr),
+						  lv22_       (*lv22Addr),
+						  lvBeam_     (*lvBeamAddr),
+						  targetMass_ (*targetMassAddr),
+						  GJ_costheta_(*GJ_costhetaAddr),
+						  GJ_phi_     (*GJ_phiAddr),
+						  HF_costheta_(*HF_costhetaAddr),
+						  HF_phi_     (*HF_phiAddr)
+						{ }
 
 
-
-					bool operator()() {
+					bool
+					operator() ()
+					{
 
 						// check if one of the LVs of the particles was not defined or is 0
 						const std::vector<const TLorentzVector*> particleLVs = {&lv11_, &lv21_, &lv22_};
 						for (size_t i = 0; i < particleLVs.size(); ++i) {
-							if (particleLVs[i] == nullptr or *particleLVs[i] == TLorentzVector() or (*particleLVs[i]).E() == 0) return true;
+							if (particleLVs[i] == nullptr or *particleLVs[i] == TLorentzVector() or (*particleLVs[i]).E() == 0)
+								return true;
 						}
 
 						// if all LVs are physical, call Stefan Wallners function to calc the angles
-						antok::user::stefan::functions::CalcAngles3P calcAngles3P(&lv11_, &lv21_, &lv22_, &lvBeam_, &targetMass_, &GJ_costheta_, &GJ_phi_, &HF_costheta_, &HF_phi_);
+						antok::user::stefan::functions::CalcAngles3P calcAngles3P(
+							&lv11_, &lv21_, &lv22_, &lvBeam_, &targetMass_, &GJ_costheta_, &GJ_phi_, &HF_costheta_, &HF_phi_);
 						calcAngles3P();
 
 						return true;
 					}
 
 				protected:
+
 					const TLorentzVector& lv11_;
 					const TLorentzVector& lv21_;
 					const TLorentzVector& lv22_;
 					const TLorentzVector& lvBeam_;
-					const double& targetMass_;
-					double& GJ_costheta_;
-					double& GJ_phi_;
-					double& HF_costheta_;
-					double& HF_phi_;
-
-
-				private:
+					const double&         targetMass_;
+					double&               GJ_costheta_;
+					double&               GJ_phi_;
+					double&               HF_costheta_;
+					double&               HF_phi_;
 
 				};
 
@@ -2433,13 +2445,13 @@ namespace antok {
 				public:
 
 					GetSelectedPhotonLVs(const std::vector<TLorentzVector>& PhotonLVs,                   // lorentz vector of all photons
-					                     const std::vector<int>&            ECALClusterInidices,         // ECAL indices of all ECAL clusters
+					                     const std::vector<int>&            ECALClusterIndices,          // ECAL indices of all ECAL clusters
 					                     const int&                         NumberOfSelectedPhotons,     // number of selected photons
 					                     std::vector<TLorentzVector>&       ResultSelectedPhotonLVs,     // lorentz vectors of selected photons
 					                     std::vector<int>&                  ResultSelectedPhotonIndices, // index of selected ECAL clusters
 					                     TLorentzVector&                    ResultSelectedSumLV)         // lorentz vector of the sum of selected photons
 						: _PhotonLVs                  (PhotonLVs),
-						  _ECALClusterInidices        (ECALClusterInidices),
+						  _ECALClusterIndices         (ECALClusterIndices),
 						  _NumberOfSelectedPhotons    (NumberOfSelectedPhotons),
 						  _ResultSelectedPhotonLVs    (ResultSelectedPhotonLVs),
 						  _ResultSelectedPhotonIndices(ResultSelectedPhotonIndices),
@@ -2485,7 +2497,7 @@ namespace antok {
 							_ResultSelectedSumLV += _PhotonLVs[selectedIndex];*/
 
 							_ResultSelectedPhotonLVs[i] = _PhotonLVs[i];
-							_ResultSelectedPhotonIndices[i]=_ECALClusterInidices[i];
+							_ResultSelectedPhotonIndices[i]=_ECALClusterIndices[i];
 							_ResultSelectedSumLV += _PhotonLVs[i];
 						}
 
@@ -2513,7 +2525,7 @@ namespace antok {
 				private:
 
 					const std::vector<TLorentzVector>& _PhotonLVs;
-					const std::vector<int>&            _ECALClusterInidices;
+					const std::vector<int>&            _ECALClusterIndices;
 					const int                          _NumberOfSelectedPhotons;
 					std::vector<TLorentzVector>&       _ResultSelectedPhotonLVs;
 					std::vector<int>&                  _ResultSelectedPhotonIndices;
@@ -2551,12 +2563,12 @@ namespace antok {
 					                const double&                EtaPrecisionGoal,               // defines convergence criterion for eta fit
 					                const int&                   WhichEnergyVariance,            // defines how variance of ECAL energies is calculated; see src/neutral_fit.h
 					                TLorentzVector&              ResultLorentzVector,            // Lorentz vectors of photon pairs after fit
-									TLorentzVector&              ResultLorentzVectorWithoutFit,  // Lorentz vectors of photon pairs before fit
-									int&                         ResultPhotonPairType,           // photon pair type, 1 for both photons in ECAL1, 2 for both in ECAL2 and 3 for one in ECAL1 and other in ECAL2
-									int&                         ResultMesonType,                // type of meson, 1 for pi0, 2 for eta
+					                TLorentzVector&              ResultLorentzVectorWithoutFit,  // Lorentz vectors of photon pairs before fit
+					                int&                         ResultPhotonPairType,           // photon pair type, 1 for both photons in ECAL1, 2 for both in ECAL2 and 3 for one in ECAL1 and other in ECAL2
+					                int&                         ResultMesonType,                // type of meson, 1 for pi0, 2 for eta
 					                double&                      ResultChi2,                     // chi^2 values of fits
 					                double&                      ResultPValue,                   // P-values of fits
-									double&                      ResultMassDifference,           // mass difference between nominal mass and mass after kinFit
+					                double&                      ResultMassDifference,           // mass difference between nominal mass and mass after kinFit
 					                int&                         ResultSuccess,                  // indicates whether fit was successful
 					                double&                      ResultPullX0,                   // pulls for x direction of first photon in pairs
 					                double&                      ResultPullY0,                   // pulls for y direction of first photon in pairs
@@ -2616,19 +2628,19 @@ namespace antok {
 							return false;
 						}
 
-						_ResultSuccess = 0;
+						_ResultSuccess        = 0;
 						_ResultPhotonPairType = 0;
-						_ResultMesonType = 0;
-						_ResultChi2 = 0;
-						_ResultPValue = 0;
+						_ResultMesonType      = 0;
+						_ResultChi2           = 0;
+						_ResultPValue         = 0;
 						_ResultMassDifference = 0;
-						_ResultSuccess = 0;
-						_ResultPullX0 = 0;
-						_ResultPullY0 = 0;
-						_ResultPullE0 = 0;
-						_ResultPullX1 = 0;
-						_ResultPullY1 = 0;
-						_ResultPullE1 = 0;
+						_ResultSuccess        = 0;
+						_ResultPullX0         = 0;
+						_ResultPullY0         = 0;
+						_ResultPullE0         = 0;
+						_ResultPullX1         = 0;
+						_ResultPullY1         = 0;
+						_ResultPullE1         = 0;
 
 						std::vector<TLorentzVector> photonLVs;
 						GetPhotonLorentzVecs getPhotonLorentzVecs(_ClusterPositions, _ClusterEnergies, _VertexPosition, photonLVs);
@@ -2703,7 +2715,8 @@ namespace antok {
 							_ResultMesonType = 1;
 							_ResultLorentzVector = neutralFit.getImprovedLVSum();
 							_ResultMassDifference = _ResultLorentzVector.M() - _PiMass;
-							if (std::isnan(_ResultLorentzVector.M())) std::cerr << "no Mass!";
+							if (std::isnan(_ResultLorentzVector.M()))
+								std::cerr << "no Mass!";
 						} else if (etaMass - etaMassWindow < _ResultLorentzVectorWithoutFit.M() and _ResultLorentzVectorWithoutFit.M() < etaMass + etaMassWindow) {
 							antok::NeutralFit neutralFit(
 								_VertexPosition,
@@ -2724,7 +2737,8 @@ namespace antok {
 							_ResultMesonType = 2;
 							_ResultLorentzVector = neutralFit.getImprovedLVSum();
 							_ResultMassDifference = _ResultLorentzVector.M() - _EtaMass;
-							if (std::isnan(_ResultLorentzVector.M())) std::cerr << "no Mass!";
+							if (std::isnan(_ResultLorentzVector.M()))
+								std::cerr << "no Mass!";
 						}
 						return true;
 					}
@@ -2841,13 +2855,15 @@ namespace antok {
 						}
 
 						switch (_SelectedChannel) {
-							case 1: {// EtaPi channel
-								if (_NeutralType != 1) return true; // check if neutral is pi0
+							case 1: { // EtaPi channel
+								if (_NeutralType != 1)
+									return true; // check if neutral is pi0
 								break;
 							}
 							case 2:
-							case 3: {// EtaPrimePi and F1Pi channels
-								if (_NeutralType != 2) return true; // check if neutral is eta
+							case 3: { // EtaPrimePi and F1Pi channels
+								if (_NeutralType != 2)
+									return true; // check if neutral is eta
 								break;
 							}
 							default: break;
@@ -2857,19 +2873,20 @@ namespace antok {
 						const double Comb2Mass = (_NeutralLV + *PiPlusLV + *PiMinus2LV).M();
 
 						// select comb that has mass within the selected range; if both combs are within range set selected comb to 3
-						const bool validSub1 = (Comb1Mass > _Mass - _MassWindow && Comb1Mass < _Mass + _MassWindow);
-						const bool validSub2 = (Comb2Mass > _Mass - _MassWindow && Comb2Mass < _Mass + _MassWindow);
+						const bool validSub1 = (Comb1Mass > _Mass - _MassWindow and Comb1Mass < _Mass + _MassWindow);
+						const bool validSub2 = (Comb2Mass > _Mass - _MassWindow and Comb2Mass < _Mass + _MassWindow);
 
 						bool excludeEvent = false;
 						if (_ExcludeMass != -1) {
-							if ((Comb1Mass > _ExcludeMass - _ExcludeMassWindow && Comb1Mass < _ExcludeMass + _ExcludeMassWindow)
-							 or (Comb2Mass > _ExcludeMass - _ExcludeMassWindow && Comb2Mass < _ExcludeMass + _ExcludeMassWindow)) excludeEvent = true;
+							if (   (Comb1Mass > _ExcludeMass - _ExcludeMassWindow and Comb1Mass < _ExcludeMass + _ExcludeMassWindow)
+							    or (Comb2Mass > _ExcludeMass - _ExcludeMassWindow and Comb2Mass < _ExcludeMass + _ExcludeMassWindow))
+								excludeEvent = true;
 						}
 
 						// if at least one comb is within exclude range no comb is selected
 						if (excludeEvent) {
 							_ResultValidCandidates = -1;
-						} else if (validSub1 && validSub2) {
+						} else if (validSub1 and validSub2) {
 							_ResultValidCandidates = 2;
 						} else if (validSub1) {
 							_ResultBachelorLV        = *PiMinus2LV;

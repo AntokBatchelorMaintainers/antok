@@ -824,7 +824,7 @@ antok::user::cdreis::generateGetCleanedEcalClusters(const YAML::Node&           
 	const std::vector<std::string> outputVarTypes
 		 = {"std::vector<TVector3>",  // ResultPositions
 		    "std::vector<TVector3>",  // ResultPositionVariances
-			"std::vector<double>",    // ResultXYVariances
+		    "std::vector<double>",    // ResultXYVariances
 		    "std::vector<double>",    // ResultEnergies
 		    "std::vector<double>",    // ResultEnergyVariances
 		    "std::vector<double>",    // ResultTimes

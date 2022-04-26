@@ -1,6 +1,11 @@
 message(STATUS "")
 message(STATUS ">>> Setting up 'pyInterface' directory.")
 
+
+# silence Boost 1.74ff #pragma message triggered by boost/python.hpp
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_BIND_GLOBAL_PLACEHOLDERS")
+
+
 include_directories(
 	${ANTOK_INCLUDE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}

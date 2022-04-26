@@ -10,7 +10,7 @@ if __name__ == "__main__":
 	indir = sys.argv[1]
 	destdir = sys.argv[2]
 
-	# legacy is required to maintain directory structure for python3, not compatibel with python2
+	# legacy is required to maintain directory structure for python3, not compatible with python2
 	try:
 		compileall.compile_dir(dir=indir, ddir=destdir, legacy=True, quiet=True)
 	except:

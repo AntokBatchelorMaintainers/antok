@@ -41,7 +41,7 @@ def getRunNumber(filename):
 	if(parsed):
 		runnbr = int( parsed[0])
 	else:
-		msg = "Can not get run number from file name '{0}'. Using run number 0.".format( filename )
+		msg = "Cannot get run number from file name '{0}'. Using run number 0.".format( filename )
 		print(msg)
 		runnbr = 0
 	return runnbr
@@ -55,7 +55,7 @@ def getSlot(filename):
 	if(parsed):
 		slot = parsed[0]
 	else:
-		msg = "Can not get slot from file name '{0}'. Using slot '0-0'".format( filename )
+		msg = "Cannot get slot from file name '{0}'. Using slot '0-0'".format( filename )
 		print(msg)
 		slot='0-0'
 	return slot
@@ -164,7 +164,7 @@ def filterExcludes( fileslist, excludes_file):
 				if not True in [ exclude in filename_real for exclude in exclude_filelist ]:
 					out_fileslist.append( filename )
 		else:
-			print("Can not open excludes file '{0}'.".fromat(excludes_file))
+			print("Cannot open excludes file '{0}'.".fromat(excludes_file))
 			exit(1)
 	else:
 		out_fileslist = copy.copy( fileslist )
@@ -388,7 +388,7 @@ def main():
 			print("***************************************************************************")
 			print("ERROR in this process: ")
 			print("***************************************************************************")
-			print("Can not open logfile")
+			print("Cannot open logfile")
 			print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
 
