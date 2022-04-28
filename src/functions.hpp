@@ -618,7 +618,7 @@ namespace antok {
 
 			double __abs (const TVector2& x) { return x.Mod(); }
 			double __abs (const TVector3& x) { return x.Mag(); }
-			template <typename Q, class Dummy = int>
+			template <typename Q>
 			double __abs(const Q& x) { return std::fabs(x); }
 
 		};
@@ -656,7 +656,7 @@ namespace antok {
 
 			double __abs (const TVector2& x) { return x.Mod(); }
 			double __abs (const TVector3& x) { return x.Mag(); }
-			template <typename Q, class Dummy = int>
+			template <typename Q>
 			double __abs(const Q& x) { return std::fabs(x); }
 
 		};

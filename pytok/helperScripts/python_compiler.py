@@ -17,6 +17,5 @@ if __name__ == "__main__":
 		compileall.compile_dir(dir=indir, ddir=destdir, quiet=True)
 
 	os.system('rm -rf ' + destdir + '/*')
-	os.system('cd ' + indir + '; for dir in `find * -type d`; do mkdir ' + destdir + '/$dir; done; cd - > /dev/null')
+	os.system('cd ' + indir + '; for dir in `find * -type d`; do [[ "$dir" != *"__pycache__" ]] && mkdir ' + destdir + '/$dir; done; cd - > /dev/null')
 	os.system('cd ' + indir + '; for pycfile in `find * -name "*.pyc"`; do mv $pycfile ' +  destdir + '/$pycfile; done; cd - > /dev/null')
-	# TODO: add line that removes '__pycache__' directories for python3 compile all

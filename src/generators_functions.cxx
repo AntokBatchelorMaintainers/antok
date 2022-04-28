@@ -1138,8 +1138,7 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 	// Get input variables
 	const YAML::Node& functionName = function["Name"];
 	vecPairString<std::string> args;
-	enum vectorElementType {Int = 0, Double = 1, Vector2 = 2, Vector3 = 3, LorentzVector = 4};
-	vectorElementType elemType;
+	antok::generators::vectorElementType elemType;
 	if        (hasNodeKey(function, "VectorInt")) {
 		elemType = Int;
 		args     = {{"VectorInt", "std::vector<int>"}};
@@ -1228,8 +1227,7 @@ antok::generators::generateGetVectorSize(const YAML::Node&               functio
 	// Get input variables
 	const YAML::Node& functionName = function["Name"];
 	vecPairString<std::string> args;
-	enum vectorElementType {Int = 0, Double = 1, Vector2 = 2, Vector3 = 3, LorentzVector = 4};
-	vectorElementType elemType;
+	antok::generators::vectorElementType elemType;
 	if        (hasNodeKey(function, "VectorInt")) {
 		elemType = Int;
 		args     = {{"VectorInt", "std::vector<int>"}};
