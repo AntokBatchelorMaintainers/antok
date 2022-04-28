@@ -26,9 +26,12 @@ set(SOURCES
 )
 
 # Check python ROOT Libs
-if(ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION GREATER_EQUAL 20)
-  message(STATUS "ROOT version ${ROOT_VERSION} > 6.20.XX found - using new TPython!")
+if(ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION GREATER_EQUAL 22)
+  message(STATUS "ROOT version ${ROOT_VERSION} >= 6.22.XX found - using new TPython!")
   set(ROOT_PYTHON "${ROOT_LIBRARY_DIR}/libROOTTPython.so")
+elseif(ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION GREATER_EQUAL 20)
+  message(WARNING "ROOT version ${ROOT_VERSION} == 6.20.XX found, which could lead to wrong linking of PyRoot library - trying old 'libPyROOT.so' - if make fails change to 'libROOTTPython.so'!")
+  set(ROOT_PYTHON "${ROOT_LIBRARY_DIR}/libPyROOT.so")
 else()
   set(ROOT_PYTHON "${ROOT_LIBRARY_DIR}/libPyROOT.so")
 endif()
