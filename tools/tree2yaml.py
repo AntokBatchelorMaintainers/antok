@@ -22,11 +22,11 @@ def createDataTypeNodes(infile, treename):
 	rootFile = ROOT.TFile(infile, "READ")
 	tree = rootFile.Get(treename)
 	branches = tree.GetListOfBranches()
-	print "Found {0} branches".format(len(branches))
+	print("Found {0} branches".format(len(branches)))
 	for branch in branches:
 		branchName = branch.GetName()
 		branchTitle = branch.GetTitle().strip()
-		print " Processing branch '{0}'".format(branchName)
+		print(" Processing branch '{0}'".format(branchName))
 		className = branch.GetClassName()
 		if className is not "":
 			dataType = "std::"+className
@@ -40,7 +40,7 @@ def createDataTypeNodes(infile, treename):
 				dataType = "UNKNOWN"
 		if dataType not in nodes:
 			nodes[dataType] = dict()
-			print " -> Created new data type node '{0}'".format(dataType)
+			print(" -> Created new data type node '{0}'".format(dataType))
 
 		if dataType.find("std::vector") > -1:
 			nodes[dataType]["- &"+branchName] = branchName
@@ -57,28 +57,28 @@ def main():
 	( options, args ) = optparser.parse_args()
 
 	if not options.tree:
-		print "No tree name given"
-		print optparser.usage
+		print("No tree name given")
+		print(optparser.usage)
 		exit( 100 )
 
 	if not options.infile:
-		print "No input file name given"
-		print optparser.usage
+		print("No input file name given")
+		print(optparser.usage)
 		exit( 100 )
 
 	if not options.outfile:
-		print "Using default output file '{0}'".format( options.outfile)
+		print("Using default output file '{0}'".format( options.outfile))
 
 	if not os.path.isfile( options.infile ):
-		print "Input file '{0}' not found!".format(options.infile)
-		print optparser.usage
+		print("Input file '{0}' not found!".format(options.infile))
+		print(optparser.usage)
 		exit( 100 )
 
 	options.outfile = os.path.realpath(options.outfile)
 	options.infile  = os.path.realpath(options.infile)
-	print "Input file set to:  '{0}'".format(options.infile)
-	print "Tree set to:        '{0}'".format(options.tree)
-	print "Output file set to: '{0}'".format(options.outfile)
+	print("Input file set to:  '{0}'".format(options.infile))
+	print("Tree set to:        '{0}'".format(options.tree))
+	print("Output file set to: '{0}'".format(options.outfile))
 
 	# - Create structure -
 	nodes = []
@@ -118,7 +118,7 @@ def main():
 				outfile.write(line)
 	os.remove(tempFileName)
 
-	print "Finished! Data saved in: '{0}'".format(options.outfile)
+	print("Finished! Data saved in: '{0}'".format(options.outfile))
 
 	exit(0)
 
