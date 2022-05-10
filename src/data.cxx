@@ -69,6 +69,19 @@ namespace antok {
 
 	template <>
 	bool
+	Data::insert<TVector2>(const std::string& name)
+	{
+		if (_vector2s.count(name) > 0) {
+			return false;
+		}
+		_global_map[name] = "TVector2";
+		_vector2s  [name] = new TVector2;
+		return true;
+	}
+
+
+	template <>
+	bool
 	Data::insert<TVector3>(const std::string& name)
 	{
 		if (_vector3s.count(name) > 0) {
@@ -128,6 +141,19 @@ namespace antok {
 		}
 		_global_map   [name] = "std::vector<double>";
 		_doubleVectors[name] = new std::vector<double>;
+		return true;
+	}
+
+
+	template <>
+	bool
+	Data::insert<std::vector<TVector2> >(const std::string& name)
+	{
+		if (_vector2Vectors.count(name) > 0) {
+			return false;
+		}
+		_global_map    [name] = "std::vector<TVector2>";
+		_vector2Vectors[name] = new std::vector<TVector2>;
 		return true;
 	}
 
@@ -195,6 +221,18 @@ namespace antok {
 
 
 	template <>
+	TVector2* const
+	Data::getAddr<TVector2>(const std::string& name)
+	{
+		auto it = _vector2s.find(name);
+		if (it == _vector2s.end()) {
+			return nullptr;
+		}
+		return it->second;
+	}
+
+
+	template <>
 	TVector3* const
 	Data::getAddr<TVector3>(const std::string& name)
 	{
@@ -248,6 +286,18 @@ namespace antok {
 	{
 		auto it = _doubleVectors.find(name);
 		if (it == _doubleVectors.end()) {
+			return nullptr;
+		}
+		return it->second;
+	}
+
+
+	template <>
+	std::vector<TVector2>* const
+	Data::getAddr<std::vector<TVector2> >(const std::string& name)
+	{
+		auto it = _vector2Vectors.find(name);
+		if (it == _vector2Vectors.end()) {
 			return nullptr;
 		}
 		return it->second;

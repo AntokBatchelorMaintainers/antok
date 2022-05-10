@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import ConfigParser
+import configparser
 import datetime
 import glob
 import hashlib
@@ -10,7 +10,7 @@ import re
 import sys
 
 import pytok
-import pytok.mc
+from pytok import mc
 
 
 if __name__ == "__main__":
@@ -19,7 +19,7 @@ if __name__ == "__main__":
 		print("usage: ./mcJob.py <config_file>")
 		sys.exit(1)
 
-	configFile = ConfigParser.ConfigParser()
+	configFile = configparser.ConfigParser()
 	configFile.read(sys.argv[1])
 
 	level = "Debug"
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
 	logger = pytok.Logger(level)
 
-	config = pytok.mc.Configuration(logger)
+	config = mc.Configuration(logger)
 	if not config.read(configFile):
 		logger.fatal("Could not read config file. Aborting...")
 

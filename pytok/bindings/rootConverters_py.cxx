@@ -6,6 +6,11 @@
 
 namespace bp = boost::python;
 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+        #define ObjectProxy_FromVoidPtr CPPInstance_FromVoidPtr
+        #define ObjectProxy_AsVoidPtr CPPInstance_AsVoidPtr
+#endif
+
 template<typename T>
 PyObject* antok::py::convertToPy(const T& cxxObj) {
 	T* newCxxObj = new T(cxxObj);

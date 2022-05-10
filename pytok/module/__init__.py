@@ -1,9 +1,6 @@
 
-import libPytok as cpp
 import subprocess as _subprocess
 import sys as _sys
-
-from _logger import Logger
 
 
 def exit(exitCode, logger):

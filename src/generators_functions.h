@@ -9,6 +9,8 @@ namespace antok {
 
 	namespace generators {
 
+		enum vectorElementType {Int = 0, Double = 1, Vector2 = 2, Vector3 = 3, LorentzVector = 4};
+
 		std::string mergeNameIndex(const std::string& name, const int index);
 		bool nmbArgsIsExactly(const YAML::Node& function, const size_t& actualNmb, const size_t& requiredNmb);
 		std::string getTypeOfArg(const YAML::Node&  function, const int index, const std::string& argName);
@@ -55,6 +57,7 @@ namespace antok {
 		FUNCTION_PROTOTYPE(generateGetLorentzVectorAttributes);
 		FUNCTION_PROTOTYPE(generateGetLorentzVec);
 		FUNCTION_PROTOTYPE(generateGetTs);
+		FUNCTION_PROTOTYPE(generateGetVector2);
 		FUNCTION_PROTOTYPE(generateGetVector3);
 		FUNCTION_PROTOTYPE(generateGetVectorEntry);
 		FUNCTION_PROTOTYPE(generateGetVectorSize);

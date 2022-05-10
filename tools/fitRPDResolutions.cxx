@@ -208,14 +208,14 @@ class bin0r {
 		_fitResults.push_back(fitResults);
 	}
 
-	void writeFitResultsToRoot(double* median1 = 0,
-	                           double* median2 = 0,
-	                           double* median3 = 0,
-	                           double* median4 = 0,
-	                           double* median5 = 0) {
-		bool medians = (median1 != 0) and (median2 != 0) and
-		               (median3 != 0) and (median4 != 0) and
-		               (median5 != 0);
+	void writeFitResultsToRoot(double* median1 = nullptr,
+	                           double* median2 = nullptr,
+	                           double* median3 = nullptr,
+	                           double* median4 = nullptr,
+	                           double* median5 = nullptr) {
+		bool medians = (median1 != nullptr) and (median2 != nullptr) and
+		               (median3 != nullptr) and (median4 != nullptr) and
+		               (median5 != nullptr);
 		std::vector<TFitResultPtr> fitResults = serializeFitResult();
 		_dir->cd();
 		TH1D* sigma1Hist[3] = { new TH1D("sigma11Hist", "sigma11Hist", 1000, 0, 0.5),

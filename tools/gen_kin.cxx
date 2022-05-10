@@ -15,7 +15,7 @@
 #include<constants.h>
 #include<initializer.h>
 
-void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfilename="../config/default.yaml") {
+void gen_kin(char* infile_name = nullptr, char* outfile_name = nullptr, std::string configfilename="../config/default.yaml") {
 
 	antok::Initializer* initializer = antok::Initializer::instance();
 	if(not initializer->readConfigFile(configfilename)) {
@@ -29,29 +29,29 @@ void gen_kin(char* infile_name = 0, char* outfile_name = 0, std::string configfi
 	new TApplication("app", 0, 0);
 
 	TFile* infile;
-	if(infile_name == 0) {
+	if(infile_name == nullptr) {
 		infile = TFile::Open("/afs/cern.ch/user/k/kbicker/scratch0/filtered_run1/files_H_2008_10.root");
 	} else {
 		infile = TFile::Open(infile_name);
 	}
-	if(infile == 0) {
+	if(infile == nullptr) {
 		std::cerr<<"Could not open input file. Aborting..."<<std::endl;
 		return;
 	}
 
 	TTree* intree = (TTree*)infile->Get("Standard Event Selection/USR55");
-	if(intree == 0) {
+	if(intree == nullptr) {
 		std::cerr<<"Could not get input TTree. Aborting..."<<std::endl;
 		return;
 	}
 
 	TFile* outfile;
-	if(outfile_name == 0) {
+	if(outfile_name == nullptr) {
 		outfile = TFile::Open("outfile.root", "RECREATE");
 	} else {
 		outfile = TFile::Open(outfile_name, "NEW");
 	}
-	if(outfile == 0) {
+	if(outfile == nullptr) {
 		return;
 	}
 

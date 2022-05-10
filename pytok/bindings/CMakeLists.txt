@@ -1,6 +1,11 @@
 message(STATUS "")
 message(STATUS ">>> Setting up 'pyInterface' directory.")
 
+
+# silence Boost 1.74ff #pragma message triggered by boost/python.hpp
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_BIND_GLOBAL_PLACEHOLDERS")
+
+
 include_directories(
 	${ANTOK_INCLUDE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}
@@ -20,29 +25,40 @@ set(SOURCES
 	rootConverters_py.cxx
 )
 
+# Check python ROOT Libs
+if(ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION GREATER_EQUAL 22)
+  message(STATUS "ROOT version ${ROOT_VERSION} >= 6.22.XX found - using new TPython!")
+  set(ROOT_PYTHON "${ROOT_LIBRARY_DIR}/libROOTTPython.so")
+elseif(ROOT_MAJOR_VERSION EQUAL 6 AND ROOT_MINOR_VERSION GREATER_EQUAL 20)
+  message(WARNING "ROOT version ${ROOT_VERSION} == 6.20.XX found, which could lead to wrong linking of PyRoot library - trying old 'libPyROOT.so' - if make fails change to 'libROOTTPython.so'!")
+  set(ROOT_PYTHON "${ROOT_LIBRARY_DIR}/libPyROOT.so")
+else()
+  set(ROOT_PYTHON "${ROOT_LIBRARY_DIR}/libPyROOT.so")
+endif()
+
 # library
 set(THIS_LIB "pytok")
 make_shared_library(
 	"${THIS_LIB}"
 	"${SOURCES}"
 	"${PYTHON_LIBRARIES}"
-	"${Boost_PYTHON${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}_LIBRARY}"
+	"${Boost_PYTHON${Python_VERSION_MAJOR}${Python_VERSION_MINOR}_LIBRARY}"
 	"${ROOT_LIBS}"
 	"${ANTOK_LIB}"
 	# no idea why this is needed explicitly here and not in rootpwa
-	"${ROOT_LIBRARY_DIR}/libPyROOT.so"
+	"${ROOT_PYTHON}"
 	)
 
 # link the shared library with the python bindings
 add_custom_target(
 	libPytokLink ALL
-	COMMAND ${CMAKE_COMMAND} -E create_symlink ${LIBRARY_OUTPUT_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}pytok${CMAKE_SHARED_LIBRARY_SUFFIX} ${PYTHON_LIBRARY_OUTPUT_PATH}/pytok/libPytok.so
+	COMMAND ${CMAKE_COMMAND} -E create_symlink ${LIBRARY_OUTPUT_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}pytok${CMAKE_SHARED_LIBRARY_SUFFIX} ${Python_LIBRARY_OUTPUT_PATH}/pytok/libPytok.so
 )
 
 # produce python byte-code and move it to the build directory
 add_custom_target(
 	pytokModuleLinks ALL
-	COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pytok/helperScripts/python_compiler.py ${CMAKE_SOURCE_DIR}/pytok/module ${PYTHON_LIBRARY_OUTPUT_PATH}/pytok
+	COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pytok/helperScripts/python_compiler.py ${CMAKE_SOURCE_DIR}/pytok/module ${Python_LIBRARY_OUTPUT_PATH}/pytok
 )
 
 add_dependencies(libPytokLink pytok pytokModuleLinks)

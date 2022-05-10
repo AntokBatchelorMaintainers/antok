@@ -12,10 +12,10 @@
 
 namespace {
 
-	void __cleanDuplicatesFromMap(std::map<std::string, std::vector<long> >& map) {
+	void __cleanDuplicatesFromMap(std::map<std::string, std::vector<antok::bitmask> >& map) {
 
-		for(std::map<std::string, std::vector<long> >::iterator it = map.begin(); it != map.end(); ++it) {
-			std::vector<long>& vec = it->second;
+		for(std::map<std::string, std::vector<antok::bitmask> >::iterator it = map.begin(); it != map.end(); ++it) {
+			std::vector<antok::bitmask>& vec = it->second;
 			for(unsigned int i = 0; i < vec.size(); ++i) {
 				for(unsigned int j = (i+1); j < vec.size(); ++j) {
 					if(vec[i] == vec[j]) {
@@ -27,16 +27,16 @@ namespace {
 
 	}
 
-	std::map<std::string, std::vector<long> > __mergeMaps(const std::map<std::string, std::vector<long> >& map1,
-	                                                      const std::map<std::string, std::vector<long> >& map2)
+	std::map<std::string, std::vector<antok::bitmask> > __mergeMaps(const std::map<std::string, std::vector<antok::bitmask> >& map1,
+	                                                      const std::map<std::string, std::vector<antok::bitmask> >& map2)
 	{
-		std::map<std::string, std::vector<long> > returnMap = map1;
-		for(std::map<std::string, std::vector<long> >::const_iterator it = map2.begin(); it != map2.end(); ++it) {
-			std::map<std::string, std::vector<long> >::const_iterator finder = returnMap.find(it->first);
+		std::map<std::string, std::vector<antok::bitmask> > returnMap = map1;
+		for(std::map<std::string, std::vector<antok::bitmask> >::const_iterator it = map2.begin(); it != map2.end(); ++it) {
+			std::map<std::string, std::vector<antok::bitmask> >::const_iterator finder = returnMap.find(it->first);
 			if(finder == returnMap.end()) {
 				returnMap[it->first] = it->second;
 			} else {
-				const std::vector<long>& vec = it->second;
+				const std::vector<antok::bitmask>& vec = it->second;
 				returnMap[it->first].insert(returnMap[it->first].end(), vec.begin(), vec.end());
 			}
 		}
@@ -45,7 +45,7 @@ namespace {
 
 	void __getCutmasks(const antok::plotUtils::GlobalPlotOptions& plotOptions,
 	                   const YAML::Node& plot,
-	                   std::map<std::string, std::vector<long> >& cutmasks)
+	                   std::map<std::string, std::vector<antok::bitmask> >& cutmasks)
 	{
 		antok::Cutter& cutter = antok::ObjectManager::instance()->getCutter();
 		cutmasks = __mergeMaps(plotOptions.cutMasks, cutmasks);
@@ -102,7 +102,7 @@ namespace {
 			std::stringstream strStr;
 			strStr<<variableName<<indices[i];
 			T* addr = data.getAddr<T>(strStr.str());
-			if(addr == 0) {
+			if(addr == nullptr) {
 				std::cerr<<"All variables for \"Plot\" with \"Indices\" need to have the same type (in \""<<plotName<<"\")."<<std::endl;
 				return 0;
 			}
@@ -180,7 +180,7 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 	}
 
 	antok::Data& data = ObjectManager::instance()->getData();
-	std::map<std::string, std::vector<long> > cutmasks;
+	std::map<std::string, std::vector<antok::bitmask> > cutmasks;
 	if(hasNodeKey(plot, "CustomCuts")) {
 		if(not antok::Plotter::handleAdditionalCuts(plot["CustomCuts"], cutmasks)) {
 			std::cerr<<"Warning: There was a problem when processing the \"CustomCuts\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
@@ -188,7 +188,7 @@ antok::Plot* antok::generators::generate1DPlot(const YAML::Node& plot, const ant
 	}
 	__getCutmasks(plotOptions, plot, cutmasks);
 
-	antok::Plot* antokPlot = 0;
+	antok::Plot* antokPlot = nullptr;
 
 	if(not hasNodeKey(plot, "Indices")) {
 
@@ -358,7 +358,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 	}
 
 	antok::Data& data = ObjectManager::instance()->getData();
-	std::map<std::string, std::vector<long> > cutmasks;
+	std::map<std::string, std::vector<antok::bitmask> > cutmasks;
 	if(hasNodeKey(plot, "CustomCuts")) {
 		if(not antok::Plotter::handleAdditionalCuts(plot["CustomCuts"], cutmasks)) {
 			std::cerr<<"Warning: There was a problem when processing the \"CustomCuts\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
@@ -366,7 +366,7 @@ antok::Plot* antok::generators::generate2DPlot(const YAML::Node& plot, const ant
 	}
 	__getCutmasks(plotOptions, plot, cutmasks);
 
-	antok::Plot* antokPlot = 0;
+	antok::Plot* antokPlot = nullptr;
 
 	if(not hasNodeKey(plot, "Indices")) {
 
@@ -774,7 +774,7 @@ antok::Plot* antok::generators::generate3DPlot(const YAML::Node& plot, const ant
 	}
 
 	antok::Data& data = ObjectManager::instance()->getData();
-	std::map<std::string, std::vector<long> > cutmasks;
+	std::map<std::string, std::vector<antok::bitmask> > cutmasks;
 	if(hasNodeKey(plot, "CustomCuts")) {
 		if(not antok::Plotter::handleAdditionalCuts(plot["CustomCuts"], cutmasks)) {
 			std::cerr<<"Warning: There was a problem when processing the \"CustomCuts\" in \"Plot\" \""<<plotName<<"\"."<<std::endl;
@@ -782,7 +782,7 @@ antok::Plot* antok::generators::generate3DPlot(const YAML::Node& plot, const ant
 	}
 	__getCutmasks(plotOptions, plot, cutmasks);
 
-	antok::Plot* antokPlot = 0;
+	antok::Plot* antokPlot = nullptr;
 
 	if(not hasNodeKey(plot, "Indices")) {
 

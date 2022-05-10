@@ -616,21 +616,22 @@ namespace antok {
 			const T& _in;
 			double&  _out;
 
+			double __abs (const TVector2& x) { return x.Mod(); }
 			double __abs (const TVector3& x) { return x.Mag(); }
-			template <typename Q, class Dummy = int>
+			template <typename Q>
 			double __abs(const Q& x) { return std::fabs(x); }
 
 		};
 
 
-		template <>
-		class Abs<std::vector<double>>: public Function
+		template <typename T>
+		class Abs<std::vector<T>>: public Function
 		{
 
 		public:
 
-			Abs(const std::vector<double>& in,
-			    std::vector<double>&       out)
+			Abs(const std::vector<T>& in,
+			    std::vector<double>&  out)
 				: _in(in),
 				  _out(out)
 			{ }
@@ -643,15 +644,20 @@ namespace antok {
 				const size_t sizeVec = _in.size();
 				_out.resize(sizeVec);
 				for (size_t i = 0; i < sizeVec; ++i) {
-				    _out[i] = std::fabs(_in[i]);
+				    _out[i] = __abs(_in[i]);
 				}
 				return true;
 			}
 
 		private:
 
-			const std::vector<double>& _in;
-			std::vector<double>&       _out;
+			const std::vector<T>& _in;
+			std::vector<double>&  _out;
+
+			double __abs (const TVector2& x) { return x.Mod(); }
+			double __abs (const TVector3& x) { return x.Mag(); }
+			template <typename Q>
+			double __abs(const Q& x) { return std::fabs(x); }
 
 		};
 
@@ -987,6 +993,74 @@ namespace antok {
 			double&               _z;
 			double&               _phi;
 			double&               _theta;
+
+		};
+
+
+		class GetVectorTVector2 : public Function
+		{
+
+		public:
+
+			GetVectorTVector2(const std::vector<double>& x,
+			                  const std::vector<double>& y,
+			                  std::vector<TVector2>&     v)
+				: _x(x),
+				  _y(y),
+				  _v(v)
+			{ }
+
+			virtual ~GetVectorTVector2() { }
+
+			bool
+			operator() ()
+			{
+				if (_x.size() != _y.size()) {
+					return false;
+				}
+				_v.resize(_x.size());
+				for (size_t i = 0; i < _x.size(); ++i) {
+					_v[i] = TVector2(_x[i], _y[i]);
+				}
+				return true;
+			}
+
+		private:
+
+			const std::vector<double>& _x;
+			const std::vector<double>& _y;
+			std::vector<TVector2>&     _v;
+
+		};
+
+
+		class GetTVector2 : public Function
+		{
+
+		public:
+
+			GetTVector2(const double& x,
+			            const double& y,
+			            TVector2&     out)
+				: _x  (x),
+				  _y  (y),
+				  _out(out)
+			{ }
+
+			virtual ~GetTVector2() { }
+
+			bool
+			operator() ()
+			{
+				_out = TVector2(_x, _y);
+				return true;
+			}
+
+		private:
+
+			const double& _x;
+			const double& _y;
+			TVector2&     _out;
 
 		};
 

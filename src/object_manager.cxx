@@ -12,11 +12,11 @@
 #include<event.h>
 #include<plotter.h>
 
-antok::ObjectManager* antok::ObjectManager::_objectManager = 0;
+antok::ObjectManager* antok::ObjectManager::_objectManager = nullptr;
 
 antok::ObjectManager* antok::ObjectManager::instance() {
 
-	if(_objectManager == 0) {
+	if(_objectManager == nullptr) {
 		_objectManager = new antok::ObjectManager();
 	}
 	return _objectManager;
@@ -24,13 +24,13 @@ antok::ObjectManager* antok::ObjectManager::instance() {
 }
 
 antok::ObjectManager::ObjectManager()
-	: _cutter(0),
-	  _data(0),
-	  _event(0),
-	  _plotter(0),
-	  _inFile(0),
-	  _outFile(0),
-	  _inTree(0),
+	: _cutter(nullptr),
+	  _data(nullptr),
+	  _event(nullptr),
+	  _plotter(nullptr),
+	  _inFile(nullptr),
+	  _outFile(nullptr),
+	  _inTree(nullptr),
 	  _histNameAppendix("")
 {
 
@@ -39,7 +39,7 @@ antok::ObjectManager::ObjectManager()
 bool antok::ObjectManager::magic() {
 
 	bool success = _event->update() and _cutter->cut() and _cutter->fillOutTrees();
-	const long& cutPattern = _cutter->getCutPattern();
+	const antok::bitmask& cutPattern = _cutter->getCutPattern();
 	_plotter->fill(cutPattern);
 	return success;
 
@@ -47,7 +47,7 @@ bool antok::ObjectManager::magic() {
 
 antok::Cutter& antok::ObjectManager::getCutter() {
 
-	if(_cutter == 0) {
+	if(_cutter == nullptr) {
 		std::cerr<<"Trying to get uninitialized Cutter."<<std::endl;
 		throw 1;
 	}
@@ -57,7 +57,7 @@ antok::Cutter& antok::ObjectManager::getCutter() {
 
 antok::Data& antok::ObjectManager::getData() {
 
-	if(_data == 0) {
+	if(_data == nullptr) {
 		std::cerr<<"Trying to get uninitialized Data."<<std::endl;
 		throw 1;
 	}
@@ -67,7 +67,7 @@ antok::Data& antok::ObjectManager::getData() {
 
 antok::Event& antok::ObjectManager::getEvent() {
 
-	if(_event == 0) {
+	if(_event == nullptr) {
 		std::cerr<<"Trying to get uninitialized Event."<<std::endl;
 		throw 1;
 	}
@@ -77,7 +77,7 @@ antok::Event& antok::ObjectManager::getEvent() {
 
 antok::Plotter& antok::ObjectManager::getPlotter() {
 
-	if(_plotter == 0) {
+	if(_plotter == nullptr) {
 		std::cerr<<"Trying to get uninitialized Plotter."<<std::endl;
 		throw 1;
 	}
@@ -87,7 +87,7 @@ antok::Plotter& antok::ObjectManager::getPlotter() {
 
 bool antok::ObjectManager::setInFile(TFile* inFile) {
 
-	if(inFile == 0) {
+	if(inFile == nullptr) {
 		return false;
 	}
 	_inFile = inFile;
@@ -95,13 +95,13 @@ bool antok::ObjectManager::setInFile(TFile* inFile) {
 
 }
 bool antok::ObjectManager::changeInFile(TFile* inFile){
-	if( _inFile != 0 ) _inFile->Close();
+	if( _inFile != nullptr ) _inFile->Close();
 	return setInFile(inFile);
 }
 
 bool antok::ObjectManager::setOutFile(TFile* outFile) {
 
-	if(outFile == 0) {
+	if(outFile == nullptr) {
 		return false;
 	}
 	_outFile = outFile;
@@ -159,9 +159,9 @@ bool antok::ObjectManager::finish() {
 			std::string cutTrainDirName = path.substr(0, path.find_last_of('/'));
 			std::string plotDirName = path.substr(path.find_last_of('/')+1);
 			TDirectory* cutTrainDir = _outFile->GetDirectory(cutTrainDirName.c_str());
-			assert(cutTrainDir != 0);
+			assert(cutTrainDir != nullptr);
 			dir = cutTrainDir->mkdir(plotDirName.c_str());
-			assert(dir != 0);
+			assert(dir != nullptr);
 		}
 		dir->cd();
 		for(unsigned int i = 0; i < histsToCopy.size(); ++i) {
@@ -173,7 +173,7 @@ bool antok::ObjectManager::finish() {
 					histName = strStr.str();
 			}
 			TH1* copiedHist = dynamic_cast<TH1*>(info.histogram->Clone(histName.c_str()));
-			assert(copiedHist != 0);
+			assert(copiedHist != nullptr);
 			copiedHist->SetTitle(info.newTitle.c_str());
 			if(copiedHist->Write() <= 0) {
 				success = false;

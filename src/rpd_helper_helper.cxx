@@ -7,7 +7,7 @@
 #include<TApplication.h>
 #include<cmath>
 
-antok::RpdHelperHelper* antok::RpdHelperHelper::_instance = 0;
+antok::RpdHelperHelper* antok::RpdHelperHelper::_instance = nullptr;
 
 const antok::RpdHelperHelper* antok::RpdHelperHelper::getInstance() {
 

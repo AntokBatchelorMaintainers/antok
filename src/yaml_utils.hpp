@@ -104,7 +104,8 @@ namespace antok {
 		           const std::string& key)
 		{
 			try {
-				return node[key];
+				const YAML::Node tmpNode = node[key];
+				return true;
 			} catch(const YAML::BadSubscript& e) {
 				return false;
 			}

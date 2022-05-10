@@ -27,7 +27,7 @@ TTree* createOutTree(TTree* const      inTree,
                      const YAML::Node& config);
 
 
-antok::Initializer* antok::Initializer::_initializer = 0;
+antok::Initializer* antok::Initializer::_initializer = nullptr;
 
 
 antok::Initializer*
@@ -171,7 +171,7 @@ antok::Initializer::initializeCutter()
 		outFile->cd();
 		outFile->mkdir(cutTrainName.c_str());
 		outFile->cd("tmptmptmp");
-		TDirectory::CurrentDirectory()->mkdir(cutTrainName.c_str());
+		((TDirectory*)TDirectory::CurrentDirectory())->mkdir(cutTrainName.c_str());
 		if (pertinent) {
 			outFile->cd(cutTrainName.c_str());
 			TTree* outTree = createOutTree(inTree, config);
@@ -217,8 +217,8 @@ antok::Initializer::initializeCutter()
 
 	}  // End loop over CutTrains
 
-	for (const std::pair<std::string, TTree*>& outTree : cutter._outTreeMap) {
-		cutter._treesToFill.push_back(std::pair<TTree*, long>(outTree.second, cutter.getAllCutsCutmaskForCutTrain(outTree.first)));
+	for (const std::pair<const std::string, TTree*>& outTree : cutter._outTreeMap) {
+		cutter._treesToFill.push_back(std::pair<TTree*, antok::bitmask>(outTree.second, cutter.getAllCutsCutmaskForCutTrain(outTree.first)));
 	}
 
 	return true;
@@ -287,13 +287,18 @@ antok::Initializer::initializeData()
 					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
-			} else if (type == "TLorentzVector") {
-				if (not data.insertInputVariable<TLorentzVector>(name)) {
+			} else if (type == "TVector2") {
+				if (not data.insertInputVariable<TVector2>(name)) {
 					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
 			} else if (type == "TVector3") {
 				if (not data.insertInputVariable<TVector3>(name)) {
+					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
+			} else if (type == "TLorentzVector") {
+				if (not data.insertInputVariable<TLorentzVector>(name)) {
 					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
@@ -370,10 +375,10 @@ antok::Initializer::initializeData()
 							return false;
 						}
 					}
-				} else if (type == "TLorentzVector") {
+				} else if (type == "TVector2") {
 					for (size_t i = 0; i < nParticles; ++i) {
 						const std::string varName = variableName(baseName, i + 1);
-						if (not data.insertInputVariable<TLorentzVector>(varName)) {
+						if (not data.insertInputVariable<TVector2>(varName)) {
 							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
 							return false;
 						}
@@ -382,6 +387,14 @@ antok::Initializer::initializeData()
 					for (size_t i = 0; i < nParticles; ++i) {
 						const std::string varName = variableName(baseName, i + 1);
 						if (not data.insertInputVariable<TVector3>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
+							return false;
+						}
+					}
+				} else if (type == "TLorentzVector") {
+					for (size_t i = 0; i < nParticles; ++i) {
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<TLorentzVector>(varName)) {
 							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
 							return false;
 						}
@@ -469,6 +482,10 @@ antok::Initializer::initializeInput()
 			return false;
 		}*/
 	}
+	for (auto& it : data._vector2s) {
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
+	}
 	for (auto& it : data._vector3s) {
 		if (data.isInputVariable(it.first))
 			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
@@ -486,6 +503,7 @@ antok::Initializer::updateInput()
 	ok &= initializeInput();  // again set all input branches
 
 	// include waterfall plot of the new input file to the existing waterfall plot
+	// TODO Consider case where waterfall plot is enabled but no inputName is given in YAML config
 	const YAML::Node&     config        = *_config;
 	antok::ObjectManager* objectManager = antok::ObjectManager::instance();
 	antok::Cutter&        cutter        = objectManager->getCutter();
@@ -650,7 +668,7 @@ antok::Initializer::initializePlotter()
 		const antok::Cutter& cutter = objectManager->getCutter();
 		TFile* outFile = objectManager->getOutFile();
 		std::vector<antok::plotUtils::waterfallHistogramContainer> waterfallHists;
-		for (const std::pair<std::string, std::vector<antok::Cut*>>& cutTrain : cutter._cutTrainsCutOrderMap) {
+		for (const std::pair<const std::string, std::vector<antok::Cut*>>& cutTrain : cutter._cutTrainsCutOrderMap) {
 			const std::string& cutTrainName = cutTrain.first;
 			outFile->cd(cutTrainName.c_str());
 			TH1D* statsHist = (TH1D*)statsHistTemplate->Clone(plotOptions.statisticsHistOutName.c_str());
@@ -772,6 +790,7 @@ createOutTree(TTree* const      inTree,
 			if (variableName != "") {
 				if      (variableType == "double")	            addToOutputBranch<double>             (outTree, data, variableName);
 				else if (variableType == "int")	                addToOutputBranch<int>                (outTree, data, variableName);
+				else if (variableType == "TVector2")            addToOutputBranch<TVector2>           (outTree, data, variableName);
 				else if (variableType == "TVector3")            addToOutputBranch<TVector3>           (outTree, data, variableName);
 				else if (variableType == "TLorentzVector")      addToOutputBranch<TLorentzVector>     (outTree, data, variableName);
 				else if (variableType == "std::vector<double>") addToOutputBranch<std::vector<double>>(outTree, data, variableName);
@@ -824,6 +843,8 @@ antok::Initializer::getFunction(const YAML::Node&               function,
 		return antok::generators::generateGetLorentzVec             (function, quantityNames, index);
 	} else if (functionName == "getTs") {
 		return antok::generators::generateGetTs                     (function, quantityNames, index);
+	} else if (functionName == "getVector2") {
+		return antok::generators::generateGetVector2                (function, quantityNames, index);
 	} else if (functionName == "getVector3") {
 		return antok::generators::generateGetVector3                (function, quantityNames, index);
 	} else if (functionName == "getVectorEntry") {

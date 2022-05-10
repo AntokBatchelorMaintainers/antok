@@ -5,7 +5,6 @@
 #include<TH1.h>
 #include<stdexcept>
 
-#include<cutter.h>
 #include<object_manager.h>
 #include<plot.hpp>
 #include<yaml_utils.hpp>
@@ -21,10 +20,10 @@ namespace {
 }
 
 
-antok::Plotter* antok::Plotter::_plotter = 0;
+antok::Plotter* antok::Plotter::_plotter = nullptr;
 
 antok::Plotter* antok::Plotter::instance() {
-	if(_plotter == 0) {
+	if(_plotter == nullptr) {
 		_plotter = new antok::Plotter();
 	}
 	return _plotter;
@@ -32,7 +31,7 @@ antok::Plotter* antok::Plotter::instance() {
 
 
 void
-antok::Plotter::fill(const long& cutPattern)
+antok::Plotter::fill(const antok::bitmask& cutPattern)
 {
 	for (size_t i = 0; i < _plots.size(); ++i) {
 		_plots[i]->fill(cutPattern);
@@ -102,7 +101,7 @@ namespace {
 
 	}
 
-	long __handleCutList(const YAML::Node& cutNode, const std::string& cutTrainName, bool invertSelection) {
+	antok::bitmask __handleCutList(const YAML::Node& cutNode, const std::string& cutTrainName, bool invertSelection) {
 
 		std::vector<std::string> cutNames;
 		if(cutNode.IsMap()) {
@@ -128,9 +127,9 @@ namespace {
 			return -1;
 		}
 		antok::Cutter& cutter = antok::ObjectManager::instance()->getCutter();
-		long cutmask = cutter.getCutmaskForNames(cutNames);
+		antok::bitmask cutmask = cutter.getCutmaskForNames(cutNames);
 		if(invertSelection) {
-			long allCuts = cutter.getAllCutsCutmaskForCutTrain(cutTrainName);
+			antok::bitmask allCuts = cutter.getAllCutsCutmaskForCutTrain(cutTrainName);
 			cutmask = (~cutmask)&allCuts;
 		}
 		return cutmask;
@@ -138,7 +137,7 @@ namespace {
 
 }
 
-bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<std::string, std::vector<long> >& map) {
+bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<std::string, std::vector<antok::bitmask> >& map) {
 
 	using antok::YAMLUtils::hasNodeKey;
 
@@ -163,16 +162,10 @@ bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<
 			continue;
 		}
 		bool innerError = false;
-		std::vector<long> cutMasks;
+		std::vector<antok::bitmask> cutMasks;
 		for(YAML::const_iterator withCuts_it = entry["WithCuts"].begin(); withCuts_it != entry["WithCuts"].end(); ++withCuts_it) {
 			const YAML::Node& withCut = *withCuts_it;
-			long cutmask = __handleCutList(withCut, cutTrainName, false);
-			if(cutmask < 0) {
-				std::cout << "CutMask is < 0!" << std::endl;
-				innerError = true;
-				error = true;
-				break;
-			}
+			antok::bitmask cutmask = __handleCutList(withCut, cutTrainName, false);
 			cutMasks.push_back(cutmask);
 		}
 		if(innerError) {
@@ -180,13 +173,7 @@ bool antok::Plotter::handleAdditionalCuts(const YAML::Node& trainList, std::map<
 		}
 		for(YAML::const_iterator withoutCuts_it = entry["WithoutCuts"].begin(); withoutCuts_it != entry["WithoutCuts"].end(); ++withoutCuts_it) {
 			const YAML::Node& withoutCut = *withoutCuts_it;
-			long cutmask = __handleCutList(withoutCut, cutTrainName, true);
-			if(cutmask < 0) {
-				std::cout << "CutMask is < 0!" << std::endl;
-				innerError = true;
-				error = true;
-				break;
-			}
+			antok::bitmask cutmask = __handleCutList(withoutCut, cutTrainName, true);
 			cutMasks.push_back(cutmask);
 		}
 		if(innerError) {

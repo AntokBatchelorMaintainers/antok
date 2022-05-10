@@ -40,58 +40,58 @@ namespace antok {
 
 	public:
 
-		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
 		             TH1 *hist_template,
 		             T1 *data1,
 		             T2 *data2 = nullptr,
 		             T3 *data3 = nullptr);
 
-		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
 		             TH1 *hist_template,
 		             std::vector<T1> *data1,
 		             std::vector<T2> *data2 = nullptr,
 		             std::vector<T3> *data3 = nullptr);
 
-		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
 		             TH1 *hist_template,
 		             std::vector<T1 *> *data1,
 		             std::vector<T2 *> *data2 = nullptr,
 		             std::vector<T3 *> *data3 = nullptr);
 
-		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
 		             TH1 *hist_template,
 		             std::vector<std::vector<T1> *> *data1,
 		             std::vector<std::vector<T2> *> *data2 = nullptr,
 		             std::vector<std::vector<T3> *> *data3 = nullptr);
 
-		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
 		             TH1 *hist_template,
 		             T1 *data1,
 		             std::vector<T2> *data2);
 
-		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
 		             TH1 *hist_template,
 		             std::vector<T1> *data1,
 		             T2 *data2);
 
-		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
 		             TH1 *hist_template,
 		             std::vector<T1 *> *data1,
 		             std::vector<std::vector<T2> *> *data2);
 
-		TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+		TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
 		             TH1 *hist_template,
 		             std::vector<std::vector<T1> *> *data1,
 		             std::vector<T2 *> *data2);
 
 
-		virtual void fill(long cutmask);
+		virtual void fill(antok::bitmask cutmask);
 
 		~TemplatePlot() {};
 
 	private:
 
-		void makePlot(std::map<std::string, std::vector<long> > &cutmasks, TH1 *histTemplate);
+		void makePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks, TH1 *histTemplate);
 
 		void fill(TH1 *hist, const T1 d1);
 		void fill(TH1 *hist, const T1 d1, const T2 d2);
@@ -100,9 +100,9 @@ namespace antok {
 		void fill(TH1 *hist, const T1 *d1, const T2 *d2) { fill(hist, *d1, *d2); }
 		void fill(TH1 *hist, const T1 *d1, const T2 *d2, const T3 *d3) { fill(hist, *d1, *d2, *d3); }
 
-		std::vector<std::pair<TH1 *, long> > _histograms;
+		std::vector<std::pair<TH1 *, antok::bitmask> > _histograms;
 
-		std::map<long, TH1 *> _cutmaskIndex;
+		std::map<unsigned long, TH1 *> _cutmaskIndex;
 
 		Modes _mode;
 
@@ -126,7 +126,7 @@ namespace antok {
 }
 
 template<typename T1, typename T2, typename T3>
-antok::TemplatePlot<T1, T2, T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+antok::TemplatePlot<T1, T2, T3>::TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
                                               TH1 *histTemplate,
                                               T1 *data1,
                                               T2 *data2,
@@ -150,7 +150,7 @@ antok::TemplatePlot<T1, T2, T3>::TemplatePlot(std::map<std::string, std::vector<
 };
 
 template<typename T1, typename T2, typename T3>
-antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
                                             TH1 *histTemplate,
                                             std::vector<T1*> *vecData1,
                                             std::vector<T2*> *vecData2,
@@ -177,7 +177,7 @@ antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<lo
 };
 
 template<typename T1, typename T2, typename T3>
-antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
                                             TH1 *histTemplate,
                                             std::vector<T1> *vecData1,
                                             std::vector<T2> *vecData2,
@@ -204,7 +204,7 @@ antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<lo
 };
 
 template<typename T1, typename T2, typename T3>
-antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
                                             TH1 *histTemplate,
                                             std::vector<std::vector<T1>*> *vecData1,
                                             std::vector<std::vector<T2>*> *vecData2,
@@ -224,14 +224,14 @@ antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<lo
 		  _data2(nullptr),
 		  _data3(nullptr) {
 
-	assert(histTemplate != 0);
+	assert(histTemplate != nullptr);
 	assert(_multipleDataVector1 != nullptr);
 	makePlot(cutmasks, histTemplate);
 
 };
 
 template<typename T1, typename T2, typename T3>
-antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
                                             TH1 *histTemplate,
                                             T1* data1,
                                             std::vector<T2> *vecData2)
@@ -258,7 +258,7 @@ antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<lo
 };
 
 template<typename T1, typename T2, typename T3>
-antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
                                             TH1 *histTemplate,
                                             std::vector<T1> *vecData1,
                                             T2* data2)
@@ -285,7 +285,7 @@ antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<lo
 };
 
 template<typename T1, typename T2, typename T3>
-antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
                                             TH1 *histTemplate,
                                             std::vector<T1*> *vecData1,
                                             std::vector<std::vector<T2>*> *vecData2)
@@ -313,7 +313,7 @@ antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<lo
 };
 
 template<typename T1, typename T2, typename T3>
-antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<long> > &cutmasks,
+antok::TemplatePlot<T1,T2,T3>::TemplatePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks,
                                             TH1 *histTemplate,
                                             std::vector<std::vector<T1>*> *vecData1,
                                             std::vector<T2*> *vecData2)
@@ -354,11 +354,11 @@ void antok::TemplatePlot<T1,T2,T3>::fill(TH1* hist, const T1 d1, const T2 d2, co
 }
 
 template<typename T1, typename T2, typename T3>
-void antok::TemplatePlot<T1,T2,T3>::fill(long cutPattern) {
+void antok::TemplatePlot<T1,T2,T3>::fill(antok::bitmask cutPattern) {
 
 	for (unsigned int i = 0; i < _histograms.size(); ++i) {
 		TH1 *hist = _histograms[i].first;
-		long histMask = _histograms[i].second;
+		antok::bitmask histMask = _histograms[i].second;
 		if ((histMask & cutPattern) == histMask) {
 			switch (_mode) {
 				case mSiscalar:
@@ -468,15 +468,15 @@ void antok::TemplatePlot<T1,T2,T3>::fill(long cutPattern) {
 
 template<typename T1, typename T2, typename T3>
 void
-antok::TemplatePlot<T1, T2, T3>::makePlot(std::map<std::string, std::vector<long> > &cutmasks, TH1 *histTemplate) {
+antok::TemplatePlot<T1, T2, T3>::makePlot(std::map<std::string, std::vector<antok::bitmask> > &cutmasks, TH1 *histTemplate) {
 
 	antok::ObjectManager *objectManager = antok::ObjectManager::instance();
 	antok::Cutter &cutter = objectManager->getCutter();
 	TFile *outFile = objectManager->getOutFile();
 
-	for (std::map<std::string, std::vector<long> >::const_iterator cutmasks_it = cutmasks.begin(); cutmasks_it != cutmasks.end(); ++cutmasks_it) {
+	for (std::map<std::string, std::vector<antok::bitmask> >::const_iterator cutmasks_it = cutmasks.begin(); cutmasks_it != cutmasks.end(); ++cutmasks_it) {
 		const std::string &cutTrainName = cutmasks_it->first;
-		const std::vector<long> &masks = cutmasks_it->second;
+		const std::vector<antok::bitmask> &masks = cutmasks_it->second;
 		const std::vector<antok::Cut *> &cuts = cutter.getCutsForCutTrain(cutTrainName);
 
 		histTemplate->SetDirectory(0);
@@ -489,7 +489,7 @@ antok::TemplatePlot<T1, T2, T3>::makePlot(std::map<std::string, std::vector<long
 
 		for (unsigned int cutmask_i = 0; cutmask_i < masks.size(); ++cutmask_i) {
 
-			long mask = masks[cutmask_i];
+			antok::bitmask mask = masks[cutmask_i];
 			strStr.str("");
 			strStr << histTemplate->GetName() << "_";
 
@@ -511,15 +511,15 @@ antok::TemplatePlot<T1, T2, T3>::makePlot(std::map<std::string, std::vector<long
 			strStr << cutTrainName << "/" << histTemplate->GetName();
 			std::string path = strStr.str();
 
-			TH1 *hist = 0;
-			if (_cutmaskIndex.find(mask) == _cutmaskIndex.end()) {
+			TH1 *hist = nullptr;
+			if (_cutmaskIndex.find(mask.to_ulong()) == _cutmaskIndex.end()) {
 				hist = dynamic_cast<TH1 *>(histTemplate->Clone(histName.c_str()));
-				assert(hist != 0);
+				assert(hist != nullptr);
 				hist->SetTitle(histTitle.c_str());
-				_histograms.push_back(std::pair<TH1 *, long>(hist, mask));
-				_cutmaskIndex[mask] = hist;
+				_histograms.push_back(std::pair<TH1 *, antok::bitmask>(hist, mask));
+				_cutmaskIndex[mask.to_ulong()] = hist;
 			} else {
-				hist = _cutmaskIndex.find(mask)->second;
+				hist = _cutmaskIndex.find(mask.to_ulong())->second;
 			}
 			assert(objectManager->registerHistogramToCopy(hist,
 			                                              path,

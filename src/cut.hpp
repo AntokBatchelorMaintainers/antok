@@ -295,7 +295,7 @@ namespace antok {
 
 		};
 
-		enum groupMethod {groupFail = -1, groupAnd = 0, groupOr = 1, groupNand};
+		enum groupMethod {groupFail = -1, groupAnd = 0, groupOr = 1, groupNand = 2};
 
 		class CutGroup : public Cut {
 
@@ -381,6 +381,8 @@ namespace antok {
 
 		};
 
+		enum listMethod {listFail = -1, listExclusive = 0, listInclusive = 1};
+
 		class ListCut: public Cut {
 
 		  public:
@@ -391,7 +393,7 @@ namespace antok {
 			        bool* outAddr,
 			        std::vector<int> list,
 			        int* variableAddress,
-			        int mode)
+			        listMethod mode)
 				: Cut(shortname, longname, abbreviation, outAddr),
 				  _list(list),
 				  _variableAddress(variableAddress),
@@ -400,12 +402,14 @@ namespace antok {
 			bool operator() () {
 				const bool inList = (std::find(_list.begin(), _list.end(), *_variableAddress) != _list.end());
 				switch(_mode) {
-					case 0: // exclude if in list
+					case listExclusive: // exclude if in list
 						*_outAddr = !inList;
 						return true;
-					case 1: //include if in list
+					case listInclusive: //include if in list
 						*_outAddr = inList;
 						return true;
+					case listFail:
+						return false;
 				}
 				return false;
 			}
@@ -424,7 +428,7 @@ namespace antok {
 
 			std::vector<int> _list;
 			int* _variableAddress;
-			int _mode;
+			listMethod _mode;
 
 		};
 
