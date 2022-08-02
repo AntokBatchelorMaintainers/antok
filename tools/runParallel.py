@@ -41,9 +41,13 @@ def getRunNumber(filename):
 	if(parsed):
 		runnbr = int( parsed[0])
 	else:
-		msg = "Cannot get run number from file name '{0}'. Using run number 0.".format( filename )
-		print(msg)
-		runnbr = 0
+		parsed = re.findall("_([0-9]+)(_[0-9]*)*\.root", filename) # for files named like uDST_<runnmbr>_00.root(.<filenmbr>)
+		if parsed:
+			runnbr = int( parsed[0][0])
+		else:
+			msg = "Can not get run number from file name '{0}'. Using run number 0.".format( filename )
+			print msg
+			runnbr = 0
 	return runnbr
 
 def getSlot(filename):
@@ -55,9 +59,13 @@ def getSlot(filename):
 	if(parsed):
 		slot = parsed[0]
 	else:
-		msg = "Cannot get slot from file name '{0}'. Using slot '0-0'".format( filename )
-		print(msg)
-		slot='0-0'
+		parsed = re.findall("_[0-9]+_([0-9])([0-9])\.root", filename) # for files named like uDST_<runnmbr>_00.root(.<filenmbr>)
+		if(parsed):
+			slot = parsed[0][0]+'-'+parsed[0][1]
+		else:
+			msg = "Can not get slot from file name '{0}'. Using slot '0-0'".format( filename )
+			print msg
+			slot='0-0'
 	return slot
 
 
