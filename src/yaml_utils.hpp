@@ -105,7 +105,7 @@ namespace antok {
 		{
 			try {
 				const YAML::Node tmpNode = node[key];
-				return true;
+				return tmpNode.IsDefined();
 			} catch(const YAML::BadSubscript& e) {
 				return false;
 			}
