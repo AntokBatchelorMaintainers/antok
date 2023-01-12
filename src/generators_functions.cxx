@@ -1145,18 +1145,28 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 	} else if (hasNodeKey(function, "VectorDouble")) {
 		elemType = Double;
 		args     = {{"VectorDouble", "std::vector<double>"}};
+	} else if (hasNodeKey(function, "VectorVectorInt")) {
+		elemType = VectorInt;
+		args     = {{"VectorVectorInt", "std::vector<std::vector<int>>"}};
+	} else if (hasNodeKey(function, "VectorVectorDouble")) {
+		elemType = VectorDouble;
+		args     = {{"VectorVectorDouble", "std::vector<std::vector<double>>"}};
 	} else if (hasNodeKey(function, "VectorTVector2")) {
 		elemType = Vector2;
 		args     = {{"VectorTVector2", "std::vector<TVector2>"}};
 	} else if (hasNodeKey(function, "VectorTVector3")) {
 		elemType = Vector3;
 		args     = {{"VectorTVector3", "std::vector<TVector3>"}};
+	// } else if (hasNodeKey(function, "VectorTVectorD")) {
+	// 	elemType = VectorTDouble;
+	// 	args     = {{"VectorTVectorD", "std::vector<TVectorD>"}};
 	} else if (hasNodeKey(function, "VectorTLorentzVector")) {
 		elemType = LorentzVector;
 		args     = {{"VectorTLorentzVector", "std::vector<TLorentzVector>"}};
 	} else {
 		std::cerr << "Function '" << functionName << "' needs either input variables "
-		          << "'VectorInt', 'VectorDouble', 'VectorTVector3', or 'VectorTLorentzVector' "
+		          << "'VectorInt', 'VectorDouble', 'VectorVectorDouble', "
+				  << "'VectorTVector2', 'VectorTVector3', 'VectorTVectorD', or 'VectorTLorentzVector' "
 		          << "to calculate variable '" << quantityNames[0] << "'." << std::endl;
 		return nullptr;
 	}
@@ -1175,15 +1185,21 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 	// return functor
 	switch (elemType) {
 		case Int:
-		  return __getVectorEntryFunction<int>           (constArgs["Entry"], args, quantityNames);
+		  return __getVectorEntryFunction<int>                (constArgs["Entry"], args, quantityNames);
 		case Double:
-		  return __getVectorEntryFunction<double>        (constArgs["Entry"], args, quantityNames);
+		  return __getVectorEntryFunction<double>             (constArgs["Entry"], args, quantityNames);
+		case VectorInt:
+		  return __getVectorEntryFunction<std::vector<int>>   (constArgs["Entry"], args, quantityNames);
+		case VectorDouble:
+		  return __getVectorEntryFunction<std::vector<double>>(constArgs["Entry"], args, quantityNames);
 		case Vector2:
-		  return __getVectorEntryFunction<TVector2>      (constArgs["Entry"], args, quantityNames);
+		  return __getVectorEntryFunction<TVector2>           (constArgs["Entry"], args, quantityNames);
 		case Vector3:
-		  return __getVectorEntryFunction<TVector3>      (constArgs["Entry"], args, quantityNames);
+		  return __getVectorEntryFunction<TVector3>           (constArgs["Entry"], args, quantityNames);
+		// case VectorTDouble:
+		//   return __getVectorEntryFunction<TVectorD>           (constArgs["Entry"], args, quantityNames);
 		case LorentzVector:
-		  return __getVectorEntryFunction<TLorentzVector>(constArgs["Entry"], args, quantityNames);
+		  return __getVectorEntryFunction<TLorentzVector>     (constArgs["Entry"], args, quantityNames);
 		default: {
 			std::cerr << "Unclear what to do in function '" << functionName << "'." << std::endl;
 			return nullptr;
@@ -1234,18 +1250,28 @@ antok::generators::generateGetVectorSize(const YAML::Node&               functio
 	} else if (hasNodeKey(function, "VectorDouble")) {
 		elemType = Double;
 		args     = {{"VectorDouble", "std::vector<double>"}};
+	} else if (hasNodeKey(function, "VectorVectorInt")) {
+		elemType = VectorInt;
+		args     = {{"VectorVectorInt", "std::vector<std::vector<int>>"}};
+	} else if (hasNodeKey(function, "VectorVectorDouble")) {
+		elemType = VectorDouble;
+		args     = {{"VectorVectorDouble", "std::vector<std::vector<double>>"}};
 	} else if (hasNodeKey(function, "VectorTVector2")) {
 		elemType = Vector2;
-		args     = {{"VectorTVector3", "std::vector<TVector2>"}};
+		args     = {{"VectorTVector2", "std::vector<TVector2>"}};
 	} else if (hasNodeKey(function, "VectorTVector3")) {
 		elemType = Vector3;
 		args     = {{"VectorTVector3", "std::vector<TVector3>"}};
+	// } else if (hasNodeKey(function, "VectorTVectorD")) {
+	// 	elemType = VectorTDouble;
+	// 	args     = {{"VectorTVectorD", "std::vector<TVectorD>"}};
 	} else if (hasNodeKey(function, "VectorTLorentzVector")) {
 		elemType = LorentzVector;
 		args     = {{"VectorTLorentzVector", "std::vector<TLorentzVector>"}};
 	} else {
 		std::cerr << "Function '" << functionName << "' needs either input variables "
-		          << "'VectorInt', 'VectorDouble', 'VectorTVector3', or 'VectorTLorentzVector' "
+		          << "'VectorInt', 'VectorDouble', 'VectorVectorDouble', "
+				  << "'VectorTVector2', 'VectorTVector3', 'VectorTVectorD', or 'VectorTLorentzVector' "
 		          << "to calculate variable '" << quantityNames[0] << "'." << std::endl;
 		return nullptr;
 	}
@@ -1257,15 +1283,21 @@ antok::generators::generateGetVectorSize(const YAML::Node&               functio
 	// return functor
 	switch (elemType) {
 		case Int:
-		  return __getVectorSizeFunction<int>           (args, quantityNames);
+		  return __getVectorSizeFunction<int>                (args, quantityNames);
 		case Double:
-		  return __getVectorSizeFunction<double>        (args, quantityNames);
+		  return __getVectorSizeFunction<double>             (args, quantityNames);
+		case VectorInt:
+		  return __getVectorSizeFunction<std::vector<int>>   (args, quantityNames);
+		case VectorDouble:
+		  return __getVectorSizeFunction<std::vector<double>>(args, quantityNames);
 		case Vector2:
-		  return __getVectorSizeFunction<TVector2>      (args, quantityNames);
+		  return __getVectorSizeFunction<TVector2>           (args, quantityNames);
 		case Vector3:
-		  return __getVectorSizeFunction<TVector3>      (args, quantityNames);
+		  return __getVectorSizeFunction<TVector3>           (args, quantityNames);
+		// case VectorTDouble:
+		//   return __getVectorSizeFunction<TVectorD>           (args, quantityNames);
 		case LorentzVector:
-		  return __getVectorSizeFunction<TLorentzVector>(args, quantityNames);
+		  return __getVectorSizeFunction<TLorentzVector>     (args, quantityNames);
 		default: {
 			std::cerr << "Unknown element type in function '" << functionName << "'." << std::endl;
 			return nullptr;

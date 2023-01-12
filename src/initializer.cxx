@@ -302,6 +302,21 @@ antok::Initializer::initializeData()
 					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
+			} else if (type == "std::vector<std::vector<int>>") {
+				if (not data.insertInputVariable<std::vector<std::vector<int>>>(name)) {
+					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
+			} else if (type == "std::vector<std::vector<double>>") {
+				if (not data.insertInputVariable<std::vector<std::vector<double>>>(name)) {
+					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
+			} else if (type == "std::vector<TVectorD>") {
+				if (not data.insertInputVariable<std::vector<TVectorD>>(name)) {
+					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
 			} else if (type == "") {
 				std::cerr << "Could not convert branch type to string when parsing the TreeBranches['onePerEvent'] part." << std::endl;
 				return false;
@@ -399,6 +414,30 @@ antok::Initializer::initializeData()
 							return false;
 						}
 					}
+				} else if (type == "std::vector<std::vector<int>>") {
+					for (size_t i = 0; i < nParticles; ++i) {
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<std::vector<std::vector<int>>>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
+							return false;
+						}
+					}
+				} else if (type == "std::vector<std::vector<double>>") {
+					for (size_t i = 0; i < nParticles; ++i) {
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<std::vector<std::vector<double>>>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
+							return false;
+						}
+					}
+				} else if (type == "std::vector<TVectorD>") {
+					for (size_t i = 0; i < nParticles; ++i) {
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<std::vector<TVectorD>>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
+							return false;
+						}
+					}
 				} else if (type == "") {
 					std::cerr << "Could not convert branch type to std::string when parsing the TreeBranches['onePerParticle'] part." << std::endl;
 					return false;
@@ -487,6 +526,18 @@ antok::Initializer::initializeInput()
 			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
 	}
 	for (auto& it : data._vector3s) {
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
+	}
+	for (auto& it : data._vectorDoubleVectors) {
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
+	}
+	for (auto& it : data._vectorIntVectors) {
+		if (data.isInputVariable(it.first))
+			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
+	}
+	for (auto& it : data._vectorTDVectors) {
 		if (data.isInputVariable(it.first))
 			inTree->SetBranchAddress(it.first.c_str(), &(it.second));
 	}
@@ -788,13 +839,16 @@ createOutTree(TTree* const      inTree,
 			const std::string variableName = antok::YAMLUtils::getString(variableNode);
 			const std::string variableType = data.getType(variableName);
 			if (variableName != "") {
-				if      (variableType == "double")	            addToOutputBranch<double>             (outTree, data, variableName);
-				else if (variableType == "int")	                addToOutputBranch<int>                (outTree, data, variableName);
-				else if (variableType == "TVector2")            addToOutputBranch<TVector2>           (outTree, data, variableName);
-				else if (variableType == "TVector3")            addToOutputBranch<TVector3>           (outTree, data, variableName);
-				else if (variableType == "TLorentzVector")      addToOutputBranch<TLorentzVector>     (outTree, data, variableName);
-				else if (variableType == "std::vector<double>") addToOutputBranch<std::vector<double>>(outTree, data, variableName);
-				else if (variableType == "std::vector<int>")    addToOutputBranch<std::vector<int>>   (outTree, data, variableName);
+				if      (variableType == "double")	                         addToOutputBranch<double>                          (outTree, data, variableName);
+				else if (variableType == "int")	                             addToOutputBranch<int>                             (outTree, data, variableName);
+				else if (variableType == "TVector2")                         addToOutputBranch<TVector2>                        (outTree, data, variableName);
+				else if (variableType == "TVector3")                         addToOutputBranch<TVector3>                        (outTree, data, variableName);
+				else if (variableType == "TLorentzVector")                   addToOutputBranch<TLorentzVector>                  (outTree, data, variableName);
+				else if (variableType == "std::vector<double>")              addToOutputBranch<std::vector<double>>             (outTree, data, variableName);
+				else if (variableType == "std::vector<int>")                 addToOutputBranch<std::vector<int>>                (outTree, data, variableName);
+				else if (variableType == "std::vector<std::vector<int>>")    addToOutputBranch<std::vector<std::vector<int>>>   (outTree, data, variableName); // std::vector<std::vector<T>> is not implemented in ROOT (for T != double) and cannot be written into TTrees without building the corresponding shared libraries!
+				else if (variableType == "std::vector<std::vector<double>>") addToOutputBranch<std::vector<std::vector<double>>>(outTree, data, variableName);
+				else if (variableType == "std::vector<TVectorD>")            addToOutputBranch<std::vector<TVectorD>>           (outTree, data, variableName); // std::vector<TVectorT> is not implemented in ROOT and cannot be written into TTrees without building the corresponding shared libraries!
 				else {
 					std::cerr << "Variable type '" << variableType << "' of variable '"
 					          << variableName << "' not implemented for own output tree." << std::endl;
