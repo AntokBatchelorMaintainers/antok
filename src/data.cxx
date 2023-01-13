@@ -106,6 +106,18 @@ namespace antok {
 		return true;
 	}
 
+	template <>
+	bool
+	Data::insert<TVectorD>(const std::string& name)
+	{
+		if (_vectorDs.count(name) > 0) {
+			return false;
+		}
+		_global_map[name] = "TVectorD";
+		_vectorDs  [name] = new TVectorD;
+		return true;
+	}
+
 
 	template <>
 	bool
@@ -294,6 +306,16 @@ namespace antok {
 		return it->second;
 	}
 
+	template <>
+	TVectorD* const
+	Data::getAddr<TVectorD>(const std::string& name)
+	{
+		auto it = _vectorDs.find(name);
+		if (it == _vectorDs.end()) {
+			return nullptr;
+		}
+		return it->second;
+	}
 
 	template <>
 	std::vector<int>* const

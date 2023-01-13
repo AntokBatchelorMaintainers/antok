@@ -302,6 +302,11 @@ antok::Initializer::initializeData()
 					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
 					return false;
 				}
+			} else if (type == "TVectorD") {
+				if (not data.insertInputVariable<TVectorD>(name)) {
+					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
+					return false;
+				}
 			} else if (type == "std::vector<std::vector<int>>") {
 				if (not data.insertInputVariable<std::vector<std::vector<int>>>(name)) {
 					std::cerr << antok::Data::getVariableInsertionErrorMsg(name);
@@ -410,6 +415,14 @@ antok::Initializer::initializeData()
 					for (size_t i = 0; i < nParticles; ++i) {
 						const std::string varName = variableName(baseName, i + 1);
 						if (not data.insertInputVariable<TLorentzVector>(varName)) {
+							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
+							return false;
+						}
+					}
+				} else if (type == "TVectorD") {
+					for (size_t i = 0; i < nParticles; ++i) {
+						const std::string varName = variableName(baseName, i + 1);
+						if (not data.insertInputVariable<TVectorD>(varName)) {
 							std::cerr << antok::Data::getVariableInsertionErrorMsg(varName);
 							return false;
 						}
@@ -843,6 +856,7 @@ createOutTree(TTree* const      inTree,
 				else if (variableType == "int")	                             addToOutputBranch<int>                             (outTree, data, variableName);
 				else if (variableType == "TVector2")                         addToOutputBranch<TVector2>                        (outTree, data, variableName);
 				else if (variableType == "TVector3")                         addToOutputBranch<TVector3>                        (outTree, data, variableName);
+				else if (variableType == "TVectorD")                         addToOutputBranch<TVectorD>                        (outTree, data, variableName);
 				else if (variableType == "TLorentzVector")                   addToOutputBranch<TLorentzVector>                  (outTree, data, variableName);
 				else if (variableType == "std::vector<double>")              addToOutputBranch<std::vector<double>>             (outTree, data, variableName);
 				else if (variableType == "std::vector<int>")                 addToOutputBranch<std::vector<int>>                (outTree, data, variableName);

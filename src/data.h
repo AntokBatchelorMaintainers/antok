@@ -27,6 +27,7 @@ namespace antok {
 			for (const auto& v2Pair        : _vector2s)             delete v2Pair.second;
 			for (const auto& v3Pair        : _vector3s)             delete v3Pair.second;
 			for (const auto& LVPair        : _lorentzVectors)       delete LVPair.second;
+			for (const auto& vDPair        : _vectorDs)             delete vDPair.second;
 			for (const auto& intVecPair    : _intVectors)           delete intVecPair.second;
 			for (const auto& l64tVecPair   : _long64_tVectors)      delete l64tVecPair.second;
 			for (const auto& doubleVecPair : _doubleVectors)        delete doubleVecPair.second;
@@ -66,6 +67,9 @@ namespace antok {
 		std::map<std::string, TVector2*>       _vector2s;
 		std::map<std::string, TVector3*>       _vector3s;
 		std::map<std::string, TLorentzVector*> _lorentzVectors;
+
+		// n-dim vectors
+		std::map<std::string, TVectorD*>       _vectorDs;
 
 		// std::vectors of numbers
 		std::map<std::string, std::vector<int>*>       _intVectors;

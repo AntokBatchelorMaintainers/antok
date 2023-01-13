@@ -1157,9 +1157,9 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 	} else if (hasNodeKey(function, "VectorTVector3")) {
 		elemType = Vector3;
 		args     = {{"VectorTVector3", "std::vector<TVector3>"}};
-	// } else if (hasNodeKey(function, "VectorTVectorD")) {
-	// 	elemType = VectorTDouble;
-	// 	args     = {{"VectorTVectorD", "std::vector<TVectorD>"}};
+	} else if (hasNodeKey(function, "VectorTVectorD")) {
+		elemType = VectorTDouble;
+		args     = {{"VectorTVectorD", "std::vector<TVectorD>"}};
 	} else if (hasNodeKey(function, "VectorTLorentzVector")) {
 		elemType = LorentzVector;
 		args     = {{"VectorTLorentzVector", "std::vector<TLorentzVector>"}};
@@ -1196,8 +1196,8 @@ antok::generators::generateGetVectorEntry(const YAML::Node&               functi
 		  return __getVectorEntryFunction<TVector2>           (constArgs["Entry"], args, quantityNames);
 		case Vector3:
 		  return __getVectorEntryFunction<TVector3>           (constArgs["Entry"], args, quantityNames);
-		// case VectorTDouble:
-		//   return __getVectorEntryFunction<TVectorD>           (constArgs["Entry"], args, quantityNames);
+		case VectorTDouble:
+		  return __getVectorEntryFunction<TVectorD>           (constArgs["Entry"], args, quantityNames);
 		case LorentzVector:
 		  return __getVectorEntryFunction<TLorentzVector>     (constArgs["Entry"], args, quantityNames);
 		default: {
@@ -1262,9 +1262,9 @@ antok::generators::generateGetVectorSize(const YAML::Node&               functio
 	} else if (hasNodeKey(function, "VectorTVector3")) {
 		elemType = Vector3;
 		args     = {{"VectorTVector3", "std::vector<TVector3>"}};
-	// } else if (hasNodeKey(function, "VectorTVectorD")) {
-	// 	elemType = VectorTDouble;
-	// 	args     = {{"VectorTVectorD", "std::vector<TVectorD>"}};
+	} else if (hasNodeKey(function, "VectorTVectorD")) {
+		elemType = VectorTDouble;
+		args     = {{"VectorTVectorD", "std::vector<TVectorD>"}};
 	} else if (hasNodeKey(function, "VectorTLorentzVector")) {
 		elemType = LorentzVector;
 		args     = {{"VectorTLorentzVector", "std::vector<TLorentzVector>"}};
@@ -1294,8 +1294,8 @@ antok::generators::generateGetVectorSize(const YAML::Node&               functio
 		  return __getVectorSizeFunction<TVector2>           (args, quantityNames);
 		case Vector3:
 		  return __getVectorSizeFunction<TVector3>           (args, quantityNames);
-		// case VectorTDouble:
-		//   return __getVectorSizeFunction<TVectorD>           (args, quantityNames);
+		case VectorTDouble:
+		  return __getVectorSizeFunction<TVectorD>           (args, quantityNames);
 		case LorentzVector:
 		  return __getVectorSizeFunction<TLorentzVector>     (args, quantityNames);
 		default: {
