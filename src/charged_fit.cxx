@@ -62,24 +62,11 @@ antok::ChargedFit::ChargedFit(const TVector3& particle1Momentum,
 		initPullHists();
 	}
 
-	std::cout << "In ChargedFit:" << std::endl;
-
-	for (int i = 0; i < 16; i ++) {
-		std::cerr << particle1MomentumCovariance[i] << " ";
-	}
-	std::cerr << std::endl;
-	for (int i = 0; i < 16; i ++) {
-		std::cerr << particle2MomentumCovariance[i] << " ";
-	}
-	std::cerr << std::endl;
-
 	// Construct covariance matrix for particles
 	_covMat.ResizeTo(_nmbFittedVars, _nmbFittedVars);
 	// Set submatrix for first particle
-	std::cout << "First particle: covForParticle" << std::endl;
 	TMatrixDSub(_covMat, 0, 2, 0, 2) = covForParticle(_particle1Momentum, _particle1Energy, _particle1MomentumCovariance);
 	// Set submatrix for second particle
-	std::cout << "Second particle: covForParticle" << std::endl;
 	TMatrixDSub(_covMat, 3, 5, 3, 5) = covForParticle(_particle2Momentum, _particle2Energy, _particle2MomentumCovariance);
 
 	// Initial measured values for the fit
@@ -92,15 +79,6 @@ antok::ChargedFit::ChargedFit(const TVector3& particle1Momentum,
 	_startValues[3] = particleDir_2.X();
 	_startValues[4] = particleDir_2.Y();
 	_startValues[5] = _particle2Energy;
-
-    std::cout << "Particle energies" << _particle1Energy << " " << _particle2Energy << std::endl;
-
-	std::cout << "Kin. fit: start values: " << std::endl;
-
-	for (int i = 0; i < 6; i++) {
-		std::cout <<_startValues[i] << " ";
-	}
-	std::cout << std::endl;
 
 	_kinFitter = new KinematicFit(_problem, _startValues, _covMat);
 	assert(_kinFitter);
@@ -137,35 +115,12 @@ antok::ChargedFit::covForParticle(const TVector3& particleMomentum,
 	                              const std::vector<double>& particleMomentumCovariance)
 {
 
-	std::cout << "In covForParticle" << std::endl;
-	std::cout << "particleMomentumCovariance elements:" << std::endl;
-	std::cout << "element 0: " << particleMomentumCovariance [0] << std::endl;
-	std::cout << "element 1: " << particleMomentumCovariance [1] << std::endl;
-	std::cout << "element 2: " << particleMomentumCovariance [2] << std::endl;
-	std::cout << "element 3: " << particleMomentumCovariance [3] << std::endl;
-	std::cout << "element 4: " << particleMomentumCovariance [4] << std::endl;
-	std::cout << "element 5: " << particleMomentumCovariance [5] << std::endl;
-	std::cout << "element 6: " << particleMomentumCovariance [6] << std::endl;
-	std::cout << "element 7: " << particleMomentumCovariance [7] << std::endl;
-	std::cout << "element 8: " << particleMomentumCovariance [8] << std::endl;
-	std::cout << "element 9: " << particleMomentumCovariance [9] << std::endl;
-	std::cout << "element 10: " << particleMomentumCovariance[10] << std::endl;
-	std::cout << "element 11: " << particleMomentumCovariance[11] << std::endl;
-	std::cout << "element 12: " << particleMomentumCovariance[12] << std::endl;
-	std::cout << "element 13: " << particleMomentumCovariance[13] << std::endl;
-	std::cout << "element 14: " << particleMomentumCovariance[14] << std::endl;
-	std::cout << "element 15: " << particleMomentumCovariance[15] << std::endl;
-
 	const double cov[16] = {particleMomentumCovariance [0], particleMomentumCovariance [1], particleMomentumCovariance [2], particleMomentumCovariance [3],
 	                        particleMomentumCovariance [4], particleMomentumCovariance [5], particleMomentumCovariance [6], particleMomentumCovariance [7],
 	                        particleMomentumCovariance [8], particleMomentumCovariance [9], particleMomentumCovariance[10], particleMomentumCovariance[11],
 	                        particleMomentumCovariance[12], particleMomentumCovariance[13], particleMomentumCovariance[14], particleMomentumCovariance[15]};
-
-	std::cout << "Built cov" << std::endl;
     
     TMatrixDSym Cov(4, cov);
-
-	std::cout << "Built TMatrixDSym Cov" << std::endl;
 
 	// Linear uncertainty propagation for variable transformation (X, Y, Z, E) -> (x, y, E),
 	// where x and y are the direction cosines, i.e. x = X / R, y = Y / R
@@ -178,32 +133,14 @@ antok::ChargedFit::covForParticle(const TVector3& particleMomentum,
 	const double R = sqrt(X2 + Y2 + Z2);
 	const double invR3 = 1 / (R * R * R);
 
-	std::cout << "Gotten quantities!" << std::endl;
-
 	// Jacobian
 	const double j[12] = {(Y2 + Z2) * invR3,  -X * Y * invR3,     -X * Z * invR3,  0,
 	                      -X * Y * invR3,     (X2 + Z2) * invR3,  -Y * Z * invR3,  0,
 	                      0,                  0,                  0,               1};
 	const TMatrixD J(3, 4, j);
 
-	std::cout << "Built TMatrixD J!" << std::endl;
-
-	std::cerr << "Transfo A:" << std::endl;
-	for (const double &i: j) {
-		std::cerr << i << " ";
-	}
-	std::cerr << std::endl;
-
 	// Finally, calculate the covariance matrix for (x, y, E).
 	Cov.Similarity(J);
-
-	std::cout << "Calculated similarity J Cov J" << std::endl;
-
-	std::cerr << "ABCBtAt matrix:" << std::endl;
-	for (int i = 0; i < 9; i++) {
-		std::cerr << Cov.GetMatrixArray()[i] << " ";
-	}
-	std::cerr << std::endl;
 
 	return Cov;
 }
@@ -227,8 +164,6 @@ antok::ChargedFit::doFit() {
 	if (not _kinFitter->doFit()) {
 		return false;
 	}
-
-	std::cout << "After kin. fit success: " << std::endl;
 
 	// Get improved values
 	TVectorD improvedMeas(_kinFitter->improvedMeasurements());
@@ -255,10 +190,6 @@ antok::ChargedFit::doFit() {
 
 	double* covMatElems = _covMat.GetMatrixArray();
 	_transfCov.assign(covMatElems,covMatElems+36);
-
-	std::cout << _improvedLV_1.X() << " " <<  _improvedLV_1.Y() << " " <<  _improvedLV_1.Z() << " " <<  _improvedLV_1.E() << std::endl;
-	std::cout << "improved LV particle 2:" << std::endl;
-	std::cout << _improvedLV_2.X() << " " <<  _improvedLV_2.Y() << " " <<  _improvedLV_2.Z() << " " <<  _improvedLV_2.E() << std::endl;
 
 	return true;
 }

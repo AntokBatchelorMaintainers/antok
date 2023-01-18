@@ -16,6 +16,7 @@
 #include "TMatrixDSym.h"
 
 #include "charged_problem.h"
+#include "kinematic_fit.h"
 
 class TH1;
 

@@ -209,8 +209,6 @@ template <typename T>
 		operator() ()
 		{
 
-			std::cout << "In GetChargedKinematicFitting" << std::endl;
-
 			_ResultLorentzVector1.SetXYZT(0.,0.,0.,0.);
 			_ResultLorentzVector2.SetXYZT(0.,0.,0.,0.);
 			_ResultChi2 = 0.;
@@ -223,12 +221,6 @@ template <typename T>
 			_ResultPullsY1 = 0.;
 			_ResultPullsE1 = 0.;
 			_ResultSuccess = 0;
-
-			std::cout << "particle1MomentumCovariance" << std::endl;
-			std::cout << "element 0: " << _particle1MomentumCovariance[0] << std::endl;
-
-			std::cout << "particle2MomentumCovariance" << std::endl;
-			std::cout << "element 0: " << _particle2MomentumCovariance[0] << std::endl;
 
 			// Fit particle momenta to given _Mass
 			bool success = false;
@@ -246,14 +238,6 @@ template <typename T>
 				0, // MassLowerLimit for chargedFit::massIsInWindow(), which is not used
 				0, // MassUpperLimit for chargedFit::massIsInWindow(), which is not used
 				_PrecisionGoal);
-			//std::cout << "Clusters: " << clusterIndexA << ", " << clusterIndexB << std::endl;
-			//std::cout << "NominalMass: " << _Mass << std::endl;
-			//std::cout << "x1,y1: " << _ClusterPositions[clusterIndexA].X() << _ClusterPositions[clusterIndexA].Y() << "+-" << std::sqrt(_ClusterPositionVariances[clusterIndexA].X()) << std::sqrt(_ClusterPositionVariances[clusterIndexA].Y()) << std::endl;
-			//std::cout << "x2,y2: " << _ClusterPositions[clusterIndexB].X() << _ClusterPositions[clusterIndexB].Y() << "+-" << std::sqrt(_ClusterPositionVariances[clusterIndexB].X()) << std::sqrt(_ClusterPositionVariances[clusterIndexB].Y()) << std::endl;
-			//std::cout << "E1: " << _ClusterEnergies[clusterIndexA] << "+-" << std::sqrt(_ClusterEnergyVariances[clusterIndexA]) << std::endl;
-			//std::cout << "E2: " << _ClusterEnergies[clusterIndexB] << "+-" << std::sqrt(_ClusterEnergyVariances[clusterIndexB]) << std::endl;
-
-			//std::cout << "Mass before Fit:" << (TLorentzVector(photonMom1, _ClusterEnergies[clusterIndexA]) + TLorentzVector(photonMom2, _ClusterEnergies[clusterIndexB]) ).M() << std::endl;
 			success = chargedFit.doFit();
 			if (success) {
 				_ResultLorentzVector1 = chargedFit.getImprovedLV1();
@@ -277,7 +261,6 @@ template <typename T>
 			if (success) {
 				_ResultSuccess = 1;
 			}
-			else {std::cout << "kin fit failure!" << std::endl;}
 			return true;
 		}
 
