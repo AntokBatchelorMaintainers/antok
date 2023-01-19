@@ -214,6 +214,82 @@ antok::generators::getFunctionArgumentHandlerErrorMsg(const std::vector<std::str
 }
 
 
+
+bool
+antok::generators::registerOutputVarTypes(const std::vector<std::string>& quantityNames, // TODO removed data,  check if this is OK
+                                          const std::vector<std::string>& outputVarTypes)
+{
+	antok::Data&      data         = antok::ObjectManager::instance()->getData();
+
+	for (size_t i = 0; i < outputVarTypes.size(); ++i) {
+		const std::string& typeName     = outputVarTypes[i];
+		const std::string& quantityName = quantityNames[i];
+		if (typeName == "int") {
+			if (not data.insert<int>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+		if (typeName == "Long64_t") {
+			if (not data.insert<Long64_t>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+		if (typeName == "double") {
+			if (not data.insert<double>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+		if (typeName == "TVector3") {
+			if (not data.insert<TVector3>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+		if (typeName == "TLorentzVector") {
+			if (not data.insert<TLorentzVector>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+		if (typeName == "std::vector<int>") {
+			if (not data.insert<std::vector<int>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+		if (typeName == "std::vector<Long64_t>") {
+			if (not data.insert<std::vector<Long64_t>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+		if (typeName == "std::vector<double>") {
+			if (not data.insert<std::vector<double>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+		if (typeName == "std::vector<TVector3>") {
+			if (not data.insert<std::vector<TVector3>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+		if (typeName == "std::vector<TLorentzVector>") {
+			if (not data.insert<std::vector<TLorentzVector>>(quantityName)) {
+				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+
+
 antok::Function*
 antok::generators::generateAbs(const YAML::Node&               function,
                                const std::vector<std::string>& quantityNames,
@@ -1642,4 +1718,86 @@ antok::generators::generateSum2(const YAML::Node&               function,
 	delete summandNamesPtr;
 
 	return new antok::functions::Sum2(doubleInputAddrs, *data.getAddr<double>(quantityName));
+}
+
+// Generator for function GetChargedKinematicFitting, which performs the kinematic fit of two charged particles
+antok::Function*
+antok::generators::generateGetChargedKinematicFitting(const YAML::Node&               function,
+                                                      const std::vector<std::string>& quantityNames,
+                                                      const int                       index)
+{
+	if (not nmbArgsIsExactly(function, quantityNames.size(), 13)) {
+		return nullptr;
+	}
+
+	// Get input variables
+	vecPairString<std::string> args
+		= {{"Particle1Momentum",           "TVector3"},             // 3-momentum of track of particle 1, extrapolated to Z of SV
+		   {"Particle2Momentum",           "TVector3"},             // 3-momentum of track of particle 2, extrapolated to Z of SV
+		   {"Particle1Energy",             "double"},               // Energy of track of particle 1, sqrt(p_track*p_track + m*m)
+		   {"Particle2Energy",             "double"},               // Energy of track of particle 2, sqrt(p_track*p_track + m*m)
+		   {"Particle1MomentumCovariance", "std::vector<double>"},  // covariance of 4-momentum of track 1 as vector of len 16=(4x4)
+		   {"Particle2MomentumCovariance", "std::vector<double>"}}; // covariance of 4-momentum of track 1 as vector of len 16=(4x4)
+	if (not functionArgumentHandler(args, function, index)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Get constant arguments
+	std::map<std::string, double> constArgsDouble
+		= {{"Mass",           0},  // mass to which the invariant mass of particles 1 and 2 is fitted
+		   {"Particle1Mass",  0},  // mass of daughter particle 1
+		   {"Particle2Mass",  0},  // mass of daughter particle 2
+		   {"PrecisionGoal",  0}}; // Precision goal relative to Mass**2
+	if (not functionArgumentHandlerConst<double>(constArgsDouble, function)) {
+		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
+		return nullptr;
+	}
+
+	// Register output variables
+	antok::Data& data = antok::ObjectManager::instance()->getData();
+	const std::vector<std::string> outputVarTypes
+		= {"TLorentzVector",       // ResultLorentzVector of particle 1
+		   "TLorentzVector",       // ResultLorentzVector of particle 2
+		   "double",               // ResultChi2
+		   "double",               // ResultPValue
+		   "int",                  // ResultNmbIterations
+		   "int",                  // ResultSuccess
+		   "double",               // ResultPullsX0 (particle 1)
+		   "double",               // ResultPullsY0
+		   "double",               // ResultPullsE0
+		   "double",               // ResultPullsX1 (particle 2)
+		   "double",               // ResultPullsY1
+		   "double",               // ResultPullsE1
+		   "std::vector<double>"}; // Transformed covariance matrix for x1,y1,E1,x2,y2,E2
+	if (not registerOutputVarTypes(quantityNames, outputVarTypes)) {
+		return nullptr;
+	}
+
+
+	return new antok::functions::GetChargedKinematicFitting(
+		*data.getAddr<TVector3>           (args[0].first),      // Momentum of particle 1
+		*data.getAddr<TVector3>           (args[1].first),      // Momentum of particle 2
+		*data.getAddr<double>             (args[2].first),      // Energy of particle 1
+		*data.getAddr<double>             (args[3].first),      // Energy of particle 2
+		*data.getAddr<std::vector<double>>(args[4].first),      // Covariance of particle 1 mom.
+		*data.getAddr<std::vector<double>>(args[5].first),      // Covariance of particle 2 mom.
+		constArgsDouble["Particle1Mass"],                       // Mass 1
+		constArgsDouble["Particle2Mass"],                       // Mass 2
+		constArgsDouble["Mass"],                                // Mass
+		constArgsDouble["PrecisionGoal"],                       // PrecisionGoal
+		*data.getAddr<TLorentzVector>      (quantityNames[0]),  // ResultLorentzVector
+		*data.getAddr<TLorentzVector>      (quantityNames[1]),  // ResultLorentzVector
+		*data.getAddr<double>              (quantityNames[2]),  // ResultChi2
+		*data.getAddr<double>              (quantityNames[3]),  // ResultPValue
+		*data.getAddr<int>                 (quantityNames[4]),  // ResultNmbIterations
+		*data.getAddr<int>                 (quantityNames[5]),  // ResultSuccess
+		*data.getAddr<double>              (quantityNames[6]),  // ResultPullsX0
+		*data.getAddr<double>              (quantityNames[7]),  // ResultPullsY0
+		*data.getAddr<double>              (quantityNames[8]),  // ResultPullsE0
+		*data.getAddr<double>              (quantityNames[9]),  // ResultPullsX1
+		*data.getAddr<double>              (quantityNames[10]), // ResultPullsY1
+		*data.getAddr<double>              (quantityNames[11]), // ResultPullsE1
+		*data.getAddr<std::vector<double>> (quantityNames[12])  // Transformed covariance matrix for x1,y1,E1,x2,y2,E2
+	);
 }

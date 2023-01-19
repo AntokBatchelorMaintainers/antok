@@ -16,7 +16,6 @@ using antok::generators::functionArgumentHandlerConst;
 using antok::generators::getFunctionArgumentHandlerErrorMsg;
 using antok::generators::nmbArgsIsExactly;
 using antok::YAMLUtils::hasNodeKey;
-using antok::user::cdreis::registerOutputVarTypes;
 
 // type aliases to save some typing
 template <class T>
@@ -35,8 +34,6 @@ antok::user::jbeckers::getUserFunction(const YAML::Node&               function,
 		return antok::user::jbeckers::generateScale                     (function, quantityNames, index);
 	} else if (functionName == "increase") {
 		return antok::user::jbeckers::generateIncrease                  (function, quantityNames, index);
-	} else if (functionName == "GetChargedKinematicFitting") {
-		return antok::user::jbeckers::generateGetChargedKinematicFitting(function, quantityNames, index);
 	} else if (functionName == "CalculateCollinearityAngle") {
 		return antok::user::jbeckers::generateCalculateCollinearityAngle(function, quantityNames, index);
 	} else if (functionName == "CompareIndices") {
@@ -185,88 +182,6 @@ antok::user::jbeckers::generateIncrease(const YAML::Node&               function
 		          << "variable '" << variableArgs[0].first << "'." << std::endl;
 		return nullptr;
 	}
-}
-
-
-antok::Function*
-antok::user::jbeckers::generateGetChargedKinematicFitting(const YAML::Node&               function,
-                                                          const std::vector<std::string>& quantityNames,
-                                                          const int                       index)
-{
-	if (not nmbArgsIsExactly(function, quantityNames.size(), 13)) {
-		return nullptr;
-	}
-
-	// Get input variables
-	vecPairString<std::string> args
-		= {{"Particle1Momentum",           "TVector3"},
-		   {"Particle2Momentum",           "TVector3"},
-		   {"Particle1Energy",             "double"},
-		   {"Particle2Energy",             "double"},
-		   {"Particle1MomentumCovariance", "std::vector<double>"},
-		   {"Particle2MomentumCovariance", "std::vector<double>"}};
-	if (not functionArgumentHandler(args, function, index)) {
-		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
-		return nullptr;
-	}
-
-	// Get constant arguments
-	std::map<std::string, double> constArgsDouble
-		= {{"Mass",           0},
-		   {"Particle1Mass",  0},
-		   {"Particle2Mass",  0},
-		   {"PrecisionGoal",  0}};
-	if (not functionArgumentHandlerConst<double>(constArgsDouble, function)) {
-		std::cerr << getFunctionArgumentHandlerErrorMsg(quantityNames);
-		return nullptr;
-	}
-
-	// Register output variables
-	antok::Data& data = antok::ObjectManager::instance()->getData();
-	const std::vector<std::string> outputVarTypes
-		= {"TLorentzVector",  // ResultLorentzVector of particle 1
-		   "TLorentzVector",  // ResultLorentzVector of particle 2
-		   "double",          // ResultChi2
-		   "double",          // ResultPValue
-		   "int",             // ResultNmbIterations
-		   "int",             // ResultSuccess
-		   "double",          // ResultPullsX0 (particle 1)
-		   "double",          // ResultPullsY0
-		   "double",          // ResultPullsE0
-		   "double",          // ResultPullsX1 (particle 2)
-		   "double",          // ResultPullsY1
-		   "double",          // ResultPullsE1
-		   "std::vector<double>"}; // ResultTransfCov
-	if (not registerOutputVarTypes(data, quantityNames, outputVarTypes)) {
-		return nullptr;
-	}
-
-
-	return new antok::user::jbeckers::functions::GetChargedKinematicFitting(
-		*data.getAddr<TVector3>(args[0].first),           // Momentum of particle 1
-		*data.getAddr<TVector3>(args[1].first),           // Momentum of particle 2
-		*data.getAddr<double>  (args[2].first),           // Energy of particle 1
-		*data.getAddr<double>  (args[3].first),           // Energy of particle 2
-		*data.getAddr<std::vector<double>>(args[4].first),           // Covariance of particle 1 mom.
-		*data.getAddr<std::vector<double>>(args[5].first),           // Covariance of particle 2 mom.
-		constArgsDouble["Particle1Mass"],                 // Mass
-		constArgsDouble["Particle2Mass"],                 // Mass
-		constArgsDouble["Mass"],                          // Mass
-		constArgsDouble["PrecisionGoal"],                 // PrecisionGoal
-		*data.getAddr<TLorentzVector>(quantityNames[0]),  // ResultLorentzVector
-		*data.getAddr<TLorentzVector>(quantityNames[1]),  // ResultLorentzVector
-		*data.getAddr<double>        (quantityNames[2]),  // ResultChi2
-		*data.getAddr<double>        (quantityNames[3]),  // ResultPValue
-		*data.getAddr<int>           (quantityNames[4]),  // ResultNmbIterations
-		*data.getAddr<int>           (quantityNames[5]),  // ResultSuccess
-		*data.getAddr<double>        (quantityNames[6]),  // ResultPullsX0
-		*data.getAddr<double>        (quantityNames[7]),  // ResultPullsY0
-		*data.getAddr<double>        (quantityNames[8]),  // ResultPullsE0
-		*data.getAddr<double>        (quantityNames[9]),  // ResultPullsX1
-		*data.getAddr<double>        (quantityNames[10]), // ResultPullsY1
-		*data.getAddr<double>        (quantityNames[11]), // ResultPullsE1
-		*data.getAddr<std::vector<double>> (quantityNames[12])  // ResultTransfCov
-	);
 }
 
 antok::Function*

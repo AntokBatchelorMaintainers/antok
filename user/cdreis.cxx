@@ -90,6 +90,11 @@ antok::user::cdreis::getUserFunction(const YAML::Node&               function,
 	return nullptr;
 }
 
+bool antok::user::cdreis::registerOutputVarTypes(antok::Data& data, const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes)
+{
+	return antok::generators::registerOutputVarTypes(quantityNames, outputVarTypes);
+}
+
 
 antok::Function*
 antok::user::cdreis::generateGetDebugPrints(const YAML::Node&               function,
@@ -1872,75 +1877,3 @@ antok::user::cdreis::generateGetPiPiNeutralSystem(const YAML::Node&             
 	);
 }
 
-
-bool
-antok::user::cdreis::registerOutputVarTypes(antok::Data&                    data,
-                                            const std::vector<std::string>& quantityNames,
-                                            const std::vector<std::string>& outputVarTypes)
-{
-	for (size_t i = 0; i < outputVarTypes.size(); ++i) {
-		const std::string& typeName     = outputVarTypes[i];
-		const std::string& quantityName = quantityNames[i];
-		if (typeName == "int") {
-			if (not data.insert<int>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-		if (typeName == "Long64_t") {
-			if (not data.insert<Long64_t>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-		if (typeName == "double") {
-			if (not data.insert<double>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-		if (typeName == "TVector3") {
-			if (not data.insert<TVector3>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-		if (typeName == "TLorentzVector") {
-			if (not data.insert<TLorentzVector>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-		if (typeName == "std::vector<int>") {
-			if (not data.insert<std::vector<int>>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-		if (typeName == "std::vector<Long64_t>") {
-			if (not data.insert<std::vector<Long64_t>>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-		if (typeName == "std::vector<double>") {
-			if (not data.insert<std::vector<double>>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-		if (typeName == "std::vector<TVector3>") {
-			if (not data.insert<std::vector<TVector3>>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-		if (typeName == "std::vector<TLorentzVector>") {
-			if (not data.insert<std::vector<TLorentzVector>>(quantityName)) {
-				std::cerr << antok::Data::getVariableInsertionErrorMsg(quantityName);
-				return false;
-			}
-		}
-	}
-	return true;
-}

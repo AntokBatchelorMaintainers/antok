@@ -13,6 +13,9 @@
 
 
 #include "charged_problem.h"
+#include "neutral_problem.h"
+
+using antok::QuantitiyHelper;
 
 
 antok::ChargedProblem::ChargedProblem(const double mass,

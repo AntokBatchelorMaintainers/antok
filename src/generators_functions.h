@@ -41,6 +41,7 @@ namespace antok {
 		                                          const YAML::Node&                        function,
 		                                          const int                                index);
 		std::string getFunctionArgumentHandlerErrorMsg(const std::vector<std::string>& quantityNames);
+		bool registerOutputVarTypes(const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes);
 
 		// macro for shorter prototyping of the antok functions
 		#define FUNCTION_PROTOTYPE(fctName) antok::Function* fctName(const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index)
@@ -66,6 +67,7 @@ namespace antok {
 		FUNCTION_PROTOTYPE(generateRadToDegree);
 		FUNCTION_PROTOTYPE(generateSum);
 		FUNCTION_PROTOTYPE(generateSum2);
+		FUNCTION_PROTOTYPE(generateGetChargedKinematicFitting);
 
 	}
 

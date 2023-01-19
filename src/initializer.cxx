@@ -929,6 +929,8 @@ antok::Initializer::getFunction(const YAML::Node&               function,
 		return antok::generators::generateSum                       (function, quantityNames, index);
 	} else if (functionName == "sum2") {
 		return antok::generators::generateSum2                      (function, quantityNames, index);
+	} else if (functionName == "getChargedKinematicFitting") {
+		return antok::generators::generateGetChargedKinematicFitting(function, quantityNames, index);
 	} else if (functionName == "") {
 		std::cerr << "Could not convert function name to std::string for calculated quantity '" << quantityNames[0] << "'." << std::endl;
 		return nullptr;

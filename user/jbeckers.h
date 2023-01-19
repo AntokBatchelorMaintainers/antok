@@ -20,8 +20,6 @@ namespace antok {
 
 			FUNCTION_PROTOTYPE(generateIncrease);
 
-			FUNCTION_PROTOTYPE(generateGetChargedKinematicFitting);
-
 			FUNCTION_PROTOTYPE(generateCompareIndices);
 
 			FUNCTION_PROTOTYPE(generatePrintEvent);
