@@ -36,8 +36,6 @@ antok::ChargedFit::ChargedFit(const TVector3& particle1Momentum,
                               const std::vector<double>& particle1MomentumCovariance,
                               const std::vector<double>& particle2MomentumCovariance,
                               const double    mass,
-                              const double    massLowerLimit,
-                              const double    massUpperLimit,
                               const double    precisionGoal)
 	: _problem                    (mass, particle1Mass, particle2Mass, precisionGoal),
 	  _kinFitter                  (nullptr),
@@ -53,8 +51,6 @@ antok::ChargedFit::ChargedFit(const TVector3& particle1Momentum,
 	  _improvedLV_2               (0, 0, 0, 0),
 	  _improvedLVSum              (0, 0, 0, 0),
 	  _mass                       (mass),
-	  _massLowerLimit             (massLowerLimit),
-	  _massUpperLimit             (massUpperLimit),
 	  _precisionGoal              (precisionGoal)
 {
 	if (_first) {
@@ -82,17 +78,6 @@ antok::ChargedFit::ChargedFit(const TVector3& particle1Momentum,
 
 	_kinFitter = new KinematicFit(_problem, _startValues, _covMat);
 	assert(_kinFitter);
-}
-
-
-bool
-antok::ChargedFit::massIsInWindow() const
-{
-	const TLorentzVector particleLV_1(_particle1Momentum, _particle1Energy);
-	const TLorentzVector particleLV_2(_particle2Momentum, _particle2Energy);
-	const double         mass = (particleLV_1 + particleLV_2).M();
-
-	return _massLowerLimit < mass and mass < _massUpperLimit;
 }
 
 

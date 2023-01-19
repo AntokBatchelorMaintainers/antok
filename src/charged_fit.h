@@ -38,8 +38,6 @@ namespace antok {
                    const std::vector<double>& particle1MomentumCovariance,
                    const std::vector<double>& particle2MomentumCovariance,
                    const double    mass,
-                   const double    massLowerLimit,
-                   const double    massUpperLimit,
                    const double    precisionGoal);
 		~ChargedFit() { delete _kinFitter; }
 
@@ -105,8 +103,6 @@ namespace antok {
 		std::vector<double> _transfCov;
 
 		const double _mass;                 //!< mass the photon pair is constrained to
-		const double _massLowerLimit;       //!< lower mass limit of mass window used in massIsInWindow()
-		const double _massUpperLimit;       //!< upper mass limit of mass window used in massIsInWindow()
 		const double _precisionGoal;        //!< limit for determining if fit converged
 
 		TVectorD    _startValues;  //!< start values for measured variables that enter the fit

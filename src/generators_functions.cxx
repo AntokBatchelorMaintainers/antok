@@ -216,7 +216,7 @@ antok::generators::getFunctionArgumentHandlerErrorMsg(const std::vector<std::str
 
 
 bool
-antok::generators::registerOutputVarTypes(const std::vector<std::string>& quantityNames, // TODO removed data,  check if this is OK
+antok::generators::registerOutputVarTypes(const std::vector<std::string>& quantityNames,
                                           const std::vector<std::string>& outputVarTypes)
 {
 	antok::Data&      data         = antok::ObjectManager::instance()->getData();

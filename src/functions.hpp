@@ -1256,8 +1256,6 @@ namespace antok {
 									   const double    Particle1Mass,
 									   const double    Particle2Mass,
 									   const double    Mass, // mass to which the invariant mass of particles 1 and 2 is fitted
-									   //const double    MassLowerLimit, // not used
-									   //const double    MassUpperLimit, // not used
 									   const double    PrecisionGoal,             // Precision goal relative to Mass**2
 									   TLorentzVector& ResultLorentzVector1,      // Lorentz vectors of particle 1 after fit
 									   TLorentzVector& ResultLorentzVector2,      // Lorentz vectors of particle 2 after fit
@@ -1281,8 +1279,6 @@ namespace antok {
 					_particle1MomentumCovariance(Particle1MomentumCovariance),
 					_particle2MomentumCovariance(Particle2MomentumCovariance),
 					_Mass                       (Mass),
-					//_MassLowerLimit             (MassLowerLimit),
-					//_MassUpperLimit             (MassUpperLimit),
 					_PrecisionGoal              (PrecisionGoal),
 					_ResultLorentzVector1       (ResultLorentzVector1),
 					_ResultLorentzVector2       (ResultLorentzVector2),
@@ -1331,8 +1327,6 @@ namespace antok {
 					_particle1MomentumCovariance,
 					_particle2MomentumCovariance,
 					_Mass,
-					0, // MassLowerLimit for chargedFit::massIsInWindow(), which is not used
-					0, // MassUpperLimit for chargedFit::massIsInWindow(), which is not used
 					_PrecisionGoal);
 				success = chargedFit.doFit();
 				if (success) {
@@ -1367,8 +1361,6 @@ namespace antok {
 			const std::vector<double>& _particle1MomentumCovariance;
 			const std::vector<double>& _particle2MomentumCovariance;
 			const double    _Mass;
-			//const double    _MassLowerLimit;
-			//const double    _MassUpperLimit;
 			const double    _PrecisionGoal;
 			TLorentzVector& _ResultLorentzVector1;      // Lorentz vectors of particle 1 after fit
 			TLorentzVector& _ResultLorentzVector2;      // Lorentz vectors of particle 2 after fit
