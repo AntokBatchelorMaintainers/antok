@@ -9,7 +9,7 @@ namespace antok {
 
 	namespace generators {
 
-		enum vectorElementType {Int = 0, Double = 1, Vector2 = 2, Vector3 = 3, LorentzVector = 4};
+		enum vectorElementType {Int = 0, Double = 1, Vector2 = 2, Vector3 = 3, LorentzVector = 4, VectorDouble = 5, VectorInt = 6, VectorTDouble = 7};
 
 		std::string mergeNameIndex(const std::string& name, const int index);
 		bool nmbArgsIsExactly(const YAML::Node& function, const size_t& actualNmb, const size_t& requiredNmb);
@@ -41,6 +41,7 @@ namespace antok {
 		                                          const YAML::Node&                        function,
 		                                          const int                                index);
 		std::string getFunctionArgumentHandlerErrorMsg(const std::vector<std::string>& quantityNames);
+		bool registerOutputVarTypes(const std::vector<std::string>& quantityNames, const std::vector<std::string>& outputVarTypes);
 
 		// macro for shorter prototyping of the antok functions
 		#define FUNCTION_PROTOTYPE(fctName) antok::Function* fctName(const YAML::Node& function, const std::vector<std::string>& quantityNames, const int index)
@@ -66,6 +67,7 @@ namespace antok {
 		FUNCTION_PROTOTYPE(generateRadToDegree);
 		FUNCTION_PROTOTYPE(generateSum);
 		FUNCTION_PROTOTYPE(generateSum2);
+		FUNCTION_PROTOTYPE(generateGetChargedKinematicFitting);
 
 	}
 

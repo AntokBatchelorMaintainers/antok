@@ -18,6 +18,14 @@ namespace antok {
 
 			FUNCTION_PROTOTYPE(generateScale);
 
+			FUNCTION_PROTOTYPE(generateIncrease);
+
+			FUNCTION_PROTOTYPE(generateCompareIndices);
+
+			FUNCTION_PROTOTYPE(generatePrintEvent);
+
+			FUNCTION_PROTOTYPE(generateCalculateCollinearityAngle);
+
 		}
 
 	}

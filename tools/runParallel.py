@@ -36,12 +36,15 @@ def getRunNumber(filename):
 	'''
 	@return: run number, extracted from mDST filename
 	'''
-	runnbr = None;
-	parsed = re.findall("-([0-9]+)-[0-9]-[0-9]\.root", filename)
-	if(parsed):
-		runnbr = int( parsed[0])
-	else:
-		msg = "Cannot get run number from file name '{0}'. Using run number 0.".format( filename )
+	runnbr = None
+	namingSchemes = ["-([0-9]+)-[0-9]-[0-9]\.root","_([0-9]+)_[0-9]+\.root"]
+	for namingScheme in namingSchemes:
+		parsed = re.findall(namingScheme, filename)
+		if(parsed):
+			runnbr = int( parsed[0] )
+			break
+	if runnbr is None:
+		msg = "Can not get run number from file name '{0}'. Using run number 0.".format( filename )
 		print(msg)
 		runnbr = 0
 	return runnbr
@@ -50,12 +53,18 @@ def getSlot(filename):
 	'''
 	@return: run number, extracted from mDST filename
 	'''
-	slot = None;
-	parsed = re.findall("-[0-9]+-([0-9]-[0-9])\.root", filename)
-	if(parsed):
-		slot = parsed[0]
-	else:
-		msg = "Cannot get slot from file name '{0}'. Using slot '0-0'".format( filename )
+	slot = None
+	namingSchemes = ["-[0-9]+-([0-9]-[0-9])\.root","_[0-9]+_([0-9][0-9])\.root"]
+	for namingScheme in namingSchemes:
+		parsed = re.findall(namingScheme, filename)
+		if(parsed):
+			if namingScheme == "_[0-9]+_([0-9][0-9])\.root":
+				slot = parsed[0][0]+'-'+parsed[0][1]
+			else:
+				slot = parsed[0]
+			break
+	if slot is None:
+		msg = "Can not get slot from file name '{0}'. Using slot '0-0'".format( filename )
 		print(msg)
 		slot='0-0'
 	return slot
@@ -301,8 +310,9 @@ def main():
 			run_first_file = getRunNumber( in_files[0] )
 			run_last_file = getRunNumber( in_files[-1] )
 			slot = getSlot( in_files[0] )
-		except Exception:
+		except Exception as e:
 			handler.shutdown();
+			print(e)
 			exit(1)
 
 		out_folder_root = outfolder
